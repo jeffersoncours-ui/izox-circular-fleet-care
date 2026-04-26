@@ -8,7 +8,7 @@ const TABS = [
   { to: "/client", label: "Accueil", icon: Home, exact: true },
   { to: "/client/flotte", label: "Ma flotte", icon: Car },
   { to: "/client/rendez-vous", label: "RDV", icon: CalendarDays },
-  { to: "/client/interventions", label: "Mes interventions", icon: Wrench },
+  { to: "/client/interventions", label: "Interventions", icon: Wrench },
   { to: "/client/factures", label: "Factures", icon: FileText },
   { to: "/client/documents", label: "Documents", icon: FolderOpen },
 ];
