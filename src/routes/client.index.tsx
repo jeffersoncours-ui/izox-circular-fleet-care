@@ -18,12 +18,15 @@ function ClientHome() {
   useEffect(() => {
     if (!profile?.entreprise_id) return;
     (async () => {
-      const [v, e] = await Promise.all([
-        supabase.from("vehicules").select("id", { count: "exact", head: true }).eq("entreprise_id", profile.entreprise_id!),
-        supabase.from("entreprises").select("palier_remise").eq("id", profile.entreprise_id!).maybeSingle(),
-      ]);
+      const v = await supabase
+        .from("vehicules")
+        .select("id", { count: "exact", head: true })
+        .eq("entreprise_id", profile.entreprise_id!);
       setVehiculeCount(v.count ?? 0);
-      setPalier((e.data?.palier_remise as string) ?? "");
+      // Le palier ne s'affiche que si un contrat actif existe en base
+      // pour cette entreprise. Tant que la table contrats n'existe pas
+      // ou qu'aucun contrat actif n'est lié, on n'affiche aucun palier.
+      setPalier("");
     })();
   }, [profile]);
 
