@@ -8,8 +8,9 @@ const TABS = [
   { to: "/client", label: "Accueil", icon: Home, exact: true },
   { to: "/client/flotte", label: "Ma flotte", icon: Car },
   { to: "/client/rendez-vous", label: "RDV", icon: CalendarDays },
-  { to: "/client/interventions", label: "Prestations", icon: Wrench },
+  { to: "/client/interventions", label: "Mes interventions", icon: Wrench },
   { to: "/client/factures", label: "Factures", icon: FileText },
+  { to: "/client/documents", label: "Documents", icon: FolderOpen },
 ];
 
 export function ClientHeader() {
@@ -43,7 +44,7 @@ export function ClientBottomNav() {
   const location = useLocation();
   return (
     <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border safe-area">
-      <ul className="grid grid-cols-5 max-w-2xl mx-auto">
+      <ul className="grid grid-cols-6 max-w-3xl mx-auto">
         {TABS.map((tab) => {
           const active = tab.exact
             ? location.pathname === tab.to
