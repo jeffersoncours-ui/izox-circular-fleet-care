@@ -1,0 +1,80 @@
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/lib/auth-context";
+import { Home, Car, CalendarDays, Wrench, FileText, FolderOpen, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+
+const TABS = [
+  { to: "/client", label: "Accueil", icon: Home, exact: true },
+  { to: "/client/flotte", label: "Ma flotte", icon: Car },
+  { to: "/client/rendez-vous", label: "RDV", icon: CalendarDays },
+  { to: "/client/interventions", label: "Prestations", icon: Wrench },
+  { to: "/client/factures", label: "Factures", icon: FileText },
+];
+
+export function ClientHeader() {
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    await signOut();
+    navigate({ to: "/login" });
+  };
+  return (
+    <header className="bg-primary text-primary-foreground sticky top-0 z-30">
+      <div className="px-4 py-3 flex items-center justify-between">
+        <img src="/logo-izox.png" alt="IZOX" className="h-7 w-auto object-contain" />
+        <div className="flex items-center gap-2">
+          <span className="text-xs hidden sm:inline">{profile?.prenom} {profile?.nom}</span>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={handleLogout}
+            className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export function ClientBottomNav() {
+  const location = useLocation();
+  return (
+    <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border safe-area">
+      <ul className="grid grid-cols-5 max-w-2xl mx-auto">
+        {TABS.map((tab) => {
+          const active = tab.exact
+            ? location.pathname === tab.to
+            : location.pathname.startsWith(tab.to);
+          const Icon = tab.icon;
+          return (
+            <li key={tab.to}>
+              <Link
+                to={tab.to}
+                className={cn(
+                  "flex flex-col items-center justify-center py-2.5 gap-1 transition-colors",
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
+                <span className={cn("text-[10px] font-medium", active && "font-semibold")}>
+                  {tab.label}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+export function ClientDocsLink() {
+  return (
+    <Link to="/client/documents" className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+      <FolderOpen className="h-3 w-3" /> Mes documents
+    </Link>
+  );
+}

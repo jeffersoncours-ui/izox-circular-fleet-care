@@ -9,38 +9,286 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TerrainRouteImport } from './routes/terrain'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ClientRouteImport } from './routes/client'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientIndexRouteImport } from './routes/client.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as ClientRendezVousRouteImport } from './routes/client.rendez-vous'
+import { Route as ClientInterventionsRouteImport } from './routes/client.interventions'
+import { Route as ClientFlotteRouteImport } from './routes/client.flotte'
+import { Route as ClientFacturesRouteImport } from './routes/client.factures'
+import { Route as ClientDocumentsRouteImport } from './routes/client.documents'
+import { Route as AdminRendezVousRouteImport } from './routes/admin.rendez-vous'
+import { Route as AdminInterventionsRouteImport } from './routes/admin.interventions'
+import { Route as AdminFacturationRouteImport } from './routes/admin.facturation'
+import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
+import { Route as AdminContratsRouteImport } from './routes/admin.contrats'
+import { Route as AdminClientsRouteImport } from './routes/admin.clients'
+import { Route as AdminClientsIdRouteImport } from './routes/admin.clients.$id'
 
+const TerrainRoute = TerrainRouteImport.update({
+  id: '/terrain',
+  path: '/terrain',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientRoute = ClientRouteImport.update({
+  id: '/client',
+  path: '/client',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientIndexRoute = ClientIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ClientRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ClientRendezVousRoute = ClientRendezVousRouteImport.update({
+  id: '/rendez-vous',
+  path: '/rendez-vous',
+  getParentRoute: () => ClientRoute,
+} as any)
+const ClientInterventionsRoute = ClientInterventionsRouteImport.update({
+  id: '/interventions',
+  path: '/interventions',
+  getParentRoute: () => ClientRoute,
+} as any)
+const ClientFlotteRoute = ClientFlotteRouteImport.update({
+  id: '/flotte',
+  path: '/flotte',
+  getParentRoute: () => ClientRoute,
+} as any)
+const ClientFacturesRoute = ClientFacturesRouteImport.update({
+  id: '/factures',
+  path: '/factures',
+  getParentRoute: () => ClientRoute,
+} as any)
+const ClientDocumentsRoute = ClientDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => ClientRoute,
+} as any)
+const AdminRendezVousRoute = AdminRendezVousRouteImport.update({
+  id: '/rendez-vous',
+  path: '/rendez-vous',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInterventionsRoute = AdminInterventionsRouteImport.update({
+  id: '/interventions',
+  path: '/interventions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFacturationRoute = AdminFacturationRouteImport.update({
+  id: '/facturation',
+  path: '/facturation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEquipeRoute = AdminEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContratsRoute = AdminContratsRouteImport.update({
+  id: '/contrats',
+  path: '/contrats',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminClientsRoute = AdminClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminClientsIdRoute = AdminClientsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminClientsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/client': typeof ClientRouteWithChildren
+  '/login': typeof LoginRoute
+  '/terrain': typeof TerrainRoute
+  '/admin/clients': typeof AdminClientsRouteWithChildren
+  '/admin/contrats': typeof AdminContratsRoute
+  '/admin/equipe': typeof AdminEquipeRoute
+  '/admin/facturation': typeof AdminFacturationRoute
+  '/admin/interventions': typeof AdminInterventionsRoute
+  '/admin/rendez-vous': typeof AdminRendezVousRoute
+  '/client/documents': typeof ClientDocumentsRoute
+  '/client/factures': typeof ClientFacturesRoute
+  '/client/flotte': typeof ClientFlotteRoute
+  '/client/interventions': typeof ClientInterventionsRoute
+  '/client/rendez-vous': typeof ClientRendezVousRoute
+  '/admin/': typeof AdminIndexRoute
+  '/client/': typeof ClientIndexRoute
+  '/admin/clients/$id': typeof AdminClientsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/terrain': typeof TerrainRoute
+  '/admin/clients': typeof AdminClientsRouteWithChildren
+  '/admin/contrats': typeof AdminContratsRoute
+  '/admin/equipe': typeof AdminEquipeRoute
+  '/admin/facturation': typeof AdminFacturationRoute
+  '/admin/interventions': typeof AdminInterventionsRoute
+  '/admin/rendez-vous': typeof AdminRendezVousRoute
+  '/client/documents': typeof ClientDocumentsRoute
+  '/client/factures': typeof ClientFacturesRoute
+  '/client/flotte': typeof ClientFlotteRoute
+  '/client/interventions': typeof ClientInterventionsRoute
+  '/client/rendez-vous': typeof ClientRendezVousRoute
+  '/admin': typeof AdminIndexRoute
+  '/client': typeof ClientIndexRoute
+  '/admin/clients/$id': typeof AdminClientsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/client': typeof ClientRouteWithChildren
+  '/login': typeof LoginRoute
+  '/terrain': typeof TerrainRoute
+  '/admin/clients': typeof AdminClientsRouteWithChildren
+  '/admin/contrats': typeof AdminContratsRoute
+  '/admin/equipe': typeof AdminEquipeRoute
+  '/admin/facturation': typeof AdminFacturationRoute
+  '/admin/interventions': typeof AdminInterventionsRoute
+  '/admin/rendez-vous': typeof AdminRendezVousRoute
+  '/client/documents': typeof ClientDocumentsRoute
+  '/client/factures': typeof ClientFacturesRoute
+  '/client/flotte': typeof ClientFlotteRoute
+  '/client/interventions': typeof ClientInterventionsRoute
+  '/client/rendez-vous': typeof ClientRendezVousRoute
+  '/admin/': typeof AdminIndexRoute
+  '/client/': typeof ClientIndexRoute
+  '/admin/clients/$id': typeof AdminClientsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/client'
+    | '/login'
+    | '/terrain'
+    | '/admin/clients'
+    | '/admin/contrats'
+    | '/admin/equipe'
+    | '/admin/facturation'
+    | '/admin/interventions'
+    | '/admin/rendez-vous'
+    | '/client/documents'
+    | '/client/factures'
+    | '/client/flotte'
+    | '/client/interventions'
+    | '/client/rendez-vous'
+    | '/admin/'
+    | '/client/'
+    | '/admin/clients/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/terrain'
+    | '/admin/clients'
+    | '/admin/contrats'
+    | '/admin/equipe'
+    | '/admin/facturation'
+    | '/admin/interventions'
+    | '/admin/rendez-vous'
+    | '/client/documents'
+    | '/client/factures'
+    | '/client/flotte'
+    | '/client/interventions'
+    | '/client/rendez-vous'
+    | '/admin'
+    | '/client'
+    | '/admin/clients/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/client'
+    | '/login'
+    | '/terrain'
+    | '/admin/clients'
+    | '/admin/contrats'
+    | '/admin/equipe'
+    | '/admin/facturation'
+    | '/admin/interventions'
+    | '/admin/rendez-vous'
+    | '/client/documents'
+    | '/client/factures'
+    | '/client/flotte'
+    | '/client/interventions'
+    | '/client/rendez-vous'
+    | '/admin/'
+    | '/client/'
+    | '/admin/clients/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  ClientRoute: typeof ClientRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  TerrainRoute: typeof TerrainRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terrain': {
+      id: '/terrain'
+      path: '/terrain'
+      fullPath: '/terrain'
+      preLoaderRoute: typeof TerrainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client': {
+      id: '/client'
+      path: '/client'
+      fullPath: '/client'
+      preLoaderRoute: typeof ClientRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +296,168 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/client/': {
+      id: '/client/'
+      path: '/'
+      fullPath: '/client/'
+      preLoaderRoute: typeof ClientIndexRouteImport
+      parentRoute: typeof ClientRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/client/rendez-vous': {
+      id: '/client/rendez-vous'
+      path: '/rendez-vous'
+      fullPath: '/client/rendez-vous'
+      preLoaderRoute: typeof ClientRendezVousRouteImport
+      parentRoute: typeof ClientRoute
+    }
+    '/client/interventions': {
+      id: '/client/interventions'
+      path: '/interventions'
+      fullPath: '/client/interventions'
+      preLoaderRoute: typeof ClientInterventionsRouteImport
+      parentRoute: typeof ClientRoute
+    }
+    '/client/flotte': {
+      id: '/client/flotte'
+      path: '/flotte'
+      fullPath: '/client/flotte'
+      preLoaderRoute: typeof ClientFlotteRouteImport
+      parentRoute: typeof ClientRoute
+    }
+    '/client/factures': {
+      id: '/client/factures'
+      path: '/factures'
+      fullPath: '/client/factures'
+      preLoaderRoute: typeof ClientFacturesRouteImport
+      parentRoute: typeof ClientRoute
+    }
+    '/client/documents': {
+      id: '/client/documents'
+      path: '/documents'
+      fullPath: '/client/documents'
+      preLoaderRoute: typeof ClientDocumentsRouteImport
+      parentRoute: typeof ClientRoute
+    }
+    '/admin/rendez-vous': {
+      id: '/admin/rendez-vous'
+      path: '/rendez-vous'
+      fullPath: '/admin/rendez-vous'
+      preLoaderRoute: typeof AdminRendezVousRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/interventions': {
+      id: '/admin/interventions'
+      path: '/interventions'
+      fullPath: '/admin/interventions'
+      preLoaderRoute: typeof AdminInterventionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/facturation': {
+      id: '/admin/facturation'
+      path: '/facturation'
+      fullPath: '/admin/facturation'
+      preLoaderRoute: typeof AdminFacturationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/equipe': {
+      id: '/admin/equipe'
+      path: '/equipe'
+      fullPath: '/admin/equipe'
+      preLoaderRoute: typeof AdminEquipeRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/contrats': {
+      id: '/admin/contrats'
+      path: '/contrats'
+      fullPath: '/admin/contrats'
+      preLoaderRoute: typeof AdminContratsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/clients': {
+      id: '/admin/clients'
+      path: '/clients'
+      fullPath: '/admin/clients'
+      preLoaderRoute: typeof AdminClientsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/clients/$id': {
+      id: '/admin/clients/$id'
+      path: '/$id'
+      fullPath: '/admin/clients/$id'
+      preLoaderRoute: typeof AdminClientsIdRouteImport
+      parentRoute: typeof AdminClientsRoute
+    }
   }
 }
 
+interface AdminClientsRouteChildren {
+  AdminClientsIdRoute: typeof AdminClientsIdRoute
+}
+
+const AdminClientsRouteChildren: AdminClientsRouteChildren = {
+  AdminClientsIdRoute: AdminClientsIdRoute,
+}
+
+const AdminClientsRouteWithChildren = AdminClientsRoute._addFileChildren(
+  AdminClientsRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminClientsRoute: typeof AdminClientsRouteWithChildren
+  AdminContratsRoute: typeof AdminContratsRoute
+  AdminEquipeRoute: typeof AdminEquipeRoute
+  AdminFacturationRoute: typeof AdminFacturationRoute
+  AdminInterventionsRoute: typeof AdminInterventionsRoute
+  AdminRendezVousRoute: typeof AdminRendezVousRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminClientsRoute: AdminClientsRouteWithChildren,
+  AdminContratsRoute: AdminContratsRoute,
+  AdminEquipeRoute: AdminEquipeRoute,
+  AdminFacturationRoute: AdminFacturationRoute,
+  AdminInterventionsRoute: AdminInterventionsRoute,
+  AdminRendezVousRoute: AdminRendezVousRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface ClientRouteChildren {
+  ClientDocumentsRoute: typeof ClientDocumentsRoute
+  ClientFacturesRoute: typeof ClientFacturesRoute
+  ClientFlotteRoute: typeof ClientFlotteRoute
+  ClientInterventionsRoute: typeof ClientInterventionsRoute
+  ClientRendezVousRoute: typeof ClientRendezVousRoute
+  ClientIndexRoute: typeof ClientIndexRoute
+}
+
+const ClientRouteChildren: ClientRouteChildren = {
+  ClientDocumentsRoute: ClientDocumentsRoute,
+  ClientFacturesRoute: ClientFacturesRoute,
+  ClientFlotteRoute: ClientFlotteRoute,
+  ClientInterventionsRoute: ClientInterventionsRoute,
+  ClientRendezVousRoute: ClientRendezVousRoute,
+  ClientIndexRoute: ClientIndexRoute,
+}
+
+const ClientRouteWithChildren =
+  ClientRoute._addFileChildren(ClientRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  ClientRoute: ClientRouteWithChildren,
+  LoginRoute: LoginRoute,
+  TerrainRoute: TerrainRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
