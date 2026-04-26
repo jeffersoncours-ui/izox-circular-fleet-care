@@ -58,8 +58,8 @@ function ClientHome() {
         <SummaryCard
           icon={Award}
           label="Palier"
-          value={palier ? palier : "—"}
-          sub={palier ? "tarifaire actif" : "Aucun contrat — Contactez IZOX"}
+          value={palier ? palier : "Aucun contrat"}
+          sub={palier ? "tarifaire actif" : "Contactez IZOX"}
           highlight={!palier}
         />
       </div>
