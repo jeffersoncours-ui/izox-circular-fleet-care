@@ -1,4 +1,3 @@
-import { createServerClient } from "@/integrations/supabase/client";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, createContext, useContext, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
