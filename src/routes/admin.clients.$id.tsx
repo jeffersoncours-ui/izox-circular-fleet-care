@@ -19,6 +19,7 @@ import {
 import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
+import { EditEntrepriseDialog } from "@/components/admin/EditEntrepriseDialog";
 
 export const Route = createFileRoute("/admin/clients/$id")({
   component: ClientDetailPage,
@@ -27,10 +28,15 @@ export const Route = createFileRoute("/admin/clients/$id")({
 interface Entreprise {
   id: string;
   nom: string;
+  siret: string | null;
+  adresse: string | null;
   ville: string | null;
+  code_postal: string | null;
   email_contact: string | null;
+  telephone: string | null;
   type_client: string;
   palier_remise: string;
+  commercial_id: string | null;
   compte_active: boolean;
 }
 
@@ -59,6 +65,7 @@ function ClientDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editEntrepriseOpen, setEditEntrepriseOpen] = useState(false);
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
@@ -71,19 +78,21 @@ function ClientDetailPage() {
     setLoadingVehicules(false);
   }, [id]);
 
+  const loadEntreprise = useCallback(async () => {
+    setLoadingEntreprise(true);
+    const { data } = await supabase
+      .from("entreprises")
+      .select("id, nom, siret, adresse, ville, code_postal, email_contact, telephone, type_client, palier_remise, commercial_id, compte_active")
+      .eq("id", id)
+      .maybeSingle();
+    setEntreprise((data as Entreprise) ?? null);
+    setLoadingEntreprise(false);
+  }, [id]);
+
   useEffect(() => {
-    (async () => {
-      setLoadingEntreprise(true);
-      const { data } = await supabase
-        .from("entreprises")
-        .select("id, nom, ville, email_contact, type_client, palier_remise, compte_active")
-        .eq("id", id)
-        .maybeSingle();
-      setEntreprise((data as Entreprise) ?? null);
-      setLoadingEntreprise(false);
-    })();
+    loadEntreprise();
     loadVehicules();
-  }, [id, loadVehicules]);
+  }, [loadEntreprise, loadVehicules]);
 
   const handleEdit = (v: Vehicule) => {
     setEditVehicule(v);
@@ -148,6 +157,9 @@ function ClientDetailPage() {
               <Row label="Ville" value={entreprise.ville} />
             </dl>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
+            <Pencil className="h-4 w-4" /> Modifier
+          </Button>
         </div>
       </Card>
 
@@ -229,6 +241,13 @@ function ClientDetailPage() {
           <ComingSoon />
         </TabsContent>
       </Tabs>
+
+      <EditEntrepriseDialog
+        open={editEntrepriseOpen}
+        onOpenChange={setEditEntrepriseOpen}
+        entreprise={entreprise}
+        onUpdated={loadEntreprise}
+      />
 
       <AddVehiculeDialog
         open={addOpen}
