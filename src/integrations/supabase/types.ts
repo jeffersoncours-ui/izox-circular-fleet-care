@@ -62,6 +62,134 @@ export type Database = {
         }
         Relationships: []
       }
+      intervention_photos: {
+        Row: {
+          created_at: string
+          id: string
+          intervention_id: string
+          moment: string
+          ordre: number
+          url: string
+          zone: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intervention_id: string
+          moment: string
+          ordre?: number
+          url: string
+          zone: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intervention_id?: string
+          moment?: string
+          ordre?: number
+          url?: string
+          zone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intervention_photos_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "interventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interventions: {
+        Row: {
+          checklist_exterieur: Json
+          checklist_interieur: Json
+          cles_documents_localisation: string | null
+          controle_cles_documents: boolean
+          controle_degradations: boolean
+          controle_objets_valeur: boolean
+          created_at: string
+          date_intervention: string | null
+          degradations_description: string | null
+          entreprise_id: string | null
+          id: string
+          motif_refus: string | null
+          notes_operateur: string | null
+          operateur_id: string | null
+          signature_url: string | null
+          statut: string
+          submitted_at: string | null
+          type_prestation: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          vehicule_id: string | null
+        }
+        Insert: {
+          checklist_exterieur?: Json
+          checklist_interieur?: Json
+          cles_documents_localisation?: string | null
+          controle_cles_documents?: boolean
+          controle_degradations?: boolean
+          controle_objets_valeur?: boolean
+          created_at?: string
+          date_intervention?: string | null
+          degradations_description?: string | null
+          entreprise_id?: string | null
+          id?: string
+          motif_refus?: string | null
+          notes_operateur?: string | null
+          operateur_id?: string | null
+          signature_url?: string | null
+          statut?: string
+          submitted_at?: string | null
+          type_prestation?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          vehicule_id?: string | null
+        }
+        Update: {
+          checklist_exterieur?: Json
+          checklist_interieur?: Json
+          cles_documents_localisation?: string | null
+          controle_cles_documents?: boolean
+          controle_degradations?: boolean
+          controle_objets_valeur?: boolean
+          created_at?: string
+          date_intervention?: string | null
+          degradations_description?: string | null
+          entreprise_id?: string | null
+          id?: string
+          motif_refus?: string | null
+          notes_operateur?: string | null
+          operateur_id?: string | null
+          signature_url?: string | null
+          statut?: string
+          submitted_at?: string | null
+          type_prestation?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          vehicule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interventions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
+            referencedRelation: "vehicules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
