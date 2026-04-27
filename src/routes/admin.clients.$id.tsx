@@ -65,6 +65,7 @@ function ClientDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editEntrepriseOpen, setEditEntrepriseOpen] = useState(false);
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
@@ -77,19 +78,21 @@ function ClientDetailPage() {
     setLoadingVehicules(false);
   }, [id]);
 
+  const loadEntreprise = useCallback(async () => {
+    setLoadingEntreprise(true);
+    const { data } = await supabase
+      .from("entreprises")
+      .select("id, nom, siret, adresse, ville, code_postal, email_contact, telephone, type_client, palier_remise, commercial_id, compte_active")
+      .eq("id", id)
+      .maybeSingle();
+    setEntreprise((data as Entreprise) ?? null);
+    setLoadingEntreprise(false);
+  }, [id]);
+
   useEffect(() => {
-    (async () => {
-      setLoadingEntreprise(true);
-      const { data } = await supabase
-        .from("entreprises")
-        .select("id, nom, ville, email_contact, type_client, palier_remise, compte_active")
-        .eq("id", id)
-        .maybeSingle();
-      setEntreprise((data as Entreprise) ?? null);
-      setLoadingEntreprise(false);
-    })();
+    loadEntreprise();
     loadVehicules();
-  }, [id, loadVehicules]);
+  }, [loadEntreprise, loadVehicules]);
 
   const handleEdit = (v: Vehicule) => {
     setEditVehicule(v);
