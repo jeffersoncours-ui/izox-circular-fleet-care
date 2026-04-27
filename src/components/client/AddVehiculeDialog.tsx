@@ -22,10 +22,12 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: () => void;
+  entrepriseId?: string;
 }
 
-export function AddVehiculeDialog({ open, onOpenChange, onCreated }: Props) {
+export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId }: Props) {
   const { profile } = useAuth();
+  const targetEntrepriseId = entrepriseId ?? profile?.entreprise_id ?? null;
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<VehiculeType | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
