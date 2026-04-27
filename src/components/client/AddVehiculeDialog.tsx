@@ -66,8 +66,8 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile?.entreprise_id) {
-      toast.error("Aucune entreprise associée à votre compte");
+    if (!targetEntrepriseId) {
+      toast.error("Aucune entreprise associée");
       return;
     }
     if (!type) {
