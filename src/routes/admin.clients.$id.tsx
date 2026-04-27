@@ -19,6 +19,7 @@ import {
 import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
+import { EditEntrepriseDialog } from "@/components/admin/EditEntrepriseDialog";
 
 export const Route = createFileRoute("/admin/clients/$id")({
   component: ClientDetailPage,
