@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Building2, Car, CalendarDays, Wrench } from "lucide-react";
 
-type AdminCardLink = "/admin/clients" | "/admin/rendez-vous" | "/admin/interventions";
+type AdminCardLink = "/admin/clients" | "/admin/vehicules" | "/admin/rendez-vous" | "/admin/interventions";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -37,7 +37,7 @@ function AdminDashboard() {
 
   const cards: { label: string; value: number; icon: typeof Building2; to: AdminCardLink }[] = [
     { label: "Clients", value: stats.clients, icon: Building2, to: "/admin/clients" },
-    { label: "Véhicules suivis", value: stats.vehicules, icon: Car, to: "/admin/clients" },
+    { label: "Véhicules suivis", value: stats.vehicules, icon: Car, to: "/admin/vehicules" },
     { label: "RDV à venir", value: stats.rdv, icon: CalendarDays, to: "/admin/rendez-vous" },
     { label: "Interventions du mois", value: stats.interventions, icon: Wrench, to: "/admin/interventions" },
   ];
