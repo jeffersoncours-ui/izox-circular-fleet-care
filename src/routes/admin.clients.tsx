@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -23,10 +23,15 @@ export const Route = createFileRoute("/admin/clients")({
 });
 
 function ClientsPage() {
+  const location = useLocation();
   const [list, setList] = useState<Entreprise[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+
+  if (location.pathname !== "/admin/clients") {
+    return <Outlet />;
+  }
 
   const load = async () => {
     setLoading(true);
