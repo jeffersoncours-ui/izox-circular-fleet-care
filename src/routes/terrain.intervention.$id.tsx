@@ -112,11 +112,13 @@ function InterventionStepper() {
       }
       setIntervention(int as unknown as InterventionRow);
 
-      const { data: veh } = await supabase
-        .from("vehicules")
-        .select("id, immatriculation, marque, modele, type_vehicule, entreprise_id")
-        .eq("id", int.vehicule_id)
-        .maybeSingle();
+      const { data: veh } = int.vehicule_id
+        ? await supabase
+            .from("vehicules")
+            .select("id, immatriculation, marque, modele, type_vehicule, entreprise_id")
+            .eq("id", int.vehicule_id)
+            .maybeSingle()
+        : { data: null };
       if (!cancelled) setVehicule(veh as VehiculeRow | null);
 
       // Load photos
@@ -702,7 +704,7 @@ function Step3({
 }: {
   intervention: InterventionRow;
   onChange: (p: Partial<InterventionRow>) => Promise<void>;
-  sigRef: React.RefObject<SignaturePadHandle>;
+  sigRef: React.RefObject<SignaturePadHandle | null>;
   onSignatureChange: (b: boolean) => void;
   readOnly: boolean;
   preControleOk: boolean;

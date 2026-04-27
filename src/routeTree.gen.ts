@@ -27,6 +27,7 @@ import { Route as AdminFacturationRouteImport } from './routes/admin.facturation
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
 import { Route as AdminContratsRouteImport } from './routes/admin.contrats'
 import { Route as AdminClientsRouteImport } from './routes/admin.clients'
+import { Route as TerrainInterventionIdRouteImport } from './routes/terrain.intervention.$id'
 import { Route as AdminClientsIdRouteImport } from './routes/admin.clients.$id'
 
 const TerrainRoute = TerrainRouteImport.update({
@@ -119,6 +120,11 @@ const AdminClientsRoute = AdminClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AdminRoute,
 } as any)
+const TerrainInterventionIdRoute = TerrainInterventionIdRouteImport.update({
+  id: '/intervention/$id',
+  path: '/intervention/$id',
+  getParentRoute: () => TerrainRoute,
+} as any)
 const AdminClientsIdRoute = AdminClientsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -130,7 +136,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
   '/login': typeof LoginRoute
-  '/terrain': typeof TerrainRoute
+  '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRoute
   '/admin/equipe': typeof AdminEquipeRoute
@@ -145,11 +151,12 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
+  '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/terrain': typeof TerrainRoute
+  '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRoute
   '/admin/equipe': typeof AdminEquipeRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
+  '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -171,7 +179,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
   '/login': typeof LoginRoute
-  '/terrain': typeof TerrainRoute
+  '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRoute
   '/admin/equipe': typeof AdminEquipeRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
+  '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -209,6 +218,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/client/'
     | '/admin/clients/$id'
+    | '/terrain/intervention/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/client'
     | '/admin/clients/$id'
+    | '/terrain/intervention/$id'
   id:
     | '__root__'
     | '/'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/client/'
     | '/admin/clients/$id'
+    | '/terrain/intervention/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -256,7 +268,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ClientRoute: typeof ClientRouteWithChildren
   LoginRoute: typeof LoginRoute
-  TerrainRoute: typeof TerrainRoute
+  TerrainRoute: typeof TerrainRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -387,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminClientsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/terrain/intervention/$id': {
+      id: '/terrain/intervention/$id'
+      path: '/intervention/$id'
+      fullPath: '/terrain/intervention/$id'
+      preLoaderRoute: typeof TerrainInterventionIdRouteImport
+      parentRoute: typeof TerrainRoute
+    }
     '/admin/clients/$id': {
       id: '/admin/clients/$id'
       path: '/$id'
@@ -452,12 +471,23 @@ const ClientRouteChildren: ClientRouteChildren = {
 const ClientRouteWithChildren =
   ClientRoute._addFileChildren(ClientRouteChildren)
 
+interface TerrainRouteChildren {
+  TerrainInterventionIdRoute: typeof TerrainInterventionIdRoute
+}
+
+const TerrainRouteChildren: TerrainRouteChildren = {
+  TerrainInterventionIdRoute: TerrainInterventionIdRoute,
+}
+
+const TerrainRouteWithChildren =
+  TerrainRoute._addFileChildren(TerrainRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   ClientRoute: ClientRouteWithChildren,
   LoginRoute: LoginRoute,
-  TerrainRoute: TerrainRoute,
+  TerrainRoute: TerrainRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
