@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, KeyRound, Car, Loader2, Copy } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ArrowLeft, KeyRound, Car, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 
 export const Route = createFileRoute("/admin/clients/$id")({
   component: ClientDetailPage,
