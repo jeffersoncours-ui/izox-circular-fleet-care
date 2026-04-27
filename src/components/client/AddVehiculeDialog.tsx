@@ -79,7 +79,7 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
       const { data: vehicule, error: vehErr } = await supabase
         .from("vehicules")
         .insert({
-          entreprise_id: profile.entreprise_id,
+          entreprise_id: targetEntrepriseId,
           immatriculation: form.immatriculation.toUpperCase().trim(),
           marque: form.marque || null,
           modele: form.modele || null,
