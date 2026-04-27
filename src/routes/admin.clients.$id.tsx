@@ -28,10 +28,15 @@ export const Route = createFileRoute("/admin/clients/$id")({
 interface Entreprise {
   id: string;
   nom: string;
+  siret: string | null;
+  adresse: string | null;
   ville: string | null;
+  code_postal: string | null;
   email_contact: string | null;
+  telephone: string | null;
   type_client: string;
   palier_remise: string;
+  commercial_id: string | null;
   compte_active: boolean;
 }
 
