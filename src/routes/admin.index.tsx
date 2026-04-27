@@ -1,9 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Building2, Car, CalendarDays, Wrench } from "lucide-react";
+
+type AdminCardLink = "/admin/clients" | "/admin/rendez-vous" | "/admin/interventions";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
