@@ -118,9 +118,11 @@ function ClientDetailPage() {
 
   return (
     <div className="p-6 lg:p-10 max-w-5xl mx-auto">
-      <Link to="/admin/clients" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Retour aux clients
-      </Link>
+      <Button asChild variant="outline" size="sm" className="mb-6">
+        <Link to="/admin/clients">
+          <ArrowLeft className="h-4 w-4" /> Retour à la liste
+        </Link>
+      </Button>
 
       <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
