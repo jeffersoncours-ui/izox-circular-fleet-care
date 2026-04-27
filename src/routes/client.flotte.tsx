@@ -90,27 +90,34 @@ function MaFlotte() {
             const label = getVehiculeLabel(v.type_vehicule);
             const url = photoUrls[v.id];
             return (
-              <Card key={v.id} className="overflow-hidden shadow-card border-border/60 group">
-                <div className="aspect-[16/10] bg-muted flex items-center justify-center text-muted-foreground/60 relative overflow-hidden">
-                  {url ? (
-                    <img src={url} alt={v.immatriculation} className="w-full h-full object-cover" />
-                  ) : (
-                    <Icon className="w-32 h-auto opacity-60" />
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-foreground truncate">
-                    {v.marque || v.modele ? `${v.marque ?? ""} ${v.modele ?? ""}`.trim() : "Véhicule"}
-                  </h3>
-                  <p className="font-mono text-sm text-primary mt-0.5">{v.immatriculation}</p>
-                  <div className="mt-3 flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">{label}</Badge>
-                    {v.statut !== "actif" && (
-                      <Badge variant="outline" className="text-xs capitalize">{v.statut.replace("_", " ")}</Badge>
+              <Link
+                key={v.id}
+                to="/client/flotte/$id"
+                params={{ id: v.id }}
+                className="block"
+              >
+                <Card className="overflow-hidden shadow-card border-border/60 group cursor-pointer transition-all duration-150 ease-out hover:shadow-strong hover:border-primary/30">
+                  <div className="aspect-[16/10] bg-muted flex items-center justify-center text-muted-foreground/60 relative overflow-hidden">
+                    {url ? (
+                      <img src={url} alt={v.immatriculation} className="w-full h-full object-cover" />
+                    ) : (
+                      <Icon className="w-32 h-auto opacity-60" />
                     )}
                   </div>
-                </div>
-              </Card>
+                  <div className="p-4">
+                    <h3 className="font-bold text-foreground truncate">
+                      {v.marque || v.modele ? `${v.marque ?? ""} ${v.modele ?? ""}`.trim() : "Véhicule"}
+                    </h3>
+                    <p className="font-mono text-sm text-primary mt-0.5">{v.immatriculation}</p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">{label}</Badge>
+                      {v.statut !== "actif" && (
+                        <Badge variant="outline" className="text-xs capitalize">{v.statut.replace("_", " ")}</Badge>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </Link>
             );
           })}
         </div>
