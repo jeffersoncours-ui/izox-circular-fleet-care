@@ -22,10 +22,12 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: () => void;
+  entrepriseId?: string;
 }
 
-export function AddVehiculeDialog({ open, onOpenChange, onCreated }: Props) {
+export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId }: Props) {
   const { profile } = useAuth();
+  const targetEntrepriseId = entrepriseId ?? profile?.entreprise_id ?? null;
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<VehiculeType | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -64,8 +66,8 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated }: Props) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile?.entreprise_id) {
-      toast.error("Aucune entreprise associée à votre compte");
+    if (!targetEntrepriseId) {
+      toast.error("Aucune entreprise associée");
       return;
     }
     if (!type) {
@@ -77,7 +79,7 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated }: Props) {
       const { data: vehicule, error: vehErr } = await supabase
         .from("vehicules")
         .insert({
-          entreprise_id: profile.entreprise_id,
+          entreprise_id: targetEntrepriseId,
           immatriculation: form.immatriculation.toUpperCase().trim(),
           marque: form.marque || null,
           modele: form.modele || null,
@@ -94,7 +96,7 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated }: Props) {
       // Upload photo if any
       if (photo && vehicule) {
         const compressed = await compressImage(photo, { maxSize: 1200, quality: 0.85 });
-        const path = `${profile.entreprise_id}/${vehicule.id}/photo.jpg`;
+        const path = `${targetEntrepriseId}/${vehicule.id}/photo.jpg`;
         const { error: upErr } = await supabase.storage
           .from("vehicules")
           .upload(path, compressed, { upsert: true, contentType: "image/jpeg" });
