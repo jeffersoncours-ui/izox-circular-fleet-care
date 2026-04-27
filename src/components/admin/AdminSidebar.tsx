@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth-context";
 import {
   LayoutDashboard,
   Building2,
+  Car,
   FileText,
   CalendarDays,
   Wrench,
@@ -26,6 +27,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/admin/clients", label: "Clients", icon: Building2 },
+  { to: "/admin/vehicules", label: "Véhicules", icon: Car },
   { to: "/admin/contrats", label: "Contrats", icon: FileText },
   { to: "/admin/rendez-vous", label: "Rendez-vous", icon: CalendarDays },
   { to: "/admin/interventions", label: "Interventions", icon: Wrench },
