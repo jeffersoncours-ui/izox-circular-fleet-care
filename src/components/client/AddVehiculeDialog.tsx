@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,16 +18,31 @@ import { useAuth } from "@/lib/auth-context";
 import { compressImage } from "@/lib/image";
 import { toast } from "sonner";
 
+interface VehiculeData {
+  id: string;
+  immatriculation: string;
+  marque: string | null;
+  modele: string | null;
+  type_vehicule: string | null;
+  annee: number | null;
+  couleur: string | null;
+  kilometrage: number | null;
+  notes: string | null;
+  photo_path: string | null;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: () => void;
   entrepriseId?: string;
+  vehicule?: VehiculeData | null;
 }
 
-export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId }: Props) {
+export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId, vehicule }: Props) {
   const { profile } = useAuth();
   const targetEntrepriseId = entrepriseId ?? profile?.entreprise_id ?? null;
+  const isEdit = !!vehicule;
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<VehiculeType | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -42,6 +57,21 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
     kilometrage: "",
     notes: "",
   });
+
+  useEffect(() => {
+    if (open && vehicule) {
+      setForm({
+        marque: vehicule.marque ?? "",
+        modele: vehicule.modele ?? "",
+        immatriculation: vehicule.immatriculation ?? "",
+        annee: vehicule.annee != null ? String(vehicule.annee) : "",
+        couleur: vehicule.couleur ?? "",
+        kilometrage: vehicule.kilometrage != null ? String(vehicule.kilometrage) : "",
+        notes: vehicule.notes ?? "",
+      });
+      setType((vehicule.type_vehicule as VehiculeType) ?? null);
+    }
+  }, [open, vehicule]);
 
   const reset = () => {
     setForm({ marque: "", modele: "", immatriculation: "", annee: "", couleur: "", kilometrage: "", notes: "" });
@@ -66,7 +96,7 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!targetEntrepriseId) {
+    if (!targetEntrepriseId && !isEdit) {
       toast.error("Aucune entreprise associée");
       return;
     }
@@ -76,35 +106,51 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
     }
     setSubmitting(true);
     try {
-      const { data: vehicule, error: vehErr } = await supabase
-        .from("vehicules")
-        .insert({
-          entreprise_id: targetEntrepriseId,
-          immatriculation: form.immatriculation.toUpperCase().trim(),
-          marque: form.marque || null,
-          modele: form.modele || null,
-          annee: form.annee ? parseInt(form.annee, 10) : null,
-          couleur: form.couleur || null,
-          kilometrage: form.kilometrage ? parseInt(form.kilometrage, 10) : null,
-          notes: form.notes || null,
-          type_vehicule: type,
-        })
-        .select("id")
-        .single();
-      if (vehErr) throw vehErr;
+      const payload = {
+        immatriculation: form.immatriculation.toUpperCase().trim(),
+        marque: form.marque || null,
+        modele: form.modele || null,
+        annee: form.annee ? parseInt(form.annee.replace(/\D/g, ""), 10) || null : null,
+        couleur: form.couleur || null,
+        kilometrage: form.kilometrage ? parseInt(form.kilometrage.replace(/\D/g, ""), 10) || null : null,
+        notes: form.notes || null,
+        type_vehicule: type,
+      };
 
-      // Upload photo if any
-      if (photo && vehicule) {
+      let vehiculeId = vehicule?.id;
+      let entrepriseForPath = targetEntrepriseId;
+
+      if (isEdit && vehicule) {
+        const { error: updErr } = await supabase
+          .from("vehicules")
+          .update(payload)
+          .eq("id", vehicule.id);
+        if (updErr) throw updErr;
+      } else {
+        const { data: created, error: vehErr } = await supabase
+          .from("vehicules")
+          .insert({
+            ...payload,
+            entreprise_id: targetEntrepriseId!,
+          })
+          .select("id, entreprise_id")
+          .single();
+        if (vehErr) throw vehErr;
+        vehiculeId = created.id;
+        entrepriseForPath = created.entreprise_id;
+      }
+
+      if (photo && vehiculeId && entrepriseForPath) {
         const compressed = await compressImage(photo, { maxSize: 1200, quality: 0.85 });
-        const path = `${targetEntrepriseId}/${vehicule.id}/photo.jpg`;
+        const path = `${entrepriseForPath}/${vehiculeId}/photo.jpg`;
         const { error: upErr } = await supabase.storage
           .from("vehicules")
           .upload(path, compressed, { upsert: true, contentType: "image/jpeg" });
         if (upErr) throw upErr;
-        await supabase.from("vehicules").update({ photo_path: path }).eq("id", vehicule.id);
+        await supabase.from("vehicules").update({ photo_path: path }).eq("id", vehiculeId);
       }
 
-      toast.success("Véhicule ajouté");
+      toast.success(isEdit ? "Véhicule mis à jour" : "Véhicule ajouté");
       onCreated?.();
       onOpenChange(false);
       setTimeout(reset, 200);
@@ -129,7 +175,7 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
     >
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Ajouter un véhicule</DialogTitle>
+          <DialogTitle>{isEdit ? "Modifier le véhicule" : "Ajouter un véhicule"}</DialogTitle>
           <DialogDescription>
             Renseignez les informations principales de votre véhicule.
           </DialogDescription>
@@ -165,9 +211,22 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
             <Field label="Marque" value={form.marque} onChange={(v) => setForm({ ...form, marque: v })} />
             <Field label="Modèle" value={form.modele} onChange={(v) => setForm({ ...form, modele: v })} />
             <Field label="Immatriculation *" required value={form.immatriculation} onChange={(v) => setForm({ ...form, immatriculation: v })} className="col-span-2" />
-            <Field label="Année" type="number" value={form.annee} onChange={(v) => setForm({ ...form, annee: v })} />
+            <Field
+              label="Année"
+              value={form.annee}
+              onChange={(v) => setForm({ ...form, annee: v.replace(/\D/g, "").slice(0, 4) })}
+              inputMode="numeric"
+              pattern="[0-9]*"
+            />
             <Field label="Couleur" value={form.couleur} onChange={(v) => setForm({ ...form, couleur: v })} />
-            <Field label="Kilométrage" type="number" value={form.kilometrage} onChange={(v) => setForm({ ...form, kilometrage: v })} className="col-span-2" />
+            <Field
+              label="Kilométrage"
+              value={form.kilometrage}
+              onChange={(v) => setForm({ ...form, kilometrage: v.replace(/\D/g, "") })}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className="col-span-2"
+            />
           </div>
 
           <div>
@@ -192,7 +251,7 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
                 className="mt-2 w-full border-2 border-dashed border-border hover:border-primary/50 rounded-lg p-6 flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
               >
                 <Upload className="h-6 w-6" />
-                <span className="text-sm">Ajouter une photo</span>
+                <span className="text-sm">{isEdit ? "Remplacer la photo" : "Ajouter une photo"}</span>
               </button>
             )}
             <input
@@ -220,7 +279,7 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
               Annuler
             </Button>
             <Button type="submit" variant="izox" disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Ajouter"}
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : isEdit ? "Enregistrer" : "Ajouter"}
             </Button>
           </div>
         </form>
@@ -236,6 +295,8 @@ function Field({
   type = "text",
   required,
   className,
+  inputMode,
+  pattern,
 }: {
   label: string;
   value: string;
@@ -243,11 +304,20 @@ function Field({
   type?: string;
   required?: boolean;
   className?: string;
+  inputMode?: "numeric" | "text" | "tel" | "search" | "email" | "url" | "decimal" | "none";
+  pattern?: string;
 }) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label>{label}</Label>
-      <Input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)} />
+      <Input
+        type={type}
+        required={required}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        inputMode={inputMode}
+        pattern={pattern}
+      />
     </div>
   );
 }

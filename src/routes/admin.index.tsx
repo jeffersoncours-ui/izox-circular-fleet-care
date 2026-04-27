@@ -1,9 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Building2, Car, CalendarDays, Wrench } from "lucide-react";
+
+type AdminCardLink = "/admin/clients" | "/admin/rendez-vous" | "/admin/interventions";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -33,11 +35,11 @@ function AdminDashboard() {
     })();
   }, []);
 
-  const cards = [
-    { label: "Clients", value: stats.clients, icon: Building2 },
-    { label: "Véhicules suivis", value: stats.vehicules, icon: Car },
-    { label: "RDV à venir", value: stats.rdv, icon: CalendarDays },
-    { label: "Interventions du mois", value: stats.interventions, icon: Wrench },
+  const cards: { label: string; value: number; icon: typeof Building2; to: AdminCardLink }[] = [
+    { label: "Clients", value: stats.clients, icon: Building2, to: "/admin/clients" },
+    { label: "Véhicules suivis", value: stats.vehicules, icon: Car, to: "/admin/clients" },
+    { label: "RDV à venir", value: stats.rdv, icon: CalendarDays, to: "/admin/rendez-vous" },
+    { label: "Interventions du mois", value: stats.interventions, icon: Wrench, to: "/admin/interventions" },
   ];
 
   return (
@@ -50,20 +52,22 @@ function AdminDashboard() {
       </header>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map(({ label, value, icon: Icon }) => (
-          <Card key={label} className="p-5 shadow-card border-border/60">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
-                  {label}
-                </p>
-                <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
+        {cards.map(({ label, value, icon: Icon, to }) => (
+          <Link key={label} to={to} className="block">
+            <Card className="p-5 shadow-card border-border/60 cursor-pointer transition-all duration-150 ease-out hover:bg-muted/40 hover:shadow-strong hover:border-primary/30">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                    {label}
+                  </p>
+                  <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
+                </div>
+                <div className="h-10 w-10 rounded-lg bg-primary-soft flex items-center justify-center text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
               </div>
-              <div className="h-10 w-10 rounded-lg bg-primary-soft flex items-center justify-center text-primary">
-                <Icon className="h-5 w-5" />
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
         ))}
       </div>
 
