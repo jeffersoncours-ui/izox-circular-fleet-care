@@ -51,6 +51,15 @@ function ClientDetailPage() {
   const [users, setUsers] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+
+  const loadVehicules = useCallback(async () => {
+    const { data } = await supabase
+      .from("vehicules")
+      .select("id, immatriculation, marque, modele, type_vehicule, statut")
+      .eq("entreprise_id", id);
+    setVehicules((data as Vehicule[]) ?? []);
+  }, [id]);
 
   useEffect(() => {
     (async () => {
