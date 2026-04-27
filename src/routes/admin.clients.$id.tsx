@@ -242,6 +242,13 @@ function ClientDetailPage() {
         </TabsContent>
       </Tabs>
 
+      <EditEntrepriseDialog
+        open={editEntrepriseOpen}
+        onOpenChange={setEditEntrepriseOpen}
+        entreprise={entreprise}
+        onUpdated={loadEntreprise}
+      />
+
       <AddVehiculeDialog
         open={addOpen}
         onOpenChange={setAddOpen}
