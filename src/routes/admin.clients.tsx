@@ -29,10 +29,6 @@ function ClientsPage() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
 
-  if (location.pathname !== "/admin/clients") {
-    return <Outlet />;
-  }
-
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
@@ -52,6 +48,10 @@ function ClientsPage() {
       e.nom.toLowerCase().includes(search.toLowerCase()) ||
       (e.ville ?? "").toLowerCase().includes(search.toLowerCase())
   );
+
+  if (location.pathname !== "/admin/clients") {
+    return <Outlet />;
+  }
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto">
