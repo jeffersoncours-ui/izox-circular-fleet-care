@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/admin/clients")({
 });
 
 function ClientsPage() {
+  const location = useLocation();
   const [list, setList] = useState<Entreprise[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -47,6 +48,10 @@ function ClientsPage() {
       e.nom.toLowerCase().includes(search.toLowerCase()) ||
       (e.ville ?? "").toLowerCase().includes(search.toLowerCase())
   );
+
+  if (location.pathname !== "/admin/clients") {
+    return <Outlet />;
+  }
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto">
