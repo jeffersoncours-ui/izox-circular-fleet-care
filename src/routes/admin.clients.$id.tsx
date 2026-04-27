@@ -157,6 +157,9 @@ function ClientDetailPage() {
               <Row label="Ville" value={entreprise.ville} />
             </dl>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
+            <Pencil className="h-4 w-4" /> Modifier
+          </Button>
         </div>
       </Card>
 
