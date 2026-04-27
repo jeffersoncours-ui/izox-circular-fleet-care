@@ -5,9 +5,19 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, KeyRound, Car, Loader2, Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth-context";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 
 export const Route = createFileRoute("/admin/clients/$id")({
@@ -17,12 +27,8 @@ export const Route = createFileRoute("/admin/clients/$id")({
 interface Entreprise {
   id: string;
   nom: string;
-  siret: string | null;
-  adresse: string | null;
   ville: string | null;
-  code_postal: string | null;
   email_contact: string | null;
-  telephone: string | null;
   type_client: string;
   palier_remise: string;
   compte_active: boolean;
@@ -34,75 +40,73 @@ interface Vehicule {
   marque: string | null;
   modele: string | null;
   type_vehicule: string | null;
+  annee: number | null;
+  couleur: string | null;
+  kilometrage: number | null;
+  notes: string | null;
+  photo_path: string | null;
   statut: string;
-}
-
-interface ProfileRow {
-  id: string;
-  prenom: string | null;
-  nom: string | null;
 }
 
 function ClientDetailPage() {
   const { id } = useParams({ from: "/admin/clients/$id" });
-  const { profile } = useAuth();
   const [entreprise, setEntreprise] = useState<Entreprise | null>(null);
   const [vehicules, setVehicules] = useState<Vehicule[]>([]);
-  const [users, setUsers] = useState<ProfileRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [resetting, setResetting] = useState<string | null>(null);
+  const [loadingEntreprise, setLoadingEntreprise] = useState(true);
+  const [loadingVehicules, setLoadingVehicules] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+  const [editVehicule, setEditVehicule] = useState<Vehicule | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadVehicules = useCallback(async () => {
+    setLoadingVehicules(true);
     const { data } = await supabase
       .from("vehicules")
-      .select("id, immatriculation, marque, modele, type_vehicule, statut")
-      .eq("entreprise_id", id);
+      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, photo_path, statut")
+      .eq("entreprise_id", id)
+      .order("created_at", { ascending: false });
     setVehicules((data as Vehicule[]) ?? []);
+    setLoadingVehicules(false);
   }, [id]);
 
   useEffect(() => {
     (async () => {
-      const [e, v, p] = await Promise.all([
-        supabase.from("entreprises").select("*").eq("id", id).maybeSingle(),
-        supabase.from("vehicules").select("id, immatriculation, marque, modele, type_vehicule, statut").eq("entreprise_id", id),
-        supabase.from("profiles").select("id, prenom, nom").eq("entreprise_id", id),
-      ]);
-      setEntreprise((e.data as Entreprise) ?? null);
-      setVehicules((v.data as Vehicule[]) ?? []);
-      setUsers((p.data as ProfileRow[]) ?? []);
-      setLoading(false);
+      setLoadingEntreprise(true);
+      const { data } = await supabase
+        .from("entreprises")
+        .select("id, nom, ville, email_contact, type_client, palier_remise, compte_active")
+        .eq("id", id)
+        .maybeSingle();
+      setEntreprise((data as Entreprise) ?? null);
+      setLoadingEntreprise(false);
     })();
-  }, [id]);
+    loadVehicules();
+  }, [id, loadVehicules]);
 
-  const resetPassword = async (userId: string, prenom: string | null) => {
-    setResetting(userId);
+  const handleEdit = (v: Vehicule) => {
+    setEditVehicule(v);
+    setEditOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      // Need email — fetch from auth via admin function. We'll use email_contact as fallback.
-      // Actually we need the user's email; we'll look it up via a small SQL trick: not possible from client.
-      // For now we ask admin function with the email_contact of entreprise OR each user must have email.
-      // Better: store email in profiles? we don't. So use entreprise.email_contact if matches first user.
-      // Simplest: use the listUsers call from admin function. Adjust function to accept user_id.
-      const email = prompt(`Email du compte ${prenom ?? ""} :`);
-      if (!email) return;
-
-      const { data, error } = await supabase.functions.invoke("admin-reset-password", {
-        body: { email, redirect_to: `${window.location.origin}/login` },
-      });
+      const { error } = await supabase.from("vehicules").delete().eq("id", deleteTarget.id);
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.link) {
-        await navigator.clipboard.writeText(data.link);
-        toast.success("Lien de réinitialisation copié");
-      }
+      toast.success("Véhicule supprimé");
+      setDeleteTarget(null);
+      loadVehicules();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erreur");
     } finally {
-      setResetting(null);
+      setDeleting(false);
     }
   };
 
-  if (loading) {
+  if (loadingEntreprise) {
     return (
       <div className="p-10 flex justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -111,10 +115,17 @@ function ClientDetailPage() {
   }
 
   if (!entreprise) {
-    return <div className="p-10 text-muted-foreground">Client introuvable.</div>;
+    return (
+      <div className="p-6 lg:p-10 max-w-5xl mx-auto">
+        <Button asChild variant="outline" size="sm" className="mb-6">
+          <Link to="/admin/clients">
+            <ArrowLeft className="h-4 w-4" /> Retour à la liste
+          </Link>
+        </Button>
+        <p className="text-muted-foreground">Client introuvable.</p>
+      </div>
+    );
   }
-
-  const isAdmin = profile?.role === "admin";
 
   return (
     <div className="p-6 lg:p-10 max-w-5xl mx-auto">
@@ -124,98 +135,98 @@ function ClientDetailPage() {
         </Link>
       </Button>
 
-      <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{entreprise.nom}</h1>
-          <div className="flex items-center gap-2 mt-2">
-            <Badge variant="secondary" className="capitalize">{entreprise.type_client}</Badge>
-            <Badge variant="outline" className="capitalize">Palier {entreprise.palier_remise}</Badge>
-            {!entreprise.compte_active && <Badge variant="destructive">Désactivé</Badge>}
+      <Card className="p-6 shadow-card border-border/60 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">{entreprise.nom}</h1>
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <Badge variant="secondary" className="capitalize">{entreprise.type_client}</Badge>
+              {!entreprise.compte_active && <Badge variant="destructive">Désactivé</Badge>}
+            </div>
+            <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <Row label="Email" value={entreprise.email_contact} />
+              <Row label="Ville" value={entreprise.ville} />
+            </dl>
           </div>
         </div>
-      </header>
+      </Card>
 
-      <Tabs defaultValue="infos" className="w-full">
-        <TabsList>
-          <TabsTrigger value="infos">Informations</TabsTrigger>
-          <TabsTrigger value="vehicules">Véhicules ({vehicules.length})</TabsTrigger>
+      <Tabs defaultValue="vehicules" className="w-full">
+        <TabsList className="h-auto flex-wrap">
+          <TabsTrigger value="vehicules">Véhicules</TabsTrigger>
+          <TabsTrigger value="contrats">Contrats</TabsTrigger>
+          <TabsTrigger value="factures">Factures</TabsTrigger>
+          <TabsTrigger value="interventions">Interventions</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="infos" className="mt-6">
-          <div className="grid lg:grid-cols-2 gap-6">
-            <Card className="p-6 shadow-card border-border/60">
-              <h2 className="font-semibold text-foreground mb-4">Coordonnées</h2>
-              <dl className="space-y-2 text-sm">
-                <Row label="SIRET" value={entreprise.siret} />
-                <Row label="Adresse" value={entreprise.adresse} />
-                <Row label="Ville" value={[entreprise.code_postal, entreprise.ville].filter(Boolean).join(" ")} />
-                <Row label="Email" value={entreprise.email_contact} />
-                <Row label="Téléphone" value={entreprise.telephone} />
-              </dl>
-            </Card>
-
-            <Card className="p-6 shadow-card border-border/60">
-              <h2 className="font-semibold text-foreground mb-4">Comptes utilisateurs</h2>
-              {users.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucun utilisateur lié.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {users.map((u) => (
-                    <li key={u.id} className="flex items-center justify-between gap-2 p-3 bg-muted rounded-md">
-                      <div>
-                        <p className="font-medium text-sm">{u.prenom} {u.nom}</p>
-                      </div>
-                      {isAdmin && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => resetPassword(u.id, u.prenom)}
-                          disabled={resetting === u.id}
-                        >
-                          {resetting === u.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <KeyRound className="h-3 w-3" />
-                          )}
-                          Réinitialiser
-                        </Button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
-          </div>
-        </TabsContent>
 
         <TabsContent value="vehicules" className="mt-6">
           <Card className="p-6 shadow-card border-border/60">
             <div className="flex items-center justify-between mb-4 gap-2">
-              <h2 className="font-semibold text-foreground">Flotte ({vehicules.length})</h2>
+              <h2 className="font-semibold text-foreground">
+                Flotte {!loadingVehicules && `(${vehicules.length})`}
+              </h2>
               <Button variant="izox" size="sm" onClick={() => setAddOpen(true)}>
                 <Plus className="h-4 w-4" />
                 Ajouter un véhicule
               </Button>
             </div>
-            {vehicules.length === 0 ? (
+
+            {loadingVehicules ? (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[0, 1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : vehicules.length === 0 ? (
               <p className="text-sm text-muted-foreground">Aucun véhicule enregistré.</p>
             ) : (
               <div className="grid sm:grid-cols-2 gap-3">
                 {vehicules.map((v) => (
                   <div key={v.id} className="flex items-center gap-3 p-3 bg-muted rounded-md">
-                    <div className="h-10 w-10 rounded-md bg-primary-soft text-primary flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-md bg-primary-soft text-primary flex items-center justify-center shrink-0">
                       <Car className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">{v.marque} {v.modele}</p>
+                      <p className="font-medium text-sm truncate">
+                        {[v.marque, v.modele].filter(Boolean).join(" ") || "Véhicule"}
+                      </p>
                       <p className="font-mono text-xs text-primary">{v.immatriculation}</p>
                     </div>
-                    <Badge variant="outline" className="capitalize text-xs">{v.statut}</Badge>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => handleEdit(v)}
+                        aria-label="Modifier"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => setDeleteTarget(v)}
+                        aria-label="Supprimer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </Card>
+        </TabsContent>
+
+        <TabsContent value="contrats" className="mt-6">
+          <ComingSoon />
+        </TabsContent>
+        <TabsContent value="factures" className="mt-6">
+          <ComingSoon />
+        </TabsContent>
+        <TabsContent value="interventions" className="mt-6">
+          <ComingSoon />
         </TabsContent>
       </Tabs>
 
@@ -225,15 +236,58 @@ function ClientDetailPage() {
         onCreated={loadVehicules}
         entrepriseId={id}
       />
+
+      <AddVehiculeDialog
+        open={editOpen}
+        onOpenChange={(o) => {
+          setEditOpen(o);
+          if (!o) setEditVehicule(null);
+        }}
+        onCreated={loadVehicules}
+        entrepriseId={id}
+        vehicule={editVehicule}
+      />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce véhicule ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le véhicule {deleteTarget?.immatriculation} sera définitivement supprimé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+  );
+}
+
+function ComingSoon() {
+  return (
+    <Card className="p-12 text-center shadow-card border-border/60">
+      <p className="text-muted-foreground">Bientôt disponible</p>
+    </Card>
   );
 }
 
 function Row({ label, value }: { label: string; value: string | null | undefined }) {
   return (
-    <div className="flex justify-between gap-4">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-foreground text-right">{value || "—"}</dd>
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-muted-foreground font-medium">{label}</dt>
+      <dd className="text-foreground mt-0.5">{value || "—"}</dd>
     </div>
   );
 }
