@@ -91,9 +91,9 @@ function ClientsPage() {
               key={e.id}
               to="/admin/clients/$id"
               params={{ id: e.id }}
-              className="block"
+              className="block cursor-pointer"
             >
-              <Card className="p-5 hover:shadow-strong hover:border-primary/30 transition-all shadow-card border-border/60">
+              <Card className="p-5 cursor-pointer transition-all duration-150 ease-out hover:bg-muted/40 hover:shadow-strong hover:border-primary/30 shadow-card border-border/60">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="h-12 w-12 rounded-lg bg-primary-soft text-primary flex items-center justify-center shrink-0">
