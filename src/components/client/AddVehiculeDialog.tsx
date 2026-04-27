@@ -96,7 +96,7 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId 
       // Upload photo if any
       if (photo && vehicule) {
         const compressed = await compressImage(photo, { maxSize: 1200, quality: 0.85 });
-        const path = `${profile.entreprise_id}/${vehicule.id}/photo.jpg`;
+        const path = `${targetEntrepriseId}/${vehicule.id}/photo.jpg`;
         const { error: upErr } = await supabase.storage
           .from("vehicules")
           .upload(path, compressed, { upsert: true, contentType: "image/jpeg" });
