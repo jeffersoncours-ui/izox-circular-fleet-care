@@ -14,6 +14,227 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_actions_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          nb_entites_impactees: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          nb_entites_impactees?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          nb_entites_impactees?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      contrat_avenants: {
+        Row: {
+          contrat_id: string
+          date_generation: string
+          genere_par: string | null
+          id: string
+          type: string
+          url: string
+        }
+        Insert: {
+          contrat_id: string
+          date_generation?: string
+          genere_par?: string | null
+          id?: string
+          type?: string
+          url: string
+        }
+        Update: {
+          contrat_id?: string
+          date_generation?: string
+          genere_par?: string | null
+          id?: string
+          type?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contrat_lignes: {
+        Row: {
+          contrat_id: string
+          created_at: string
+          id: string
+          nb_vehicules: number
+          prix_unitaire_ht: number
+          statut_ligne: string
+          type_pack: string
+        }
+        Insert: {
+          contrat_id: string
+          created_at?: string
+          id?: string
+          nb_vehicules?: number
+          prix_unitaire_ht: number
+          statut_ligne?: string
+          type_pack: string
+        }
+        Update: {
+          contrat_id?: string
+          created_at?: string
+          id?: string
+          nb_vehicules?: number
+          prix_unitaire_ht?: number
+          statut_ligne?: string
+          type_pack?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contrats: {
+        Row: {
+          created_at: string
+          date_anniversaire: string | null
+          date_debut: string
+          date_fin: string | null
+          engagement_annuel: boolean
+          entreprise_id: string
+          gel_actif: boolean
+          gel_date_debut: string | null
+          gel_date_fin: string | null
+          gel_justificatif_url: string | null
+          gel_type: Database["public"]["Enums"]["gel_type_enum"] | null
+          id: string
+          mode_paiement: Database["public"]["Enums"]["mode_paiement_enum"]
+          numero_contrat: string | null
+          passages_mois: number
+          passages_reportes: number
+          passages_restants_mois: number
+          statut: Database["public"]["Enums"]["contrat_statut_enum"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_anniversaire?: string | null
+          date_debut?: string
+          date_fin?: string | null
+          engagement_annuel?: boolean
+          entreprise_id: string
+          gel_actif?: boolean
+          gel_date_debut?: string | null
+          gel_date_fin?: string | null
+          gel_justificatif_url?: string | null
+          gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
+          id?: string
+          mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          numero_contrat?: string | null
+          passages_mois?: number
+          passages_reportes?: number
+          passages_restants_mois?: number
+          statut?: Database["public"]["Enums"]["contrat_statut_enum"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_anniversaire?: string | null
+          date_debut?: string
+          date_fin?: string | null
+          engagement_annuel?: boolean
+          entreprise_id?: string
+          gel_actif?: boolean
+          gel_date_debut?: string | null
+          gel_date_fin?: string | null
+          gel_justificatif_url?: string | null
+          gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
+          id?: string
+          mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          numero_contrat?: string | null
+          passages_mois?: number
+          passages_reportes?: number
+          passages_restants_mois?: number
+          statut?: Database["public"]["Enums"]["contrat_statut_enum"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demandes_rdv: {
+        Row: {
+          commentaires: string | null
+          created_at: string
+          creneaux_preferes: Json
+          derogation_min_vehicules: boolean
+          derogation_motif: string | null
+          entreprise_id: string
+          id: string
+          nb_vehicules_rdv: number
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          commentaires?: string | null
+          created_at?: string
+          creneaux_preferes?: Json
+          derogation_min_vehicules?: boolean
+          derogation_motif?: string | null
+          entreprise_id: string
+          id?: string
+          nb_vehicules_rdv?: number
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          commentaires?: string | null
+          created_at?: string
+          creneaux_preferes?: Json
+          derogation_min_vehicules?: boolean
+          derogation_motif?: string | null
+          entreprise_id?: string
+          id?: string
+          nb_vehicules_rdv?: number
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandes_rdv_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entreprises: {
         Row: {
           adresse: string | null
@@ -190,6 +411,99 @@ export type Database = {
           },
         ]
       }
+      parrainages: {
+        Row: {
+          code_parrainage: string
+          date_parrainage: string
+          date_premiere_mensualite: string | null
+          filleul_id: string | null
+          id: string
+          parrain_id: string
+          recompense_filleul_appliquee: boolean
+          recompense_parrain_appliquee: boolean
+          statut: string
+        }
+        Insert: {
+          code_parrainage: string
+          date_parrainage?: string
+          date_premiere_mensualite?: string | null
+          filleul_id?: string | null
+          id?: string
+          parrain_id: string
+          recompense_filleul_appliquee?: boolean
+          recompense_parrain_appliquee?: boolean
+          statut?: string
+        }
+        Update: {
+          code_parrainage?: string
+          date_parrainage?: string
+          date_premiere_mensualite?: string | null
+          filleul_id?: string | null
+          id?: string
+          parrain_id?: string
+          recompense_filleul_appliquee?: boolean
+          recompense_parrain_appliquee?: boolean
+          statut?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parrainages_filleul_id_fkey"
+            columns: ["filleul_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parrainages_parrain_id_fkey"
+            columns: ["parrain_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prestations_catalogue: {
+        Row: {
+          code: string
+          created_at: string
+          duree_minutes: number | null
+          est_abonnement: boolean
+          est_one_shot: boolean
+          id: string
+          nom: string
+          passages_mois: number | null
+          prix_ht: number
+          type_prestation: Database["public"]["Enums"]["type_prestation_enum"]
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          duree_minutes?: number | null
+          est_abonnement?: boolean
+          est_one_shot?: boolean
+          id?: string
+          nom: string
+          passages_mois?: number | null
+          prix_ht: number
+          type_prestation: Database["public"]["Enums"]["type_prestation_enum"]
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          duree_minutes?: number | null
+          est_abonnement?: boolean
+          est_one_shot?: boolean
+          id?: string
+          nom?: string
+          passages_mois?: number | null
+          prix_ht?: number
+          type_prestation?: Database["public"]["Enums"]["type_prestation_enum"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -325,6 +639,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "staff" | "commercial" | "operateur" | "client"
+      contrat_statut_enum: "actif" | "suspendu" | "resilie" | "en_cours_gel"
+      gel_type_enum: "programme" | "sinistre"
+      mode_paiement_enum: "sepa" | "virement" | "stripe"
       palier_remise: "starter" | "pro" | "business" | "premium"
       statut_vehicule:
         | "actif"
@@ -332,6 +649,16 @@ export type Database = {
         | "remplace"
         | "archive"
       type_client: "flotte" | "concession" | "vtc" | "autre"
+      type_prestation_enum:
+        | "pack_interieur"
+        | "pack_standard"
+        | "pack_vtc"
+        | "concession_one_shot"
+        | "fin_de_bail_one_shot"
+        | "supplement_poils"
+        | "supplement_coffre"
+        | "supplement_ozone"
+        | "supplement_puzzi"
       type_vehicule: "citadine" | "berline" | "suv_break" | "utilitaire"
     }
     CompositeTypes: {
@@ -461,6 +788,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "staff", "commercial", "operateur", "client"],
+      contrat_statut_enum: ["actif", "suspendu", "resilie", "en_cours_gel"],
+      gel_type_enum: ["programme", "sinistre"],
+      mode_paiement_enum: ["sepa", "virement", "stripe"],
       palier_remise: ["starter", "pro", "business", "premium"],
       statut_vehicule: [
         "actif",
@@ -469,6 +799,17 @@ export const Constants = {
         "archive",
       ],
       type_client: ["flotte", "concession", "vtc", "autre"],
+      type_prestation_enum: [
+        "pack_interieur",
+        "pack_standard",
+        "pack_vtc",
+        "concession_one_shot",
+        "fin_de_bail_one_shot",
+        "supplement_poils",
+        "supplement_coffre",
+        "supplement_ozone",
+        "supplement_puzzi",
+      ],
       type_vehicule: ["citadine", "berline", "suv_break", "utilitaire"],
     },
   },
