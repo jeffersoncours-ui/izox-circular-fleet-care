@@ -357,7 +357,9 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
             </div>
             {pack && !memePack && (
               <p className="text-xs text-amber-700 mt-2">
-                Changement de formule : votre demande sera transmise à notre équipe pour validation.
+                {ancienAvaitPack
+                  ? "Changement de formule : votre demande sera transmise à notre équipe pour validation."
+                  : "Première demande de pack : votre demande sera transmise à notre équipe pour validation."}
               </p>
             )}
           </div>
