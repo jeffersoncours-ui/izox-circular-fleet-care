@@ -163,9 +163,13 @@ export function AddVehiculeDialog({
       toast.error("Sélectionnez un type de véhicule");
       return;
     }
+    if (isClientMode && !packSouhaite) {
+      toast.error("Sélectionnez une formule souhaitée");
+      return;
+    }
     setSubmitting(true);
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         immatriculation: form.immatriculation.toUpperCase().trim(),
         marque: form.marque || null,
         modele: form.modele || null,
@@ -186,12 +190,16 @@ export function AddVehiculeDialog({
           .eq("id", vehicule.id);
         if (updErr) throw updErr;
       } else {
+        const insertPayload = {
+          ...payload,
+          entreprise_id: targetEntrepriseId!,
+          ...(isClientMode
+            ? { statut: "en_attente_validation" as const, type_pack_souhaite: packSouhaite }
+            : {}),
+        };
         const { data: created, error: vehErr } = await supabase
           .from("vehicules")
-          .insert({
-            ...payload,
-            entreprise_id: targetEntrepriseId!,
-          })
+          .insert(insertPayload)
           .select("id, entreprise_id")
           .single();
         if (vehErr) throw vehErr;
@@ -209,7 +217,15 @@ export function AddVehiculeDialog({
         await supabase.from("vehicules").update({ photo_path: path }).eq("id", vehiculeId);
       }
 
-      toast.success(isEdit ? "Véhicule mis à jour" : "Véhicule ajouté");
+      if (isEdit) {
+        toast.success("Véhicule mis à jour");
+      } else if (isClientMode) {
+        toast.success(
+          "Votre demande a été envoyée. Notre équipe vous recontactera sous 24h pour valider votre contrat."
+        );
+      } else {
+        toast.success("Véhicule ajouté");
+      }
       onCreated?.();
       onOpenChange(false);
       setTimeout(reset, 200);
