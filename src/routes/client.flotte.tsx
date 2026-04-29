@@ -209,6 +209,16 @@ function MaFlotte() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ReplaceVehiculeDialog
+        open={!!replaceTarget}
+        onOpenChange={(o) => !o && setReplaceTarget(null)}
+        ancien={replaceTarget}
+        onReplaced={() => {
+          setReplaceTarget(null);
+          load();
+        }}
+      />
     </div>
   );
 }
