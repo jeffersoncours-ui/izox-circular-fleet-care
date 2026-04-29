@@ -153,7 +153,7 @@ function MaFlotte() {
         <>
           {vehiculesAffiches.length > 0 && (
             <div className="grid sm:grid-cols-2 gap-4">
-              {vehiculesAffiches.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete))}
+              {vehiculesAffiches.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete, handleAskReplace))}
             </div>
           )}
 
@@ -161,7 +161,7 @@ function MaFlotte() {
             <section className="mt-8">
               <h2 className="text-lg font-semibold text-foreground mb-3">Demandes en cours</h2>
               <div className="grid sm:grid-cols-2 gap-4">
-                {vehiculesEnAttente.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete))}
+                {vehiculesEnAttente.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete, handleAskReplace))}
               </div>
             </section>
           )}
