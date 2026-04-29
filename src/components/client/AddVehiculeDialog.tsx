@@ -349,12 +349,72 @@ export function AddVehiculeDialog({
             />
           </div>
 
+          {isClientMode && (
+            <div>
+              <Label className="mb-2 block">Formule souhaitée *</Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {PACK_OPTIONS.map((p) => {
+                  const active = packSouhaite === p.value;
+                  return (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => setPackSouhaite(p.value)}
+                      className={cn(
+                        "text-left rounded-lg border-2 p-3 transition-all bg-card",
+                        active ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"
+                      )}
+                    >
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className={cn("font-semibold text-sm", active && "text-primary")}>{p.nom}</span>
+                        <span className="text-sm font-bold text-foreground">{p.prix} € HT/mois</span>
+                      </div>
+                      <p className="text-xs text-foreground/80 mt-1">{p.description}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">Bonus : {p.bonus}</p>
+                      <p className="text-[10px] text-muted-foreground/80 mt-2 italic leading-tight">
+                        Prix indicatif HT par véhicule. Votre tarif définitif sera confirmé par notre équipe lors du réajustement de votre contrat.
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {isClientMode && upsell && (
+            <Card className="p-4 border-primary/40 bg-primary-soft">
+              <div className="flex gap-3">
+                <TrendingUp className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div className="text-sm text-foreground">
+                  <p>
+                    Avec ce véhicule, votre flotte passe à <strong>{nouveauTotal}</strong> véhicules et déclenche le Palier{" "}
+                    <strong>{PALIER_LABELS[upsell.prochainPalier] ?? upsell.prochainPalier}</strong> !
+                  </p>
+                  <p className="mt-1">
+                    Économie estimée sur votre facture : <strong>-{upsell.gainMensuelEstime} €/mois</strong>.
+                  </p>
+                  <p className="mt-1 text-muted-foreground text-xs">
+                    Notre équipe vous contactera pour valider votre nouvelle mensualité.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
           <div className="flex gap-2 justify-end pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               Annuler
             </Button>
             <Button type="submit" variant="izox" disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : isEdit ? "Enregistrer" : "Ajouter"}
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isEdit ? (
+                "Enregistrer"
+              ) : isClientMode ? (
+                "Envoyer la demande"
+              ) : (
+                "Ajouter"
+              )}
             </Button>
           </div>
         </form>
