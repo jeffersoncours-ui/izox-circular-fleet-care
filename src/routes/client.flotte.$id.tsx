@@ -160,6 +160,31 @@ function VehiculeDetail() {
         )}
       </Card>
 
+      {(vehicule.type_pack_souhaite || vehicule.contrat_id) && (
+        <Card className="p-5 shadow-card border-border/60 mb-5">
+          <h2 className="font-semibold text-foreground mb-3">Bonus inclus</h2>
+          <ul className="space-y-3 text-sm">
+            <li className="flex items-start gap-3">
+              <Gauge className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <span className="text-foreground">Vérification pneus</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <BookOpen className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-foreground">Carnet entretien numérique</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Bientôt disponible</p>
+              </div>
+            </li>
+            {vehicule.type_pack_souhaite === "pack_vtc" && (
+              <li className="flex items-start gap-3">
+                <Droplets className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <span className="text-foreground">Lave-glace gratuit</span>
+              </li>
+            )}
+          </ul>
+        </Card>
+      )}
+
       <div className="flex gap-2">
         <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
           <Pencil className="h-4 w-4" /> Modifier
