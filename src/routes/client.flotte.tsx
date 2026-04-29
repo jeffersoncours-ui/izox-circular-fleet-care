@@ -54,14 +54,6 @@ function MaFlotte() {
   const [replaceTarget, setReplaceTarget] = useState<Vehicule | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [list, setList] = useState<Vehicule[]>([]);
-  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [editVehicule, setEditVehicule] = useState<Vehicule | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     if (!profile?.entreprise_id) return;
