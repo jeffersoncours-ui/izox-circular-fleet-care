@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { compressImage } from "@/lib/image";
 import { toast } from "sonner";
-import { getProchainPalier } from "@/lib/pricing";
+import { getProchainPalier, getPalier } from "@/lib/pricing";
 import { Card } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 
