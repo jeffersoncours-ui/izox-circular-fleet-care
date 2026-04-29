@@ -17,6 +17,47 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { compressImage } from "@/lib/image";
 import { toast } from "sonner";
+import { getProchainPalier, getPalier } from "@/lib/pricing";
+import { Card } from "@/components/ui/card";
+import { TrendingUp } from "lucide-react";
+
+type PackType = "pack_interieur" | "pack_standard" | "pack_vtc";
+
+const PACK_OPTIONS: Array<{
+  value: PackType;
+  nom: string;
+  prix: number;
+  description: string;
+  bonus: string;
+}> = [
+  {
+    value: "pack_interieur",
+    nom: "Pack Intérieur",
+    prix: 100,
+    description: "2x intérieur 6 étapes (45 min)",
+    bonus: "Vérification pneus + Carnet entretien numérique",
+  },
+  {
+    value: "pack_standard",
+    nom: "Pack Standard",
+    prix: 150,
+    description: "2x intérieur + extérieur Karcher (1h15)",
+    bonus: "Vérification pneus + Carnet entretien numérique",
+  },
+  {
+    value: "pack_vtc",
+    nom: "Pack VTC/Taxi",
+    prix: 190,
+    description: "3x intérieur + 1x intérieur+extérieur (4 passages)",
+    bonus: "Vérification pneus + Carnet entretien + Lave-glace gratuit",
+  },
+];
+
+const PALIER_LABELS: Record<string, string> = {
+  pro: "Pro",
+  business: "Business",
+  premium: "Premium",
+};
 
 interface VehiculeData {
   id: string;
@@ -37,16 +78,28 @@ interface Props {
   onCreated?: () => void;
   entrepriseId?: string;
   vehicule?: VehiculeData | null;
+  mode?: "admin" | "client";
+  nbVehiculesActifs?: number;
 }
 
-export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId, vehicule }: Props) {
+export function AddVehiculeDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  entrepriseId,
+  vehicule,
+  mode = "admin",
+  nbVehiculesActifs = 0,
+}: Props) {
   const { profile } = useAuth();
   const targetEntrepriseId = entrepriseId ?? profile?.entreprise_id ?? null;
   const isEdit = !!vehicule;
+  const isClientMode = mode === "client" && !isEdit;
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<VehiculeType | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [packSouhaite, setPackSouhaite] = useState<PackType | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     marque: "",
@@ -57,6 +110,11 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId,
     kilometrage: "",
     notes: "",
   });
+
+  const nouveauTotal = nbVehiculesActifs + 1;
+  const changementPalier = isClientMode && getPalier(nbVehiculesActifs) !== getPalier(nouveauTotal);
+  const upsell = changementPalier ? getProchainPalier(nbVehiculesActifs) : null;
+
 
   useEffect(() => {
     if (open && vehicule) {
@@ -78,6 +136,7 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId,
     setType(null);
     setPhoto(null);
     setPhotoPreview(null);
+    setPackSouhaite(null);
   };
 
   const onPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,6 +163,10 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId,
       toast.error("Sélectionnez un type de véhicule");
       return;
     }
+    if (isClientMode && !packSouhaite) {
+      toast.error("Sélectionnez une formule souhaitée");
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
@@ -127,12 +190,16 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId,
           .eq("id", vehicule.id);
         if (updErr) throw updErr;
       } else {
+        const insertPayload = {
+          ...payload,
+          entreprise_id: targetEntrepriseId!,
+          ...(isClientMode
+            ? { statut: "en_attente_validation" as const, type_pack_souhaite: packSouhaite }
+            : {}),
+        };
         const { data: created, error: vehErr } = await supabase
           .from("vehicules")
-          .insert({
-            ...payload,
-            entreprise_id: targetEntrepriseId!,
-          })
+          .insert(insertPayload)
           .select("id, entreprise_id")
           .single();
         if (vehErr) throw vehErr;
@@ -150,7 +217,15 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId,
         await supabase.from("vehicules").update({ photo_path: path }).eq("id", vehiculeId);
       }
 
-      toast.success(isEdit ? "Véhicule mis à jour" : "Véhicule ajouté");
+      if (isEdit) {
+        toast.success("Véhicule mis à jour");
+      } else if (isClientMode) {
+        toast.success(
+          "Votre demande a été envoyée. Notre équipe vous recontactera sous 24h pour valider votre contrat."
+        );
+      } else {
+        toast.success("Véhicule ajouté");
+      }
       onCreated?.();
       onOpenChange(false);
       setTimeout(reset, 200);
@@ -274,12 +349,72 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId,
             />
           </div>
 
+          {isClientMode && (
+            <div>
+              <Label className="mb-2 block">Formule souhaitée *</Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {PACK_OPTIONS.map((p) => {
+                  const active = packSouhaite === p.value;
+                  return (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => setPackSouhaite(p.value)}
+                      className={cn(
+                        "text-left rounded-lg border-2 p-3 transition-all bg-card",
+                        active ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"
+                      )}
+                    >
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className={cn("font-semibold text-sm", active && "text-primary")}>{p.nom}</span>
+                        <span className="text-sm font-bold text-foreground">{p.prix} € HT/mois</span>
+                      </div>
+                      <p className="text-xs text-foreground/80 mt-1">{p.description}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">Bonus : {p.bonus}</p>
+                      <p className="text-[10px] text-muted-foreground/80 mt-2 italic leading-tight">
+                        Prix indicatif HT par véhicule. Votre tarif définitif sera confirmé par notre équipe lors du réajustement de votre contrat.
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {isClientMode && upsell && (
+            <Card className="p-4 border-primary/40 bg-primary-soft">
+              <div className="flex gap-3">
+                <TrendingUp className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div className="text-sm text-foreground">
+                  <p>
+                    Avec ce véhicule, votre flotte passe à <strong>{nouveauTotal}</strong> véhicules et déclenche le Palier{" "}
+                    <strong>{PALIER_LABELS[upsell.prochainPalier] ?? upsell.prochainPalier}</strong> !
+                  </p>
+                  <p className="mt-1">
+                    Économie estimée sur votre facture : <strong>-{upsell.gainMensuelEstime} €/mois</strong>.
+                  </p>
+                  <p className="mt-1 text-muted-foreground text-xs">
+                    Notre équipe vous contactera pour valider votre nouvelle mensualité.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
           <div className="flex gap-2 justify-end pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               Annuler
             </Button>
             <Button type="submit" variant="izox" disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : isEdit ? "Enregistrer" : "Ajouter"}
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isEdit ? (
+                "Enregistrer"
+              ) : isClientMode ? (
+                "Envoyer la demande"
+              ) : (
+                "Ajouter"
+              )}
             </Button>
           </div>
         </form>
