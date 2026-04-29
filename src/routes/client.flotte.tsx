@@ -98,6 +98,12 @@ function MaFlotte() {
     setDeleteTarget(v);
   };
 
+  const handleAskReplace = (e: React.MouseEvent, v: Vehicule) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setReplaceTarget(v);
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
