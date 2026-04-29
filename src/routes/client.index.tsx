@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Car, CalendarDays, Sparkles, Award } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
 
 export const Route = createFileRoute("/client/")({
   component: ClientHome,
