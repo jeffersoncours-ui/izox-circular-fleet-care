@@ -128,6 +128,17 @@ export function AddVehiculeDialog({
         notes: vehicule.notes ?? "",
       });
       setType((vehicule.type_vehicule as VehiculeType) ?? null);
+      // Load existing photo via signed URL
+      if (vehicule.photo_path) {
+        supabase.storage
+          .from("vehicules")
+          .createSignedUrl(vehicule.photo_path, 3600)
+          .then(({ data }) => {
+            if (data?.signedUrl) setPhotoPreview(data.signedUrl);
+          });
+      } else {
+        setPhotoPreview(null);
+      }
     }
   }, [open, vehicule]);
 
