@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Loader2, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
