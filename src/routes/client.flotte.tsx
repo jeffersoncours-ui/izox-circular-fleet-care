@@ -108,11 +108,9 @@ function MaFlotte() {
     }
   };
 
+  const vehiculesAffiches = list.filter((v) => v.statut !== "en_attente_validation");
   const vehiculesActifs = list.filter((v) => v.statut === "actif");
   const vehiculesEnAttente = list.filter((v) => v.statut === "en_attente_validation");
-  const vehiculesAutres = list.filter(
-    (v) => v.statut !== "actif" && v.statut !== "en_attente_validation"
-  );
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
