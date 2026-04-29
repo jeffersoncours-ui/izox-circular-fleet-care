@@ -126,6 +126,7 @@ function MaFlotte() {
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
+      <PassagesReportesBanner />
       <header className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Ma flotte</h1>
