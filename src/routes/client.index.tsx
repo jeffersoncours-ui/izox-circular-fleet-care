@@ -21,7 +21,8 @@ function ClientHome() {
       const v = await supabase
         .from("vehicules")
         .select("id", { count: "exact", head: true })
-        .eq("entreprise_id", profile.entreprise_id!);
+        .eq("entreprise_id", profile.entreprise_id!)
+        .eq("statut", "actif");
       setVehiculeCount(v.count ?? 0);
       // Le palier ne s'affiche que si un contrat actif existe en base
       // pour cette entreprise. Tant que la table contrats n'existe pas
