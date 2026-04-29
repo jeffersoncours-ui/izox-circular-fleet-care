@@ -169,7 +169,7 @@ export function AddVehiculeDialog({
     }
     setSubmitting(true);
     try {
-      const payload: Record<string, unknown> = {
+      const payload = {
         immatriculation: form.immatriculation.toUpperCase().trim(),
         marque: form.marque || null,
         modele: form.modele || null,
