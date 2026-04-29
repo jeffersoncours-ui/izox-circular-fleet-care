@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,10 @@ interface Vehicule {
 }
 
 function MaFlotte() {
+  const location = useLocation();
+  if (location.pathname !== "/client/flotte") {
+    return <Outlet />;
+  }
   const { profile } = useAuth();
   const [list, setList] = useState<Vehicule[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
