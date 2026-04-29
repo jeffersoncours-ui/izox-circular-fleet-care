@@ -563,6 +563,7 @@ export type Database = {
       vehicules: {
         Row: {
           annee: number | null
+          contrat_id: string | null
           couleur: string | null
           created_at: string
           entreprise_id: string
@@ -579,6 +580,7 @@ export type Database = {
         }
         Insert: {
           annee?: number | null
+          contrat_id?: string | null
           couleur?: string | null
           created_at?: string
           entreprise_id: string
@@ -595,6 +597,7 @@ export type Database = {
         }
         Update: {
           annee?: number | null
+          contrat_id?: string | null
           couleur?: string | null
           created_at?: string
           entreprise_id?: string
@@ -610,6 +613,13 @@ export type Database = {
           type_vehicule?: Database["public"]["Enums"]["type_vehicule"] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vehicules_entreprise_id_fkey"
             columns: ["entreprise_id"]
