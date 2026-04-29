@@ -15,9 +15,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Car, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Car, Pencil, Trash2, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
+import { ReplaceVehiculeDialog } from "@/components/client/ReplaceVehiculeDialog";
+import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
 
 export const Route = createFileRoute("/client/flotte")({
@@ -36,6 +38,9 @@ interface Vehicule {
   notes: string | null;
   statut: string;
   photo_path: string | null;
+  type_pack_souhaite: string | null;
+  contrat_id: string | null;
+  entreprise_id: string;
 }
 
 function MaFlotte() {
@@ -46,6 +51,7 @@ function MaFlotte() {
   const [open, setOpen] = useState(false);
   const [editVehicule, setEditVehicule] = useState<Vehicule | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [replaceTarget, setReplaceTarget] = useState<Vehicule | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -54,7 +60,7 @@ function MaFlotte() {
     setLoading(true);
     const { data } = await supabase
       .from("vehicules")
-      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path")
+      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id, entreprise_id")
       .eq("entreprise_id", profile.entreprise_id)
       .order("created_at", { ascending: false });
     const items = (data as Vehicule[]) ?? [];
@@ -92,6 +98,12 @@ function MaFlotte() {
     setDeleteTarget(v);
   };
 
+  const handleAskReplace = (e: React.MouseEvent, v: Vehicule) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setReplaceTarget(v);
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -114,6 +126,7 @@ function MaFlotte() {
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
+      <PassagesReportesBanner />
       <header className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Ma flotte</h1>
@@ -140,7 +153,7 @@ function MaFlotte() {
         <>
           {vehiculesAffiches.length > 0 && (
             <div className="grid sm:grid-cols-2 gap-4">
-              {vehiculesAffiches.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete))}
+              {vehiculesAffiches.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete, handleAskReplace))}
             </div>
           )}
 
@@ -148,7 +161,7 @@ function MaFlotte() {
             <section className="mt-8">
               <h2 className="text-lg font-semibold text-foreground mb-3">Demandes en cours</h2>
               <div className="grid sm:grid-cols-2 gap-4">
-                {vehiculesEnAttente.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete))}
+                {vehiculesEnAttente.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete, handleAskReplace))}
               </div>
             </section>
           )}
@@ -196,6 +209,16 @@ function MaFlotte() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ReplaceVehiculeDialog
+        open={!!replaceTarget}
+        onOpenChange={(o) => !o && setReplaceTarget(null)}
+        ancien={replaceTarget}
+        onReplaced={() => {
+          setReplaceTarget(null);
+          load();
+        }}
+      />
     </div>
   );
 }
@@ -204,12 +227,14 @@ function renderVehiculeCard(
   v: Vehicule,
   photoUrls: Record<string, string>,
   handleEdit: (e: React.MouseEvent, v: Vehicule) => void,
-  handleAskDelete: (e: React.MouseEvent, v: Vehicule) => void
+  handleAskDelete: (e: React.MouseEvent, v: Vehicule) => void,
+  handleAskReplace: (e: React.MouseEvent, v: Vehicule) => void
 ) {
   const Icon = getVehiculeIcon(v.type_vehicule);
   const label = getVehiculeLabel(v.type_vehicule);
   const url = photoUrls[v.id];
   const isEnAttente = v.statut === "en_attente_validation";
+  const isActif = v.statut === "actif";
   return (
     <Link key={v.id} to="/client/flotte/$id" params={{ id: v.id }} className="block">
       <Card className="overflow-hidden shadow-card border-border/60 group cursor-pointer transition-all duration-150 ease-out hover:shadow-strong hover:border-primary/30 relative">
@@ -239,6 +264,19 @@ function renderVehiculeCard(
               >
                 <Pencil className="h-4 w-4" />
               </Button>
+              {isActif && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-primary hover:text-primary"
+                  onClick={(e) => handleAskReplace(e, v)}
+                  aria-label="Remplacer"
+                  title="Remplacer ce véhicule"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 type="button"
                 size="icon"
