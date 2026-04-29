@@ -34,6 +34,7 @@ function ClientHome() {
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
+      <PassagesReportesBanner />
       <header className="mb-6">
         <p className="text-sm text-muted-foreground">Bonjour</p>
         <h1 className="text-2xl font-bold text-foreground">{profile?.prenom} {profile?.nom}</h1>
