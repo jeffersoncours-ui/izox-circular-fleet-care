@@ -123,20 +123,18 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
 
     setSubmitting(true);
     try {
-      const insertPayload: Record<string, unknown> = {
-        entreprise_id: entrepriseId,
-        immatriculation: form.immatriculation.toUpperCase().trim(),
-        marque: form.marque || null,
-        modele: form.modele || null,
-        type_vehicule: type,
-        type_pack_souhaite: pack,
-        statut: memePack ? "actif" : "en_attente_validation",
-        contrat_id: memePack ? ancien.contrat_id ?? null : null,
-      };
-
       const { data: created, error: insErr } = await supabase
         .from("vehicules")
-        .insert(insertPayload)
+        .insert({
+          entreprise_id: entrepriseId,
+          immatriculation: form.immatriculation.toUpperCase().trim(),
+          marque: form.marque || null,
+          modele: form.modele || null,
+          type_vehicule: type,
+          type_pack_souhaite: pack,
+          statut: memePack ? "actif" : "en_attente_validation",
+          contrat_id: memePack ? ancien.contrat_id ?? null : null,
+        })
         .select("id, entreprise_id")
         .single();
       if (insErr) throw insErr;
