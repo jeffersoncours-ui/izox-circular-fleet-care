@@ -35,6 +35,8 @@ interface Vehicule {
   notes: string | null;
   statut: string;
   photo_path: string | null;
+  type_pack_souhaite: string | null;
+  contrat_id: string | null;
 }
 
 function VehiculeDetail() {
