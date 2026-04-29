@@ -194,7 +194,12 @@ function ClientDetailPage() {
             ) : (
               <div className="grid sm:grid-cols-2 gap-3">
                 {vehicules.map((v) => (
-                  <div key={v.id} className="flex items-center gap-3 p-3 bg-muted rounded-md">
+                  <Link
+                    key={v.id}
+                    to="/admin/vehicules/$id"
+                    params={{ id: v.id }}
+                    className="flex items-center gap-3 p-3 bg-muted rounded-md transition-colors hover:bg-muted/70"
+                  >
                     <div className="h-10 w-10 rounded-md bg-primary-soft text-primary flex items-center justify-center shrink-0">
                       <Car className="h-4 w-4" />
                     </div>
@@ -209,7 +214,11 @@ function ClientDetailPage() {
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8"
-                        onClick={() => handleEdit(v)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleEdit(v);
+                        }}
                         aria-label="Modifier"
                       >
                         <Pencil className="h-4 w-4" />
@@ -218,13 +227,17 @@ function ClientDetailPage() {
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => setDeleteTarget(v)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDeleteTarget(v);
+                        }}
                         aria-label="Supprimer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
