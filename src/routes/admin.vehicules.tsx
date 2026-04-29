@@ -147,62 +147,59 @@ function AdminVehiculesList() {
                 ? `${v.marque ?? ""} ${v.modele ?? ""}`.trim()
                 : "Véhicule";
             return (
-              <Card
+              <Link
                 key={v.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => onEdit(v)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onEdit(v);
-                  }
-                }}
-                className="p-5 cursor-pointer transition-all duration-150 ease-out hover:bg-muted/40 hover:shadow-strong hover:border-primary/30 shadow-card border-border/60"
+                to="/admin/vehicules/$id"
+                params={{ id: v.id }}
+                className="block"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="h-12 w-12 rounded-lg bg-primary-soft text-primary flex items-center justify-center shrink-0">
-                      <Icon className="h-6 w-auto" />
+                <Card className="p-5 cursor-pointer transition-all duration-150 ease-out hover:bg-muted/40 hover:shadow-strong hover:border-primary/30 shadow-card border-border/60">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="h-12 w-12 rounded-lg bg-primary-soft text-primary flex items-center justify-center shrink-0">
+                        <Icon className="h-6 w-auto" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground truncate">{title}</h3>
+                        <p className="font-mono text-xs text-primary mt-0.5">{v.immatriculation}</p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          {v.entreprises?.nom ?? "—"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-foreground truncate">{title}</h3>
-                      <p className="font-mono text-xs text-primary mt-0.5">{v.immatriculation}</p>
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {v.entreprises?.nom ?? "—"}
-                      </p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="secondary" className="hidden sm:inline-flex">
+                        {typeLabel}
+                      </Badge>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onEdit(v);
+                        }}
+                        aria-label="Modifier"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDeleteTarget(v);
+                        }}
+                        aria-label="Supprimer"
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant="secondary" className="hidden sm:inline-flex">
-                      {typeLabel}
-                    </Badge>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(v);
-                      }}
-                      aria-label="Modifier"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteTarget(v);
-                      }}
-                      aria-label="Supprimer"
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </Link>
             );
           })}
         </div>
