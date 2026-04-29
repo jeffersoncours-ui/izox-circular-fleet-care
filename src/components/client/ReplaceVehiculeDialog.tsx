@@ -114,7 +114,8 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
       return;
     }
 
-    const memePack = pack === ancien.type_pack_souhaite;
+    const ancienAvaitPack = !!ancien.type_pack_souhaite;
+    const memePack = ancienAvaitPack && pack === ancien.type_pack_souhaite;
     const entrepriseId = ancien.entreprise_id ?? profile?.entreprise_id;
     if (!entrepriseId) {
       toast.error("Aucune entreprise associée");
@@ -152,7 +153,7 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
       }
 
       if (memePack) {
-        // Archive l'ancien et transfère le contrat
+        // Archive l'ancien et transfère le contrat immédiatement
         const { error: updErr } = await supabase
           .from("vehicules")
           .update({ statut: "remplace", contrat_id: null })
@@ -166,14 +167,35 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
             ancien_vehicule_id: ancien.id,
             nouveau_vehicule_id: created.id,
             contrat_id: ancien.contrat_id ?? null,
+            statut: "applique",
           },
           nb_entites_impactees: 2,
         });
 
         toast.success("Véhicule remplacé avec succès.");
       } else {
+        // Cas changement de formule OU première demande de pack :
+        // on trace la demande pour que l'admin puisse basculer l'ancien
+        // véhicule en 'remplace' lors de la validation du nouveau.
+        await supabase.from("admin_actions_log").insert({
+          user_id: user?.id ?? null,
+          action: "remplacement_vehicule",
+          details: {
+            ancien_vehicule_id: ancien.id,
+            nouveau_vehicule_id: created.id,
+            contrat_id: ancien.contrat_id ?? null,
+            ancien_pack: ancien.type_pack_souhaite ?? null,
+            nouveau_pack: pack,
+            type_demande: ancienAvaitPack ? "changement_formule" : "premiere_demande_pack",
+            statut: "en_attente_validation",
+          },
+          nb_entites_impactees: 2,
+        });
+
         toast.success(
-          "Votre demande de remplacement a été envoyée. Notre équipe vous recontactera sous 24h."
+          ancienAvaitPack
+            ? "Votre demande de remplacement a été envoyée. Notre équipe vous recontactera sous 24h."
+            : "Votre demande de pack a été envoyée. Notre équipe vous recontactera sous 24h pour valider votre contrat."
         );
       }
 
@@ -191,7 +213,8 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
     ancien.marque || ancien.modele
       ? `${ancien.marque ?? ""} ${ancien.modele ?? ""}`.trim()
       : "Véhicule";
-  const memePack = pack === ancien.type_pack_souhaite;
+  const ancienAvaitPack = !!ancien.type_pack_souhaite;
+  const memePack = ancienAvaitPack && pack === ancien.type_pack_souhaite;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -334,7 +357,9 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
             </div>
             {pack && !memePack && (
               <p className="text-xs text-amber-700 mt-2">
-                Changement de formule : votre demande sera transmise à notre équipe pour validation.
+                {ancienAvaitPack
+                  ? "Changement de formule : votre demande sera transmise à notre équipe pour validation."
+                  : "Première demande de pack : votre demande sera transmise à notre équipe pour validation."}
               </p>
             )}
           </div>
