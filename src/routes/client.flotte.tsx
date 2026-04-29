@@ -15,9 +15,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Car, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Car, Pencil, Trash2, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
+import { ReplaceVehiculeDialog } from "@/components/client/ReplaceVehiculeDialog";
+import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
 
 export const Route = createFileRoute("/client/flotte")({
@@ -36,10 +38,22 @@ interface Vehicule {
   notes: string | null;
   statut: string;
   photo_path: string | null;
+  type_pack_souhaite: string | null;
+  contrat_id: string | null;
+  entreprise_id: string;
 }
 
 function MaFlotte() {
   const { profile } = useAuth();
+  const [list, setList] = useState<Vehicule[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [editVehicule, setEditVehicule] = useState<Vehicule | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [replaceTarget, setReplaceTarget] = useState<Vehicule | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [list, setList] = useState<Vehicule[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -54,7 +68,7 @@ function MaFlotte() {
     setLoading(true);
     const { data } = await supabase
       .from("vehicules")
-      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path")
+      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id, entreprise_id")
       .eq("entreprise_id", profile.entreprise_id)
       .order("created_at", { ascending: false });
     const items = (data as Vehicule[]) ?? [];
