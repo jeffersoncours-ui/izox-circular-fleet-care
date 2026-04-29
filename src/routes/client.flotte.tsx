@@ -44,6 +44,10 @@ interface Vehicule {
 }
 
 function MaFlotte() {
+  const location = useLocation();
+  if (location.pathname !== "/client/flotte") {
+    return <Outlet />;
+  }
   const { profile } = useAuth();
   const [list, setList] = useState<Vehicule[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
