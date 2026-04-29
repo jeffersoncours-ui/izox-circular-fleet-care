@@ -254,6 +254,19 @@ function renderVehiculeCard(
               >
                 <Pencil className="h-4 w-4" />
               </Button>
+              {isActif && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-primary hover:text-primary"
+                  onClick={(e) => handleAskReplace(e, v)}
+                  aria-label="Remplacer"
+                  title="Remplacer ce véhicule"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 type="button"
                 size="icon"
