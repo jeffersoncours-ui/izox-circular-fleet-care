@@ -114,7 +114,8 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
       return;
     }
 
-    const memePack = pack === ancien.type_pack_souhaite;
+    const ancienAvaitPack = !!ancien.type_pack_souhaite;
+    const memePack = ancienAvaitPack && pack === ancien.type_pack_souhaite;
     const entrepriseId = ancien.entreprise_id ?? profile?.entreprise_id;
     if (!entrepriseId) {
       toast.error("Aucune entreprise associée");
