@@ -108,12 +108,17 @@ function MaFlotte() {
     }
   };
 
+  const vehiculesActifs = list.filter((v) => v.statut !== "en_attente_validation");
+  const vehiculesEnAttente = list.filter((v) => v.statut === "en_attente_validation");
+
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
       <header className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Ma flotte</h1>
-          <p className="text-sm text-muted-foreground">{list.length} véhicule{list.length > 1 ? "s" : ""}</p>
+          <p className="text-sm text-muted-foreground">
+            {vehiculesActifs.length} véhicule{vehiculesActifs.length > 1 ? "s" : ""} actif{vehiculesActifs.length > 1 ? "s" : ""}
+          </p>
         </div>
         <Button variant="izox" size="sm" onClick={() => setOpen(true)}>
           <Plus className="h-4 w-4" /> Ajouter
