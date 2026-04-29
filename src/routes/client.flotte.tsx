@@ -217,12 +217,14 @@ function renderVehiculeCard(
   v: Vehicule,
   photoUrls: Record<string, string>,
   handleEdit: (e: React.MouseEvent, v: Vehicule) => void,
-  handleAskDelete: (e: React.MouseEvent, v: Vehicule) => void
+  handleAskDelete: (e: React.MouseEvent, v: Vehicule) => void,
+  handleAskReplace: (e: React.MouseEvent, v: Vehicule) => void
 ) {
   const Icon = getVehiculeIcon(v.type_vehicule);
   const label = getVehiculeLabel(v.type_vehicule);
   const url = photoUrls[v.id];
   const isEnAttente = v.statut === "en_attente_validation";
+  const isActif = v.statut === "actif";
   return (
     <Link key={v.id} to="/client/flotte/$id" params={{ id: v.id }} className="block">
       <Card className="overflow-hidden shadow-card border-border/60 group cursor-pointer transition-all duration-150 ease-out hover:shadow-strong hover:border-primary/30 relative">
