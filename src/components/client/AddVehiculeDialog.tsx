@@ -78,16 +78,28 @@ interface Props {
   onCreated?: () => void;
   entrepriseId?: string;
   vehicule?: VehiculeData | null;
+  mode?: "admin" | "client";
+  nbVehiculesActifs?: number;
 }
 
-export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId, vehicule }: Props) {
+export function AddVehiculeDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  entrepriseId,
+  vehicule,
+  mode = "admin",
+  nbVehiculesActifs = 0,
+}: Props) {
   const { profile } = useAuth();
   const targetEntrepriseId = entrepriseId ?? profile?.entreprise_id ?? null;
   const isEdit = !!vehicule;
+  const isClientMode = mode === "client" && !isEdit;
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<VehiculeType | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [packSouhaite, setPackSouhaite] = useState<PackType | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     marque: "",
@@ -98,6 +110,10 @@ export function AddVehiculeDialog({ open, onOpenChange, onCreated, entrepriseId,
     kilometrage: "",
     notes: "",
   });
+
+  const upsell = isClientMode ? getProchainPalier(nbVehiculesActifs + 1) : null;
+  const showUpsell = !!upsell && upsell.vehiculesManquants === 0;
+
 
   useEffect(() => {
     if (open && vehicule) {
