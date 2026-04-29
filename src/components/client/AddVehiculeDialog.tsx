@@ -135,6 +135,7 @@ export function AddVehiculeDialog({
     setType(null);
     setPhoto(null);
     setPhotoPreview(null);
+    setPackSouhaite(null);
   };
 
   const onPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
