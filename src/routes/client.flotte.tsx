@@ -136,72 +136,31 @@ function MaFlotte() {
           </Button>
         </Card>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {list.map((v) => {
-            const Icon = getVehiculeIcon(v.type_vehicule);
-            const label = getVehiculeLabel(v.type_vehicule);
-            const url = photoUrls[v.id];
-            return (
-              <Link
-                key={v.id}
-                to="/client/flotte/$id"
-                params={{ id: v.id }}
-                className="block"
-              >
-                <Card className="overflow-hidden shadow-card border-border/60 group cursor-pointer transition-all duration-150 ease-out hover:shadow-strong hover:border-primary/30 relative">
-                  <div className="aspect-[16/10] bg-muted flex items-center justify-center text-muted-foreground/60 relative overflow-hidden">
-                    {url ? (
-                      <img src={url} alt={v.immatriculation} className="w-full h-full object-cover" />
-                    ) : (
-                      <Icon className="w-32 h-auto opacity-60" />
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-bold text-foreground truncate">
-                          {v.marque || v.modele ? `${v.marque ?? ""} ${v.modele ?? ""}`.trim() : "Véhicule"}
-                        </h3>
-                        <p className="font-mono text-sm text-primary mt-0.5">{v.immatriculation}</p>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          onClick={(e) => handleEdit(e, v)}
-                          aria-label="Modifier"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={(e) => handleAskDelete(e, v)}
-                          aria-label="Supprimer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">{label}</Badge>
-                      {v.statut !== "actif" && (
-                        <Badge variant="outline" className="text-xs capitalize">{v.statut.replace("_", " ")}</Badge>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+        <>
+          {vehiculesActifs.length > 0 && (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {vehiculesActifs.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete))}
+            </div>
+          )}
+
+          {vehiculesEnAttente.length > 0 && (
+            <section className="mt-8">
+              <h2 className="text-lg font-semibold text-foreground mb-3">Demandes en cours</h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {vehiculesEnAttente.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete))}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
-      <AddVehiculeDialog open={open} onOpenChange={setOpen} onCreated={load} />
+      <AddVehiculeDialog
+        open={open}
+        onOpenChange={setOpen}
+        onCreated={load}
+        mode="client"
+        nbVehiculesActifs={vehiculesActifs.length}
+      />
 
       <AddVehiculeDialog
         open={editOpen}
