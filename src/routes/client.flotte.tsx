@@ -108,7 +108,8 @@ function MaFlotte() {
     }
   };
 
-  const vehiculesActifs = list.filter((v) => v.statut !== "en_attente_validation");
+  const vehiculesAffiches = list.filter((v) => v.statut !== "en_attente_validation");
+  const vehiculesActifs = list.filter((v) => v.statut === "actif");
   const vehiculesEnAttente = list.filter((v) => v.statut === "en_attente_validation");
 
   return (
@@ -137,9 +138,9 @@ function MaFlotte() {
         </Card>
       ) : (
         <>
-          {vehiculesActifs.length > 0 && (
+          {vehiculesAffiches.length > 0 && (
             <div className="grid sm:grid-cols-2 gap-4">
-              {vehiculesActifs.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete))}
+              {vehiculesAffiches.map((v) => renderVehiculeCard(v, photoUrls, handleEdit, handleAskDelete))}
             </div>
           )}
 
