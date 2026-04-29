@@ -213,7 +213,8 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
     ancien.marque || ancien.modele
       ? `${ancien.marque ?? ""} ${ancien.modele ?? ""}`.trim()
       : "Véhicule";
-  const memePack = pack === ancien.type_pack_souhaite;
+  const ancienAvaitPack = !!ancien.type_pack_souhaite;
+  const memePack = ancienAvaitPack && pack === ancien.type_pack_souhaite;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
