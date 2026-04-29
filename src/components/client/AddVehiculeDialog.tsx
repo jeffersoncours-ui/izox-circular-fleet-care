@@ -111,8 +111,9 @@ export function AddVehiculeDialog({
     notes: "",
   });
 
-  const upsell = isClientMode ? getProchainPalier(nbVehiculesActifs + 1) : null;
-  const showUpsell = !!upsell && upsell.vehiculesManquants === 0;
+  const nouveauTotal = nbVehiculesActifs + 1;
+  const changementPalier = isClientMode && getPalier(nbVehiculesActifs) !== getPalier(nouveauTotal);
+  const upsell = changementPalier ? getProchainPalier(nbVehiculesActifs) : null;
 
 
   useEffect(() => {
