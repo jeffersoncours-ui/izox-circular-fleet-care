@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -41,6 +41,14 @@ interface VehiculeRow {
 }
 
 function AdminVehiculesPage() {
+  const location = useLocation();
+  if (location.pathname !== "/admin/vehicules") {
+    return <Outlet />;
+  }
+  return <AdminVehiculesList />;
+}
+
+function AdminVehiculesList() {
   const [list, setList] = useState<VehiculeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
