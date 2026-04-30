@@ -32,8 +32,8 @@ import { Route as TerrainInterventionIdRouteImport } from './routes/terrain.inte
 import { Route as ClientFlotteIdRouteImport } from './routes/client.flotte.$id'
 import { Route as AdminVehiculesIdRouteImport } from './routes/admin.vehicules.$id'
 import { Route as AdminInterventionsIdRouteImport } from './routes/admin.interventions.$id'
-import { Route as AdminClientsIdRouteImport } from './routes/admin.clients.$id'
 import { Route as AdminContratsIdRouteImport } from './routes/admin.contrats.$id'
+import { Route as AdminClientsIdRouteImport } from './routes/admin.clients.$id'
 
 const TerrainRoute = TerrainRouteImport.update({
   id: '/terrain',
