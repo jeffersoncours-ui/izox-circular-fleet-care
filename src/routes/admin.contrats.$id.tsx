@@ -625,77 +625,27 @@ function ContratDetailPage() {
         }
       />
 
-      {/* Resiliation dialog */}
-      <AlertDialog open={resilOpen} onOpenChange={setResilOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Résilier le contrat {contrat.numero_contrat ?? ""} ?
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  Vous êtes sur le point de résilier le contrat{" "}
-                  <span className="font-semibold text-foreground">
-                    {contrat.numero_contrat}
-                  </span>{" "}
-                  de{" "}
-                  <span className="font-semibold text-foreground">
-                    {contrat.entreprise?.nom}
-                  </span>
-                  .
-                </p>
-                <p>
-                  Cela représente une perte de{" "}
-                  <span className="font-bold text-destructive text-base">
-                    {(facture?.totalAbonnementHt ?? 0).toFixed(2)} € HT/mois
-                  </span>{" "}
-                  pour IZOX.
-                </p>
-                <div className="bg-muted/40 rounded-md p-3 text-xs space-y-1">
-                  <p>Après résiliation :</p>
-                  <ul className="list-disc list-inside space-y-0.5">
-                    <li>
-                      Tous les véhicules liés ({vehiculesActifs.length}) verront leur contrat
-                      détaché
-                    </li>
-                    <li>Le contrat passera en statut « résilié »</li>
-                    <li>Les passages restants du mois seront perdus</li>
-                    <li>Cette action est définitive et ne peut pas être annulée</li>
-                  </ul>
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="motif">Motif de résiliation (optionnel)</Label>
-            <Textarea
-              id="motif"
-              value={resilMotif}
-              onChange={(e) => setResilMotif(e.target.value)}
-              placeholder="Pour audit interne et statistiques de churn..."
-              rows={3}
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={resilSubmitting}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleResilier();
-              }}
-              disabled={resilSubmitting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {resilSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Confirmer la résiliation"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Resiliation dialog (shared) */}
+      <ResiliationContratDialog
+        open={resilOpen}
+        onOpenChange={setResilOpen}
+        contrat={
+          contrat
+            ? {
+                id: contrat.id,
+                numero_contrat: contrat.numero_contrat,
+                entreprise_id: contrat.entreprise_id,
+                entreprise_nom: contrat.entreprise?.nom ?? null,
+                engagement_annuel: contrat.engagement_annuel,
+                lignes: contrat.lignes,
+              }
+            : null
+        }
+        onResiliated={() => {
+          load();
+          navigate({ to: "/admin/contrats" });
+        }}
+      />
 
       {/* Validation dialog */}
       {validateVeh && (
