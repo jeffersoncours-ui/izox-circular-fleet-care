@@ -33,6 +33,7 @@ import { Route as ClientFlotteIdRouteImport } from './routes/client.flotte.$id'
 import { Route as AdminVehiculesIdRouteImport } from './routes/admin.vehicules.$id'
 import { Route as AdminInterventionsIdRouteImport } from './routes/admin.interventions.$id'
 import { Route as AdminClientsIdRouteImport } from './routes/admin.clients.$id'
+import { Route as AdminContratsIdRouteImport } from './routes/admin.contrats.$id'
 
 const TerrainRoute = TerrainRouteImport.update({
   id: '/terrain',
@@ -149,6 +150,11 @@ const AdminInterventionsIdRoute = AdminInterventionsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminInterventionsRoute,
 } as any)
+const AdminContratsIdRoute = AdminContratsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminContratsRoute,
+} as any)
 const AdminClientsIdRoute = AdminClientsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -162,7 +168,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
-  '/admin/contrats': typeof AdminContratsRoute
+  '/admin/contrats': typeof AdminContratsRouteWithChildren
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
+  '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
@@ -186,7 +193,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
-  '/admin/contrats': typeof AdminContratsRoute
+  '/admin/contrats': typeof AdminContratsRouteWithChildren
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
+  '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
@@ -213,7 +221,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
-  '/admin/contrats': typeof AdminContratsRoute
+  '/admin/contrats': typeof AdminContratsRouteWithChildren
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
+  '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/client/'
     | '/admin/clients/$id'
+    | '/admin/contrats/$id'
     | '/admin/interventions/$id'
     | '/admin/vehicules/$id'
     | '/client/flotte/$id'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/client'
     | '/admin/clients/$id'
+    | '/admin/contrats/$id'
     | '/admin/interventions/$id'
     | '/admin/vehicules/$id'
     | '/client/flotte/$id'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/client/'
     | '/admin/clients/$id'
+    | '/admin/contrats/$id'
     | '/admin/interventions/$id'
     | '/admin/vehicules/$id'
     | '/client/flotte/$id'
@@ -482,6 +494,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInterventionsIdRouteImport
       parentRoute: typeof AdminInterventionsRoute
     }
+    '/admin/contrats/$id': {
+      id: '/admin/contrats/$id'
+      path: '/$id'
+      fullPath: '/admin/contrats/$id'
+      preLoaderRoute: typeof AdminContratsIdRouteImport
+      parentRoute: typeof AdminContratsRoute
+    }
     '/admin/clients/$id': {
       id: '/admin/clients/$id'
       path: '/$id'
@@ -502,6 +521,18 @@ const AdminClientsRouteChildren: AdminClientsRouteChildren = {
 
 const AdminClientsRouteWithChildren = AdminClientsRoute._addFileChildren(
   AdminClientsRouteChildren,
+)
+
+interface AdminContratsRouteChildren {
+  AdminContratsIdRoute: typeof AdminContratsIdRoute
+}
+
+const AdminContratsRouteChildren: AdminContratsRouteChildren = {
+  AdminContratsIdRoute: AdminContratsIdRoute,
+}
+
+const AdminContratsRouteWithChildren = AdminContratsRoute._addFileChildren(
+  AdminContratsRouteChildren,
 )
 
 interface AdminInterventionsRouteChildren {
@@ -529,7 +560,7 @@ const AdminVehiculesRouteWithChildren = AdminVehiculesRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminClientsRoute: typeof AdminClientsRouteWithChildren
-  AdminContratsRoute: typeof AdminContratsRoute
+  AdminContratsRoute: typeof AdminContratsRouteWithChildren
   AdminEquipeRoute: typeof AdminEquipeRoute
   AdminFacturationRoute: typeof AdminFacturationRoute
   AdminInterventionsRoute: typeof AdminInterventionsRouteWithChildren
@@ -540,7 +571,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminClientsRoute: AdminClientsRouteWithChildren,
-  AdminContratsRoute: AdminContratsRoute,
+  AdminContratsRoute: AdminContratsRouteWithChildren,
   AdminEquipeRoute: AdminEquipeRoute,
   AdminFacturationRoute: AdminFacturationRoute,
   AdminInterventionsRoute: AdminInterventionsRouteWithChildren,

@@ -125,13 +125,28 @@ const schema = z.object({
     .min(1, "Au moins une ligne de pack"),
 });
 
+interface ExistingContrat {
+  id: string;
+  numero_contrat: string | null;
+  entreprise_id: string;
+  entreprise_nom?: string | null;
+  date_debut: string;
+  date_anniversaire: string | null;
+  engagement_annuel: boolean;
+  mode_paiement: "sepa" | "virement" | "stripe";
+  lignes: Array<{ type_pack: TypePack; nb_vehicules: number }>;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onCreated?: () => void;
+  /** When provided, dialog enters edit mode (UPDATE existing contract). */
+  contrat?: ExistingContrat | null;
 }
 
-export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
+export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: Props) {
+  const isEdit = !!contrat;
   const [entreprises, setEntreprises] = useState<Entreprise[]>([]);
   const [entrepriseId, setEntrepriseId] = useState<string>("");
   const [vehiculesActifs, setVehiculesActifs] = useState<number | null>(null);
@@ -148,20 +163,48 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
   const [debutOpen, setDebutOpen] = useState(false);
   const [annivOpen, setAnnivOpen] = useState(false);
 
-  // Reset when dialog opens
+  // Reset / hydrate when dialog opens
   useEffect(() => {
     if (open) {
-      setEntrepriseId("");
-      setVehiculesActifs(null);
-      setLignes([newLigne()]);
-      setEngagementAnnuel(false);
-      const d = new Date();
-      setDateDebut(d);
-      setDateAnniv(defaultAnniversaire(d));
-      setCustomAnniv(false);
-      setModePaiement("sepa");
+      if (contrat) {
+        setEntrepriseId(contrat.entreprise_id);
+        setLignes(
+          contrat.lignes.length > 0
+            ? contrat.lignes.map((l) => ({
+                id: crypto.randomUUID(),
+                typePack: l.type_pack,
+                nbVehicules: l.nb_vehicules,
+              }))
+            : [newLigne()]
+        );
+        setEngagementAnnuel(contrat.engagement_annuel);
+        const d = new Date(contrat.date_debut);
+        setDateDebut(d);
+        setDateAnniv(
+          contrat.date_anniversaire ? new Date(contrat.date_anniversaire) : defaultAnniversaire(d)
+        );
+        setCustomAnniv(true);
+        setModePaiement(contrat.mode_paiement);
+      } else {
+        setEntrepriseId("");
+        setVehiculesActifs(null);
+        setLignes([newLigne()]);
+        setEngagementAnnuel(false);
+        const d = new Date();
+        setDateDebut(d);
+        setDateAnniv(defaultAnniversaire(d));
+        setCustomAnniv(false);
+        setModePaiement("sepa");
+      }
     }
-  }, [open]);
+  }, [open, contrat]);
+
+  // Auto-update anniversaire if not custom
+  useEffect(() => {
+    if (!customAnniv) {
+      setDateAnniv(defaultAnniversaire(dateDebut));
+    }
+  }, [dateDebut, customAnniv]);
 
   // Auto-update anniversaire if not custom
   useEffect(() => {
@@ -255,9 +298,71 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
     setSubmitting(true);
     try {
       const passagesMois = Math.max(...lignes.map((l) => PACK_PASSAGES[l.typePack]));
-      const numero = await generateNumeroContrat(dateDebut);
+      const { data: userData } = await supabase.auth.getUser();
 
-      const { data: contrat, error: errContrat } = await supabase
+      if (isEdit && contrat) {
+        // Snapshot anciennes valeurs
+        const anciennes = {
+          engagement_annuel: contrat.engagement_annuel,
+          mode_paiement: contrat.mode_paiement,
+          date_anniversaire: contrat.date_anniversaire,
+          lignes: contrat.lignes,
+        };
+
+        const { error: errUpd } = await supabase
+          .from("contrats")
+          .update({
+            date_anniversaire: format(dateAnniv, "yyyy-MM-dd"),
+            engagement_annuel: engagementAnnuel,
+            mode_paiement: modePaiement,
+            passages_mois: passagesMois,
+          })
+          .eq("id", contrat.id);
+        if (errUpd) throw errUpd;
+
+        const { error: errDel } = await supabase
+          .from("contrat_lignes")
+          .delete()
+          .eq("contrat_id", contrat.id);
+        if (errDel) throw errDel;
+
+        const lignesPayload = lignes.map((l) => ({
+          contrat_id: contrat.id,
+          type_pack: l.typePack,
+          nb_vehicules: l.nbVehicules,
+          prix_unitaire_ht: PACK_PRIX[l.typePack],
+          statut_ligne: "actif",
+        }));
+        const { error: errIns } = await supabase.from("contrat_lignes").insert(lignesPayload);
+        if (errIns) throw errIns;
+
+        await supabase.from("admin_actions_log").insert({
+          action: "modification_contrat",
+          user_id: userData.user?.id ?? null,
+          details: {
+            contrat_id: contrat.id,
+            entreprise_id: entrepriseId,
+            anciennes_valeurs: anciennes,
+            nouvelles_valeurs: {
+              engagement_annuel: engagementAnnuel,
+              mode_paiement: modePaiement,
+              date_anniversaire: format(dateAnniv, "yyyy-MM-dd"),
+              lignes: lignes.map((l) => ({
+                type_pack: l.typePack,
+                nb_vehicules: l.nbVehicules,
+              })),
+            },
+          },
+        });
+
+        toast.success(`Contrat ${contrat.numero_contrat ?? ""} mis à jour.`);
+        onOpenChange(false);
+        onCreated?.();
+        return;
+      }
+
+      const numero = await generateNumeroContrat(dateDebut);
+      const { data: created, error: errContrat } = await supabase
         .from("contrats")
         .insert([
           {
@@ -275,10 +380,10 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
         .select("id, numero_contrat")
         .single();
 
-      if (errContrat || !contrat) throw errContrat ?? new Error("Échec création contrat");
+      if (errContrat || !created) throw errContrat ?? new Error("Échec création contrat");
 
       const lignesPayload = lignes.map((l) => ({
-        contrat_id: contrat.id,
+        contrat_id: created.id,
         type_pack: l.typePack,
         nb_vehicules: l.nbVehicules,
         prix_unitaire_ht: PACK_PRIX[l.typePack],
@@ -288,23 +393,23 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
       const { error: errLignes } = await supabase.from("contrat_lignes").insert(lignesPayload);
       if (errLignes) throw errLignes;
 
-      const { data: userData } = await supabase.auth.getUser();
       await supabase.from("admin_actions_log").insert({
         action: "creation_contrat",
         user_id: userData.user?.id ?? null,
         details: {
-          contrat_id: contrat.id,
+          contrat_id: created.id,
           entreprise_id: entrepriseId,
           palier,
           total_ht: facture?.totalAbonnementHt ?? 0,
+          nb_vehicules_lignes: totalVehicules,
         },
       });
 
-      toast.success(`Contrat ${contrat.numero_contrat ?? ""} créé avec succès.`);
+      toast.success(`Contrat ${created.numero_contrat ?? ""} créé avec succès.`);
       onOpenChange(false);
       onCreated?.();
     } catch (e: any) {
-      toast.error(e?.message ?? "Erreur lors de la création");
+      toast.error(e?.message ?? "Erreur lors de l'enregistrement");
     } finally {
       setSubmitting(false);
     }
@@ -316,9 +421,15 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nouveau contrat</DialogTitle>
+          <DialogTitle>
+            {isEdit
+              ? `Modifier le contrat ${contrat?.numero_contrat ?? ""}`
+              : "Nouveau contrat"}
+          </DialogTitle>
           <DialogDescription>
-            Créez un contrat avec aperçu de facturation en temps réel.
+            {isEdit
+              ? "Modifiez les lignes, l'engagement, le mode de paiement ou la date d'anniversaire. L'entreprise et la date de début ne sont pas modifiables."
+              : "Créez un contrat avec aperçu de facturation en temps réel."}
           </DialogDescription>
         </DialogHeader>
 
@@ -328,20 +439,25 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
             {/* Entreprise */}
             <div className="space-y-2">
               <Label>Entreprise</Label>
-              <Popover open={comboOpen} onOpenChange={setComboOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-between font-normal"
-                  >
-                    {selectedEntreprise
-                      ? selectedEntreprise.nom
-                      : "Sélectionner une entreprise..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+              {isEdit ? (
+                <div className="h-9 flex items-center px-3 text-sm rounded-md border bg-muted/40">
+                  {contrat?.entreprise_nom ?? selectedEntreprise?.nom ?? "—"}
+                </div>
+              ) : (
+                <Popover open={comboOpen} onOpenChange={setComboOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
+                    >
+                      {selectedEntreprise
+                        ? selectedEntreprise.nom
+                        : "Sélectionner une entreprise..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                   <Command>
                     <CommandInput placeholder="Rechercher..." />
                     <CommandList>
@@ -373,9 +489,10 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
                       </CommandGroup>
                     </CommandList>
                   </Command>
-                </PopoverContent>
-              </Popover>
-              {vehiculesActifs !== null && (
+                  </PopoverContent>
+                </Popover>
+              )}
+              {!isEdit && vehiculesActifs !== null && (
                 <p className="text-xs text-muted-foreground">
                   Cette entreprise a {vehiculesActifs} véhicule
                   {vehiculesActifs > 1 ? "s" : ""} actif{vehiculesActifs > 1 ? "s" : ""}.
@@ -454,28 +571,34 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Date de début</Label>
-                <Popover open={debutOpen} onOpenChange={setDebutOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(dateDebut, "dd/MM/yyyy")}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateDebut}
-                      onSelect={(d) => {
-                        if (d) {
-                          setDateDebut(d);
-                          setDebutOpen(false);
-                        }
-                      }}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
+                {isEdit ? (
+                  <div className="h-9 flex items-center px-3 text-sm rounded-md border bg-muted/40 text-muted-foreground">
+                    {format(dateDebut, "dd/MM/yyyy")}
+                  </div>
+                ) : (
+                  <Popover open={debutOpen} onOpenChange={setDebutOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(dateDebut, "dd/MM/yyyy")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateDebut}
+                        onSelect={(d) => {
+                          if (d) {
+                            setDateDebut(d);
+                            setDebutOpen(false);
+                          }
+                        }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -592,7 +715,13 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
             Annuler
           </Button>
           <Button variant="izox" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Création..." : "Créer le contrat"}
+            {submitting
+              ? isEdit
+                ? "Enregistrement..."
+                : "Création..."
+              : isEdit
+                ? "Enregistrer"
+                : "Créer le contrat"}
           </Button>
         </DialogFooter>
       </DialogContent>

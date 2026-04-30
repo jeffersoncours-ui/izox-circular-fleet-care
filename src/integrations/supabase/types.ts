@@ -658,6 +658,7 @@ export type Database = {
         | "en_attente_validation"
         | "remplace"
         | "archive"
+        | "refuse"
       type_client: "flotte" | "concession" | "vtc" | "autre"
       type_prestation_enum:
         | "pack_interieur"
@@ -807,6 +808,7 @@ export const Constants = {
         "en_attente_validation",
         "remplace",
         "archive",
+        "refuse",
       ],
       type_client: ["flotte", "concession", "vtc", "autre"],
       type_prestation_enum: [

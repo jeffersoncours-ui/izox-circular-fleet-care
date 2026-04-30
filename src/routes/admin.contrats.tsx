@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { calculerFactureFlotte, getPalier } from "@/lib/pricing";
@@ -361,9 +361,11 @@ function ContratsList() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handlePlaceholder("Modification du contrat")}
+                                asChild
                               >
-                                <Eye className="h-4 w-4" />
+                                <Link to="/admin/contrats/$id" params={{ id: r.id }}>
+                                  <Eye className="h-4 w-4" />
+                                </Link>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Voir / Modifier</TooltipContent>
@@ -459,9 +461,11 @@ function ContratsList() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handlePlaceholder("Modification du contrat")}
+                    asChild
                   >
-                    <Eye className="h-4 w-4" />
+                    <Link to="/admin/contrats/$id" params={{ id: r.id }}>
+                      <Eye className="h-4 w-4" />
+                    </Link>
                   </Button>
                   <Button variant="ghost" size="sm" disabled>
                     <Pause className="h-4 w-4" />
