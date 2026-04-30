@@ -491,7 +491,8 @@ function ContratsList() {
                     variant="ghost"
                     size="sm"
                     className="text-destructive"
-                    onClick={() => handlePlaceholder("Résiliation")}
+                    onClick={() => openResil(r)}
+                    disabled={r.statut === "resilie"}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -506,6 +507,16 @@ function ContratsList() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreated={load}
+      />
+
+      <ResiliationContratDialog
+        open={!!resilTarget}
+        onOpenChange={(o) => !o && setResilTarget(null)}
+        contrat={resilTarget}
+        onResiliated={() => {
+          setResilTarget(null);
+          load();
+        }}
       />
     </div>
   );
