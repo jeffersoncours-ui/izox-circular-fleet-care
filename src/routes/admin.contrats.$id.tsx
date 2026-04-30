@@ -211,21 +211,73 @@ function ContratDetailPage() {
     const userIds = Array.from(
       new Set(baseLogs.map((l) => l.user_id).filter((x): x is string => !!x))
     );
-    let usersMap: Record<string, string> = {};
+    const profilesMap: Record<
+      string,
+      { name: string; entreprise_id: string | null }
+    > = {};
+    const rolesMap: Record<string, string> = {};
     if (userIds.length > 0) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, prenom, nom")
-        .in("id", userIds);
+      const [{ data: profs }, { data: roles }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, prenom, nom, entreprise_id")
+          .in("id", userIds),
+        supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
+      ]);
       for (const p of (profs as any[]) ?? []) {
-        usersMap[p.id] = `${p.prenom ?? ""} ${p.nom ?? ""}`.trim() || "Utilisateur";
+        profilesMap[p.id] = {
+          name: `${p.prenom ?? ""} ${p.nom ?? ""}`.trim() || "Utilisateur",
+          entreprise_id: p.entreprise_id ?? null,
+        };
+      }
+      for (const r of (roles as any[]) ?? []) {
+        rolesMap[r.user_id] = r.role;
       }
     }
+    const contratEntrepriseId = (c as any).entreprise_id as string;
     setLogs(
-      baseLogs.map((l) => ({
-        ...l,
-        user_label: l.user_id ? usersMap[l.user_id] ?? "Utilisateur" : "Système",
-      }))
+      baseLogs.map((l) => {
+        if (SYSTEM_ACTIONS.has(l.action) && !l.user_id) {
+          return {
+            ...l,
+            author_kind: "systeme",
+            user_label: "automatique (système)",
+          };
+        }
+        if (!l.user_id) {
+          return {
+            ...l,
+            author_kind: "systeme",
+            user_label: "automatique (système)",
+          };
+        }
+        const prof = profilesMap[l.user_id];
+        const role = rolesMap[l.user_id];
+        const name = prof?.name ?? "Utilisateur";
+        if (role && role !== "client") {
+          return {
+            ...l,
+            author_kind: "interne",
+            author_role: role,
+            user_label: `par ${name} (${ROLE_LABEL[role] ?? role})`,
+          };
+        }
+        // client of this entreprise
+        if (prof?.entreprise_id && prof.entreprise_id === contratEntrepriseId) {
+          return {
+            ...l,
+            author_kind: "client",
+            author_role: "client",
+            user_label: `par le client ${name}`,
+          };
+        }
+        return {
+          ...l,
+          author_kind: "interne",
+          author_role: role ?? null,
+          user_label: `par ${name}${role ? ` (${ROLE_LABEL[role] ?? role})` : ""}`,
+        };
+      })
     );
 
     setLoading(false);
