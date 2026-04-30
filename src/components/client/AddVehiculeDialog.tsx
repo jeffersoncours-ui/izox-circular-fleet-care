@@ -14,6 +14,7 @@ import { VEHICULE_TYPES, type VehiculeType } from "./VehiculeIcons";
 import { cn } from "@/lib/utils";
 import { Loader2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getVehiculePhotoUrl } from "@/lib/vehicule-photo";
 import { useAuth } from "@/lib/auth-context";
 import { compressImage } from "@/lib/image";
 import { toast } from "sonner";
