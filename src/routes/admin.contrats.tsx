@@ -39,6 +39,10 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
+import {
+  ResiliationContratDialog,
+  type ResiliationContratInput,
+} from "@/components/admin/ResiliationContratDialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/contrats")({
