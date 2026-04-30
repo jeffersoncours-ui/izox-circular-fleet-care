@@ -218,6 +218,17 @@ function ContratsList() {
     toast.info(`${label} — bientôt disponible.`);
   };
 
+  const openResil = (r: ContratRow) => {
+    setResilTarget({
+      id: r.id,
+      numero_contrat: r.numero_contrat,
+      entreprise_id: r.entreprise?.id ?? "",
+      entreprise_nom: r.entreprise?.nom ?? null,
+      engagement_annuel: r.engagement_annuel,
+      lignes: r.lignes,
+    });
+  };
+
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto">
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
