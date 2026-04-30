@@ -242,7 +242,6 @@ export interface FileRoutesById {
   '/client/': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
-  '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
