@@ -489,9 +489,10 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
                       </CommandGroup>
                     </CommandList>
                   </Command>
-                </PopoverContent>
-              </Popover>
-              {vehiculesActifs !== null && (
+                  </PopoverContent>
+                </Popover>
+              )}
+              {!isEdit && vehiculesActifs !== null && (
                 <p className="text-xs text-muted-foreground">
                   Cette entreprise a {vehiculesActifs} véhicule
                   {vehiculesActifs > 1 ? "s" : ""} actif{vehiculesActifs > 1 ? "s" : ""}.
