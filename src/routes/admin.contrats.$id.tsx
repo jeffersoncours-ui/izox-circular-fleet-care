@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 
 import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
+import { ResiliationContratDialog } from "@/components/admin/ResiliationContratDialog";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 
 export const Route = createFileRoute("/admin/contrats/$id")({
@@ -123,7 +124,22 @@ interface LogEntry {
   user_id: string | null;
   details: any;
   user_label?: string;
+  author_kind?: "interne" | "client" | "systeme";
+  author_role?: string | null;
 }
+
+const SYSTEM_ACTIONS = new Set([
+  "cloture_mensuelle",
+  "bascule_automatique_remplacement",
+]);
+
+const ROLE_LABEL: Record<string, string> = {
+  admin: "admin",
+  staff: "staff",
+  commercial: "commercial",
+  operateur: "opérateur",
+  client: "client",
+};
 
 function ContratDetailPage() {
   const { id } = useParams({ from: "/admin/contrats/$id" });
@@ -137,8 +153,6 @@ function ContratDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [resilOpen, setResilOpen] = useState(false);
-  const [resilMotif, setResilMotif] = useState("");
-  const [resilSubmitting, setResilSubmitting] = useState(false);
 
   const [validateVeh, setValidateVeh] = useState<Vehicule | null>(null);
   const [refuseVeh, setRefuseVeh] = useState<Vehicule | null>(null);
@@ -195,21 +209,73 @@ function ContratDetailPage() {
     const userIds = Array.from(
       new Set(baseLogs.map((l) => l.user_id).filter((x): x is string => !!x))
     );
-    let usersMap: Record<string, string> = {};
+    const profilesMap: Record<
+      string,
+      { name: string; entreprise_id: string | null }
+    > = {};
+    const rolesMap: Record<string, string> = {};
     if (userIds.length > 0) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, prenom, nom")
-        .in("id", userIds);
+      const [{ data: profs }, { data: roles }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, prenom, nom, entreprise_id")
+          .in("id", userIds),
+        supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
+      ]);
       for (const p of (profs as any[]) ?? []) {
-        usersMap[p.id] = `${p.prenom ?? ""} ${p.nom ?? ""}`.trim() || "Utilisateur";
+        profilesMap[p.id] = {
+          name: `${p.prenom ?? ""} ${p.nom ?? ""}`.trim() || "Utilisateur",
+          entreprise_id: p.entreprise_id ?? null,
+        };
+      }
+      for (const r of (roles as any[]) ?? []) {
+        rolesMap[r.user_id] = r.role;
       }
     }
+    const contratEntrepriseId = (c as any).entreprise_id as string;
     setLogs(
-      baseLogs.map((l) => ({
-        ...l,
-        user_label: l.user_id ? usersMap[l.user_id] ?? "Utilisateur" : "Système",
-      }))
+      baseLogs.map((l) => {
+        if (SYSTEM_ACTIONS.has(l.action) && !l.user_id) {
+          return {
+            ...l,
+            author_kind: "systeme",
+            user_label: "automatique (système)",
+          };
+        }
+        if (!l.user_id) {
+          return {
+            ...l,
+            author_kind: "systeme",
+            user_label: "automatique (système)",
+          };
+        }
+        const prof = profilesMap[l.user_id];
+        const role = rolesMap[l.user_id];
+        const name = prof?.name ?? "Utilisateur";
+        if (role && role !== "client") {
+          return {
+            ...l,
+            author_kind: "interne",
+            author_role: role,
+            user_label: `par ${name} (${ROLE_LABEL[role] ?? role})`,
+          };
+        }
+        // client of this entreprise
+        if (prof?.entreprise_id && prof.entreprise_id === contratEntrepriseId) {
+          return {
+            ...l,
+            author_kind: "client",
+            author_role: "client",
+            user_label: `par le client ${name}`,
+          };
+        }
+        return {
+          ...l,
+          author_kind: "interne",
+          author_role: role ?? null,
+          user_label: `par ${name}${role ? ` (${ROLE_LABEL[role] ?? role})` : ""}`,
+        };
+      })
     );
 
     setLoading(false);
@@ -236,54 +302,6 @@ function ContratDetailPage() {
   const goBack = () => {
     if (window.history.length > 1) router.history.back();
     else navigate({ to: "/admin/contrats" });
-  };
-
-  const handleResilier = async () => {
-    if (!contrat) return;
-    setResilSubmitting(true);
-    try {
-      const { error: e1 } = await supabase
-        .from("contrats")
-        .update({
-          statut: "resilie",
-          date_fin: format(new Date(), "yyyy-MM-dd"),
-        })
-        .eq("id", contrat.id);
-      if (e1) throw e1;
-
-      // Détacher les véhicules
-      const vehIds = vehiculesActifs.map((v) => v.id);
-      if (vehIds.length > 0) {
-        const { error: e2 } = await supabase
-          .from("vehicules")
-          .update({ contrat_id: null })
-          .eq("contrat_id", contrat.id);
-        if (e2) throw e2;
-      }
-
-      const { data: userData } = await supabase.auth.getUser();
-      await supabase.from("admin_actions_log").insert({
-        action: "resiliation_contrat",
-        user_id: userData.user?.id ?? null,
-        details: {
-          contrat_id: contrat.id,
-          entreprise_id: contrat.entreprise_id,
-          mensualite_perdue: facture?.totalAbonnementHt ?? 0,
-          motif: resilMotif || null,
-          vehicules_concernes_count: vehIds.length,
-        },
-      });
-
-      toast.success(
-        `Contrat ${contrat.numero_contrat ?? ""} résilié. Manque à gagner mensuel : ${(facture?.totalAbonnementHt ?? 0).toFixed(2)} € HT.`
-      );
-      navigate({ to: "/admin/contrats" });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Erreur lors de la résiliation");
-    } finally {
-      setResilSubmitting(false);
-      setResilOpen(false);
-    }
   };
 
   if (loading) {
@@ -607,77 +625,27 @@ function ContratDetailPage() {
         }
       />
 
-      {/* Resiliation dialog */}
-      <AlertDialog open={resilOpen} onOpenChange={setResilOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Résilier le contrat {contrat.numero_contrat ?? ""} ?
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  Vous êtes sur le point de résilier le contrat{" "}
-                  <span className="font-semibold text-foreground">
-                    {contrat.numero_contrat}
-                  </span>{" "}
-                  de{" "}
-                  <span className="font-semibold text-foreground">
-                    {contrat.entreprise?.nom}
-                  </span>
-                  .
-                </p>
-                <p>
-                  Cela représente une perte de{" "}
-                  <span className="font-bold text-destructive text-base">
-                    {(facture?.totalAbonnementHt ?? 0).toFixed(2)} € HT/mois
-                  </span>{" "}
-                  pour IZOX.
-                </p>
-                <div className="bg-muted/40 rounded-md p-3 text-xs space-y-1">
-                  <p>Après résiliation :</p>
-                  <ul className="list-disc list-inside space-y-0.5">
-                    <li>
-                      Tous les véhicules liés ({vehiculesActifs.length}) verront leur contrat
-                      détaché
-                    </li>
-                    <li>Le contrat passera en statut « résilié »</li>
-                    <li>Les passages restants du mois seront perdus</li>
-                    <li>Cette action est définitive et ne peut pas être annulée</li>
-                  </ul>
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="motif">Motif de résiliation (optionnel)</Label>
-            <Textarea
-              id="motif"
-              value={resilMotif}
-              onChange={(e) => setResilMotif(e.target.value)}
-              placeholder="Pour audit interne et statistiques de churn..."
-              rows={3}
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={resilSubmitting}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleResilier();
-              }}
-              disabled={resilSubmitting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {resilSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Confirmer la résiliation"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Resiliation dialog (shared) */}
+      <ResiliationContratDialog
+        open={resilOpen}
+        onOpenChange={setResilOpen}
+        contrat={
+          contrat
+            ? {
+                id: contrat.id,
+                numero_contrat: contrat.numero_contrat,
+                entreprise_id: contrat.entreprise_id,
+                entreprise_nom: contrat.entreprise?.nom ?? null,
+                engagement_annuel: contrat.engagement_annuel,
+                lignes: contrat.lignes,
+              }
+            : null
+        }
+        onResiliated={() => {
+          load();
+          navigate({ to: "/admin/contrats" });
+        }}
+      />
 
       {/* Validation dialog */}
       {validateVeh && (
@@ -747,7 +715,7 @@ function TimelineItem({ log }: { log: LogEntry }) {
       {meta.subtitle && (
         <p className="text-xs text-muted-foreground mt-0.5">{meta.subtitle}</p>
       )}
-      <p className="text-[11px] text-muted-foreground mt-0.5">par {log.user_label}</p>
+      <p className="text-[11px] text-muted-foreground mt-0.5">{log.user_label}</p>
     </li>
   );
 }
@@ -760,12 +728,18 @@ function getActionMeta(log: LogEntry): {
 } {
   const d = log.details ?? {};
   switch (log.action) {
-    case "creation_contrat":
+    case "creation_contrat": {
+      const nb = d.nb_vehicules_lignes ?? d.nb_vehicules_initial;
+      const palierLabel = d.palier ? PALIER_LABEL[d.palier] ?? d.palier : null;
+      const parts: string[] = ["Contrat créé"];
+      if (nb) parts[0] = `Contrat créé avec ${nb} véhicule(s)`;
+      if (palierLabel) parts.push(`Palier ${palierLabel}`);
       return {
         icon: Plus,
-        title: `Contrat créé${d.nb_vehicules_lignes ? ` avec ${d.nb_vehicules_lignes} véhicule(s)` : ""}`,
+        title: parts.join(" — "),
         colorClass: "bg-primary/15 text-primary",
       };
+    }
     case "modification_contrat":
       return {
         icon: Edit,
@@ -778,24 +752,36 @@ function getActionMeta(log: LogEntry): {
         icon: Repeat,
         title: "Remplacement de véhicule",
         subtitle: d.ancien_immat
-          ? `${d.ancien_immat} remplacé par ${d.nouveau_immat ?? "—"}`
+          ? `${d.ancien_immat} → ${d.nouveau_immat ?? "—"}`
           : undefined,
         colorClass: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
       };
-    case "validation_vehicule_attente":
+    case "validation_vehicule_attente": {
+      const av = d.palier_avant;
+      const ap = d.palier_apres;
+      const subtitle =
+        av && ap && av !== ap
+          ? `Palier ${PALIER_LABEL[ap] ?? ap} (était ${PALIER_LABEL[av] ?? av})`
+          : ap
+          ? `Palier ${PALIER_LABEL[ap] ?? ap}`
+          : undefined;
       return {
         icon: Check,
         title: `Véhicule ${d.vehicule_immat ?? ""} validé`.trim(),
-        subtitle: d.palier_avant !== d.palier_apres
-          ? `Palier : ${PALIER_LABEL[d.palier_avant] ?? d.palier_avant} → ${PALIER_LABEL[d.palier_apres] ?? d.palier_apres}`
-          : undefined,
+        subtitle,
         colorClass: "bg-primary/15 text-primary",
       };
+    }
     case "bascule_automatique_remplacement":
       return {
         icon: Repeat,
-        title: "Bascule automatique de remplacement",
-        subtitle: d.ancien_immat ? `${d.ancien_immat} archivé` : undefined,
+        title: "Bascule automatique",
+        subtitle:
+          d.ancien_immat && d.nouveau_immat
+            ? `${d.ancien_immat} → ${d.nouveau_immat}`
+            : d.ancien_immat
+            ? `${d.ancien_immat} archivé`
+            : undefined,
         colorClass: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
       };
     case "refus_vehicule_attente":
@@ -805,17 +791,34 @@ function getActionMeta(log: LogEntry): {
         subtitle: d.motif ?? undefined,
         colorClass: "bg-destructive/15 text-destructive",
       };
-    case "resiliation_contrat":
+    case "resiliation_contrat": {
+      const perte =
+        typeof d.mensualite_perdue === "number" ? d.mensualite_perdue : null;
+      const title =
+        perte !== null
+          ? `Contrat résilié — perte mensuelle ${perte.toFixed(2)} € HT`
+          : "Contrat résilié";
       return {
         icon: X,
-        title: "Contrat résilié",
-        subtitle: d.motif ?? undefined,
+        title,
+        subtitle: d.motif ? `Motif : ${d.motif}` : undefined,
         colorClass: "bg-destructive/15 text-destructive",
       };
+    }
     case "gel_contrat":
       return {
         icon: Pause,
         title: `Contrat gelé${d.gel_date_debut ? ` du ${d.gel_date_debut}` : ""}${d.gel_date_fin ? ` au ${d.gel_date_fin}` : ""}`,
+        colorClass: "bg-muted text-muted-foreground",
+      };
+    case "cloture_mensuelle":
+      return {
+        icon: History,
+        title: "Clôture mensuelle",
+        subtitle:
+          d.passages_reportes != null
+            ? `${d.passages_reportes} passage(s) reporté(s)`
+            : undefined,
         colorClass: "bg-muted text-muted-foreground",
       };
     default:
@@ -833,13 +836,33 @@ function summarizeChanges(d: any): string | undefined {
   const n = d.nouvelles_valeurs;
   const parts: string[] = [];
   if (a.engagement_annuel !== n.engagement_annuel) {
-    parts.push(`engagement annuel : ${a.engagement_annuel ? "oui" : "non"} → ${n.engagement_annuel ? "oui" : "non"}`);
+    parts.push(
+      `engagement annuel : ${a.engagement_annuel ? "oui" : "non"} → ${n.engagement_annuel ? "oui" : "non"}`
+    );
   }
   if (a.mode_paiement !== n.mode_paiement) {
     parts.push(`paiement : ${a.mode_paiement} → ${n.mode_paiement}`);
   }
-  if (JSON.stringify(a.lignes) !== JSON.stringify(n.lignes)) {
-    parts.push("lignes de pack mises à jour");
+  // Diff lignes de pack
+  const aL: Array<{ type_pack: string; nb_vehicules: number }> = a.lignes ?? [];
+  const nL: Array<{ type_pack: string; nb_vehicules: number }> = n.lignes ?? [];
+  const PACK: Record<string, string> = {
+    pack_interieur: "Pack Intérieur",
+    pack_standard: "Pack Standard",
+    pack_vtc: "Pack VTC",
+  };
+  const aMap = new Map(aL.map((l) => [l.type_pack, l.nb_vehicules]));
+  const nMap = new Map(nL.map((l) => [l.type_pack, l.nb_vehicules]));
+  const allKeys = new Set([...aMap.keys(), ...nMap.keys()]);
+  for (const k of allKeys) {
+    const av = aMap.get(k) ?? 0;
+    const nv = nMap.get(k) ?? 0;
+    if (av === nv) continue;
+    const diff = nv - av;
+    const sign = diff > 0 ? "+" : "−";
+    parts.push(
+      `${sign}${Math.abs(diff)} ligne ${PACK[k] ?? k} × ${Math.abs(diff)} véhicule(s)`
+    );
   }
   return parts.length > 0 ? parts.join(" · ") : undefined;
 }

@@ -39,6 +39,10 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
+import {
+  ResiliationContratDialog,
+  type ResiliationContratInput,
+} from "@/components/admin/ResiliationContratDialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/contrats")({
@@ -104,6 +108,7 @@ function ContratsList() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
+  const [resilTarget, setResilTarget] = useState<ResiliationContratInput | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -211,6 +216,17 @@ function ContratsList() {
 
   const handlePlaceholder = (label: string) => {
     toast.info(`${label} — bientôt disponible.`);
+  };
+
+  const openResil = (r: ContratRow) => {
+    setResilTarget({
+      id: r.id,
+      numero_contrat: r.numero_contrat,
+      entreprise_id: r.entreprise?.id ?? "",
+      entreprise_nom: r.entreprise?.nom ?? null,
+      engagement_annuel: r.engagement_annuel,
+      lignes: r.lignes,
+    });
   };
 
   return (
@@ -386,7 +402,8 @@ function ContratsList() {
                                 variant="ghost"
                                 size="icon"
                                 className="text-destructive hover:text-destructive"
-                                onClick={() => handlePlaceholder("Résiliation")}
+                                onClick={() => openResil(r)}
+                                disabled={r.statut === "resilie"}
                               >
                                 <X className="h-4 w-4" />
                               </Button>
@@ -474,7 +491,8 @@ function ContratsList() {
                     variant="ghost"
                     size="sm"
                     className="text-destructive"
-                    onClick={() => handlePlaceholder("Résiliation")}
+                    onClick={() => openResil(r)}
+                    disabled={r.statut === "resilie"}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -489,6 +507,16 @@ function ContratsList() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreated={load}
+      />
+
+      <ResiliationContratDialog
+        open={!!resilTarget}
+        onOpenChange={(o) => !o && setResilTarget(null)}
+        contrat={resilTarget}
+        onResiliated={() => {
+          setResilTarget(null);
+          load();
+        }}
       />
     </div>
   );
