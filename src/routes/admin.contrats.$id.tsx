@@ -304,54 +304,6 @@ function ContratDetailPage() {
     else navigate({ to: "/admin/contrats" });
   };
 
-  const handleResilier = async () => {
-    if (!contrat) return;
-    setResilSubmitting(true);
-    try {
-      const { error: e1 } = await supabase
-        .from("contrats")
-        .update({
-          statut: "resilie",
-          date_fin: format(new Date(), "yyyy-MM-dd"),
-        })
-        .eq("id", contrat.id);
-      if (e1) throw e1;
-
-      // Détacher les véhicules
-      const vehIds = vehiculesActifs.map((v) => v.id);
-      if (vehIds.length > 0) {
-        const { error: e2 } = await supabase
-          .from("vehicules")
-          .update({ contrat_id: null })
-          .eq("contrat_id", contrat.id);
-        if (e2) throw e2;
-      }
-
-      const { data: userData } = await supabase.auth.getUser();
-      await supabase.from("admin_actions_log").insert({
-        action: "resiliation_contrat",
-        user_id: userData.user?.id ?? null,
-        details: {
-          contrat_id: contrat.id,
-          entreprise_id: contrat.entreprise_id,
-          mensualite_perdue: facture?.totalAbonnementHt ?? 0,
-          motif: resilMotif || null,
-          vehicules_concernes_count: vehIds.length,
-        },
-      });
-
-      toast.success(
-        `Contrat ${contrat.numero_contrat ?? ""} résilié. Manque à gagner mensuel : ${(facture?.totalAbonnementHt ?? 0).toFixed(2)} € HT.`
-      );
-      navigate({ to: "/admin/contrats" });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Erreur lors de la résiliation");
-    } finally {
-      setResilSubmitting(false);
-      setResilOpen(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="p-6 lg:p-10 max-w-5xl mx-auto space-y-4">
