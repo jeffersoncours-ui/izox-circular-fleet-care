@@ -57,14 +57,7 @@ function VehiculeDetail() {
       .eq("id", id)
       .maybeSingle();
     setVehicule((data as Vehicule) ?? null);
-    if (data?.photo_path) {
-      const { data: signed } = await supabase.storage
-        .from("vehicules")
-        .createSignedUrl(data.photo_path, 3600);
-      setPhotoUrl(signed?.signedUrl ?? null);
-    } else {
-      setPhotoUrl(null);
-    }
+    setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
     setLoading(false);
   }, [id]);
 
