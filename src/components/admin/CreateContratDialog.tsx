@@ -259,17 +259,19 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
 
       const { data: contrat, error: errContrat } = await supabase
         .from("contrats")
-        .insert({
-          entreprise_id: entrepriseId,
-          date_debut: format(dateDebut, "yyyy-MM-dd"),
-          date_anniversaire: format(dateAnniv, "yyyy-MM-dd"),
-          engagement_annuel: engagementAnnuel,
-          mode_paiement: modePaiement,
-          passages_mois: passagesMois,
-          passages_restants_mois: passagesMois,
-          statut: "actif",
-          numero_contrat: numero,
-        })
+        .insert([
+          {
+            entreprise_id: entrepriseId,
+            date_debut: format(dateDebut, "yyyy-MM-dd"),
+            date_anniversaire: format(dateAnniv, "yyyy-MM-dd"),
+            engagement_annuel: engagementAnnuel,
+            mode_paiement: modePaiement,
+            passages_mois: passagesMois,
+            passages_restants_mois: passagesMois,
+            statut: "actif",
+            numero_contrat: numero,
+          },
+        ])
         .select("id, numero_contrat")
         .single();
 
