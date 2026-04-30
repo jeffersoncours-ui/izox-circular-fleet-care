@@ -715,7 +715,13 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
             Annuler
           </Button>
           <Button variant="izox" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Création..." : "Créer le contrat"}
+            {submitting
+              ? isEdit
+                ? "Enregistrement..."
+                : "Création..."
+              : isEdit
+                ? "Enregistrer"
+                : "Créer le contrat"}
           </Button>
         </DialogFooter>
       </DialogContent>
