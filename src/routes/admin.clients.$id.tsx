@@ -249,7 +249,7 @@ function ClientDetailPage() {
         </TabsContent>
 
         <TabsContent value="contrats" className="mt-6">
-          <ComingSoon />
+          <ContratsTab entrepriseId={id} />
         </TabsContent>
         <TabsContent value="factures" className="mt-6">
           <ComingSoon />
