@@ -402,7 +402,8 @@ function ContratsList() {
                                 variant="ghost"
                                 size="icon"
                                 className="text-destructive hover:text-destructive"
-                                onClick={() => handlePlaceholder("Résiliation")}
+                                onClick={() => openResil(r)}
+                                disabled={r.statut === "resilie"}
                               >
                                 <X className="h-4 w-4" />
                               </Button>
