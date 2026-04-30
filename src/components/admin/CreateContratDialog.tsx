@@ -439,20 +439,25 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
             {/* Entreprise */}
             <div className="space-y-2">
               <Label>Entreprise</Label>
-              <Popover open={comboOpen} onOpenChange={setComboOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-between font-normal"
-                  >
-                    {selectedEntreprise
-                      ? selectedEntreprise.nom
-                      : "Sélectionner une entreprise..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+              {isEdit ? (
+                <div className="h-9 flex items-center px-3 text-sm rounded-md border bg-muted/40">
+                  {contrat?.entreprise_nom ?? selectedEntreprise?.nom ?? "—"}
+                </div>
+              ) : (
+                <Popover open={comboOpen} onOpenChange={setComboOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
+                    >
+                      {selectedEntreprise
+                        ? selectedEntreprise.nom
+                        : "Sélectionner une entreprise..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                   <Command>
                     <CommandInput placeholder="Rechercher..." />
                     <CommandList>
