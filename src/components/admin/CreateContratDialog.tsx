@@ -114,7 +114,7 @@ const schema = z.object({
   date_debut: z.date({ required_error: "Date de début requise" }),
   date_anniversaire: z.date({ required_error: "Date d'anniversaire requise" }),
   engagement_annuel: z.boolean(),
-  mode_paiement: z.enum(["sepa", "virement", "cb_stripe"]),
+  mode_paiement: z.enum(["sepa", "virement", "stripe"]),
   lignes: z
     .array(
       z.object({
@@ -142,7 +142,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
   const [dateDebut, setDateDebut] = useState<Date>(new Date());
   const [customAnniv, setCustomAnniv] = useState(false);
   const [dateAnniv, setDateAnniv] = useState<Date>(defaultAnniversaire(new Date()));
-  const [modePaiement, setModePaiement] = useState<"sepa" | "virement" | "cb_stripe">("sepa");
+  const [modePaiement, setModePaiement] = useState<"sepa" | "virement" | "stripe">("sepa");
   const [submitting, setSubmitting] = useState(false);
 
   const [debutOpen, setDebutOpen] = useState(false);
@@ -536,7 +536,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
                 <SelectContent>
                   <SelectItem value="sepa">SEPA</SelectItem>
                   <SelectItem value="virement">Virement</SelectItem>
-                  <SelectItem value="cb_stripe">CB Stripe</SelectItem>
+                  <SelectItem value="stripe">CB Stripe</SelectItem>
                 </SelectContent>
               </Select>
             </div>
