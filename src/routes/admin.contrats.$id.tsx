@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 
 import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
+import { ResiliationContratDialog } from "@/components/admin/ResiliationContratDialog";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 
 export const Route = createFileRoute("/admin/contrats/$id")({
