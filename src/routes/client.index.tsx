@@ -6,15 +6,31 @@ import { Card } from "@/components/ui/card";
 import { Car, CalendarDays, Sparkles, Award } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/client/")({
   component: ClientHome,
 });
 
+const PALIER_LABEL: Record<string, string> = {
+  starter: "Starter",
+  pro: "Pro",
+  business: "Business",
+  premium: "Premium",
+};
+
+const PALIER_CARD_CLASS: Record<string, string> = {
+  starter: "bg-muted text-muted-foreground",
+  pro: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-200",
+  business: "bg-primary/10 text-primary",
+  premium: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-200",
+};
+
 function ClientHome() {
   const { profile } = useAuth();
   const [vehiculeCount, setVehiculeCount] = useState(0);
   const [palier, setPalier] = useState<string>("");
+  const [numeroContrat, setNumeroContrat] = useState<string>("");
 
   useEffect(() => {
     if (!profile?.entreprise_id) return;
@@ -24,11 +40,29 @@ function ClientHome() {
         .select("id", { count: "exact", head: true })
         .eq("entreprise_id", profile.entreprise_id!)
         .eq("statut", "actif");
-      setVehiculeCount(v.count ?? 0);
-      // Le palier ne s'affiche que si un contrat actif existe en base
-      // pour cette entreprise. Tant que la table contrats n'existe pas
-      // ou qu'aucun contrat actif n'est lié, on n'affiche aucun palier.
-      setPalier("");
+      const count = v.count ?? 0;
+      setVehiculeCount(count);
+
+      // Récupère le contrat actif (le plus récent) pour calculer le palier
+      const { data: contrat } = await supabase
+        .from("contrats")
+        .select("numero_contrat, statut")
+        .eq("entreprise_id", profile.entreprise_id!)
+        .eq("statut", "actif")
+        .order("date_debut", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (contrat) {
+        // Calcul du palier depuis le nb de véhicules actifs
+        const p =
+          count >= 20 ? "premium" : count >= 10 ? "business" : count >= 5 ? "pro" : "starter";
+        setPalier(p);
+        setNumeroContrat(contrat.numero_contrat ?? "");
+      } else {
+        setPalier("");
+        setNumeroContrat("");
+      }
     })();
   }, [profile]);
 
@@ -61,13 +95,21 @@ function ClientHome() {
           value="—"
           sub="aucune prestation"
         />
-        <SummaryCard
-          icon={Award}
-          label="Palier"
-          value={palier ? palier : "Aucun contrat"}
-          sub={palier ? "tarifaire actif" : "Contactez IZOX"}
-          highlight={!palier}
-        />
+        {palier ? (
+          <PalierCard
+            palier={palier}
+            vehiculeCount={vehiculeCount}
+            numeroContrat={numeroContrat}
+          />
+        ) : (
+          <SummaryCard
+            icon={Award}
+            label="Palier"
+            value="Aucun contrat"
+            sub="Contactez IZOX"
+            highlight
+          />
+        )}
       </div>
 
       <Card className="mt-6 p-5 bg-primary text-primary-foreground border-none shadow-strong">
@@ -101,6 +143,33 @@ function SummaryCard({
       </div>
       <p className="text-2xl font-bold text-foreground capitalize">{value}</p>
       <p className={`text-[11px] mt-1 ${highlight ? "text-primary font-medium" : "text-muted-foreground"}`}>{sub}</p>
+    </Card>
+  );
+}
+
+function PalierCard({
+  palier,
+  vehiculeCount,
+  numeroContrat,
+}: {
+  palier: string;
+  vehiculeCount: number;
+  numeroContrat: string;
+}) {
+  const cls = PALIER_CARD_CLASS[palier] ?? "bg-card text-foreground";
+  return (
+    <Card className={cn("p-4 shadow-card border-border/60 h-full", cls)}>
+      <div className="flex items-start justify-between mb-2">
+        <p className="text-xs uppercase tracking-wide font-medium opacity-80">Palier</p>
+        <Award className="h-4 w-4" />
+      </div>
+      <p className="text-2xl font-bold capitalize">{PALIER_LABEL[palier] ?? palier}</p>
+      <p className="text-[11px] mt-1 opacity-80">
+        {vehiculeCount} véhicule{vehiculeCount > 1 ? "s" : ""} actif{vehiculeCount > 1 ? "s" : ""}
+      </p>
+      {numeroContrat && (
+        <p className="text-[11px] opacity-70 truncate">Contrat {numeroContrat}</p>
+      )}
     </Card>
   );
 }
