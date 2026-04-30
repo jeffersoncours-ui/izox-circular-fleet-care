@@ -163,20 +163,48 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
   const [debutOpen, setDebutOpen] = useState(false);
   const [annivOpen, setAnnivOpen] = useState(false);
 
-  // Reset when dialog opens
+  // Reset / hydrate when dialog opens
   useEffect(() => {
     if (open) {
-      setEntrepriseId("");
-      setVehiculesActifs(null);
-      setLignes([newLigne()]);
-      setEngagementAnnuel(false);
-      const d = new Date();
-      setDateDebut(d);
-      setDateAnniv(defaultAnniversaire(d));
-      setCustomAnniv(false);
-      setModePaiement("sepa");
+      if (contrat) {
+        setEntrepriseId(contrat.entreprise_id);
+        setLignes(
+          contrat.lignes.length > 0
+            ? contrat.lignes.map((l) => ({
+                id: crypto.randomUUID(),
+                typePack: l.type_pack,
+                nbVehicules: l.nb_vehicules,
+              }))
+            : [newLigne()]
+        );
+        setEngagementAnnuel(contrat.engagement_annuel);
+        const d = new Date(contrat.date_debut);
+        setDateDebut(d);
+        setDateAnniv(
+          contrat.date_anniversaire ? new Date(contrat.date_anniversaire) : defaultAnniversaire(d)
+        );
+        setCustomAnniv(true);
+        setModePaiement(contrat.mode_paiement);
+      } else {
+        setEntrepriseId("");
+        setVehiculesActifs(null);
+        setLignes([newLigne()]);
+        setEngagementAnnuel(false);
+        const d = new Date();
+        setDateDebut(d);
+        setDateAnniv(defaultAnniversaire(d));
+        setCustomAnniv(false);
+        setModePaiement("sepa");
+      }
     }
-  }, [open]);
+  }, [open, contrat]);
+
+  // Auto-update anniversaire if not custom
+  useEffect(() => {
+    if (!customAnniv) {
+      setDateAnniv(defaultAnniversaire(dateDebut));
+    }
+  }, [dateDebut, customAnniv]);
 
   // Auto-update anniversaire if not custom
   useEffect(() => {
