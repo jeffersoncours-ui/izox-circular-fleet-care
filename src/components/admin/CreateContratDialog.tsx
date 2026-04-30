@@ -571,28 +571,34 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Date de début</Label>
-                <Popover open={debutOpen} onOpenChange={setDebutOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(dateDebut, "dd/MM/yyyy")}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateDebut}
-                      onSelect={(d) => {
-                        if (d) {
-                          setDateDebut(d);
-                          setDebutOpen(false);
-                        }
-                      }}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
+                {isEdit ? (
+                  <div className="h-9 flex items-center px-3 text-sm rounded-md border bg-muted/40 text-muted-foreground">
+                    {format(dateDebut, "dd/MM/yyyy")}
+                  </div>
+                ) : (
+                  <Popover open={debutOpen} onOpenChange={setDebutOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(dateDebut, "dd/MM/yyyy")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateDebut}
+                        onSelect={(d) => {
+                          if (d) {
+                            setDateDebut(d);
+                            setDebutOpen(false);
+                          }
+                        }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
 
               <div className="space-y-2">
