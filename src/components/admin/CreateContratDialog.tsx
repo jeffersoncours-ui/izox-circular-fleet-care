@@ -421,9 +421,15 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nouveau contrat</DialogTitle>
+          <DialogTitle>
+            {isEdit
+              ? `Modifier le contrat ${contrat?.numero_contrat ?? ""}`
+              : "Nouveau contrat"}
+          </DialogTitle>
           <DialogDescription>
-            Créez un contrat avec aperçu de facturation en temps réel.
+            {isEdit
+              ? "Modifiez les lignes, l'engagement, le mode de paiement ou la date d'anniversaire. L'entreprise et la date de début ne sont pas modifiables."
+              : "Créez un contrat avec aperçu de facturation en temps réel."}
           </DialogDescription>
         </DialogHeader>
 
