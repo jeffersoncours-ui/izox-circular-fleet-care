@@ -815,7 +815,7 @@ function TimelineItem({ log }: { log: LogEntry }) {
       {meta.subtitle && (
         <p className="text-xs text-muted-foreground mt-0.5">{meta.subtitle}</p>
       )}
-      <p className="text-[11px] text-muted-foreground mt-0.5">par {log.user_label}</p>
+      <p className="text-[11px] text-muted-foreground mt-0.5">{log.user_label}</p>
     </li>
   );
 }
