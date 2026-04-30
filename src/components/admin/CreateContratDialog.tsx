@@ -298,9 +298,71 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
     setSubmitting(true);
     try {
       const passagesMois = Math.max(...lignes.map((l) => PACK_PASSAGES[l.typePack]));
-      const numero = await generateNumeroContrat(dateDebut);
+      const { data: userData } = await supabase.auth.getUser();
 
-      const { data: contrat, error: errContrat } = await supabase
+      if (isEdit && contrat) {
+        // Snapshot anciennes valeurs
+        const anciennes = {
+          engagement_annuel: contrat.engagement_annuel,
+          mode_paiement: contrat.mode_paiement,
+          date_anniversaire: contrat.date_anniversaire,
+          lignes: contrat.lignes,
+        };
+
+        const { error: errUpd } = await supabase
+          .from("contrats")
+          .update({
+            date_anniversaire: format(dateAnniv, "yyyy-MM-dd"),
+            engagement_annuel: engagementAnnuel,
+            mode_paiement: modePaiement,
+            passages_mois: passagesMois,
+          })
+          .eq("id", contrat.id);
+        if (errUpd) throw errUpd;
+
+        const { error: errDel } = await supabase
+          .from("contrat_lignes")
+          .delete()
+          .eq("contrat_id", contrat.id);
+        if (errDel) throw errDel;
+
+        const lignesPayload = lignes.map((l) => ({
+          contrat_id: contrat.id,
+          type_pack: l.typePack,
+          nb_vehicules: l.nbVehicules,
+          prix_unitaire_ht: PACK_PRIX[l.typePack],
+          statut_ligne: "actif",
+        }));
+        const { error: errIns } = await supabase.from("contrat_lignes").insert(lignesPayload);
+        if (errIns) throw errIns;
+
+        await supabase.from("admin_actions_log").insert({
+          action: "modification_contrat",
+          user_id: userData.user?.id ?? null,
+          details: {
+            contrat_id: contrat.id,
+            entreprise_id: entrepriseId,
+            anciennes_valeurs: anciennes,
+            nouvelles_valeurs: {
+              engagement_annuel: engagementAnnuel,
+              mode_paiement: modePaiement,
+              date_anniversaire: format(dateAnniv, "yyyy-MM-dd"),
+              lignes: lignes.map((l) => ({
+                type_pack: l.typePack,
+                nb_vehicules: l.nbVehicules,
+              })),
+            },
+          },
+        });
+
+        toast.success(`Contrat ${contrat.numero_contrat ?? ""} mis à jour.`);
+        onOpenChange(false);
+        onCreated?.();
+        return;
+      }
+
+      const numero = await generateNumeroContrat(dateDebut);
+      const { data: created, error: errContrat } = await supabase
         .from("contrats")
         .insert([
           {
@@ -318,10 +380,10 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
         .select("id, numero_contrat")
         .single();
 
-      if (errContrat || !contrat) throw errContrat ?? new Error("Échec création contrat");
+      if (errContrat || !created) throw errContrat ?? new Error("Échec création contrat");
 
       const lignesPayload = lignes.map((l) => ({
-        contrat_id: contrat.id,
+        contrat_id: created.id,
         type_pack: l.typePack,
         nb_vehicules: l.nbVehicules,
         prix_unitaire_ht: PACK_PRIX[l.typePack],
@@ -331,23 +393,23 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
       const { error: errLignes } = await supabase.from("contrat_lignes").insert(lignesPayload);
       if (errLignes) throw errLignes;
 
-      const { data: userData } = await supabase.auth.getUser();
       await supabase.from("admin_actions_log").insert({
         action: "creation_contrat",
         user_id: userData.user?.id ?? null,
         details: {
-          contrat_id: contrat.id,
+          contrat_id: created.id,
           entreprise_id: entrepriseId,
           palier,
           total_ht: facture?.totalAbonnementHt ?? 0,
+          nb_vehicules_lignes: totalVehicules,
         },
       });
 
-      toast.success(`Contrat ${contrat.numero_contrat ?? ""} créé avec succès.`);
+      toast.success(`Contrat ${created.numero_contrat ?? ""} créé avec succès.`);
       onOpenChange(false);
       onCreated?.();
     } catch (e: any) {
-      toast.error(e?.message ?? "Erreur lors de la création");
+      toast.error(e?.message ?? "Erreur lors de l'enregistrement");
     } finally {
       setSubmitting(false);
     }
