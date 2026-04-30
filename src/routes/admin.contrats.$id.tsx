@@ -828,12 +828,18 @@ function getActionMeta(log: LogEntry): {
 } {
   const d = log.details ?? {};
   switch (log.action) {
-    case "creation_contrat":
+    case "creation_contrat": {
+      const nb = d.nb_vehicules_lignes ?? d.nb_vehicules_initial;
+      const palierLabel = d.palier ? PALIER_LABEL[d.palier] ?? d.palier : null;
+      const parts: string[] = ["Contrat créé"];
+      if (nb) parts[0] = `Contrat créé avec ${nb} véhicule(s)`;
+      if (palierLabel) parts.push(`Palier ${palierLabel}`);
       return {
         icon: Plus,
-        title: `Contrat créé${d.nb_vehicules_lignes ? ` avec ${d.nb_vehicules_lignes} véhicule(s)` : ""}`,
+        title: parts.join(" — "),
         colorClass: "bg-primary/15 text-primary",
       };
+    }
     case "modification_contrat":
       return {
         icon: Edit,
@@ -846,24 +852,36 @@ function getActionMeta(log: LogEntry): {
         icon: Repeat,
         title: "Remplacement de véhicule",
         subtitle: d.ancien_immat
-          ? `${d.ancien_immat} remplacé par ${d.nouveau_immat ?? "—"}`
+          ? `${d.ancien_immat} → ${d.nouveau_immat ?? "—"}`
           : undefined,
         colorClass: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
       };
-    case "validation_vehicule_attente":
+    case "validation_vehicule_attente": {
+      const av = d.palier_avant;
+      const ap = d.palier_apres;
+      const subtitle =
+        av && ap && av !== ap
+          ? `Palier ${PALIER_LABEL[ap] ?? ap} (était ${PALIER_LABEL[av] ?? av})`
+          : ap
+          ? `Palier ${PALIER_LABEL[ap] ?? ap}`
+          : undefined;
       return {
         icon: Check,
         title: `Véhicule ${d.vehicule_immat ?? ""} validé`.trim(),
-        subtitle: d.palier_avant !== d.palier_apres
-          ? `Palier : ${PALIER_LABEL[d.palier_avant] ?? d.palier_avant} → ${PALIER_LABEL[d.palier_apres] ?? d.palier_apres}`
-          : undefined,
+        subtitle,
         colorClass: "bg-primary/15 text-primary",
       };
+    }
     case "bascule_automatique_remplacement":
       return {
         icon: Repeat,
-        title: "Bascule automatique de remplacement",
-        subtitle: d.ancien_immat ? `${d.ancien_immat} archivé` : undefined,
+        title: "Bascule automatique",
+        subtitle:
+          d.ancien_immat && d.nouveau_immat
+            ? `${d.ancien_immat} → ${d.nouveau_immat}`
+            : d.ancien_immat
+            ? `${d.ancien_immat} archivé`
+            : undefined,
         colorClass: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
       };
     case "refus_vehicule_attente":
@@ -873,17 +891,34 @@ function getActionMeta(log: LogEntry): {
         subtitle: d.motif ?? undefined,
         colorClass: "bg-destructive/15 text-destructive",
       };
-    case "resiliation_contrat":
+    case "resiliation_contrat": {
+      const perte =
+        typeof d.mensualite_perdue === "number" ? d.mensualite_perdue : null;
+      const title =
+        perte !== null
+          ? `Contrat résilié — perte mensuelle ${perte.toFixed(2)} € HT`
+          : "Contrat résilié";
       return {
         icon: X,
-        title: "Contrat résilié",
-        subtitle: d.motif ?? undefined,
+        title,
+        subtitle: d.motif ? `Motif : ${d.motif}` : undefined,
         colorClass: "bg-destructive/15 text-destructive",
       };
+    }
     case "gel_contrat":
       return {
         icon: Pause,
         title: `Contrat gelé${d.gel_date_debut ? ` du ${d.gel_date_debut}` : ""}${d.gel_date_fin ? ` au ${d.gel_date_fin}` : ""}`,
+        colorClass: "bg-muted text-muted-foreground",
+      };
+    case "cloture_mensuelle":
+      return {
+        icon: History,
+        title: "Clôture mensuelle",
+        subtitle:
+          d.passages_reportes != null
+            ? `${d.passages_reportes} passage(s) reporté(s)`
+            : undefined,
         colorClass: "bg-muted text-muted-foreground",
       };
     default:
@@ -901,13 +936,33 @@ function summarizeChanges(d: any): string | undefined {
   const n = d.nouvelles_valeurs;
   const parts: string[] = [];
   if (a.engagement_annuel !== n.engagement_annuel) {
-    parts.push(`engagement annuel : ${a.engagement_annuel ? "oui" : "non"} → ${n.engagement_annuel ? "oui" : "non"}`);
+    parts.push(
+      `engagement annuel : ${a.engagement_annuel ? "oui" : "non"} → ${n.engagement_annuel ? "oui" : "non"}`
+    );
   }
   if (a.mode_paiement !== n.mode_paiement) {
     parts.push(`paiement : ${a.mode_paiement} → ${n.mode_paiement}`);
   }
-  if (JSON.stringify(a.lignes) !== JSON.stringify(n.lignes)) {
-    parts.push("lignes de pack mises à jour");
+  // Diff lignes de pack
+  const aL: Array<{ type_pack: string; nb_vehicules: number }> = a.lignes ?? [];
+  const nL: Array<{ type_pack: string; nb_vehicules: number }> = n.lignes ?? [];
+  const PACK: Record<string, string> = {
+    pack_interieur: "Pack Intérieur",
+    pack_standard: "Pack Standard",
+    pack_vtc: "Pack VTC",
+  };
+  const aMap = new Map(aL.map((l) => [l.type_pack, l.nb_vehicules]));
+  const nMap = new Map(nL.map((l) => [l.type_pack, l.nb_vehicules]));
+  const allKeys = new Set([...aMap.keys(), ...nMap.keys()]);
+  for (const k of allKeys) {
+    const av = aMap.get(k) ?? 0;
+    const nv = nMap.get(k) ?? 0;
+    if (av === nv) continue;
+    const diff = nv - av;
+    const sign = diff > 0 ? "+" : "−";
+    parts.push(
+      `${sign}${Math.abs(diff)} ligne ${PACK[k] ?? k} × ${Math.abs(diff)} véhicule(s)`
+    );
   }
   return parts.length > 0 ? parts.join(" · ") : undefined;
 }
