@@ -189,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/client/': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
+  '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
@@ -213,6 +214,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
+  '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
@@ -241,6 +243,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
+  '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
