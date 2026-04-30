@@ -2,6 +2,7 @@ import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-rout
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { getVehiculePhotoUrl } from "@/lib/vehicule-photo";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -75,10 +76,8 @@ function MaFlotte() {
       items
         .filter((v) => v.photo_path)
         .map(async (v) => {
-          const { data: signed } = await supabase.storage
-            .from("vehicules")
-            .createSignedUrl(v.photo_path!, 3600);
-          if (signed?.signedUrl) urls[v.id] = signed.signedUrl;
+          const url = await getVehiculePhotoUrl(v.photo_path);
+          if (url) urls[v.id] = url;
         })
     );
     setPhotoUrls(urls);

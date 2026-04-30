@@ -18,7 +18,8 @@ import {
 import { Search, Car, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
-import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
+import { getVehiculeLabel } from "@/components/client/VehiculeIcons";
+import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 
 export const Route = createFileRoute("/admin/vehicules")({
   component: AdminVehiculesPage,
@@ -140,7 +141,6 @@ function AdminVehiculesList() {
       ) : (
         <div className="grid gap-3">
           {filtered.map((v) => {
-            const Icon = getVehiculeIcon(v.type_vehicule);
             const typeLabel = getVehiculeLabel(v.type_vehicule);
             const title =
               v.marque || v.modele
@@ -156,9 +156,7 @@ function AdminVehiculesList() {
                 <Card className="p-5 cursor-pointer transition-all duration-150 ease-out hover:bg-muted/40 hover:shadow-strong hover:border-primary/30 shadow-card border-border/60">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="h-12 w-12 rounded-lg bg-primary-soft text-primary flex items-center justify-center shrink-0">
-                        <Icon className="h-6 w-auto" />
-                      </div>
+                      <VehiculeThumbnail photoPath={v.photo_path} alt={title} />
                       <div className="min-w-0">
                         <h3 className="font-semibold text-foreground truncate">{title}</h3>
                         <p className="font-mono text-xs text-primary mt-0.5">{v.immatriculation}</p>

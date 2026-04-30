@@ -14,6 +14,7 @@ import { VEHICULE_TYPES, type VehiculeType } from "./VehiculeIcons";
 import { cn } from "@/lib/utils";
 import { Loader2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getVehiculePhotoUrl } from "@/lib/vehicule-photo";
 import { useAuth } from "@/lib/auth-context";
 import { compressImage } from "@/lib/image";
 import { toast } from "sonner";
@@ -129,16 +130,7 @@ export function AddVehiculeDialog({
       });
       setType((vehicule.type_vehicule as VehiculeType) ?? null);
       // Load existing photo via signed URL
-      if (vehicule.photo_path) {
-        supabase.storage
-          .from("vehicules")
-          .createSignedUrl(vehicule.photo_path, 3600)
-          .then(({ data }) => {
-            if (data?.signedUrl) setPhotoPreview(data.signedUrl);
-          });
-      } else {
-        setPhotoPreview(null);
-      }
+      getVehiculePhotoUrl(vehicule.photo_path).then((url) => setPhotoPreview(url));
     }
   }, [open, vehicule]);
 

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getVehiculePhotoUrl } from "@/lib/vehicule-photo";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,14 +84,7 @@ function AdminVehiculeDetail() {
       .eq("id", id)
       .maybeSingle();
     setVehicule((data as unknown as Vehicule) ?? null);
-    if (data?.photo_path) {
-      const { data: signed } = await supabase.storage
-        .from("vehicules")
-        .createSignedUrl(data.photo_path, 3600);
-      setPhotoUrl(signed?.signedUrl ?? null);
-    } else {
-      setPhotoUrl(null);
-    }
+    setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
     setLoading(false);
   }, [id]);
 
