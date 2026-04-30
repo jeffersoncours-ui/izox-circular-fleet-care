@@ -19,6 +19,7 @@ import {
 import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
+import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 import { EditEntrepriseDialog } from "@/components/admin/EditEntrepriseDialog";
 
 export const Route = createFileRoute("/admin/clients/$id")({
@@ -200,9 +201,10 @@ function ClientDetailPage() {
                     params={{ id: v.id }}
                     className="flex items-center gap-3 p-3 bg-muted rounded-md transition-colors hover:bg-muted/70"
                   >
-                    <div className="h-10 w-10 rounded-md bg-primary-soft text-primary flex items-center justify-center shrink-0">
-                      <Car className="h-4 w-4" />
-                    </div>
+                    <VehiculeThumbnail
+                      photoPath={v.photo_path}
+                      alt={[v.marque, v.modele].filter(Boolean).join(" ") || v.immatriculation}
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm truncate">
                         {[v.marque, v.modele].filter(Boolean).join(" ") || "Véhicule"}
