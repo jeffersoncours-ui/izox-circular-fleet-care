@@ -124,7 +124,22 @@ interface LogEntry {
   user_id: string | null;
   details: any;
   user_label?: string;
+  author_kind?: "interne" | "client" | "systeme";
+  author_role?: string | null;
 }
+
+const SYSTEM_ACTIONS = new Set([
+  "cloture_mensuelle",
+  "bascule_automatique_remplacement",
+]);
+
+const ROLE_LABEL: Record<string, string> = {
+  admin: "admin",
+  staff: "staff",
+  commercial: "commercial",
+  operateur: "opérateur",
+  client: "client",
+};
 
 function ContratDetailPage() {
   const { id } = useParams({ from: "/admin/contrats/$id" });
