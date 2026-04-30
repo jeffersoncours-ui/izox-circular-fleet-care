@@ -32,7 +32,6 @@ import { Route as TerrainInterventionIdRouteImport } from './routes/terrain.inte
 import { Route as ClientFlotteIdRouteImport } from './routes/client.flotte.$id'
 import { Route as AdminVehiculesIdRouteImport } from './routes/admin.vehicules.$id'
 import { Route as AdminInterventionsIdRouteImport } from './routes/admin.interventions.$id'
-import { Route as AdminContratsIdRouteImport } from './routes/admin.contrats.$id'
 import { Route as AdminClientsIdRouteImport } from './routes/admin.clients.$id'
 import { Route as AdminContratsIdRouteImport } from './routes/admin.contrats.$id'
 
@@ -160,11 +159,6 @@ const AdminClientsIdRoute = AdminClientsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AdminClientsRoute,
-} as any)
-const AdminContratsIdRoute = AdminContratsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AdminContratsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
