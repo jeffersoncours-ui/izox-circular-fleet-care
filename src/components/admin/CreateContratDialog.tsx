@@ -125,13 +125,28 @@ const schema = z.object({
     .min(1, "Au moins une ligne de pack"),
 });
 
+interface ExistingContrat {
+  id: string;
+  numero_contrat: string | null;
+  entreprise_id: string;
+  entreprise_nom?: string | null;
+  date_debut: string;
+  date_anniversaire: string | null;
+  engagement_annuel: boolean;
+  mode_paiement: "sepa" | "virement" | "stripe";
+  lignes: Array<{ type_pack: TypePack; nb_vehicules: number }>;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onCreated?: () => void;
+  /** When provided, dialog enters edit mode (UPDATE existing contract). */
+  contrat?: ExistingContrat | null;
 }
 
-export function CreateContratDialog({ open, onOpenChange, onCreated }: Props) {
+export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: Props) {
+  const isEdit = !!contrat;
   const [entreprises, setEntreprises] = useState<Entreprise[]>([]);
   const [entrepriseId, setEntrepriseId] = useState<string>("");
   const [vehiculesActifs, setVehiculesActifs] = useState<number | null>(null);
