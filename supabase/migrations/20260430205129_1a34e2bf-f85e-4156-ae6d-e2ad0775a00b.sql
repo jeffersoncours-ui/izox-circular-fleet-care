@@ -1,0 +1,1 @@
+ALTER TYPE public.statut_vehicule ADD VALUE IF NOT EXISTS 'refuse';
