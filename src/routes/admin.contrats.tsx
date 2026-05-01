@@ -104,7 +104,7 @@ function ContratsPage() {
 function ContratsList() {
   const [rows, setRows] = useState<ContratRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statutFilter, setStatutFilter] = useState<string>("tous");
+  const [statutFilter, setStatutFilter] = useState<string>("actif");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
