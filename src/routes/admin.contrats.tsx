@@ -235,7 +235,9 @@ function ContratsList() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Contrats</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {rows.length} contrat{rows.length > 1 ? "s" : ""}
+            {filtered.length} contrat{filtered.length > 1 ? "s" : ""}
+            {statutFilter !== "tous" &&
+              ` ${(STATUT_LABEL[statutFilter] ?? statutFilter).toLowerCase()}${filtered.length > 1 ? "s" : ""}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
