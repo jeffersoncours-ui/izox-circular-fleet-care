@@ -730,7 +730,10 @@ function TimelineItem({
   );
 }
 
-function getActionMeta(log: LogEntry): {
+function getActionMeta(
+  log: LogEntry,
+  fallbackVehiculeCount: number
+): {
   icon: typeof Plus;
   title: string;
   subtitle?: string;
@@ -739,7 +742,11 @@ function getActionMeta(log: LogEntry): {
   const d = log.details ?? {};
   switch (log.action) {
     case "creation_contrat": {
-      const nb = d.nb_vehicules_lignes ?? d.nb_vehicules_initial;
+      // Priorité : nb_vehicules_initial (nouveau) > nb_vehicules_lignes (legacy) > fallback (somme actuelle)
+      const nb =
+        d.nb_vehicules_initial ??
+        d.nb_vehicules_lignes ??
+        (fallbackVehiculeCount > 0 ? fallbackVehiculeCount : null);
       const palierLabel = d.palier ? PALIER_LABEL[d.palier] ?? d.palier : null;
       const parts: string[] = ["Contrat créé"];
       if (nb) parts[0] = `Contrat créé avec ${nb} véhicule(s)`;
