@@ -587,7 +587,10 @@ function ContratDetailPage() {
                   <TimelineItem
                     key={l.id}
                     log={l}
-                    fallbackVehiculeCount={totalVehLignes}
+                    currentVehiculeCount={totalVehLignes}
+                    hasModifications={logs.some(
+                      (x) => x.action === "modification_contrat"
+                    )}
                   />
                 ))}
               </ol>
