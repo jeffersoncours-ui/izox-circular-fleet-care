@@ -697,8 +697,14 @@ function Field({
   );
 }
 
-function TimelineItem({ log }: { log: LogEntry }) {
-  const meta = getActionMeta(log);
+function TimelineItem({
+  log,
+  fallbackVehiculeCount,
+}: {
+  log: LogEntry;
+  fallbackVehiculeCount: number;
+}) {
+  const meta = getActionMeta(log, fallbackVehiculeCount);
   const Icon = meta.icon;
   return (
     <li className="ml-6">
