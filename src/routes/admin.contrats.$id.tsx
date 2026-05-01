@@ -584,7 +584,11 @@ function ContratDetailPage() {
             ) : (
               <ol className="relative border-l-2 border-border/60 ml-3 space-y-5">
                 {logs.map((l) => (
-                  <TimelineItem key={l.id} log={l} />
+                  <TimelineItem
+                    key={l.id}
+                    log={l}
+                    fallbackVehiculeCount={totalVehLignes}
+                  />
                 ))}
               </ol>
             )}
