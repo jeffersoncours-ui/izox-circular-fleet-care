@@ -104,7 +104,7 @@ function ContratsPage() {
 function ContratsList() {
   const [rows, setRows] = useState<ContratRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statutFilter, setStatutFilter] = useState<string>("tous");
+  const [statutFilter, setStatutFilter] = useState<string>("actif");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -235,7 +235,9 @@ function ContratsList() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Contrats</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {rows.length} contrat{rows.length > 1 ? "s" : ""}
+            {filtered.length} contrat{filtered.length > 1 ? "s" : ""}
+            {statutFilter !== "tous" &&
+              ` ${(STATUT_LABEL[statutFilter] ?? statutFilter).toLowerCase()}${filtered.length > 1 ? "s" : ""}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
