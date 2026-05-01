@@ -434,7 +434,13 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
           entreprise_id: entrepriseId,
           palier,
           total_ht: facture?.totalAbonnementHt ?? 0,
+          nb_vehicules_initial: totalVehicules,
           nb_vehicules_lignes: totalVehicules,
+          lignes_initiales: lignes.map((l) => ({
+            type_pack: l.typePack,
+            nb_vehicules: l.nbVehicules,
+            prix_unitaire_ht: PACK_PRIX[l.typePack],
+          })),
         },
       });
 
