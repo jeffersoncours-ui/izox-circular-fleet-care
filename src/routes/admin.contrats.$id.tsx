@@ -848,39 +848,59 @@ function getActionMeta(
 }
 
 function summarizeChanges(d: any): string | undefined {
-  if (!d?.anciennes_valeurs || !d?.nouvelles_valeurs) return undefined;
-  const a = d.anciennes_valeurs;
-  const n = d.nouvelles_valeurs;
-  const parts: string[] = [];
-  if (a.engagement_annuel !== n.engagement_annuel) {
-    parts.push(
-      `engagement annuel : ${a.engagement_annuel ? "oui" : "non"} → ${n.engagement_annuel ? "oui" : "non"}`
-    );
+  // Nouveau format : snapshots fiables lignes_avant / lignes_apres
+  const hasSnapshot = Array.isArray(d?.lignes_avant) && Array.isArray(d?.lignes_apres);
+  if (!hasSnapshot) {
+    // Modifications legacy : pas de snapshot fiable -> on n'affiche pas de diff (faux)
+    return undefined;
   }
-  if (a.mode_paiement !== n.mode_paiement) {
-    parts.push(`paiement : ${a.mode_paiement} → ${n.mode_paiement}`);
-  }
-  // Diff lignes de pack
-  const aL: Array<{ type_pack: string; nb_vehicules: number }> = a.lignes ?? [];
-  const nL: Array<{ type_pack: string; nb_vehicules: number }> = n.lignes ?? [];
+
   const PACK: Record<string, string> = {
     pack_interieur: "Pack Intérieur",
     pack_standard: "Pack Standard",
     pack_vtc: "Pack VTC",
   };
-  const aMap = new Map(aL.map((l) => [l.type_pack, l.nb_vehicules]));
-  const nMap = new Map(nL.map((l) => [l.type_pack, l.nb_vehicules]));
+
+  const aL: Array<{ type_pack: string; nb_vehicules: number }> = d.lignes_avant;
+  const nL: Array<{ type_pack: string; nb_vehicules: number }> = d.lignes_apres;
+  const aMap = new Map<string, number>();
+  for (const l of aL) aMap.set(l.type_pack, (aMap.get(l.type_pack) ?? 0) + l.nb_vehicules);
+  const nMap = new Map<string, number>();
+  for (const l of nL) nMap.set(l.type_pack, (nMap.get(l.type_pack) ?? 0) + l.nb_vehicules);
+
+  const parts: string[] = [];
   const allKeys = new Set([...aMap.keys(), ...nMap.keys()]);
   for (const k of allKeys) {
     const av = aMap.get(k) ?? 0;
     const nv = nMap.get(k) ?? 0;
     if (av === nv) continue;
-    const diff = nv - av;
-    const sign = diff > 0 ? "+" : "−";
+    const label = PACK[k] ?? k;
+    if (av === 0 && nv > 0) {
+      parts.push(`+ ligne ${label} × ${nv} véhicule(s)`);
+    } else if (nv === 0 && av > 0) {
+      parts.push(`− ligne ${label} × ${av} véhicule(s)`);
+    } else {
+      const diff = nv - av;
+      const sign = diff > 0 ? "+" : "−";
+      parts.push(`${sign}${Math.abs(diff)} véhicule(s) ${label}`);
+    }
+  }
+
+  if (d.engagement_avant !== undefined && d.engagement_avant !== d.engagement_apres) {
     parts.push(
-      `${sign}${Math.abs(diff)} ligne ${PACK[k] ?? k} × ${Math.abs(diff)} véhicule(s)`
+      `engagement annuel : ${d.engagement_avant ? "oui" : "non"} → ${d.engagement_apres ? "oui" : "non"}`
     );
   }
+  if (d.mode_paiement_avant && d.mode_paiement_avant !== d.mode_paiement_apres) {
+    parts.push(`paiement : ${d.mode_paiement_avant} → ${d.mode_paiement_apres}`);
+  }
+
+  const av = typeof d.mensualite_avant === "number" ? d.mensualite_avant : null;
+  const ap = typeof d.mensualite_apres === "number" ? d.mensualite_apres : null;
+  if (av !== null && ap !== null && Math.abs(av - ap) > 0.005) {
+    parts.push(`Mensualité : ${av.toFixed(2)} € → ${ap.toFixed(2)} €`);
+  }
+
   return parts.length > 0 ? parts.join(" · ") : undefined;
 }
 
