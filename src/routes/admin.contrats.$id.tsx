@@ -702,12 +702,14 @@ function Field({
 
 function TimelineItem({
   log,
-  fallbackVehiculeCount,
+  currentVehiculeCount,
+  hasModifications,
 }: {
   log: LogEntry;
-  fallbackVehiculeCount: number;
+  currentVehiculeCount: number;
+  hasModifications: boolean;
 }) {
-  const meta = getActionMeta(log, fallbackVehiculeCount);
+  const meta = getActionMeta(log, currentVehiculeCount, hasModifications);
   const Icon = meta.icon;
   return (
     <li className="ml-6">
@@ -728,6 +730,11 @@ function TimelineItem({
       {meta.subtitle && (
         <p className="text-xs text-muted-foreground mt-0.5">{meta.subtitle}</p>
       )}
+      {meta.note && (
+        <p className="text-[11px] text-muted-foreground/80 italic mt-0.5">
+          {meta.note}
+        </p>
+      )}
       <p className="text-[11px] text-muted-foreground mt-0.5">{log.user_label}</p>
     </li>
   );
@@ -735,28 +742,42 @@ function TimelineItem({
 
 function getActionMeta(
   log: LogEntry,
-  fallbackVehiculeCount: number
+  currentVehiculeCount: number,
+  hasModifications: boolean
 ): {
   icon: typeof Plus;
   title: string;
   subtitle?: string;
+  note?: string;
   colorClass: string;
 } {
   const d = log.details ?? {};
   switch (log.action) {
     case "creation_contrat": {
-      // Priorité : nb_vehicules_initial (nouveau) > nb_vehicules_lignes (legacy) > fallback (somme actuelle)
-      const nb =
-        d.nb_vehicules_initial ??
-        d.nb_vehicules_lignes ??
-        (fallbackVehiculeCount > 0 ? fallbackVehiculeCount : null);
       const palierLabel = d.palier ? PALIER_LABEL[d.palier] ?? d.palier : null;
-      const parts: string[] = ["Contrat créé"];
-      if (nb) parts[0] = `Contrat créé avec ${nb} véhicule(s)`;
-      if (palierLabel) parts.push(`Palier ${palierLabel}`);
+      const palierSuffix = palierLabel ? ` — Palier ${palierLabel}` : "";
+      // CAS A : donnée figée
+      if (d.nb_vehicules_initial != null) {
+        return {
+          icon: Plus,
+          title: `Contrat créé avec ${d.nb_vehicules_initial} véhicule(s)${palierSuffix}`,
+          colorClass: "bg-primary/15 text-primary",
+        };
+      }
+      // CAS B : reconstitué fiable (jamais modifié)
+      if (!hasModifications && currentVehiculeCount > 0) {
+        return {
+          icon: Plus,
+          title: `Contrat créé avec ${currentVehiculeCount} véhicule(s)¹${palierSuffix}`,
+          note: "¹ Reconstitué depuis l'état actuel (aucune modification depuis la création)",
+          colorClass: "bg-primary/15 text-primary",
+        };
+      }
+      // CAS C : non reconstituable
       return {
         icon: Plus,
-        title: parts.join(" — "),
+        title: `Contrat créé${palierSuffix}`,
+        note: "Nombre de véhicules initial non enregistré",
         colorClass: "bg-primary/15 text-primary",
       };
     }
