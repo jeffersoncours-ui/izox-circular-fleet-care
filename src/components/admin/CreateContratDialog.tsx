@@ -301,7 +301,30 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
       const { data: userData } = await supabase.auth.getUser();
 
       if (isEdit && contrat) {
-        // Snapshot anciennes valeurs
+        // Snapshot lignes avant (avec prix_unitaire_ht pour audit fiable)
+        const lignesAvant = contrat.lignes.map((l) => ({
+          type_pack: l.type_pack,
+          nb_vehicules: l.nb_vehicules,
+          prix_unitaire_ht: PACK_PRIX[l.type_pack as TypePack] ?? 0,
+        }));
+        const lignesApres = lignes.map((l) => ({
+          type_pack: l.typePack,
+          nb_vehicules: l.nbVehicules,
+          prix_unitaire_ht: PACK_PRIX[l.typePack],
+        }));
+
+        const factureAvant = calculerFactureFlotte({
+          lignes: contrat.lignes.map((l) => ({
+            typePack: l.type_pack,
+            nbVehicules: l.nb_vehicules,
+          })),
+          engagementAnnuel: contrat.engagement_annuel,
+        });
+        const factureApres = calculerFactureFlotte({
+          lignes: lignes.map((l) => ({ typePack: l.typePack, nbVehicules: l.nbVehicules })),
+          engagementAnnuel,
+        });
+
         const anciennes = {
           engagement_annuel: contrat.engagement_annuel,
           mode_paiement: contrat.mode_paiement,
@@ -342,6 +365,16 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
           details: {
             contrat_id: contrat.id,
             entreprise_id: entrepriseId,
+            // Snapshots fiables pour diff timeline
+            lignes_avant: lignesAvant,
+            lignes_apres: lignesApres,
+            mensualite_avant: factureAvant.totalAbonnementHt,
+            mensualite_apres: factureApres.totalAbonnementHt,
+            engagement_avant: contrat.engagement_annuel,
+            engagement_apres: engagementAnnuel,
+            mode_paiement_avant: contrat.mode_paiement,
+            mode_paiement_apres: modePaiement,
+            // Conserver l'ancien format pour rétrocompatibilité
             anciennes_valeurs: anciennes,
             nouvelles_valeurs: {
               engagement_annuel: engagementAnnuel,
@@ -401,7 +434,13 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
           entreprise_id: entrepriseId,
           palier,
           total_ht: facture?.totalAbonnementHt ?? 0,
+          nb_vehicules_initial: totalVehicules,
           nb_vehicules_lignes: totalVehicules,
+          lignes_initiales: lignes.map((l) => ({
+            type_pack: l.typePack,
+            nb_vehicules: l.nbVehicules,
+            prix_unitaire_ht: PACK_PRIX[l.typePack],
+          })),
         },
       });
 
