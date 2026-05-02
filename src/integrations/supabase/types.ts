@@ -119,8 +119,14 @@ export type Database = {
           created_at: string
           date_anniversaire: string | null
           date_debut: string
+          date_dernier_passage: string | null
           date_fin: string | null
+          date_fin_engagement: string | null
+          date_paiement_anticipe: string | null
           engagement_annuel: boolean
+          engagement_type:
+            | Database["public"]["Enums"]["engagement_type_enum"]
+            | null
           entreprise_id: string
           gel_actif: boolean
           gel_date_debut: string | null
@@ -129,10 +135,19 @@ export type Database = {
           gel_type: Database["public"]["Enums"]["gel_type_enum"] | null
           id: string
           mode_paiement: Database["public"]["Enums"]["mode_paiement_enum"]
+          multiplicateur_prix: number | null
           numero_contrat: string | null
+          paiement_anticipe_total: boolean
           passages_mois: number
           passages_reportes: number
           passages_restants_mois: number
+          plage_horaire_preferee: string | null
+          planning_niveau:
+            | Database["public"]["Enums"]["planning_niveau_enum"]
+            | null
+          preavis_deadline: string | null
+          preavis_envoye_le: string | null
+          status_cycle: Database["public"]["Enums"]["status_cycle_enum"]
           statut: Database["public"]["Enums"]["contrat_statut_enum"]
           updated_at: string
         }
@@ -140,8 +155,14 @@ export type Database = {
           created_at?: string
           date_anniversaire?: string | null
           date_debut?: string
+          date_dernier_passage?: string | null
           date_fin?: string | null
+          date_fin_engagement?: string | null
+          date_paiement_anticipe?: string | null
           engagement_annuel?: boolean
+          engagement_type?:
+            | Database["public"]["Enums"]["engagement_type_enum"]
+            | null
           entreprise_id: string
           gel_actif?: boolean
           gel_date_debut?: string | null
@@ -150,10 +171,19 @@ export type Database = {
           gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
           id?: string
           mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          multiplicateur_prix?: number | null
           numero_contrat?: string | null
+          paiement_anticipe_total?: boolean
           passages_mois?: number
           passages_reportes?: number
           passages_restants_mois?: number
+          plage_horaire_preferee?: string | null
+          planning_niveau?:
+            | Database["public"]["Enums"]["planning_niveau_enum"]
+            | null
+          preavis_deadline?: string | null
+          preavis_envoye_le?: string | null
+          status_cycle?: Database["public"]["Enums"]["status_cycle_enum"]
           statut?: Database["public"]["Enums"]["contrat_statut_enum"]
           updated_at?: string
         }
@@ -161,8 +191,14 @@ export type Database = {
           created_at?: string
           date_anniversaire?: string | null
           date_debut?: string
+          date_dernier_passage?: string | null
           date_fin?: string | null
+          date_fin_engagement?: string | null
+          date_paiement_anticipe?: string | null
           engagement_annuel?: boolean
+          engagement_type?:
+            | Database["public"]["Enums"]["engagement_type_enum"]
+            | null
           entreprise_id?: string
           gel_actif?: boolean
           gel_date_debut?: string | null
@@ -171,10 +207,19 @@ export type Database = {
           gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
           id?: string
           mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          multiplicateur_prix?: number | null
           numero_contrat?: string | null
+          paiement_anticipe_total?: boolean
           passages_mois?: number
           passages_reportes?: number
           passages_restants_mois?: number
+          plage_horaire_preferee?: string | null
+          planning_niveau?:
+            | Database["public"]["Enums"]["planning_niveau_enum"]
+            | null
+          preavis_deadline?: string | null
+          preavis_envoye_le?: string | null
+          status_cycle?: Database["public"]["Enums"]["status_cycle_enum"]
           statut?: Database["public"]["Enums"]["contrat_statut_enum"]
           updated_at?: string
         }
@@ -650,9 +695,16 @@ export type Database = {
     Enums: {
       app_role: "admin" | "staff" | "commercial" | "operateur" | "client"
       contrat_statut_enum: "actif" | "suspendu" | "resilie" | "en_cours_gel"
+      engagement_type_enum: "mensuel" | "trimestriel" | "annuel"
       gel_type_enum: "programme" | "sinistre"
       mode_paiement_enum: "sepa" | "virement" | "stripe"
       palier_remise: "starter" | "pro" | "business" | "premium"
+      planning_niveau_enum:
+        | "libre"
+        | "demi_journee"
+        | "journee"
+        | "recurrent_annuel"
+      status_cycle_enum: "onboarding" | "actif" | "dormant"
       statut_vehicule:
         | "actif"
         | "en_attente_validation"
@@ -800,9 +852,17 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "staff", "commercial", "operateur", "client"],
       contrat_statut_enum: ["actif", "suspendu", "resilie", "en_cours_gel"],
+      engagement_type_enum: ["mensuel", "trimestriel", "annuel"],
       gel_type_enum: ["programme", "sinistre"],
       mode_paiement_enum: ["sepa", "virement", "stripe"],
       palier_remise: ["starter", "pro", "business", "premium"],
+      planning_niveau_enum: [
+        "libre",
+        "demi_journee",
+        "journee",
+        "recurrent_annuel",
+      ],
+      status_cycle_enum: ["onboarding", "actif", "dormant"],
       statut_vehicule: [
         "actif",
         "en_attente_validation",
