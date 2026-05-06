@@ -328,6 +328,174 @@ export type Database = {
         }
         Relationships: []
       }
+      factures: {
+        Row: {
+          annee_fiscale: number
+          avoir_id: string | null
+          contrat_id: string | null
+          created_at: string
+          created_by: string | null
+          date_echeance: string | null
+          date_emission: string | null
+          date_paiement: string | null
+          devise: string
+          emitted_at: string | null
+          entreprise_id: string | null
+          id: string
+          mention_tva_speciale: string | null
+          mode_paiement: string | null
+          montant_ht: number
+          montant_ttc: number
+          numero_facture: string | null
+          numero_sequentiel: number | null
+          periode_debut: string
+          periode_fin: string
+          regime_tva: Database["public"]["Enums"]["regime_tva_enum"]
+          serie: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_client: Json | null
+          snapshot_contrat: Json | null
+          snapshot_izox: Json | null
+          snapshot_prestations: Json | null
+          statut: Database["public"]["Enums"]["statut_facture_enum"]
+          tva_montant: number
+          tva_taux: number
+        }
+        Insert: {
+          annee_fiscale: number
+          avoir_id?: string | null
+          contrat_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_echeance?: string | null
+          date_emission?: string | null
+          date_paiement?: string | null
+          devise?: string
+          emitted_at?: string | null
+          entreprise_id?: string | null
+          id?: string
+          mention_tva_speciale?: string | null
+          mode_paiement?: string | null
+          montant_ht?: number
+          montant_ttc?: number
+          numero_facture?: string | null
+          numero_sequentiel?: number | null
+          periode_debut: string
+          periode_fin: string
+          regime_tva?: Database["public"]["Enums"]["regime_tva_enum"]
+          serie: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_client?: Json | null
+          snapshot_contrat?: Json | null
+          snapshot_izox?: Json | null
+          snapshot_prestations?: Json | null
+          statut?: Database["public"]["Enums"]["statut_facture_enum"]
+          tva_montant?: number
+          tva_taux?: number
+        }
+        Update: {
+          annee_fiscale?: number
+          avoir_id?: string | null
+          contrat_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_echeance?: string | null
+          date_emission?: string | null
+          date_paiement?: string | null
+          devise?: string
+          emitted_at?: string | null
+          entreprise_id?: string | null
+          id?: string
+          mention_tva_speciale?: string | null
+          mode_paiement?: string | null
+          montant_ht?: number
+          montant_ttc?: number
+          numero_facture?: string | null
+          numero_sequentiel?: number | null
+          periode_debut?: string
+          periode_fin?: string
+          regime_tva?: Database["public"]["Enums"]["regime_tva_enum"]
+          serie?: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_client?: Json | null
+          snapshot_contrat?: Json | null
+          snapshot_izox?: Json | null
+          snapshot_prestations?: Json | null
+          statut?: Database["public"]["Enums"]["statut_facture_enum"]
+          tva_montant?: number
+          tva_taux?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      factures_lignes: {
+        Row: {
+          created_at: string
+          facture_id: string
+          id: string
+          intervention_id: string | null
+          libelle: string
+          montant_ht: number
+          ordre_affichage: number
+          prix_unitaire_ht: number | null
+          quantite: number | null
+          tva_taux: number | null
+          type_ligne: string
+        }
+        Insert: {
+          created_at?: string
+          facture_id: string
+          id?: string
+          intervention_id?: string | null
+          libelle: string
+          montant_ht: number
+          ordre_affichage?: number
+          prix_unitaire_ht?: number | null
+          quantite?: number | null
+          tva_taux?: number | null
+          type_ligne: string
+        }
+        Update: {
+          created_at?: string
+          facture_id?: string
+          id?: string
+          intervention_id?: string | null
+          libelle?: string
+          montant_ht?: number
+          ordre_affichage?: number
+          prix_unitaire_ht?: number | null
+          quantite?: number | null
+          tva_taux?: number | null
+          type_ligne?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factures_lignes_facture_id_fkey"
+            columns: ["facture_id"]
+            isOneToOne: false
+            referencedRelation: "factures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_lignes_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "interventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intervention_photos: {
         Row: {
           created_at: string
@@ -704,7 +872,10 @@ export type Database = {
         | "demi_journee"
         | "journee"
         | "recurrent_annuel"
+      regime_tva_enum: "franchise_base" | "reel_normal"
+      serie_facture_enum: "B2B" | "B2C"
       status_cycle_enum: "onboarding" | "actif" | "dormant"
+      statut_facture_enum: "brouillon" | "emise" | "payee" | "annulee"
       statut_vehicule:
         | "actif"
         | "en_attente_validation"
@@ -862,7 +1033,10 @@ export const Constants = {
         "journee",
         "recurrent_annuel",
       ],
+      regime_tva_enum: ["franchise_base", "reel_normal"],
+      serie_facture_enum: ["B2B", "B2C"],
       status_cycle_enum: ["onboarding", "actif", "dormant"],
+      statut_facture_enum: ["brouillon", "emise", "payee", "annulee"],
       statut_vehicule: [
         "actif",
         "en_attente_validation",
