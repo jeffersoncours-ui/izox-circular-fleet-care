@@ -1,9 +1,9 @@
 // RDV duration & slot helpers for IZOX scheduling
 
 const DUREES_PRESTATIONS: Record<string, number> = {
-  pack_interieur: 45,
-  pack_standard: 75,
-  pack_vtc: 45,
+  pack_interieur: 90,
+  pack_standard: 120,
+  pack_vtc: 90,
   concession_one_shot: 60,
   fin_de_bail_one_shot: 180,
 };

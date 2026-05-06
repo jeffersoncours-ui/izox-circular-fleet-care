@@ -42,7 +42,7 @@ const PACK_OPTIONS: Array<{
     value: "pack_vtc",
     nom: "Pack VTC/Taxi",
     prix: 190,
-    description: "3x intérieur + 1x intérieur+extérieur (4 passages)",
+    description: "2x intérieur + 2x intérieur+extérieur (4 passages)",
   },
 ];
 
