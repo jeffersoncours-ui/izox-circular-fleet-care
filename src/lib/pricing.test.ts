@@ -7,9 +7,9 @@ describe('pricing - calculerFactureFlotte', () => {
       lignes: [{ typePack: 'pack_interieur', nbVehicules: 3 }],
       engagementAnnuel: false,
     });
-    expect(f.totalBrutHt).toBe(300);
+    expect(f.totalBrutHt).toBe(390);
     expect(f.remisePalier).toBe(0);
-    expect(f.totalFacture).toBe(300);
+    expect(f.totalFacture).toBe(390);
     expect(f.palier).toBe('starter');
   });
 
@@ -18,11 +18,11 @@ describe('pricing - calculerFactureFlotte', () => {
       lignes: [{ typePack: 'pack_standard', nbVehicules: 10 }],
       engagementAnnuel: true,
     });
-    expect(f.totalBrutHt).toBe(1500);
-    expect(f.remisePalier).toBe(180);
-    expect(f.sousTotal).toBe(1320);
-    expect(f.remiseAnnuelle).toBe(66);
-    expect(f.totalAbonnementHt).toBe(1254);
+    expect(f.totalBrutHt).toBe(1700);
+    expect(f.remisePalier).toBe(204);
+    expect(f.sousTotal).toBe(1496);
+    expect(f.remiseAnnuelle).toBe(74.8);
+    expect(f.totalAbonnementHt).toBe(1421.2);
     expect(f.palier).toBe('business');
   });
 
@@ -34,10 +34,10 @@ describe('pricing - calculerFactureFlotte', () => {
       ],
       engagementAnnuel: false,
     });
-    expect(f.totalBrutHt).toBe(1250);
+    expect(f.totalBrutHt).toBe(1500);
     expect(f.palier).toBe('business');
-    expect(f.remisePalier).toBe(150);
-    expect(f.totalAbonnementHt).toBe(1100);
+    expect(f.remisePalier).toBe(180);
+    expect(f.totalAbonnementHt).toBe(1320);
   });
 
   it('Test D - Upsell : 4 véhicules -> getProchainPalier', () => {

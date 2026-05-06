@@ -4,9 +4,9 @@
 export type Palier = 'starter' | 'pro' | 'business' | 'premium';
 
 const PRIX_CATALOGUE: Record<string, number> = {
-  pack_interieur: 100,
-  pack_standard: 150,
-  pack_vtc: 190,
+  pack_interieur: 130,
+  pack_standard: 170,
+  pack_vtc: 240,
 };
 
 const PRIX_CATALOGUE_MOYEN = 130;
