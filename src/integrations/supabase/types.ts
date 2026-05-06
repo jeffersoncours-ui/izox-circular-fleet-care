@@ -41,6 +41,77 @@ export type Database = {
         }
         Relationships: []
       }
+      avoirs: {
+        Row: {
+          annee_fiscale: number
+          created_at: string
+          created_by: string | null
+          date_emission: string
+          devise: string
+          emitted_at: string
+          facture_id: string
+          id: string
+          montant_ht: number
+          montant_ttc: number
+          motif: string
+          numero_avoir: string
+          numero_sequentiel: number
+          serie: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_facture_origine: Json
+          tva_montant: number
+          tva_taux: number
+          type_avoir: string
+        }
+        Insert: {
+          annee_fiscale: number
+          created_at?: string
+          created_by?: string | null
+          date_emission: string
+          devise?: string
+          emitted_at?: string
+          facture_id: string
+          id?: string
+          montant_ht: number
+          montant_ttc: number
+          motif: string
+          numero_avoir: string
+          numero_sequentiel: number
+          serie: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_facture_origine: Json
+          tva_montant?: number
+          tva_taux?: number
+          type_avoir: string
+        }
+        Update: {
+          annee_fiscale?: number
+          created_at?: string
+          created_by?: string | null
+          date_emission?: string
+          devise?: string
+          emitted_at?: string
+          facture_id?: string
+          id?: string
+          montant_ht?: number
+          montant_ttc?: number
+          motif?: string
+          numero_avoir?: string
+          numero_sequentiel?: number
+          serie?: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_facture_origine?: Json
+          tva_montant?: number
+          tva_taux?: number
+          type_avoir?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avoirs_facture_id_fkey"
+            columns: ["facture_id"]
+            isOneToOne: false
+            referencedRelation: "factures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrat_avenants: {
         Row: {
           contrat_id: string
@@ -435,6 +506,13 @@ export type Database = {
             columns: ["entreprise_id"]
             isOneToOne: false
             referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_factures_avoir"
+            columns: ["avoir_id"]
+            isOneToOne: false
+            referencedRelation: "avoirs"
             referencedColumns: ["id"]
           },
         ]
