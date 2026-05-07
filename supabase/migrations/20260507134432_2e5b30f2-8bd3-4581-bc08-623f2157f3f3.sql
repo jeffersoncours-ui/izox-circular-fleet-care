@@ -1,0 +1,1 @@
+ALTER FUNCTION public.generer_facture(uuid, integer, integer) SET search_path = public, pg_temp;
