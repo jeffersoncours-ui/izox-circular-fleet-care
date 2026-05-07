@@ -1119,6 +1119,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      emettre_facture: { Args: { p_facture_id: string }; Returns: string }
       generer_facture: {
         Args: { p_annee: number; p_contrat_id: string; p_mois: number }
         Returns: string
