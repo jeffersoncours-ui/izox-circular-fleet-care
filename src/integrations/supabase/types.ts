@@ -1119,6 +1119,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generer_facture: {
+        Args: { p_annee: number; p_contrat_id: string; p_mois: number }
+        Returns: string
+      }
       get_user_entreprise: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
