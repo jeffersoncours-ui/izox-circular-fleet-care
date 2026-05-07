@@ -304,6 +304,65 @@ export type Database = {
           },
         ]
       }
+      creneaux_recurrents_garantis: {
+        Row: {
+          actif: boolean
+          contrat_id: string
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string
+          frequence_semaines: number
+          heure_debut: string
+          heure_fin: string
+          id: string
+          jour_semaine: number
+          notes: string | null
+          operateur_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          contrat_id: string
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin: string
+          frequence_semaines?: number
+          heure_debut: string
+          heure_fin: string
+          id?: string
+          jour_semaine: number
+          notes?: string | null
+          operateur_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          contrat_id?: string
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string
+          frequence_semaines?: number
+          heure_debut?: string
+          heure_fin?: string
+          id?: string
+          jour_semaine?: number
+          notes?: string | null
+          operateur_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demandes_rdv: {
         Row: {
           commentaires: string | null
@@ -350,6 +409,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      disponibilites_operateurs: {
+        Row: {
+          actif: boolean
+          created_at: string
+          created_by: string | null
+          date_debut_validite: string | null
+          date_fin_validite: string | null
+          heure_debut: string
+          heure_fin: string
+          id: string
+          jour_semaine: number
+          operateur_id: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          date_debut_validite?: string | null
+          date_fin_validite?: string | null
+          heure_debut: string
+          heure_fin: string
+          id?: string
+          jour_semaine: number
+          operateur_id: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          date_debut_validite?: string | null
+          date_fin_validite?: string | null
+          heure_debut?: string
+          heure_fin?: string
+          id?: string
+          jour_semaine?: number
+          operateur_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       entreprises: {
         Row: {
@@ -702,6 +803,39 @@ export type Database = {
           },
         ]
       }
+      jours_indisponibles_izox: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string
+          id: string
+          motif: string
+          operateur_id: string | null
+          type_indisponibilite: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin: string
+          id?: string
+          motif: string
+          operateur_id?: string | null
+          type_indisponibilite: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string
+          id?: string
+          motif?: string
+          operateur_id?: string | null
+          type_indisponibilite?: string
+        }
+        Relationships: []
+      }
       parrainages: {
         Row: {
           code_parrainage: string
@@ -829,6 +963,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seuils_planning: {
+        Row: {
+          delai_annulation_demi_journee_h: number
+          delai_annulation_journee_h: number
+          delai_annulation_libre_h: number
+          delai_annulation_recurrent_h: number
+          delai_min_demi_journee: number
+          delai_min_journee: number
+          delai_min_libre: number
+          id: number
+          penalite_annulation_demi_journee: number
+          penalite_annulation_journee: number
+          penalite_annulation_libre: number
+          penalite_annulation_recurrent: number
+          seuil_demi_journee_max: number
+          seuil_journee_max: number
+          seuil_libre_max: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          delai_annulation_demi_journee_h?: number
+          delai_annulation_journee_h?: number
+          delai_annulation_libre_h?: number
+          delai_annulation_recurrent_h?: number
+          delai_min_demi_journee?: number
+          delai_min_journee?: number
+          delai_min_libre?: number
+          id?: number
+          penalite_annulation_demi_journee?: number
+          penalite_annulation_journee?: number
+          penalite_annulation_libre?: number
+          penalite_annulation_recurrent?: number
+          seuil_demi_journee_max?: number
+          seuil_journee_max?: number
+          seuil_libre_max?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          delai_annulation_demi_journee_h?: number
+          delai_annulation_journee_h?: number
+          delai_annulation_libre_h?: number
+          delai_annulation_recurrent_h?: number
+          delai_min_demi_journee?: number
+          delai_min_journee?: number
+          delai_min_libre?: number
+          id?: number
+          penalite_annulation_demi_journee?: number
+          penalite_annulation_journee?: number
+          penalite_annulation_libre?: number
+          penalite_annulation_recurrent?: number
+          seuil_demi_journee_max?: number
+          seuil_journee_max?: number
+          seuil_libre_max?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
