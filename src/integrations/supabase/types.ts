@@ -1119,6 +1119,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      annuler_facture_via_avoir: {
+        Args: {
+          p_facture_id: string
+          p_montant_partiel_ht?: number
+          p_motif: string
+          p_type_avoir?: string
+        }
+        Returns: string
+      }
       emettre_facture: { Args: { p_facture_id: string }; Returns: string }
       generer_facture: {
         Args: { p_annee: number; p_contrat_id: string; p_mois: number }
