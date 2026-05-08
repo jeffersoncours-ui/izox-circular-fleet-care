@@ -142,7 +142,7 @@ export function GelContratDialog({
       open={open}
       onOpenChange={(o) => !submitting && onOpenChange(o)}
     >
-      <AlertDialogContent className="max-w-lg">
+      <AlertDialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <Snowflake className="h-5 w-5 text-sky-500" />
