@@ -700,6 +700,27 @@ function ContratDetailPage() {
         }}
       />
 
+      {/* Réactivation dialog */}
+      <ReactiverContratDialog
+        open={reactivateDialogOpen}
+        onOpenChange={setReactivateDialogOpen}
+        contrat={
+          contrat
+            ? {
+                id: contrat.id,
+                numero_contrat: contrat.numero_contrat,
+                raison_sociale_client: contrat.entreprise?.nom ?? "Client inconnu",
+                gel_date_debut: contrat.gel_date_debut ?? null,
+                gel_date_fin: contrat.gel_date_fin ?? null,
+                gel_commentaire: contrat.gel_commentaire ?? null,
+              }
+            : null
+        }
+        onReactivated={() => {
+          load();
+        }}
+      />
+
       {/* Validation dialog */}
       {validateVeh && (
         <ValidateVehiculeDialog
