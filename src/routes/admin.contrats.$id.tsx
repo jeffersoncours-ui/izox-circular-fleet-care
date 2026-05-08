@@ -47,10 +47,12 @@ import {
   History,
   AlertTriangle,
   Repeat,
+  Snowflake,
 } from "lucide-react";
 
 import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
 import { ResiliationContratDialog } from "@/components/admin/ResiliationContratDialog";
+import { GelContratDialog } from "@/components/admin/GelContratDialog";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 
 export const Route = createFileRoute("/admin/contrats/$id")({
@@ -153,6 +155,7 @@ function ContratDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [resilOpen, setResilOpen] = useState(false);
+  const [gelDialogOpen, setGelDialogOpen] = useState(false);
 
   const [validateVeh, setValidateVeh] = useState<Vehicule | null>(null);
   const [refuseVeh, setRefuseVeh] = useState<Vehicule | null>(null);
@@ -456,6 +459,13 @@ function ContratDetailPage() {
                 <Edit className="h-4 w-4" /> Modifier le contrat
               </Button>
               <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setGelDialogOpen(true)}
+              >
+                <Snowflake className="h-4 w-4" /> Mettre en veille
+              </Button>
+              <Button
                 variant="destructive"
                 className="flex-1"
                 onClick={() => setResilOpen(true)}
@@ -651,6 +661,24 @@ function ContratDetailPage() {
         onResiliated={() => {
           load();
           navigate({ to: "/admin/contrats" });
+        }}
+      />
+
+      {/* Gel (mise en veille) dialog */}
+      <GelContratDialog
+        open={gelDialogOpen}
+        onOpenChange={setGelDialogOpen}
+        contrat={
+          contrat
+            ? {
+                id: contrat.id,
+                numero_contrat: contrat.numero_contrat,
+                raison_sociale_client: contrat.entreprise?.nom ?? "Client inconnu",
+              }
+            : null
+        }
+        onGeled={() => {
+          load();
         }}
       />
 
