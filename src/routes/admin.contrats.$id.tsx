@@ -106,6 +106,9 @@ interface Contrat {
   passages_restants_mois: number;
   passages_reportes: number;
   entreprise_id: string;
+  gel_date_debut: string | null;
+  gel_date_fin: string | null;
+  gel_commentaire: string | null;
   entreprise: { id: string; nom: string } | null;
   lignes: Array<{ type_pack: string; nb_vehicules: number }>;
 }
