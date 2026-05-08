@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export interface GelContratInput {
   id: string;
-  numero_contrat: string;
+  numero_contrat: string | null;
   raison_sociale_client: string;
 }
 
