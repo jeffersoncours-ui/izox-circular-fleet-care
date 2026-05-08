@@ -112,7 +112,7 @@ export function ResiliationContratDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle>
             Résilier le contrat {contrat?.numero_contrat ?? ""} ?
