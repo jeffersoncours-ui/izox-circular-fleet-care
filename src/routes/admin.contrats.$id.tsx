@@ -175,6 +175,7 @@ function ContratDetailPage() {
         `id, numero_contrat, statut, date_debut, date_fin, date_anniversaire,
          mode_paiement, engagement_annuel, passages_mois, passages_restants_mois,
          passages_reportes, entreprise_id,
+         gel_date_debut, gel_date_fin, gel_commentaire,
          entreprise:entreprises ( id, nom ),
          lignes:contrat_lignes ( type_pack, nb_vehicules )`
       )
