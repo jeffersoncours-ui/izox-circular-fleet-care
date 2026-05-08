@@ -664,6 +664,24 @@ function ContratDetailPage() {
         }}
       />
 
+      {/* Gel (mise en veille) dialog */}
+      <GelContratDialog
+        open={gelDialogOpen}
+        onOpenChange={setGelDialogOpen}
+        contrat={
+          contrat
+            ? {
+                id: contrat.id,
+                numero_contrat: contrat.numero_contrat,
+                raison_sociale_client: contrat.entreprise?.nom ?? "Client inconnu",
+              }
+            : null
+        }
+        onGeled={() => {
+          load();
+        }}
+      />
+
       {/* Validation dialog */}
       {validateVeh && (
         <ValidateVehiculeDialog
