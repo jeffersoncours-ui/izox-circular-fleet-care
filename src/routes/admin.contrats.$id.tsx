@@ -48,11 +48,13 @@ import {
   AlertTriangle,
   Repeat,
   Snowflake,
+  RotateCcw,
 } from "lucide-react";
 
 import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
 import { ResiliationContratDialog } from "@/components/admin/ResiliationContratDialog";
 import { GelContratDialog } from "@/components/admin/GelContratDialog";
+import { ReactiverContratDialog } from "@/components/admin/ReactiverContratDialog";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 
 export const Route = createFileRoute("/admin/contrats/$id")({
@@ -104,6 +106,9 @@ interface Contrat {
   passages_restants_mois: number;
   passages_reportes: number;
   entreprise_id: string;
+  gel_date_debut: string | null;
+  gel_date_fin: string | null;
+  gel_commentaire: string | null;
   entreprise: { id: string; nom: string } | null;
   lignes: Array<{ type_pack: string; nb_vehicules: number }>;
 }
@@ -156,6 +161,7 @@ function ContratDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [resilOpen, setResilOpen] = useState(false);
   const [gelDialogOpen, setGelDialogOpen] = useState(false);
+  const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
 
   const [validateVeh, setValidateVeh] = useState<Vehicule | null>(null);
   const [refuseVeh, setRefuseVeh] = useState<Vehicule | null>(null);
@@ -169,6 +175,7 @@ function ContratDetailPage() {
         `id, numero_contrat, statut, date_debut, date_fin, date_anniversaire,
          mode_paiement, engagement_annuel, passages_mois, passages_restants_mois,
          passages_reportes, entreprise_id,
+         gel_date_debut, gel_date_fin, gel_commentaire,
          entreprise:entreprises ( id, nom ),
          lignes:contrat_lignes ( type_pack, nb_vehicules )`
       )
@@ -453,18 +460,29 @@ function ContratDetailPage() {
             )}
           </Card>
 
-          {contrat.statut === "actif" && (
+          {(contrat.statut === "actif" || contrat.statut === "en_cours_gel") && (
             <div className="flex flex-col sm:flex-row gap-2">
               <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
                 <Edit className="h-4 w-4" /> Modifier le contrat
               </Button>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setGelDialogOpen(true)}
-              >
-                <Snowflake className="h-4 w-4" /> Mettre en veille
-              </Button>
+              {contrat.statut === "actif" && (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setGelDialogOpen(true)}
+                >
+                  <Snowflake className="h-4 w-4" /> Mettre en veille
+                </Button>
+              )}
+              {contrat.statut === "en_cours_gel" && (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setReactivateDialogOpen(true)}
+                >
+                  <RotateCcw className="h-4 w-4" /> Réactiver le contrat
+                </Button>
+              )}
               <Button
                 variant="destructive"
                 className="flex-1"
@@ -678,6 +696,27 @@ function ContratDetailPage() {
             : null
         }
         onGeled={() => {
+          load();
+        }}
+      />
+
+      {/* Réactivation dialog */}
+      <ReactiverContratDialog
+        open={reactivateDialogOpen}
+        onOpenChange={setReactivateDialogOpen}
+        contrat={
+          contrat
+            ? {
+                id: contrat.id,
+                numero_contrat: contrat.numero_contrat,
+                raison_sociale_client: contrat.entreprise?.nom ?? "Client inconnu",
+                gel_date_debut: contrat.gel_date_debut ?? null,
+                gel_date_fin: contrat.gel_date_fin ?? null,
+                gel_commentaire: contrat.gel_commentaire ?? null,
+              }
+            : null
+        }
+        onReactivated={() => {
           load();
         }}
       />
