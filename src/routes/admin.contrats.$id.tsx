@@ -460,18 +460,29 @@ function ContratDetailPage() {
             )}
           </Card>
 
-          {contrat.statut === "actif" && (
+          {(contrat.statut === "actif" || contrat.statut === "en_cours_gel") && (
             <div className="flex flex-col sm:flex-row gap-2">
               <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
                 <Edit className="h-4 w-4" /> Modifier le contrat
               </Button>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setGelDialogOpen(true)}
-              >
-                <Snowflake className="h-4 w-4" /> Mettre en veille
-              </Button>
+              {contrat.statut === "actif" && (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setGelDialogOpen(true)}
+                >
+                  <Snowflake className="h-4 w-4" /> Mettre en veille
+                </Button>
+              )}
+              {contrat.statut === "en_cours_gel" && (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setReactivateDialogOpen(true)}
+                >
+                  <RotateCcw className="h-4 w-4" /> Réactiver le contrat
+                </Button>
+              )}
               <Button
                 variant="destructive"
                 className="flex-1"
