@@ -462,9 +462,6 @@ function ContratDetailPage() {
                 variant="outline"
                 className="flex-1"
                 onClick={() => setGelDialogOpen(true)}
-                disabled={
-                  contrat?.statut === "en_cours_gel" || contrat?.statut === "resilie"
-                }
               >
                 <Snowflake className="h-4 w-4" /> Mettre en veille
               </Button>
