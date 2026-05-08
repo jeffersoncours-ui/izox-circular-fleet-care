@@ -1128,6 +1128,8 @@ export type Database = {
         }
         Returns: string
       }
+      cron_cloture_mensuelle: { Args: never; Returns: undefined }
+      cron_maintenance_quotidienne: { Args: never; Returns: undefined }
       emettre_facture: { Args: { p_facture_id: string }; Returns: string }
       generer_facture: {
         Args: { p_annee: number; p_contrat_id: string; p_mois: number }
