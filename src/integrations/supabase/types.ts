@@ -200,9 +200,11 @@ export type Database = {
             | null
           entreprise_id: string
           gel_actif: boolean
+          gel_commentaire: string | null
           gel_date_debut: string | null
           gel_date_fin: string | null
           gel_justificatif_url: string | null
+          gel_notifier_client: boolean
           gel_type: Database["public"]["Enums"]["gel_type_enum"] | null
           id: string
           mode_paiement: Database["public"]["Enums"]["mode_paiement_enum"]
@@ -236,9 +238,11 @@ export type Database = {
             | null
           entreprise_id: string
           gel_actif?: boolean
+          gel_commentaire?: string | null
           gel_date_debut?: string | null
           gel_date_fin?: string | null
           gel_justificatif_url?: string | null
+          gel_notifier_client?: boolean
           gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
           id?: string
           mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
@@ -272,9 +276,11 @@ export type Database = {
             | null
           entreprise_id?: string
           gel_actif?: boolean
+          gel_commentaire?: string | null
           gel_date_debut?: string | null
           gel_date_fin?: string | null
           gel_justificatif_url?: string | null
+          gel_notifier_client?: boolean
           gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
           id?: string
           mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
