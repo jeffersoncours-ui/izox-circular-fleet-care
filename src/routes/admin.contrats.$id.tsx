@@ -155,6 +155,7 @@ function ContratDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [resilOpen, setResilOpen] = useState(false);
+  const [gelDialogOpen, setGelDialogOpen] = useState(false);
 
   const [validateVeh, setValidateVeh] = useState<Vehicule | null>(null);
   const [refuseVeh, setRefuseVeh] = useState<Vehicule | null>(null);
