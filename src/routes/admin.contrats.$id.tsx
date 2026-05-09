@@ -49,6 +49,13 @@ import {
   Repeat,
   Snowflake,
   RotateCcw,
+  FileSignature,
+  Sun,
+  Archive,
+  Wrench,
+  CalendarClock,
+  Receipt,
+  Activity,
 } from "lucide-react";
 
 import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
