@@ -826,65 +826,70 @@ function getActionMeta(
   colorClass: string;
 } {
   const d = log.details ?? {};
+
+  const safeFormat = (iso: unknown, fmt: string): string | null => {
+    if (typeof iso !== "string" || !iso) return null;
+    try {
+      return format(parseISO(iso), fmt, { locale: fr });
+    } catch {
+      return null;
+    }
+  };
+
   switch (log.action) {
     case "creation_contrat": {
-      const palierLabel = d.palier ? PALIER_LABEL[d.palier] ?? d.palier : null;
-      const palierSuffix = palierLabel ? ` — Palier ${palierLabel}` : "";
-      // CAS A : donnée figée
-      if (d.nb_vehicules_initial != null) {
-        return {
-          icon: Plus,
-          title: `Contrat créé avec ${d.nb_vehicules_initial} véhicule(s)${palierSuffix}`,
-          colorClass: "bg-primary/15 text-primary",
-        };
-      }
-      // CAS B : reconstitué fiable (jamais modifié)
-      if (!hasModifications && currentVehiculeCount > 0) {
-        return {
-          icon: Plus,
-          title: `Contrat créé avec ${currentVehiculeCount} véhicule(s)¹${palierSuffix}`,
-          note: "¹ Reconstitué depuis l'état actuel (aucune modification depuis la création)",
-          colorClass: "bg-primary/15 text-primary",
-        };
-      }
-      // CAS C : non reconstituable
+      const palierLabel = d.palier ? PALIER_LABEL[d.palier] ?? d.palier : "Starter";
+      const nb = d.nb_vehicules_initial ?? d.nb_vehicules;
+      const subtitle =
+        nb != null
+          ? `${nb} véhicule(s) — Palier ${palierLabel}`
+          : !hasModifications && currentVehiculeCount > 0
+          ? `${currentVehiculeCount} véhicule(s)¹ — Palier ${palierLabel}`
+          : "Création initiale";
+      const note =
+        typeof d.total_ht === "number"
+          ? `Mensualité de référence : ${d.total_ht.toFixed(2)} € HT`
+          : nb == null && !hasModifications && currentVehiculeCount > 0
+          ? "¹ Reconstitué depuis l'état actuel (aucune modification depuis la création)"
+          : undefined;
       return {
-        icon: Plus,
-        title: `Contrat créé${palierSuffix}`,
-        note: "Nombre de véhicules initial non enregistré",
-        colorClass: "bg-primary/15 text-primary",
+        icon: FileSignature,
+        title: "Initialisation du contrat",
+        subtitle,
+        note,
+        colorClass: "bg-primary/10 text-primary border border-primary/20",
       };
     }
     case "modification_contrat":
       return {
         icon: Edit,
-        title: "Contrat modifié",
+        title: "Ajustement de flotte",
         subtitle: summarizeChanges(d),
-        colorClass: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
+        colorClass: "bg-muted text-foreground border border-border",
       };
     case "remplacement_vehicule":
       return {
         icon: Repeat,
-        title: "Remplacement de véhicule",
+        title: "Remplacement véhicule",
         subtitle: d.ancien_immat
           ? `${d.ancien_immat} → ${d.nouveau_immat ?? "—"}`
           : undefined,
-        colorClass: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+        colorClass: "bg-muted text-foreground border border-border",
       };
     case "validation_vehicule_attente": {
-      const av = d.palier_avant;
       const ap = d.palier_apres;
-      const subtitle =
+      const av = d.palier_avant;
+      const palierInfo =
         av && ap && av !== ap
-          ? `Palier ${PALIER_LABEL[ap] ?? ap} (était ${PALIER_LABEL[av] ?? av})`
-          : ap
-          ? `Palier ${PALIER_LABEL[ap] ?? ap}`
-          : undefined;
+          ? ` · Palier ${PALIER_LABEL[ap] ?? ap} (était ${PALIER_LABEL[av] ?? av})`
+          : "";
       return {
         icon: Check,
-        title: `Véhicule ${d.vehicule_immat ?? ""} validé`.trim(),
-        subtitle,
-        colorClass: "bg-primary/15 text-primary",
+        title: "Validation véhicule",
+        subtitle: d.vehicule_immat
+          ? `${d.vehicule_immat} accepté dans la flotte${palierInfo}`
+          : "Véhicule validé",
+        colorClass: "bg-primary/10 text-primary border border-primary/20",
       };
     }
     case "bascule_automatique_remplacement":
@@ -897,50 +902,105 @@ function getActionMeta(
             : d.ancien_immat
             ? `${d.ancien_immat} archivé`
             : undefined,
-        colorClass: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+        colorClass: "bg-muted text-muted-foreground border border-border",
       };
     case "refus_vehicule_attente":
       return {
         icon: X,
-        title: `Véhicule ${d.vehicule_immat ?? ""} refusé`.trim(),
-        subtitle: d.motif ?? undefined,
-        colorClass: "bg-destructive/15 text-destructive",
+        title: "Refus véhicule",
+        subtitle: d.vehicule_immat
+          ? `${d.vehicule_immat} non validé`
+          : "Véhicule non validé",
+        note: d.motif ? `Motif : ${d.motif}` : undefined,
+        colorClass: "bg-muted text-muted-foreground border border-border",
       };
-    case "resiliation_contrat": {
-      const perte =
-        typeof d.mensualite_perdue === "number" ? d.mensualite_perdue : null;
-      const title =
-        perte !== null
-          ? `Contrat résilié — perte mensuelle ${perte.toFixed(2)} € HT`
-          : "Contrat résilié";
+    case "gel_contrat": {
+      const gelType = d.gel_type ?? "programme";
+      const dateDebut = safeFormat(d.gel_date_debut, "d MMMM yyyy");
+      const dateFin = safeFormat(d.gel_date_fin, "d MMMM yyyy");
+      const dureeIndeterminee = d.duree_indeterminee ?? false;
+      const commentaire = d.commentaire;
+      const periode =
+        dateDebut && dateFin
+          ? `Du ${dateDebut} au ${dateFin}`
+          : dateDebut && dureeIndeterminee
+          ? `À partir du ${dateDebut} (durée indéterminée)`
+          : dateDebut
+          ? `À partir du ${dateDebut}`
+          : "Période non précisée";
       return {
-        icon: X,
-        title,
-        subtitle: d.motif ? `Motif : ${d.motif}` : undefined,
-        colorClass: "bg-destructive/15 text-destructive",
+        icon: gelType === "sinistre" ? Wrench : Snowflake,
+        title:
+          gelType === "sinistre"
+            ? "Mise en veille — Sinistre"
+            : "Mise en veille temporaire",
+        subtitle: periode,
+        note: commentaire ? `« ${commentaire} »` : undefined,
+        colorClass:
+          gelType === "sinistre"
+            ? "bg-muted text-foreground border border-border"
+            : "bg-primary/10 text-primary border border-primary/20",
       };
     }
-    case "gel_contrat":
+    case "reactivation_contrat": {
+      const debut = safeFormat(d.gel_date_debut_origine, "d MMM");
+      const fin = safeFormat(d.gel_date_fin_origine, "d MMM yyyy");
+      const dureeGel = debut && fin ? `Période de veille : ${debut} → ${fin}` : undefined;
       return {
-        icon: Pause,
-        title: `Contrat gelé${d.gel_date_debut ? ` du ${d.gel_date_debut}` : ""}${d.gel_date_fin ? ` au ${d.gel_date_fin}` : ""}`,
-        colorClass: "bg-muted text-muted-foreground",
+        icon: Sun,
+        title: "Reprise du contrat",
+        subtitle: "Sortie de mise en veille",
+        note: dureeGel,
+        colorClass: "bg-primary/10 text-primary border border-primary/20",
       };
+    }
+    case "resiliation_contrat": {
+      const dateRes = safeFormat(d.date_resiliation, "d MMMM yyyy");
+      return {
+        icon: Archive,
+        title: "Clôture du contrat",
+        subtitle: dateRes ? `Effective le ${dateRes}` : "Contrat clôturé",
+        note: d.motif ? `Motif : ${d.motif}` : undefined,
+        colorClass: "bg-muted text-muted-foreground border border-border",
+      };
+    }
     case "cloture_mensuelle":
       return {
-        icon: History,
+        icon: Receipt,
         title: "Clôture mensuelle",
         subtitle:
           d.passages_reportes != null
             ? `${d.passages_reportes} passage(s) reporté(s)`
             : undefined,
-        colorClass: "bg-muted text-muted-foreground",
+        colorClass: "bg-primary/10 text-primary border border-primary/20",
       };
+    case "cron_maintenance_quotidienne": {
+      const nbDormants = d.nb_dormants_detectes ?? 0;
+      const nbActives = d.nb_onboarding_basculees_actif ?? 0;
+      const nbPreavis = d.nb_preavis_echus ?? 0;
+      const total = nbDormants + nbActives + nbPreavis;
+      const recap =
+        total === 0
+          ? "Aucun événement à signaler"
+          : [
+              nbDormants > 0 ? `${nbDormants} dormant(s)` : null,
+              nbActives > 0 ? `${nbActives} activation(s)` : null,
+              nbPreavis > 0 ? `${nbPreavis} préavis` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ");
+      return {
+        icon: Activity,
+        title: "Maintenance quotidienne",
+        subtitle: recap,
+        colorClass: "bg-muted text-muted-foreground border border-border",
+      };
+    }
     default:
       return {
         icon: History,
-        title: log.action,
-        colorClass: "bg-muted text-muted-foreground",
+        title: log.action.replace(/_/g, " "),
+        colorClass: "bg-muted text-muted-foreground border border-border",
       };
   }
 }
