@@ -62,6 +62,7 @@ import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
 import { ResiliationContratDialog } from "@/components/admin/ResiliationContratDialog";
 import { GelContratDialog } from "@/components/admin/GelContratDialog";
 import { ReactiverContratDialog } from "@/components/admin/ReactiverContratDialog";
+import { GelInfoBanner } from "@/components/admin/GelInfoBanner";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 
 export const Route = createFileRoute("/admin/contrats/$id")({
@@ -113,9 +114,12 @@ interface Contrat {
   passages_restants_mois: number;
   passages_reportes: number;
   entreprise_id: string;
+  gel_actif: boolean;
+  gel_type: "programme" | "sinistre" | null;
   gel_date_debut: string | null;
   gel_date_fin: string | null;
   gel_commentaire: string | null;
+  gel_notifier_client: boolean;
   entreprise: { id: string; nom: string } | null;
   lignes: Array<{ type_pack: string; nb_vehicules: number }>;
 }
@@ -182,7 +186,7 @@ function ContratDetailPage() {
         `id, numero_contrat, statut, date_debut, date_fin, date_anniversaire,
          mode_paiement, engagement_annuel, passages_mois, passages_restants_mois,
          passages_reportes, entreprise_id,
-         gel_date_debut, gel_date_fin, gel_commentaire,
+         gel_actif, gel_type, gel_date_debut, gel_date_fin, gel_commentaire, gel_notifier_client,
          entreprise:entreprises ( id, nom ),
          lignes:contrat_lignes ( type_pack, nb_vehicules )`
       )
@@ -371,6 +375,17 @@ function ContratDetailPage() {
           {STATUT_LABEL[contrat.statut] ?? contrat.statut}
         </Badge>
       </header>
+
+      {contrat.gel_actif && (
+        <GelInfoBanner
+          gelType={contrat.gel_type}
+          gelDateDebut={contrat.gel_date_debut}
+          gelDateFin={contrat.gel_date_fin}
+          gelCommentaire={contrat.gel_commentaire}
+          gelNotifierClient={contrat.gel_notifier_client}
+          onReactivateClick={() => setReactivateDialogOpen(true)}
+        />
+      )}
 
       <Tabs defaultValue="infos" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
