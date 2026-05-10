@@ -62,6 +62,7 @@ import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
 import { ResiliationContratDialog } from "@/components/admin/ResiliationContratDialog";
 import { GelContratDialog } from "@/components/admin/GelContratDialog";
 import { ReactiverContratDialog } from "@/components/admin/ReactiverContratDialog";
+import { GelInfoBanner } from "@/components/admin/GelInfoBanner";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 
 export const Route = createFileRoute("/admin/contrats/$id")({
