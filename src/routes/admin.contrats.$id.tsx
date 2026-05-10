@@ -376,6 +376,17 @@ function ContratDetailPage() {
         </Badge>
       </header>
 
+      {contrat.gel_actif && (
+        <GelInfoBanner
+          gelType={contrat.gel_type}
+          gelDateDebut={contrat.gel_date_debut}
+          gelDateFin={contrat.gel_date_fin}
+          gelCommentaire={contrat.gel_commentaire}
+          gelNotifierClient={contrat.gel_notifier_client}
+          onReactivateClick={() => setReactivateDialogOpen(true)}
+        />
+      )}
+
       <Tabs defaultValue="infos" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
           <TabsTrigger value="infos">Infos générales</TabsTrigger>
