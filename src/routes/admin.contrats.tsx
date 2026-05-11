@@ -35,6 +35,7 @@ import {
   Search,
   Eye,
   Pause,
+  Sun,
   X,
   Calendar as CalendarIcon,
 } from "lucide-react";
@@ -43,6 +44,8 @@ import {
   ResiliationContratDialog,
   type ResiliationContratInput,
 } from "@/components/admin/ResiliationContratDialog";
+import { GelContratDialog } from "@/components/admin/GelContratDialog";
+import { ReactiverContratDialog } from "@/components/admin/ReactiverContratDialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/contrats")({
@@ -62,6 +65,12 @@ interface ContratRow {
   vehiculesEnAttente: number;
   mensualiteNetteHt: number;
   palier: string;
+  gel_actif: boolean;
+  gel_type: "programme" | "sinistre" | null;
+  gel_date_debut: string | null;
+  gel_date_fin: string | null;
+  gel_commentaire: string | null;
+  gel_notifier_client: boolean;
 }
 
 const PACK_LABELS: Record<string, string> = {
@@ -109,6 +118,20 @@ function ContratsList() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [resilTarget, setResilTarget] = useState<ResiliationContratInput | null>(null);
+  const [gelDialogOpen, setGelDialogOpen] = useState(false);
+  const [gelTarget, setGelTarget] = useState<ContratRow | null>(null);
+  const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
+  const [reactivateTarget, setReactivateTarget] = useState<ContratRow | null>(null);
+
+  const openGel = (r: ContratRow) => {
+    setGelTarget(r);
+    setGelDialogOpen(true);
+  };
+
+  const openReactivate = (r: ContratRow) => {
+    setReactivateTarget(r);
+    setReactivateDialogOpen(true);
+  };
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -124,6 +147,8 @@ function ContratsList() {
         `
         id, numero_contrat, statut, passages_restants_mois, passages_reportes,
         engagement_annuel, entreprise_id,
+        gel_actif, gel_type, gel_date_debut, gel_date_fin,
+        gel_commentaire, gel_notifier_client,
         entreprise:entreprises ( id, nom ),
         lignes:contrat_lignes ( type_pack, nb_vehicules )
       `
@@ -185,6 +210,12 @@ function ContratsList() {
         engagement_annuel: c.engagement_annuel,
         entreprise: c.entreprise,
         lignes,
+        gel_actif: c.gel_actif ?? false,
+        gel_type: c.gel_type ?? null,
+        gel_date_debut: c.gel_date_debut ?? null,
+        gel_date_fin: c.gel_date_fin ?? null,
+        gel_commentaire: c.gel_commentaire ?? null,
+        gel_notifier_client: c.gel_notifier_client ?? false,
         vehiculesActifs: ent ? counts[ent]?.actifs ?? 0 : 0,
         vehiculesEnAttente: ent ? counts[ent]?.enAttente ?? 0 : 0,
         mensualiteNetteHt: facture?.totalAbonnementHt ?? 0,
@@ -388,16 +419,40 @@ function ContratsList() {
                             </TooltipTrigger>
                             <TooltipContent>Voir / Modifier</TooltipContent>
                           </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span>
-                                <Button variant="ghost" size="icon" disabled>
+                          {r.statut === "actif" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => openGel(r)}>
                                   <Pause className="h-4 w-4" />
                                 </Button>
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>Bientôt disponible</TooltipContent>
-                          </Tooltip>
+                              </TooltipTrigger>
+                              <TooltipContent>Mettre en veille</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {r.statut === "en_cours_gel" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => openReactivate(r)}>
+                                  <Sun className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Réactiver le contrat</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {r.statut !== "actif" && r.statut !== "en_cours_gel" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span tabIndex={0}>
+                                  <Button variant="ghost" size="icon" disabled>
+                                    <Pause className="h-4 w-4" />
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {r.statut === "resilie" ? "Contrat clôturé" : "Action indisponible"}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -486,9 +541,21 @@ function ContratsList() {
                       <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="sm" disabled>
-                    <Pause className="h-4 w-4" />
-                  </Button>
+                  {r.statut === "actif" && (
+                    <Button variant="ghost" size="sm" onClick={() => openGel(r)}>
+                      <Pause className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {r.statut === "en_cours_gel" && (
+                    <Button variant="ghost" size="sm" onClick={() => openReactivate(r)}>
+                      <Sun className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {r.statut !== "actif" && r.statut !== "en_cours_gel" && (
+                    <Button variant="ghost" size="sm" disabled>
+                      <Pause className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -517,6 +584,45 @@ function ContratsList() {
         contrat={resilTarget}
         onResiliated={() => {
           setResilTarget(null);
+          load();
+        }}
+      />
+
+      <GelContratDialog
+        open={gelDialogOpen}
+        onOpenChange={setGelDialogOpen}
+        contrat={
+          gelTarget
+            ? {
+                id: gelTarget.id,
+                numero_contrat: gelTarget.numero_contrat,
+                raison_sociale_client: gelTarget.entreprise?.nom ?? "Client inconnu",
+              }
+            : null
+        }
+        onGeled={() => {
+          setGelTarget(null);
+          load();
+        }}
+      />
+
+      <ReactiverContratDialog
+        open={reactivateDialogOpen}
+        onOpenChange={setReactivateDialogOpen}
+        contrat={
+          reactivateTarget
+            ? {
+                id: reactivateTarget.id,
+                numero_contrat: reactivateTarget.numero_contrat,
+                raison_sociale_client: reactivateTarget.entreprise?.nom ?? "Client inconnu",
+                gel_date_debut: reactivateTarget.gel_date_debut,
+                gel_date_fin: reactivateTarget.gel_date_fin,
+                gel_commentaire: reactivateTarget.gel_commentaire,
+              }
+            : null
+        }
+        onReactivated={() => {
+          setReactivateTarget(null);
           load();
         }}
       />
