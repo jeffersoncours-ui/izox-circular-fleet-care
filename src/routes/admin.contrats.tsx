@@ -587,6 +587,45 @@ function ContratsList() {
           load();
         }}
       />
+
+      <GelContratDialog
+        open={gelDialogOpen}
+        onOpenChange={setGelDialogOpen}
+        contrat={
+          gelTarget
+            ? {
+                id: gelTarget.id,
+                numero_contrat: gelTarget.numero_contrat,
+                raison_sociale_client: gelTarget.entreprise?.nom ?? "Client inconnu",
+              }
+            : null
+        }
+        onGeled={() => {
+          setGelTarget(null);
+          load();
+        }}
+      />
+
+      <ReactiverContratDialog
+        open={reactivateDialogOpen}
+        onOpenChange={setReactivateDialogOpen}
+        contrat={
+          reactivateTarget
+            ? {
+                id: reactivateTarget.id,
+                numero_contrat: reactivateTarget.numero_contrat,
+                raison_sociale_client: reactivateTarget.entreprise?.nom ?? "Client inconnu",
+                gel_date_debut: reactivateTarget.gel_date_debut,
+                gel_date_fin: reactivateTarget.gel_date_fin,
+                gel_commentaire: reactivateTarget.gel_commentaire,
+              }
+            : null
+        }
+        onReactivated={() => {
+          setReactivateTarget(null);
+          load();
+        }}
+      />
     </div>
   );
 }
