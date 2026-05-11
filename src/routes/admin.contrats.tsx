@@ -35,6 +35,7 @@ import {
   Search,
   Eye,
   Pause,
+  Sun,
   X,
   Calendar as CalendarIcon,
 } from "lucide-react";
@@ -43,6 +44,8 @@ import {
   ResiliationContratDialog,
   type ResiliationContratInput,
 } from "@/components/admin/ResiliationContratDialog";
+import { GelContratDialog } from "@/components/admin/GelContratDialog";
+import { ReactiverContratDialog } from "@/components/admin/ReactiverContratDialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/contrats")({
@@ -62,6 +65,12 @@ interface ContratRow {
   vehiculesEnAttente: number;
   mensualiteNetteHt: number;
   palier: string;
+  gel_actif: boolean;
+  gel_type: "programme" | "sinistre" | null;
+  gel_date_debut: string | null;
+  gel_date_fin: string | null;
+  gel_commentaire: string | null;
+  gel_notifier_client: boolean;
 }
 
 const PACK_LABELS: Record<string, string> = {
@@ -124,6 +133,8 @@ function ContratsList() {
         `
         id, numero_contrat, statut, passages_restants_mois, passages_reportes,
         engagement_annuel, entreprise_id,
+        gel_actif, gel_type, gel_date_debut, gel_date_fin,
+        gel_commentaire, gel_notifier_client,
         entreprise:entreprises ( id, nom ),
         lignes:contrat_lignes ( type_pack, nb_vehicules )
       `
