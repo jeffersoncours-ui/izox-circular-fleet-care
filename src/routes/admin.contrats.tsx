@@ -541,9 +541,21 @@ function ContratsList() {
                       <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="sm" disabled>
-                    <Pause className="h-4 w-4" />
-                  </Button>
+                  {r.statut === "actif" && (
+                    <Button variant="ghost" size="sm" onClick={() => openGel(r)}>
+                      <Pause className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {r.statut === "en_cours_gel" && (
+                    <Button variant="ghost" size="sm" onClick={() => openReactivate(r)}>
+                      <Sun className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {r.statut !== "actif" && r.statut !== "en_cours_gel" && (
+                    <Button variant="ghost" size="sm" disabled>
+                      <Pause className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
