@@ -419,16 +419,40 @@ function ContratsList() {
                             </TooltipTrigger>
                             <TooltipContent>Voir / Modifier</TooltipContent>
                           </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span>
-                                <Button variant="ghost" size="icon" disabled>
+                          {r.statut === "actif" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => openGel(r)}>
                                   <Pause className="h-4 w-4" />
                                 </Button>
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>Bientôt disponible</TooltipContent>
-                          </Tooltip>
+                              </TooltipTrigger>
+                              <TooltipContent>Mettre en veille</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {r.statut === "en_cours_gel" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => openReactivate(r)}>
+                                  <Sun className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Réactiver le contrat</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {r.statut !== "actif" && r.statut !== "en_cours_gel" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span tabIndex={0}>
+                                  <Button variant="ghost" size="icon" disabled>
+                                    <Pause className="h-4 w-4" />
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {r.statut === "resilie" ? "Contrat clôturé" : "Action indisponible"}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
