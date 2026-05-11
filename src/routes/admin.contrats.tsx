@@ -118,6 +118,20 @@ function ContratsList() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [resilTarget, setResilTarget] = useState<ResiliationContratInput | null>(null);
+  const [gelDialogOpen, setGelDialogOpen] = useState(false);
+  const [gelTarget, setGelTarget] = useState<ContratRow | null>(null);
+  const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
+  const [reactivateTarget, setReactivateTarget] = useState<ContratRow | null>(null);
+
+  const openGel = (r: ContratRow) => {
+    setGelTarget(r);
+    setGelDialogOpen(true);
+  };
+
+  const openReactivate = (r: ContratRow) => {
+    setReactivateTarget(r);
+    setReactivateDialogOpen(true);
+  };
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
