@@ -842,6 +842,62 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications_internes: {
+        Row: {
+          action_requise: boolean
+          archived_at: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          link_url: string | null
+          read_at: string | null
+          severite: string
+          source_action: string
+          source_log_id: string | null
+          statut: Database["public"]["Enums"]["notification_statut_enum"]
+          titre: string
+          user_id: string
+        }
+        Insert: {
+          action_requise?: boolean
+          archived_at?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          link_url?: string | null
+          read_at?: string | null
+          severite?: string
+          source_action: string
+          source_log_id?: string | null
+          statut?: Database["public"]["Enums"]["notification_statut_enum"]
+          titre: string
+          user_id: string
+        }
+        Update: {
+          action_requise?: boolean
+          archived_at?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          link_url?: string | null
+          read_at?: string | null
+          severite?: string
+          source_action?: string
+          source_log_id?: string | null
+          statut?: Database["public"]["Enums"]["notification_statut_enum"]
+          titre?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_internes_source_log_id_fkey"
+            columns: ["source_log_id"]
+            isOneToOne: false
+            referencedRelation: "admin_actions_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parrainages: {
         Row: {
           code_parrainage: string
@@ -1160,6 +1216,7 @@ export type Database = {
       engagement_type_enum: "mensuel" | "trimestriel" | "annuel"
       gel_type_enum: "programme" | "sinistre"
       mode_paiement_enum: "sepa" | "virement" | "stripe"
+      notification_statut_enum: "non_lu" | "vu" | "priorite" | "archive"
       palier_remise: "starter" | "pro" | "business" | "premium"
       planning_niveau_enum:
         | "libre"
@@ -1320,6 +1377,7 @@ export const Constants = {
       engagement_type_enum: ["mensuel", "trimestriel", "annuel"],
       gel_type_enum: ["programme", "sinistre"],
       mode_paiement_enum: ["sepa", "virement", "stripe"],
+      notification_statut_enum: ["non_lu", "vu", "priorite", "archive"],
       palier_remise: ["starter", "pro", "business", "premium"],
       planning_niveau_enum: [
         "libre",
