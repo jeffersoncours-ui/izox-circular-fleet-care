@@ -103,12 +103,13 @@ function SidebarFooter({ onAfterLogout }: { onAfterLogout?: () => void }) {
 export function AdminSidebar() {
   return (
     <aside className="hidden md:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-      <div className="px-6 py-6 border-b border-sidebar-border">
+      <div className="px-6 py-6 border-b border-sidebar-border flex items-center justify-between gap-2">
         <img
           src="/logo-izox.png"
           alt="IZOX"
           className="h-10 w-auto object-contain"
         />
+        <NotificationCenter />
       </div>
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
         <NavList />
