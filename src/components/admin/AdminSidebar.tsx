@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { useState } from "react";
 
 interface NavItem {
