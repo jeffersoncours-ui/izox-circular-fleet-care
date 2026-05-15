@@ -157,7 +157,10 @@ export function AdminMobileHeader() {
         </Sheet>
         <img src="/logo-izox.png" alt="IZOX" className="h-7 w-auto object-contain" />
       </div>
-      <span className="text-xs capitalize">{profile?.role}</span>
+      <div className="flex items-center gap-2">
+        <NotificationCenter />
+        <span className="text-xs capitalize">{profile?.role}</span>
+      </div>
     </header>
   );
 }
