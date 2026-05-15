@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { NotificationCenter } from "@/components/admin/NotificationCenter";
 import { useState } from "react";
 
 interface NavItem {
@@ -102,12 +103,13 @@ function SidebarFooter({ onAfterLogout }: { onAfterLogout?: () => void }) {
 export function AdminSidebar() {
   return (
     <aside className="hidden md:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-      <div className="px-6 py-6 border-b border-sidebar-border">
+      <div className="px-6 py-6 border-b border-sidebar-border flex items-center justify-between gap-2">
         <img
           src="/logo-izox.png"
           alt="IZOX"
           className="h-10 w-auto object-contain"
         />
+        <NotificationCenter />
       </div>
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
         <NavList />
@@ -155,7 +157,10 @@ export function AdminMobileHeader() {
         </Sheet>
         <img src="/logo-izox.png" alt="IZOX" className="h-7 w-auto object-contain" />
       </div>
-      <span className="text-xs capitalize">{profile?.role}</span>
+      <div className="flex items-center gap-2">
+        <NotificationCenter />
+        <span className="text-xs capitalize">{profile?.role}</span>
+      </div>
     </header>
   );
 }
