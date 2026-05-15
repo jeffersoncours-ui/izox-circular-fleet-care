@@ -848,6 +848,9 @@ export type Database = {
           archived_at: string | null
           created_at: string
           details: Json | null
+          epingle_at: string | null
+          epingle_equipe: boolean
+          epingle_par: string | null
           id: string
           link_url: string | null
           read_at: string | null
@@ -863,6 +866,9 @@ export type Database = {
           archived_at?: string | null
           created_at?: string
           details?: Json | null
+          epingle_at?: string | null
+          epingle_equipe?: boolean
+          epingle_par?: string | null
           id?: string
           link_url?: string | null
           read_at?: string | null
@@ -878,6 +884,9 @@ export type Database = {
           archived_at?: string | null
           created_at?: string
           details?: Json | null
+          epingle_at?: string | null
+          epingle_equipe?: boolean
+          epingle_par?: string | null
           id?: string
           link_url?: string | null
           read_at?: string | null
@@ -1208,6 +1217,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      toggle_epingle_equipe: {
+        Args: { p_notification_id: string }
+        Returns: Json
       }
     }
     Enums: {
