@@ -28,6 +28,8 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -46,6 +48,9 @@ interface Notification {
   created_at: string;
   read_at: string | null;
   archived_at: string | null;
+  epingle_equipe: boolean;
+  epingle_par: string | null;
+  epingle_at: string | null;
 }
 
 export function NotificationCenter() {
@@ -53,6 +58,7 @@ export function NotificationCenter() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showArchives, setShowArchives] = useState(false);
+  const [showConsultees, setShowConsultees] = useState(false);
   const [archives, setArchives] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
@@ -184,6 +190,26 @@ export function NotificationCenter() {
     toast.success("Toutes les notifications marquées comme vues");
   };
 
+  const toggleEpingleEquipe = async (id: string) => {
+    const { data, error } = await supabase.rpc("toggle_epingle_equipe", {
+      p_notification_id: id,
+    });
+    if (error) {
+      toast.error("Erreur : " + error.message);
+      return;
+    }
+    if ((data as any)?.success) {
+      fetchNotifications();
+      toast.success(
+        (data as any).epingle_equipe
+          ? "Notification épinglée pour toute l'équipe"
+          : "Notification désépinglée",
+      );
+    } else {
+      toast.error((data as any)?.error ?? "Erreur inconnue");
+    }
+  };
+
   const handleNotifClick = (notif: Notification) => {
     if (notif.link_url) {
       if (notif.statut === "non_lu") {
@@ -220,7 +246,17 @@ export function NotificationCenter() {
     }
   };
 
-  const getSeveriteClasses = (severite: string, statut: string) => {
+  const getSeveriteClasses = (
+    severite: string,
+    statut: string,
+    epingleEquipe: boolean,
+  ) => {
+    if (epingleEquipe) {
+      if (statut === "non_lu") {
+        return "border-l-4 border-l-blue-600 bg-blue-100";
+      }
+      return "border-l-4 border-l-blue-500 bg-blue-50";
+    }
     if (statut === "priorite")
       return "border-l-4 border-l-orange-500 bg-orange-50";
     switch (severite) {
@@ -246,9 +282,16 @@ export function NotificationCenter() {
     }
   };
 
-  const prioritaires = notifications.filter((n) => n.statut === "priorite");
-  const nonLues = notifications.filter((n) => n.statut === "non_lu");
-  const vues = notifications.filter((n) => n.statut === "vu");
+  const epinglees = notifications.filter((n) => n.epingle_equipe);
+  const prioritaires = notifications.filter(
+    (n) => n.statut === "priorite" && !n.epingle_equipe,
+  );
+  const nonLues = notifications.filter(
+    (n) => n.statut === "non_lu" && !n.epingle_equipe,
+  );
+  const vues = notifications.filter(
+    (n) => n.statut === "vu" && !n.epingle_equipe,
+  );
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -297,6 +340,30 @@ export function NotificationCenter() {
 
         <ScrollArea className="h-[calc(100vh-80px)]">
           <div className="p-2 space-y-1">
+            {epinglees.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide px-2 py-1 flex items-center gap-1">
+                  <Pin className="h-3 w-3" />
+                  Épinglées équipe ({epinglees.length})
+                </p>
+                {epinglees.map((notif) => (
+                  <NotificationItem
+                    key={notif.id}
+                    notif={notif}
+                    onClick={() => handleNotifClick(notif)}
+                    onMarkVu={() => markAsVu(notif.id)}
+                    onMarkPriorite={() => markAsPriorite(notif.id)}
+                    onArchive={() => markAsArchive(notif.id)}
+                    onTogglePin={() => toggleEpingleEquipe(notif.id)}
+                    getIcon={getNotifIcon}
+                    getClasses={getSeveriteClasses}
+                    getTime={getRelativeTime}
+                    isEpingleSection
+                  />
+                ))}
+              </div>
+            )}
+
             {prioritaires.length > 0 && (
               <div className="mb-3">
                 <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide px-2 py-1">
@@ -310,6 +377,7 @@ export function NotificationCenter() {
                     onMarkVu={() => markAsVu(notif.id)}
                     onMarkPriorite={() => markAsPriorite(notif.id)}
                     onArchive={() => markAsArchive(notif.id)}
+                    onTogglePin={() => toggleEpingleEquipe(notif.id)}
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
@@ -331,6 +399,7 @@ export function NotificationCenter() {
                     onMarkVu={() => markAsVu(notif.id)}
                     onMarkPriorite={() => markAsPriorite(notif.id)}
                     onArchive={() => markAsArchive(notif.id)}
+                    onTogglePin={() => toggleEpingleEquipe(notif.id)}
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
@@ -341,22 +410,37 @@ export function NotificationCenter() {
 
             {vues.length > 0 && (
               <div className="mb-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-2 py-1">
-                  Consultées ({vues.length})
-                </p>
-                {vues.map((notif) => (
-                  <NotificationItem
-                    key={notif.id}
-                    notif={notif}
-                    onClick={() => handleNotifClick(notif)}
-                    onMarkVu={() => markAsVu(notif.id)}
-                    onMarkPriorite={() => markAsPriorite(notif.id)}
-                    onArchive={() => markAsArchive(notif.id)}
-                    getIcon={getNotifIcon}
-                    getClasses={getSeveriteClasses}
-                    getTime={getRelativeTime}
-                  />
-                ))}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-between text-xs text-muted-foreground px-2 py-1"
+                  onClick={() => setShowConsultees(!showConsultees)}
+                >
+                  <span className="uppercase tracking-wide font-semibold">
+                    Consultées ({vues.length})
+                  </span>
+                  {showConsultees ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
+                </Button>
+
+                {showConsultees &&
+                  vues.map((notif) => (
+                    <NotificationItem
+                      key={notif.id}
+                      notif={notif}
+                      onClick={() => handleNotifClick(notif)}
+                      onMarkVu={() => markAsVu(notif.id)}
+                      onMarkPriorite={() => markAsPriorite(notif.id)}
+                      onArchive={() => markAsArchive(notif.id)}
+                      onTogglePin={() => toggleEpingleEquipe(notif.id)}
+                      getIcon={getNotifIcon}
+                      getClasses={getSeveriteClasses}
+                      getTime={getRelativeTime}
+                    />
+                  ))}
               </div>
             )}
 
@@ -402,6 +486,7 @@ export function NotificationCenter() {
                     onMarkVu={() => {}}
                     onMarkPriorite={() => {}}
                     onArchive={() => {}}
+                    onTogglePin={() => {}}
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
@@ -422,10 +507,12 @@ interface NotificationItemProps {
   onMarkVu: () => void;
   onMarkPriorite: () => void;
   onArchive: () => void;
+  onTogglePin: () => void;
   getIcon: (action: string) => React.ReactNode;
-  getClasses: (severite: string, statut: string) => string;
+  getClasses: (severite: string, statut: string, epingleEquipe: boolean) => string;
   getTime: (dateStr: string) => string;
   isArchive?: boolean;
+  isEpingleSection?: boolean;
 }
 
 function NotificationItem({
@@ -434,14 +521,16 @@ function NotificationItem({
   onMarkVu,
   onMarkPriorite,
   onArchive,
+  onTogglePin,
   getIcon,
   getClasses,
   getTime,
   isArchive = false,
+  isEpingleSection = false,
 }: NotificationItemProps) {
   return (
     <Card
-      className={`p-3 mb-1 cursor-pointer hover:bg-muted/50 transition-colors ${getClasses(notif.severite, notif.statut)}`}
+      className={`p-3 mb-1 cursor-pointer hover:bg-muted/50 transition-colors ${getClasses(notif.severite, notif.statut, notif.epingle_equipe)}`}
       onClick={onClick}
     >
       <div className="flex items-start gap-3">
@@ -456,6 +545,15 @@ function NotificationItem({
           <p className="text-xs text-muted-foreground mt-0.5">
             {getTime(notif.created_at)}
           </p>
+          {isEpingleSection && (
+            <Badge
+              variant="outline"
+              className="mt-1 text-xs border-blue-300 text-blue-600"
+            >
+              <Pin className="h-2.5 w-2.5 mr-1" />
+              Épinglé équipe
+            </Badge>
+          )}
           {notif.action_requise && notif.statut !== "archive" && (
             <Badge
               variant="outline"
@@ -493,6 +591,23 @@ function NotificationItem({
                 <Star className="h-3.5 w-3.5" />
               </Button>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={onTogglePin}
+              title={
+                notif.epingle_equipe
+                  ? "Désépingler de l'équipe"
+                  : "Épingler pour l'équipe"
+              }
+            >
+              {notif.epingle_equipe ? (
+                <PinOff className="h-3.5 w-3.5 text-blue-600" />
+              ) : (
+                <Pin className="h-3.5 w-3.5" />
+              )}
+            </Button>
             <Button
               variant="ghost"
               size="icon"
