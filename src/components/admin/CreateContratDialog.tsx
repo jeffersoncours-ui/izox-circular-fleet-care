@@ -55,31 +55,13 @@ interface Entreprise {
   ville: string | null;
 }
 
-type TypePack = "pack_interieur" | "pack_standard" | "pack_vtc";
+type TypePack = PackType;
 
 interface Ligne {
   id: string;
   typePack: TypePack;
   nbVehicules: number;
 }
-
-const PACK_LABELS: Record<TypePack, string> = {
-  pack_interieur: "Pack Intérieur",
-  pack_standard: "Pack Standard",
-  pack_vtc: "Pack VTC",
-};
-
-const PACK_PASSAGES: Record<TypePack, number> = {
-  pack_interieur: 2,
-  pack_standard: 2,
-  pack_vtc: 4,
-};
-
-const PACK_PRIX: Record<TypePack, number> = {
-  pack_interieur: 100,
-  pack_standard: 150,
-  pack_vtc: 190,
-};
 
 const PALIER_BADGE: Record<string, string> = {
   starter: "bg-muted text-muted-foreground",
