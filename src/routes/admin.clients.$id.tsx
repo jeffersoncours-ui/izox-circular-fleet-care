@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 import { EditEntrepriseDialog } from "@/components/admin/EditEntrepriseDialog";
-import { calculerFactureFlotte } from "@/lib/pricing";
+import { calculerFactureFlotte, getPackLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/clients/$id")({
