@@ -18,33 +18,7 @@ import { useAuth } from "@/lib/auth-context";
 import { compressImage } from "@/lib/image";
 import { toast } from "sonner";
 
-type PackType = "pack_interieur" | "pack_standard" | "pack_vtc";
-
-const PACK_OPTIONS: Array<{
-  value: PackType;
-  nom: string;
-  prix: number;
-  description: string;
-}> = [
-  {
-    value: "pack_interieur",
-    nom: "Pack Intérieur",
-    prix: 100,
-    description: "2x intérieur 6 étapes (45 min)",
-  },
-  {
-    value: "pack_standard",
-    nom: "Pack Standard",
-    prix: 150,
-    description: "2x intérieur + extérieur Karcher (1h15)",
-  },
-  {
-    value: "pack_vtc",
-    nom: "Pack VTC/Taxi",
-    prix: 190,
-    description: "2x intérieur + 2x intérieur+extérieur (4 passages)",
-  },
-];
+import { getAllPacks, getPackLabel, type PackType } from "@/lib/pricing";
 
 interface VehiculeData {
   id: string;
