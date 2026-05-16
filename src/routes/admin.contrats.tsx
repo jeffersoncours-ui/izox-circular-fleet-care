@@ -73,11 +73,6 @@ interface ContratRow {
   gel_notifier_client: boolean;
 }
 
-const PACK_LABELS: Record<string, string> = {
-  pack_interieur: "Pack Intérieur",
-  pack_standard: "Pack Standard",
-  pack_vtc: "Pack VTC",
-};
 
 const PALIER_BADGE: Record<string, string> = {
   starter: "bg-muted text-muted-foreground",
