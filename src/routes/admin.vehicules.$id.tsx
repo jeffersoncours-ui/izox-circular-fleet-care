@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate, useParams, useRouter } from "@tanst
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getVehiculePhotoUrl } from "@/lib/vehicule-photo";
+import { getPackLabel } from "@/lib/pricing";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,12 +51,6 @@ interface Vehicule {
   entreprise_id: string;
   entreprises: { id: string; nom: string } | null;
 }
-
-const PACK_LABELS: Record<string, string> = {
-  pack_interieur: "Pack Intérieur",
-  pack_standard: "Pack Standard",
-  pack_vtc: "Pack VTC/Taxi",
-};
 
 const STATUT_LABELS: Record<string, string> = {
   actif: "Actif",
@@ -171,7 +166,7 @@ function AdminVehiculeDetail() {
             </Badge>
             {vehicule.type_pack_souhaite && (
               <Badge variant="outline">
-                {PACK_LABELS[vehicule.type_pack_souhaite] ?? vehicule.type_pack_souhaite}
+                {getPackLabel(vehicule.type_pack_souhaite)}
               </Badge>
             )}
           </div>

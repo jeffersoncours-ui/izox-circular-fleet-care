@@ -18,41 +18,9 @@ import { getVehiculePhotoUrl } from "@/lib/vehicule-photo";
 import { useAuth } from "@/lib/auth-context";
 import { compressImage } from "@/lib/image";
 import { toast } from "sonner";
-import { getProchainPalier, getPalier } from "@/lib/pricing";
+import { getProchainPalier, getPalier, getAllPacks, type PackType } from "@/lib/pricing";
 import { Card } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
-
-type PackType = "pack_interieur" | "pack_standard" | "pack_vtc";
-
-const PACK_OPTIONS: Array<{
-  value: PackType;
-  nom: string;
-  prix: number;
-  description: string;
-  bonus: string;
-}> = [
-  {
-    value: "pack_interieur",
-    nom: "Pack Intérieur",
-    prix: 100,
-    description: "2x intérieur 6 étapes (45 min)",
-    bonus: "Vérification pneus + Carnet entretien numérique",
-  },
-  {
-    value: "pack_standard",
-    nom: "Pack Standard",
-    prix: 150,
-    description: "2x intérieur + extérieur Karcher (1h15)",
-    bonus: "Vérification pneus + Carnet entretien numérique",
-  },
-  {
-    value: "pack_vtc",
-    nom: "Pack VTC/Taxi",
-    prix: 190,
-    description: "2x intérieur + 2x intérieur+extérieur (4 passages)",
-    bonus: "Vérification pneus + Carnet entretien + Lave-glace gratuit",
-  },
-];
 
 const PALIER_LABELS: Record<string, string> = {
   pro: "Pro",
@@ -356,31 +324,31 @@ export function AddVehiculeDialog({
             <div>
               <Label className="mb-2 block">Formule souhaitée *</Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {PACK_OPTIONS.map((p) => {
-                  const active = packSouhaite === p.value;
+                {getAllPacks().map((p) => {
+                  const active = packSouhaite === p.type;
                   return (
                     <button
-                      key={p.value}
+                      key={p.type}
                       type="button"
-                      onClick={() => setPackSouhaite(p.value)}
+                      onClick={() => setPackSouhaite(p.type)}
                       className={cn(
                         "text-left rounded-lg border-2 p-3 transition-all bg-card",
                         active ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"
                       )}
                     >
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className={cn("font-semibold text-sm", active && "text-primary")}>{p.nom}</span>
-                        <span className="text-sm font-bold text-foreground">{p.prix} € HT/mois</span>
+                        <span className={cn("font-semibold text-sm", active && "text-primary")}>{p.label}</span>
+                        <span className="text-sm font-bold text-foreground">{p.prix_ht} € HT/mois</span>
                       </div>
                       <p className="text-xs text-foreground/80 mt-1">{p.description}</p>
                       <p className="text-[11px] text-muted-foreground mt-1">Bonus : {p.bonus}</p>
-                      <p className="text-[10px] text-muted-foreground/80 mt-2 italic leading-tight">
-                        Prix indicatif HT par véhicule. Votre tarif définitif sera confirmé par notre équipe lors du réajustement de votre contrat.
-                      </p>
                     </button>
                   );
                 })}
               </div>
+              <p className="text-xs text-muted-foreground mt-3 italic">
+                Tarif HT par véhicule selon votre palier actuel. Ajout effectif après validation par notre équipe.
+              </p>
             </div>
           )}
 

@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 import { EditEntrepriseDialog } from "@/components/admin/EditEntrepriseDialog";
-import { calculerFactureFlotte } from "@/lib/pricing";
+import { calculerFactureFlotte, getPackLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/clients/$id")({
@@ -328,11 +328,6 @@ function Row({ label, value }: { label: string; value: string | null | undefined
   );
 }
 
-const PACK_LABELS: Record<string, string> = {
-  pack_interieur: "Pack Intérieur",
-  pack_standard: "Pack Standard",
-  pack_vtc: "Pack VTC",
-};
 
 const PALIER_LABEL: Record<string, string> = {
   starter: "Starter",
@@ -493,7 +488,7 @@ function ContratsTab({ entrepriseId }: { entrepriseId: string }) {
               ) : (
                 c.lignes.map((l, i) => (
                   <li key={i} className="flex items-center justify-between">
-                    <span>{PACK_LABELS[l.type_pack] ?? l.type_pack}</span>
+                    <span>{getPackLabel(l.type_pack)}</span>
                     <span className="font-medium tabular-nums">×{l.nb_vehicules} véh.</span>
                   </li>
                 ))

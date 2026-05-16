@@ -18,33 +18,7 @@ import { useAuth } from "@/lib/auth-context";
 import { compressImage } from "@/lib/image";
 import { toast } from "sonner";
 
-type PackType = "pack_interieur" | "pack_standard" | "pack_vtc";
-
-const PACK_OPTIONS: Array<{
-  value: PackType;
-  nom: string;
-  prix: number;
-  description: string;
-}> = [
-  {
-    value: "pack_interieur",
-    nom: "Pack Intérieur",
-    prix: 100,
-    description: "2x intérieur 6 étapes (45 min)",
-  },
-  {
-    value: "pack_standard",
-    nom: "Pack Standard",
-    prix: 150,
-    description: "2x intérieur + extérieur Karcher (1h15)",
-  },
-  {
-    value: "pack_vtc",
-    nom: "Pack VTC/Taxi",
-    prix: 190,
-    description: "2x intérieur + 2x intérieur+extérieur (4 passages)",
-  },
-];
+import { getAllPacks, getPackLabel, type PackType } from "@/lib/pricing";
 
 interface VehiculeData {
   id: string;
@@ -238,8 +212,7 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
               {ancien.type_pack_souhaite && (
                 <>
                   {" • "}
-                  {PACK_OPTIONS.find((p) => p.value === ancien.type_pack_souhaite)?.nom ??
-                    ancien.type_pack_souhaite}
+                  {getPackLabel(ancien.type_pack_souhaite)}
                 </>
               )}
             </p>
@@ -326,14 +299,14 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
           <div>
             <Label className="mb-2 block">Formule *</Label>
             <div className="grid grid-cols-1 gap-2">
-              {PACK_OPTIONS.map((p) => {
-                const active = pack === p.value;
-                const isCurrent = ancien.type_pack_souhaite === p.value;
+              {getAllPacks().map((p) => {
+                const active = pack === p.type;
+                const isCurrent = ancien.type_pack_souhaite === p.type;
                 return (
                   <button
-                    key={p.value}
+                    key={p.type}
                     type="button"
-                    onClick={() => setPack(p.value)}
+                    onClick={() => setPack(p.type)}
                     className={cn(
                       "text-left rounded-lg border-2 p-3 transition-all bg-card",
                       active ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"
@@ -341,20 +314,23 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
                   >
                     <div className="flex items-baseline justify-between gap-2">
                       <span className={cn("font-semibold text-sm", active && "text-primary")}>
-                        {p.nom}
+                        {p.label}
                         {isCurrent && (
                           <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground font-normal">
                             (actuel)
                           </span>
                         )}
                       </span>
-                      <span className="text-sm font-bold text-foreground">{p.prix} € HT/mois</span>
+                      <span className="text-sm font-bold text-foreground">{p.prix_ht} € HT/mois</span>
                     </div>
                     <p className="text-xs text-foreground/80 mt-1">{p.description}</p>
                   </button>
                 );
               })}
             </div>
+            <p className="text-xs text-muted-foreground mt-2 italic">
+              Tarif HT par véhicule selon votre palier actuel. Remplacement effectif après validation par notre équipe.
+            </p>
             {pack && !memePack && (
               <p className="text-xs text-amber-700 mt-2">
                 {ancienAvaitPack

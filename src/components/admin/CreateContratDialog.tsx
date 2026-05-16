@@ -4,7 +4,14 @@ import { format, addMonths, startOfMonth } from "date-fns";
 import { Calendar as CalendarIcon, Plus, Trash2, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { calculerFactureFlotte, getPalier } from "@/lib/pricing";
+import {
+  calculerFactureFlotte,
+  getPalier,
+  getPackInfo,
+  getPackPrix,
+  getAllPacks,
+  type PackType,
+} from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 import {
@@ -48,31 +55,13 @@ interface Entreprise {
   ville: string | null;
 }
 
-type TypePack = "pack_interieur" | "pack_standard" | "pack_vtc";
+type TypePack = PackType;
 
 interface Ligne {
   id: string;
   typePack: TypePack;
   nbVehicules: number;
 }
-
-const PACK_LABELS: Record<TypePack, string> = {
-  pack_interieur: "Pack Intérieur",
-  pack_standard: "Pack Standard",
-  pack_vtc: "Pack VTC",
-};
-
-const PACK_PASSAGES: Record<TypePack, number> = {
-  pack_interieur: 2,
-  pack_standard: 2,
-  pack_vtc: 4,
-};
-
-const PACK_PRIX: Record<TypePack, number> = {
-  pack_interieur: 100,
-  pack_standard: 150,
-  pack_vtc: 190,
-};
 
 const PALIER_BADGE: Record<string, string> = {
   starter: "bg-muted text-muted-foreground",
@@ -297,7 +286,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
 
     setSubmitting(true);
     try {
-      const passagesMois = Math.max(...lignes.map((l) => PACK_PASSAGES[l.typePack]));
+      const passagesMois = Math.max(...lignes.map((l) => getPackInfo(l.typePack).nbPassages));
       const { data: userData } = await supabase.auth.getUser();
 
       if (isEdit && contrat) {
@@ -305,12 +294,12 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
         const lignesAvant = contrat.lignes.map((l) => ({
           type_pack: l.type_pack,
           nb_vehicules: l.nb_vehicules,
-          prix_unitaire_ht: PACK_PRIX[l.type_pack as TypePack] ?? 0,
+          prix_unitaire_ht: getPackPrix(l.type_pack as PackType) ?? 0,
         }));
         const lignesApres = lignes.map((l) => ({
           type_pack: l.typePack,
           nb_vehicules: l.nbVehicules,
-          prix_unitaire_ht: PACK_PRIX[l.typePack],
+          prix_unitaire_ht: getPackPrix(l.typePack),
         }));
 
         const factureAvant = calculerFactureFlotte({
@@ -353,7 +342,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
           contrat_id: contrat.id,
           type_pack: l.typePack,
           nb_vehicules: l.nbVehicules,
-          prix_unitaire_ht: PACK_PRIX[l.typePack],
+          prix_unitaire_ht: getPackPrix(l.typePack),
           statut_ligne: "actif",
         }));
         const { error: errIns } = await supabase.from("contrat_lignes").insert(lignesPayload);
@@ -419,7 +408,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
         contrat_id: created.id,
         type_pack: l.typePack,
         nb_vehicules: l.nbVehicules,
-        prix_unitaire_ht: PACK_PRIX[l.typePack],
+        prix_unitaire_ht: getPackPrix(l.typePack),
         statut_ligne: "actif",
       }));
 
@@ -439,7 +428,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
           lignes_initiales: lignes.map((l) => ({
             type_pack: l.typePack,
             nb_vehicules: l.nbVehicules,
-            prix_unitaire_ht: PACK_PRIX[l.typePack],
+            prix_unitaire_ht: getPackPrix(l.typePack),
           })),
         },
       });
@@ -564,9 +553,11 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pack_interieur">Pack Intérieur (100 €)</SelectItem>
-                        <SelectItem value="pack_standard">Pack Standard (150 €)</SelectItem>
-                        <SelectItem value="pack_vtc">Pack VTC (190 €)</SelectItem>
+                        {getAllPacks().map((pack) => (
+                          <SelectItem key={pack.type} value={pack.type}>
+                            {pack.label} ({pack.prix_ht} €)
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <Input

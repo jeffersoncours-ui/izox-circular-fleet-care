@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { calculerFactureFlotte, getPalier } from "@/lib/pricing";
+import { calculerFactureFlotte, getPalier, getPackLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -69,11 +69,6 @@ export const Route = createFileRoute("/admin/contrats/$id")({
   component: ContratDetailPage,
 });
 
-const PACK_LABELS: Record<string, string> = {
-  pack_interieur: "Pack Intérieur",
-  pack_standard: "Pack Standard",
-  pack_vtc: "Pack VTC",
-};
 
 const PALIER_BADGE: Record<string, string> = {
   starter: "bg-muted text-muted-foreground",
@@ -547,7 +542,7 @@ function ContratDetailPage() {
                           <p className="font-mono text-xs text-primary">{v.immatriculation}</p>
                           {v.type_pack_souhaite && (
                             <p className="text-[11px] text-muted-foreground mt-0.5">
-                              {PACK_LABELS[v.type_pack_souhaite] ?? v.type_pack_souhaite}
+                              {getPackLabel(v.type_pack_souhaite)}
                             </p>
                           )}
                         </div>
@@ -591,7 +586,7 @@ function ContratDetailPage() {
                         </Badge>
                         {v.type_pack_souhaite && (
                           <p className="text-[11px] text-muted-foreground mt-1">
-                            Pack souhaité : {PACK_LABELS[v.type_pack_souhaite] ?? v.type_pack_souhaite}
+                            Pack souhaité : {getPackLabel(v.type_pack_souhaite)}
                           </p>
                         )}
                       </div>
@@ -1028,11 +1023,6 @@ function summarizeChanges(d: any): string | undefined {
     return undefined;
   }
 
-  const PACK: Record<string, string> = {
-    pack_interieur: "Pack Intérieur",
-    pack_standard: "Pack Standard",
-    pack_vtc: "Pack VTC",
-  };
 
   const aL: Array<{ type_pack: string; nb_vehicules: number }> = d.lignes_avant;
   const nL: Array<{ type_pack: string; nb_vehicules: number }> = d.lignes_apres;
@@ -1047,7 +1037,7 @@ function summarizeChanges(d: any): string | undefined {
     const av = aMap.get(k) ?? 0;
     const nv = nMap.get(k) ?? 0;
     if (av === nv) continue;
-    const label = PACK[k] ?? k;
+    const label = getPackLabel(k);
     if (av === 0 && nv > 0) {
       parts.push(`+ ligne ${label} × ${nv} véhicule(s)`);
     } else if (nv === 0 && av > 0) {
@@ -1239,7 +1229,7 @@ function ValidateVehiculeDialog({
               <p className="font-mono text-xs text-primary">{vehicule.immatriculation}</p>
               {vehicule.type_pack_souhaite && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Pack : {PACK_LABELS[vehicule.type_pack_souhaite] ?? vehicule.type_pack_souhaite}
+                  Pack : {getPackLabel(vehicule.type_pack_souhaite)}
                 </p>
               )}
             </div>

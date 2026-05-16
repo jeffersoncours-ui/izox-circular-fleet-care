@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { calculerFactureFlotte, getPalier } from "@/lib/pricing";
+import { calculerFactureFlotte, getPalier, getPackLabel } from "@/lib/pricing";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,11 +73,6 @@ interface ContratRow {
   gel_notifier_client: boolean;
 }
 
-const PACK_LABELS: Record<string, string> = {
-  pack_interieur: "Pack Intérieur",
-  pack_standard: "Pack Standard",
-  pack_vtc: "Pack VTC",
-};
 
 const PALIER_BADGE: Record<string, string> = {
   starter: "bg-muted text-muted-foreground",
@@ -379,7 +374,7 @@ function ContratsList() {
                       {r.lignes
                         .map(
                           (l) =>
-                            `${PACK_LABELS[l.type_pack] ?? l.type_pack} ×${l.nb_vehicules}`
+                            `${getPackLabel(l.type_pack)} ×${l.nb_vehicules}`
                         )
                         .join(", ") || "—"}
                     </TableCell>
@@ -495,7 +490,7 @@ function ContratsList() {
                   {r.lignes
                     .map(
                       (l) =>
-                        `${PACK_LABELS[l.type_pack] ?? l.type_pack} ×${l.nb_vehicules}`
+                        `${getPackLabel(l.type_pack)} ×${l.nb_vehicules}`
                     )
                     .join(", ") || "—"}
                 </div>

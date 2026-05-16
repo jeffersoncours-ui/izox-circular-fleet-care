@@ -3,10 +3,69 @@
 
 export type Palier = 'starter' | 'pro' | 'business' | 'premium';
 
+export type PackType = 'pack_interieur' | 'pack_standard' | 'pack_vtc';
+
+export interface PackInfo {
+  type: PackType;
+  label: string;
+  prix_ht: number;
+  description: string;
+  bonus: string;
+  nbPassages: number;
+  dureeAffichee: string;
+}
+
+// SOURCE UNIQUE DE VÉRITÉ pour les packs (prix V2 mai 2026).
+export const PACKS_CATALOG: Record<PackType, PackInfo> = {
+  pack_interieur: {
+    type: 'pack_interieur',
+    label: 'Pack Intérieur',
+    prix_ht: 130,
+    description: '2x intérieur 6 étapes (45 min)',
+    bonus: 'Vérification pneus + Carnet entretien numérique',
+    nbPassages: 2,
+    dureeAffichee: '1h30',
+  },
+  pack_standard: {
+    type: 'pack_standard',
+    label: 'Pack Standard',
+    prix_ht: 170,
+    description: '2x intérieur + extérieur Karcher (1h15)',
+    bonus: 'Vérification pneus + Carnet entretien numérique',
+    nbPassages: 2,
+    dureeAffichee: '2h',
+  },
+  pack_vtc: {
+    type: 'pack_vtc',
+    label: 'Pack VTC',
+    prix_ht: 240,
+    description: '2x intérieur + 2x intérieur+extérieur (4 passages)',
+    bonus: 'Vérification pneus + Carnet entretien + Lave-glace gratuit',
+    nbPassages: 4,
+    dureeAffichee: '2h',
+  },
+};
+
+export function getPackInfo(type: PackType): PackInfo {
+  return PACKS_CATALOG[type];
+}
+
+export function getPackPrix(type: PackType): number {
+  return PACKS_CATALOG[type].prix_ht;
+}
+
+export function getPackLabel(type: PackType | string): string {
+  return PACKS_CATALOG[type as PackType]?.label ?? String(type);
+}
+
+export function getAllPacks(): PackInfo[] {
+  return Object.values(PACKS_CATALOG);
+}
+
 const PRIX_CATALOGUE: Record<string, number> = {
-  pack_interieur: 130,
-  pack_standard: 170,
-  pack_vtc: 240,
+  pack_interieur: PACKS_CATALOG.pack_interieur.prix_ht,
+  pack_standard: PACKS_CATALOG.pack_standard.prix_ht,
+  pack_vtc: PACKS_CATALOG.pack_vtc.prix_ht,
 };
 
 const PRIX_CATALOGUE_MOYEN = 130;
