@@ -328,11 +328,6 @@ function Row({ label, value }: { label: string; value: string | null | undefined
   );
 }
 
-const PACK_LABELS: Record<string, string> = {
-  pack_interieur: "Pack Intérieur",
-  pack_standard: "Pack Standard",
-  pack_vtc: "Pack VTC",
-};
 
 const PALIER_LABEL: Record<string, string> = {
   starter: "Starter",
