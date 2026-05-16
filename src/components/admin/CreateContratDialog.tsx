@@ -553,9 +553,11 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pack_interieur">Pack Intérieur (100 €)</SelectItem>
-                        <SelectItem value="pack_standard">Pack Standard (150 €)</SelectItem>
-                        <SelectItem value="pack_vtc">Pack VTC (190 €)</SelectItem>
+                        {getAllPacks().map((pack) => (
+                          <SelectItem key={pack.type} value={pack.type}>
+                            {pack.label} ({pack.prix_ht} €)
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <Input
