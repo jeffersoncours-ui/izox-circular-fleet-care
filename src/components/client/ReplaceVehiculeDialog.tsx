@@ -299,14 +299,14 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
           <div>
             <Label className="mb-2 block">Formule *</Label>
             <div className="grid grid-cols-1 gap-2">
-              {PACK_OPTIONS.map((p) => {
-                const active = pack === p.value;
-                const isCurrent = ancien.type_pack_souhaite === p.value;
+              {getAllPacks().map((p) => {
+                const active = pack === p.type;
+                const isCurrent = ancien.type_pack_souhaite === p.type;
                 return (
                   <button
-                    key={p.value}
+                    key={p.type}
                     type="button"
-                    onClick={() => setPack(p.value)}
+                    onClick={() => setPack(p.type)}
                     className={cn(
                       "text-left rounded-lg border-2 p-3 transition-all bg-card",
                       active ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"
@@ -314,20 +314,23 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
                   >
                     <div className="flex items-baseline justify-between gap-2">
                       <span className={cn("font-semibold text-sm", active && "text-primary")}>
-                        {p.nom}
+                        {p.label}
                         {isCurrent && (
                           <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground font-normal">
                             (actuel)
                           </span>
                         )}
                       </span>
-                      <span className="text-sm font-bold text-foreground">{p.prix} € HT/mois</span>
+                      <span className="text-sm font-bold text-foreground">{p.prix_ht} € HT/mois</span>
                     </div>
                     <p className="text-xs text-foreground/80 mt-1">{p.description}</p>
                   </button>
                 );
               })}
             </div>
+            <p className="text-xs text-muted-foreground mt-2 italic">
+              Tarif HT par véhicule selon votre palier actuel. Remplacement effectif après validation par notre équipe.
+            </p>
             {pack && !memePack && (
               <p className="text-xs text-amber-700 mt-2">
                 {ancienAvaitPack
