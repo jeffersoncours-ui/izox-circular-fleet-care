@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { calculerFactureFlotte, getPalier } from "@/lib/pricing";
+import { calculerFactureFlotte, getPalier, getPackLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
