@@ -1037,7 +1037,7 @@ function summarizeChanges(d: any): string | undefined {
     const av = aMap.get(k) ?? 0;
     const nv = nMap.get(k) ?? 0;
     if (av === nv) continue;
-    const label = PACK[k] ?? k;
+    const label = getPackLabel(k);
     if (av === 0 && nv > 0) {
       parts.push(`+ ligne ${label} × ${nv} véhicule(s)`);
     } else if (nv === 0 && av > 0) {
