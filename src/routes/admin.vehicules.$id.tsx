@@ -52,12 +52,6 @@ interface Vehicule {
   entreprises: { id: string; nom: string } | null;
 }
 
-const PACK_LABELS: Record<string, string> = {
-  pack_interieur: "Pack Intérieur",
-  pack_standard: "Pack Standard",
-  pack_vtc: "Pack VTC/Taxi",
-};
-
 const STATUT_LABELS: Record<string, string> = {
   actif: "Actif",
   en_attente_validation: "En attente de validation",
