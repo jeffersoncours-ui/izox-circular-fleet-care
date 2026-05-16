@@ -4,7 +4,14 @@ import { format, addMonths, startOfMonth } from "date-fns";
 import { Calendar as CalendarIcon, Plus, Trash2, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { calculerFactureFlotte, getPalier } from "@/lib/pricing";
+import {
+  calculerFactureFlotte,
+  getPalier,
+  getPackInfo,
+  getPackPrix,
+  getAllPacks,
+  type PackType,
+} from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 import {
