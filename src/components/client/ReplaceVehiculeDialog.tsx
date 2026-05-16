@@ -212,8 +212,7 @@ export function ReplaceVehiculeDialog({ open, onOpenChange, onReplaced, ancien }
               {ancien.type_pack_souhaite && (
                 <>
                   {" • "}
-                  {PACK_OPTIONS.find((p) => p.value === ancien.type_pack_souhaite)?.nom ??
-                    ancien.type_pack_souhaite}
+                  {getPackLabel(ancien.type_pack_souhaite)}
                 </>
               )}
             </p>
