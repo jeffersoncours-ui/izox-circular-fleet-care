@@ -1023,11 +1023,6 @@ function summarizeChanges(d: any): string | undefined {
     return undefined;
   }
 
-  const PACK: Record<string, string> = {
-    pack_interieur: "Pack Intérieur",
-    pack_standard: "Pack Standard",
-    pack_vtc: "Pack VTC",
-  };
 
   const aL: Array<{ type_pack: string; nb_vehicules: number }> = d.lignes_avant;
   const nL: Array<{ type_pack: string; nb_vehicules: number }> = d.lignes_apres;
