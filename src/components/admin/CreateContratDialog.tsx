@@ -286,7 +286,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
 
     setSubmitting(true);
     try {
-      const passagesMois = Math.max(...lignes.map((l) => PACK_PASSAGES[l.typePack]));
+      const passagesMois = Math.max(...lignes.map((l) => getPackInfo(l.typePack).nbPassages));
       const { data: userData } = await supabase.auth.getUser();
 
       if (isEdit && contrat) {
@@ -294,12 +294,12 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
         const lignesAvant = contrat.lignes.map((l) => ({
           type_pack: l.type_pack,
           nb_vehicules: l.nb_vehicules,
-          prix_unitaire_ht: PACK_PRIX[l.type_pack as TypePack] ?? 0,
+          prix_unitaire_ht: getPackPrix(l.type_pack as PackType) ?? 0,
         }));
         const lignesApres = lignes.map((l) => ({
           type_pack: l.typePack,
           nb_vehicules: l.nbVehicules,
-          prix_unitaire_ht: PACK_PRIX[l.typePack],
+          prix_unitaire_ht: getPackPrix(l.typePack),
         }));
 
         const factureAvant = calculerFactureFlotte({
@@ -342,7 +342,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
           contrat_id: contrat.id,
           type_pack: l.typePack,
           nb_vehicules: l.nbVehicules,
-          prix_unitaire_ht: PACK_PRIX[l.typePack],
+          prix_unitaire_ht: getPackPrix(l.typePack),
           statut_ligne: "actif",
         }));
         const { error: errIns } = await supabase.from("contrat_lignes").insert(lignesPayload);
@@ -408,7 +408,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
         contrat_id: created.id,
         type_pack: l.typePack,
         nb_vehicules: l.nbVehicules,
-        prix_unitaire_ht: PACK_PRIX[l.typePack],
+        prix_unitaire_ht: getPackPrix(l.typePack),
         statut_ligne: "actif",
       }));
 
@@ -428,7 +428,7 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
           lignes_initiales: lignes.map((l) => ({
             type_pack: l.typePack,
             nb_vehicules: l.nbVehicules,
-            prix_unitaire_ht: PACK_PRIX[l.typePack],
+            prix_unitaire_ht: getPackPrix(l.typePack),
           })),
         },
       });
