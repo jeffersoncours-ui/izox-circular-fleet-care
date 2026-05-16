@@ -493,7 +493,7 @@ function ContratsTab({ entrepriseId }: { entrepriseId: string }) {
               ) : (
                 c.lignes.map((l, i) => (
                   <li key={i} className="flex items-center justify-between">
-                    <span>{PACK_LABELS[l.type_pack] ?? l.type_pack}</span>
+                    <span>{getPackLabel(l.type_pack)}</span>
                     <span className="font-medium tabular-nums">×{l.nb_vehicules} véh.</span>
                   </li>
                 ))

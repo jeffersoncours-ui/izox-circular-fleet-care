@@ -547,7 +547,7 @@ function ContratDetailPage() {
                           <p className="font-mono text-xs text-primary">{v.immatriculation}</p>
                           {v.type_pack_souhaite && (
                             <p className="text-[11px] text-muted-foreground mt-0.5">
-                              {PACK_LABELS[v.type_pack_souhaite] ?? v.type_pack_souhaite}
+                              {getPackLabel(v.type_pack_souhaite)}
                             </p>
                           )}
                         </div>
@@ -591,7 +591,7 @@ function ContratDetailPage() {
                         </Badge>
                         {v.type_pack_souhaite && (
                           <p className="text-[11px] text-muted-foreground mt-1">
-                            Pack souhaité : {PACK_LABELS[v.type_pack_souhaite] ?? v.type_pack_souhaite}
+                            Pack souhaité : {getPackLabel(v.type_pack_souhaite)}
                           </p>
                         )}
                       </div>
@@ -1239,7 +1239,7 @@ function ValidateVehiculeDialog({
               <p className="font-mono text-xs text-primary">{vehicule.immatriculation}</p>
               {vehicule.type_pack_souhaite && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Pack : {PACK_LABELS[vehicule.type_pack_souhaite] ?? vehicule.type_pack_souhaite}
+                  Pack : {getPackLabel(vehicule.type_pack_souhaite)}
                 </p>
               )}
             </div>

@@ -166,7 +166,7 @@ function AdminVehiculeDetail() {
             </Badge>
             {vehicule.type_pack_souhaite && (
               <Badge variant="outline">
-                {PACK_LABELS[vehicule.type_pack_souhaite] ?? vehicule.type_pack_souhaite}
+                {getPackLabel(vehicule.type_pack_souhaite)}
               </Badge>
             )}
           </div>

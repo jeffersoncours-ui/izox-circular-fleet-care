@@ -379,7 +379,7 @@ function ContratsList() {
                       {r.lignes
                         .map(
                           (l) =>
-                            `${PACK_LABELS[l.type_pack] ?? l.type_pack} ×${l.nb_vehicules}`
+                            `${getPackLabel(l.type_pack)} ×${l.nb_vehicules}`
                         )
                         .join(", ") || "—"}
                     </TableCell>
@@ -495,7 +495,7 @@ function ContratsList() {
                   {r.lignes
                     .map(
                       (l) =>
-                        `${PACK_LABELS[l.type_pack] ?? l.type_pack} ×${l.nb_vehicules}`
+                        `${getPackLabel(l.type_pack)} ×${l.nb_vehicules}`
                     )
                     .join(", ") || "—"}
                 </div>
