@@ -18,41 +18,9 @@ import { getVehiculePhotoUrl } from "@/lib/vehicule-photo";
 import { useAuth } from "@/lib/auth-context";
 import { compressImage } from "@/lib/image";
 import { toast } from "sonner";
-import { getProchainPalier, getPalier } from "@/lib/pricing";
+import { getProchainPalier, getPalier, getAllPacks, type PackType } from "@/lib/pricing";
 import { Card } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
-
-type PackType = "pack_interieur" | "pack_standard" | "pack_vtc";
-
-const PACK_OPTIONS: Array<{
-  value: PackType;
-  nom: string;
-  prix: number;
-  description: string;
-  bonus: string;
-}> = [
-  {
-    value: "pack_interieur",
-    nom: "Pack Intérieur",
-    prix: 100,
-    description: "2x intérieur 6 étapes (45 min)",
-    bonus: "Vérification pneus + Carnet entretien numérique",
-  },
-  {
-    value: "pack_standard",
-    nom: "Pack Standard",
-    prix: 150,
-    description: "2x intérieur + extérieur Karcher (1h15)",
-    bonus: "Vérification pneus + Carnet entretien numérique",
-  },
-  {
-    value: "pack_vtc",
-    nom: "Pack VTC/Taxi",
-    prix: 190,
-    description: "2x intérieur + 2x intérieur+extérieur (4 passages)",
-    bonus: "Vérification pneus + Carnet entretien + Lave-glace gratuit",
-  },
-];
 
 const PALIER_LABELS: Record<string, string> = {
   pro: "Pro",
