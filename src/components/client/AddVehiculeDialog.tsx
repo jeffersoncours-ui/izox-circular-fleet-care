@@ -324,31 +324,31 @@ export function AddVehiculeDialog({
             <div>
               <Label className="mb-2 block">Formule souhaitée *</Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {PACK_OPTIONS.map((p) => {
-                  const active = packSouhaite === p.value;
+                {getAllPacks().map((p) => {
+                  const active = packSouhaite === p.type;
                   return (
                     <button
-                      key={p.value}
+                      key={p.type}
                       type="button"
-                      onClick={() => setPackSouhaite(p.value)}
+                      onClick={() => setPackSouhaite(p.type)}
                       className={cn(
                         "text-left rounded-lg border-2 p-3 transition-all bg-card",
                         active ? "border-primary bg-primary-soft" : "border-border hover:border-primary/40"
                       )}
                     >
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className={cn("font-semibold text-sm", active && "text-primary")}>{p.nom}</span>
-                        <span className="text-sm font-bold text-foreground">{p.prix} € HT/mois</span>
+                        <span className={cn("font-semibold text-sm", active && "text-primary")}>{p.label}</span>
+                        <span className="text-sm font-bold text-foreground">{p.prix_ht} € HT/mois</span>
                       </div>
                       <p className="text-xs text-foreground/80 mt-1">{p.description}</p>
                       <p className="text-[11px] text-muted-foreground mt-1">Bonus : {p.bonus}</p>
-                      <p className="text-[10px] text-muted-foreground/80 mt-2 italic leading-tight">
-                        Prix indicatif HT par véhicule. Votre tarif définitif sera confirmé par notre équipe lors du réajustement de votre contrat.
-                      </p>
                     </button>
                   );
                 })}
               </div>
+              <p className="text-xs text-muted-foreground mt-3 italic">
+                Tarif HT par véhicule selon votre palier actuel. Ajout effectif après validation par notre équipe.
+              </p>
             </div>
           )}
 
