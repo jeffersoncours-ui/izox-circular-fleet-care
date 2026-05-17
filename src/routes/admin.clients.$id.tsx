@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2, FileText } from "lucide-react";
+import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2, FileText, Info } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
@@ -160,11 +160,35 @@ function ClientDetailPage() {
               <Row label="Ville" value={entreprise.ville} />
             </dl>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
-            <Pencil className="h-4 w-4" /> Modifier
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="izox" size="sm" onClick={() => setAddOpen(true)}>
+              <Plus className="h-4 w-4" /> Ajouter un véhicule
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
+              <Pencil className="h-4 w-4" /> Modifier
+            </Button>
+          </div>
         </div>
       </Card>
+
+      {!loadingVehicules && vehicules.length === 0 && (
+        <Card className="p-4 mb-6 bg-primary/5 border-primary/20">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">
+                Comment fonctionne la création de contrat&nbsp;?
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Le contrat de ce client se créera automatiquement dès l'ajout du
+                premier véhicule. Vous pourrez ensuite enrichir la flotte au fur
+                et à mesure&nbsp;: chaque nouveau véhicule ajustera automatiquement
+                le contrat et le palier de remise.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Tabs defaultValue="vehicules" className="w-full">
         <TabsList className="h-auto flex-wrap">
@@ -249,7 +273,7 @@ function ClientDetailPage() {
         </TabsContent>
 
         <TabsContent value="contrats" className="mt-6">
-          <ContratsTab entrepriseId={id} />
+          <ContratsTab entrepriseId={id} onAddVehicule={() => setAddOpen(true)} />
         </TabsContent>
         <TabsContent value="factures" className="mt-6">
           <ComingSoon />
@@ -367,7 +391,7 @@ interface ContratItem {
   palier: string;
 }
 
-function ContratsTab({ entrepriseId }: { entrepriseId: string }) {
+function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; onAddVehicule: () => void }) {
   const [contrats, setContrats] = useState<ContratItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -432,15 +456,17 @@ function ContratsTab({ entrepriseId }: { entrepriseId: string }) {
 
   if (contrats.length === 0) {
     return (
-      <Card className="p-12 text-center shadow-card border-border/60">
-        <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-        <p className="text-muted-foreground">
-          Aucun contrat actif pour ce client. Créez-en un depuis{" "}
-          <Link to="/admin/contrats" className="text-primary underline">
-            /admin/contrats
-          </Link>
-          .
+      <Card className="p-8 text-center shadow-card border-border/60">
+        <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
+        <h3 className="font-semibold text-foreground mb-2">Aucun contrat actif</h3>
+        <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+          Le contrat de ce client se créera automatiquement dès l'ajout du
+          premier véhicule.
         </p>
+        <Button variant="izox" onClick={onAddVehicule}>
+          <Plus className="h-4 w-4" />
+          Ajouter un véhicule
+        </Button>
       </Card>
     );
   }

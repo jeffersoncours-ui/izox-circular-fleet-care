@@ -58,7 +58,7 @@ import {
   Activity,
 } from "lucide-react";
 
-import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
+
 import { ResiliationContratDialog } from "@/components/admin/ResiliationContratDialog";
 import { GelContratDialog } from "@/components/admin/GelContratDialog";
 import { ReactiverContratDialog } from "@/components/admin/ReactiverContratDialog";
@@ -164,7 +164,6 @@ function ContratDetailPage() {
   const [vehiculesEnAttente, setVehiculesEnAttente] = useState<Vehicule[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editOpen, setEditOpen] = useState(false);
   const [resilOpen, setResilOpen] = useState(false);
   const [gelDialogOpen, setGelDialogOpen] = useState(false);
   const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
@@ -479,9 +478,6 @@ function ContratDetailPage() {
 
           {(contrat.statut === "actif" || contrat.statut === "en_cours_gel") && (
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
-                <Edit className="h-4 w-4" /> Modifier le contrat
-              </Button>
               {contrat.statut === "actif" && (
                 <Button
                   variant="outline"
@@ -651,31 +647,6 @@ function ContratDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Edit dialog */}
-      <CreateContratDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onCreated={load}
-        contrat={
-          contrat
-            ? {
-                id: contrat.id,
-                numero_contrat: contrat.numero_contrat,
-                entreprise_id: contrat.entreprise_id,
-                entreprise_nom: contrat.entreprise?.nom ?? null,
-                date_debut: contrat.date_debut,
-                date_anniversaire: contrat.date_anniversaire,
-                engagement_annuel: contrat.engagement_annuel,
-                mode_paiement: contrat.mode_paiement,
-                lignes: contrat.lignes.map((l) => ({
-                  type_pack: l.type_pack as "pack_interieur" | "pack_standard" | "pack_vtc",
-                  nb_vehicules: l.nb_vehicules,
-                })),
-              }
-            : null
-        }
-      />
 
       {/* Resiliation dialog (shared) */}
       <ResiliationContratDialog

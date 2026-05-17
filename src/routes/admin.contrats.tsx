@@ -31,7 +31,6 @@ import {
 import { toast } from "sonner";
 import {
   FileText,
-  Plus,
   Search,
   Eye,
   Pause,
@@ -39,7 +38,6 @@ import {
   X,
   Calendar as CalendarIcon,
 } from "lucide-react";
-import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
 import {
   ResiliationContratDialog,
   type ResiliationContratInput,
@@ -111,7 +109,7 @@ function ContratsList() {
   const [statutFilter, setStatutFilter] = useState<string>("actif");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
+  
   const [resilTarget, setResilTarget] = useState<ResiliationContratInput | null>(null);
   const [gelDialogOpen, setGelDialogOpen] = useState(false);
   const [gelTarget, setGelTarget] = useState<ContratRow | null>(null);
@@ -282,10 +280,6 @@ function ContratsList() {
               <TooltipContent>Clôture mensuelle des passages</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <Button variant="izox" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Nouveau contrat
-          </Button>
         </div>
       </header>
 
@@ -328,7 +322,7 @@ function ContratsList() {
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">
             {rows.length === 0
-              ? "Aucun contrat pour le moment. Cliquez sur Nouveau contrat pour créer le premier contrat."
+              ? "Aucun contrat pour le moment. Les contrats sont créés automatiquement à l'ajout du premier véhicule depuis la fiche client."
               : "Aucun résultat."}
           </p>
         </Card>
@@ -566,13 +560,6 @@ function ContratsList() {
           </div>
         </>
       )}
-
-      <CreateContratDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreated={load}
-      />
-
       <ResiliationContratDialog
         open={!!resilTarget}
         onOpenChange={(o) => !o && setResilTarget(null)}
