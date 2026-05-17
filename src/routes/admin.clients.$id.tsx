@@ -160,11 +160,35 @@ function ClientDetailPage() {
               <Row label="Ville" value={entreprise.ville} />
             </dl>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
-            <Pencil className="h-4 w-4" /> Modifier
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="izox" size="sm" onClick={() => setAddOpen(true)}>
+              <Plus className="h-4 w-4" /> Ajouter un véhicule
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
+              <Pencil className="h-4 w-4" /> Modifier
+            </Button>
+          </div>
         </div>
       </Card>
+
+      {!loadingVehicules && vehicules.length === 0 && (
+        <Card className="p-4 mb-6 bg-primary/5 border-primary/20">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">
+                Comment fonctionne la création de contrat&nbsp;?
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Le contrat de ce client se créera automatiquement dès l'ajout du
+                premier véhicule. Vous pourrez ensuite enrichir la flotte au fur
+                et à mesure&nbsp;: chaque nouveau véhicule ajustera automatiquement
+                le contrat et le palier de remise.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Tabs defaultValue="vehicules" className="w-full">
         <TabsList className="h-auto flex-wrap">
