@@ -456,15 +456,17 @@ function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; on
 
   if (contrats.length === 0) {
     return (
-      <Card className="p-12 text-center shadow-card border-border/60">
-        <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-        <p className="text-muted-foreground">
-          Aucun contrat actif pour ce client. Créez-en un depuis{" "}
-          <Link to="/admin/contrats" className="text-primary underline">
-            /admin/contrats
-          </Link>
-          .
+      <Card className="p-8 text-center shadow-card border-border/60">
+        <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
+        <h3 className="font-semibold text-foreground mb-2">Aucun contrat actif</h3>
+        <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+          Le contrat de ce client se créera automatiquement dès l'ajout du
+          premier véhicule.
         </p>
+        <Button variant="izox" onClick={onAddVehicule}>
+          <Plus className="h-4 w-4" />
+          Ajouter un véhicule
+        </Button>
       </Card>
     );
   }
