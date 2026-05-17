@@ -164,7 +164,6 @@ function ContratDetailPage() {
   const [vehiculesEnAttente, setVehiculesEnAttente] = useState<Vehicule[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editOpen, setEditOpen] = useState(false);
   const [resilOpen, setResilOpen] = useState(false);
   const [gelDialogOpen, setGelDialogOpen] = useState(false);
   const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
@@ -648,31 +647,6 @@ function ContratDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Edit dialog */}
-      <CreateContratDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onCreated={load}
-        contrat={
-          contrat
-            ? {
-                id: contrat.id,
-                numero_contrat: contrat.numero_contrat,
-                entreprise_id: contrat.entreprise_id,
-                entreprise_nom: contrat.entreprise?.nom ?? null,
-                date_debut: contrat.date_debut,
-                date_anniversaire: contrat.date_anniversaire,
-                engagement_annuel: contrat.engagement_annuel,
-                mode_paiement: contrat.mode_paiement,
-                lignes: contrat.lignes.map((l) => ({
-                  type_pack: l.type_pack as "pack_interieur" | "pack_standard" | "pack_vtc",
-                  nb_vehicules: l.nb_vehicules,
-                })),
-              }
-            : null
-        }
-      />
 
       {/* Resiliation dialog (shared) */}
       <ResiliationContratDialog
