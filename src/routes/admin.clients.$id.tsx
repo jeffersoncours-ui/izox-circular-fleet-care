@@ -273,7 +273,7 @@ function ClientDetailPage() {
         </TabsContent>
 
         <TabsContent value="contrats" className="mt-6">
-          <ContratsTab entrepriseId={id} />
+          <ContratsTab entrepriseId={id} onAddVehicule={() => setAddOpen(true)} />
         </TabsContent>
         <TabsContent value="factures" className="mt-6">
           <ComingSoon />
