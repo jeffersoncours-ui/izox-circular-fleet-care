@@ -31,7 +31,6 @@ import {
 import { toast } from "sonner";
 import {
   FileText,
-  Plus,
   Search,
   Eye,
   Pause,
@@ -39,7 +38,6 @@ import {
   X,
   Calendar as CalendarIcon,
 } from "lucide-react";
-import { CreateContratDialog } from "@/components/admin/CreateContratDialog";
 import {
   ResiliationContratDialog,
   type ResiliationContratInput,
