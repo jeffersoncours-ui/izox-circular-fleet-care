@@ -560,13 +560,6 @@ function ContratsList() {
           </div>
         </>
       )}
-
-      <CreateContratDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreated={load}
-      />
-
       <ResiliationContratDialog
         open={!!resilTarget}
         onOpenChange={(o) => !o && setResilTarget(null)}
