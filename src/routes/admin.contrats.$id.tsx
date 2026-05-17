@@ -479,9 +479,6 @@ function ContratDetailPage() {
 
           {(contrat.statut === "actif" || contrat.statut === "en_cours_gel") && (
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
-                <Edit className="h-4 w-4" /> Modifier le contrat
-              </Button>
               {contrat.statut === "actif" && (
                 <Button
                   variant="outline"
