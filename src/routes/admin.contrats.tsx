@@ -280,6 +280,7 @@ function ContratsList() {
               <TooltipContent>Clôture mensuelle des passages</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        </div>
       </header>
 
       {/* Filtres */}
