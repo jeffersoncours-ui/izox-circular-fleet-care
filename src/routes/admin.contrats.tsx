@@ -280,11 +280,6 @@ function ContratsList() {
               <TooltipContent>Clôture mensuelle des passages</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <Button variant="izox" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Nouveau contrat
-          </Button>
-        </div>
       </header>
 
       {/* Filtres */}
