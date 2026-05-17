@@ -109,7 +109,7 @@ function ContratsList() {
   const [statutFilter, setStatutFilter] = useState<string>("actif");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
+  
   const [resilTarget, setResilTarget] = useState<ResiliationContratInput | null>(null);
   const [gelDialogOpen, setGelDialogOpen] = useState(false);
   const [gelTarget, setGelTarget] = useState<ContratRow | null>(null);
