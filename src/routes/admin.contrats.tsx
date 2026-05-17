@@ -322,7 +322,7 @@ function ContratsList() {
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">
             {rows.length === 0
-              ? "Aucun contrat pour le moment. Cliquez sur Nouveau contrat pour créer le premier contrat."
+              ? "Aucun contrat pour le moment. Les contrats sont créés automatiquement à l'ajout du premier véhicule depuis la fiche client."
               : "Aucun résultat."}
           </p>
         </Card>
