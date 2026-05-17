@@ -391,7 +391,7 @@ interface ContratItem {
   palier: string;
 }
 
-function ContratsTab({ entrepriseId }: { entrepriseId: string }) {
+function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; onAddVehicule: () => void }) {
   const [contrats, setContrats] = useState<ContratItem[]>([]);
   const [loading, setLoading] = useState(true);
 
