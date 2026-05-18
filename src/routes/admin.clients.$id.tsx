@@ -196,6 +196,28 @@ function ClientDetailPage() {
             <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
               <Row label="Email" value={entreprise.email_contact} />
               <Row label="Ville" value={entreprise.ville} />
+              <div className="sm:col-span-2">
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  Commercial responsable
+                </dt>
+                <dd className="text-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+                  <span>
+                    {commercialNom ?? (
+                      <span className="italic text-muted-foreground">
+                        Aucun commercial dédié
+                      </span>
+                    )}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setReassignOpen(true)}
+                  >
+                    Réassigner
+                  </Button>
+                </dd>
+              </div>
             </dl>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
