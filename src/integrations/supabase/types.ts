@@ -166,6 +166,13 @@ export type Database = {
             referencedRelation: "v_contrats_resume"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
         ]
       }
       contrat_lignes: {
@@ -224,6 +231,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_contrats_resume"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
           },
         ]
       }
@@ -416,6 +430,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
             foreignKeyName: "contrats_remise_commerciale_auteur_id_fkey"
             columns: ["remise_commerciale_auteur_id"]
             isOneToOne: false
@@ -502,6 +523,13 @@ export type Database = {
             referencedRelation: "v_contrats_resume"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
         ]
       }
       demandes_rdv: {
@@ -555,6 +583,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_rdv_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -643,6 +678,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entreprise_acces_commerciaux_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -835,6 +877,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
             foreignKeyName: "factures_entreprise_id_fkey"
             columns: ["entreprise_id"]
             isOneToOne: false
@@ -847,6 +896,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
           },
           {
             foreignKeyName: "fk_factures_avoir"
@@ -1058,6 +1114,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "interventions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
             foreignKeyName: "interventions_vehicule_id_fkey"
             columns: ["vehicule_id"]
             isOneToOne: false
@@ -1214,6 +1277,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "parrainages_filleul_id_fkey"
+            columns: ["filleul_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
             foreignKeyName: "parrainages_parrain_id_fkey"
             columns: ["parrain_id"]
             isOneToOne: false
@@ -1226,6 +1296,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parrainages_parrain_id_fkey"
+            columns: ["parrain_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -1310,6 +1387,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -1482,6 +1566,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
             foreignKeyName: "vehicules_entreprise_id_fkey"
             columns: ["entreprise_id"]
             isOneToOne: false
@@ -1494,6 +1585,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicules_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -1526,6 +1624,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -1573,6 +1678,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
           },
         ]
       }
@@ -1640,6 +1752,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_entreprises_vehicules_resume: {
+        Row: {
+          commercial_id: string | null
+          commercial_nom: string | null
+          contrat_actif_id: string | null
+          contrat_statut: string | null
+          entreprise_id: string | null
+          montant_brut_mensuel: number | null
+          montant_net_mensuel: number | null
+          nb_vehicules_actifs: number | null
+          nb_vehicules_en_attente: number | null
+          nb_vehicules_total: number | null
+          nom: string | null
+          numero_contrat: string | null
+          palier: string | null
+          remise_commerciale_pct: number | null
+          type_client: Database["public"]["Enums"]["type_client"] | null
+          ville: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
