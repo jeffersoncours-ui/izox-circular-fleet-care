@@ -117,6 +117,23 @@ function ClientDetailPage() {
     })();
   }, [loadEntreprise, loadVehicules, id]);
 
+  useEffect(() => {
+    if (!entreprise?.commercial_id) {
+      setCommercialNom(null);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("prenom, nom")
+        .eq("id", entreprise.commercial_id!)
+        .maybeSingle();
+      setCommercialNom(
+        data ? `${data.prenom ?? ""} ${data.nom ?? ""}`.trim() || null : null
+      );
+    })();
+  }, [entreprise?.commercial_id]);
+
   const handleEdit = (v: Vehicule) => {
     setEditVehicule(v);
     setEditOpen(true);
