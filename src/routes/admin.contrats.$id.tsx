@@ -188,6 +188,9 @@ function ContratDetailPage() {
          mode_paiement, engagement_annuel, passages_mois, passages_restants_mois,
          passages_reportes, entreprise_id,
          gel_actif, gel_type, gel_date_debut, gel_date_fin, gel_commentaire, gel_notifier_client,
+         montant_brut_mensuel, montant_net_mensuel, remise_pct,
+         remise_commerciale_pct, remise_commerciale_justification, remise_commerciale_date,
+         commercial_signataire_id,
          entreprise:entreprises ( id, nom ),
          lignes:contrat_lignes ( type_pack, nb_vehicules )`
       )
