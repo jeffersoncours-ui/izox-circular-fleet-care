@@ -55,7 +55,9 @@ interface Vehicule {
   type_pack_souhaite: string | null;
   contrat_id: string | null;
   entreprise_id: string;
+  created_by: string | null;
   entreprises: { id: string; nom: string } | null;
+  contrats: { commercial_signataire_id: string | null } | null;
 }
 
 const STATUT_LABELS: Record<string, string> = {
