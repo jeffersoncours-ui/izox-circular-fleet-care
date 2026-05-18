@@ -1,260 +1,305 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Search, Car, Pencil, Trash2, Loader2 } from "lucide-react";
-import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
-import { getVehiculeLabel } from "@/components/client/VehiculeIcons";
-import { supprimerVehicule } from "@/lib/supprimer-vehicule";
-import {
-  FacturationPrealableDialog,
-  type FacturationPrealableState,
-} from "@/components/admin/FacturationPrealableDialog";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Car, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
+import { useAuth } from "@/lib/auth-context";
+import { formatCurrency } from "@/lib/format";
+import {
+  CartClientPliable,
+  type ClientResume,
+} from "@/components/admin/CartClientPliable";
+import {
+  LigneVehiculeAdmin,
+  type VehiculeAdminRow,
+} from "@/components/admin/LigneVehiculeAdmin";
+import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 
 export const Route = createFileRoute("/admin/vehicules")({
   component: AdminVehiculesPage,
 });
 
-interface VehiculeRow {
-  id: string;
-  immatriculation: string;
-  marque: string | null;
-  modele: string | null;
-  type_vehicule: string | null;
-  annee: number | null;
-  couleur: string | null;
-  kilometrage: number | null;
-  notes: string | null;
-  statut: string;
-  photo_path: string | null;
-  entreprise_id: string;
-  entreprises: { id: string; nom: string } | null;
-}
-
 function AdminVehiculesPage() {
   const location = useLocation();
-  if (location.pathname !== "/admin/vehicules") {
-    return <Outlet />;
-  }
+  if (location.pathname !== "/admin/vehicules") return <Outlet />;
   return <AdminVehiculesList />;
 }
 
+type StatutFilter = "tous" | "actifs" | "en_attente";
+type CommercialFilter = "tous" | "mes_clients";
+type TriOpt = "alphabetique" | "plus_vehicules" | "mrr_decroissant";
+
+interface VehiculeWithContrat extends VehiculeAdminRow {
+  contrats: { commercial_signataire_id: string | null } | null;
+}
+
 function AdminVehiculesList() {
-  const [list, setList] = useState<VehiculeRow[]>([]);
+  const { user, profile } = useAuth();
+  const role = profile?.role;
+  const isCommercial = role === "commercial";
+  const isAdminStaff = role === "admin" || role === "staff";
+
+  const [clients, setClients] = useState<ClientResume[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<VehiculeRow | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<VehiculeRow | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
+  const [statutFilter, setStatutFilter] = useState<StatutFilter>("tous");
+  const [commercialFilter, setCommercialFilter] = useState<CommercialFilter>("tous");
+  const [tri, setTri] = useState<TriOpt>("alphabetique");
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+  const [vehiculesMap, setVehiculesMap] = useState<
+    Record<string, { loading: boolean; data: VehiculeWithContrat[] }>
+  >({});
+  const [addDialogFor, setAddDialogFor] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const loadClients = useCallback(async () => {
     setLoading(true);
+    let q = supabase.from("v_entreprises_vehicules_resume").select("*");
+    if (statutFilter === "actifs") q = q.gt("nb_vehicules_actifs", 0);
+    else if (statutFilter === "en_attente") q = q.gt("nb_vehicules_en_attente", 0);
+
+    switch (tri) {
+      case "alphabetique":
+        q = q.order("nom", { ascending: true });
+        break;
+      case "plus_vehicules":
+        q = q.order("nb_vehicules_total", { ascending: false });
+        break;
+      case "mrr_decroissant":
+        q = q.order("montant_net_mensuel", { ascending: false, nullsFirst: false });
+        break;
+    }
+    const { data, error } = await q;
+    if (error) toast.error(error.message);
+    setClients((data as unknown as ClientResume[]) ?? []);
+    setLoading(false);
+  }, [statutFilter, tri]);
+
+  useEffect(() => {
+    loadClients();
+  }, [loadClients]);
+
+  const loadVehicules = useCallback(async (entrepriseId: string) => {
+    setVehiculesMap((m) => ({
+      ...m,
+      [entrepriseId]: { loading: true, data: m[entrepriseId]?.data ?? [] },
+    }));
     const { data, error } = await supabase
       .from("vehicules")
       .select(
-        "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, entreprise_id, entreprises!inner ( id, nom, archived_at )"
+        "id, immatriculation, marque, modele, type_vehicule, type_pack_souhaite, statut, photo_path, created_by, contrats ( commercial_signataire_id )",
       )
-      .not("contrat_id", "is", null)
-      .is("entreprises.archived_at", null)
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast.error(error.message);
-    }
-    setList((data as unknown as VehiculeRow[]) ?? []);
-    setLoading(false);
+      .eq("entreprise_id", entrepriseId)
+      .order("created_at", { ascending: false })
+      .limit(11);
+    if (error) toast.error(error.message);
+    setVehiculesMap((m) => ({
+      ...m,
+      [entrepriseId]: {
+        loading: false,
+        data: (data as unknown as VehiculeWithContrat[]) ?? [],
+      },
+    }));
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const filtered = list.filter((v) => {
-    const q = search.toLowerCase();
-    return (
-      v.immatriculation.toLowerCase().includes(q) ||
-      (v.marque ?? "").toLowerCase().includes(q) ||
-      (v.modele ?? "").toLowerCase().includes(q) ||
-      (v.entreprises?.nom ?? "").toLowerCase().includes(q)
-    );
-  });
-
-  const onEdit = (v: VehiculeRow) => {
-    setEditing(v);
-    setEditOpen(true);
+  const onToggle = (id: string) => {
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        if (!vehiculesMap[id]) loadVehicules(id);
+      }
+      return next;
+    });
   };
 
-  const onDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    const target = deleteTarget;
-    const res = await supprimerVehicule(target.id);
-    setDeleting(false);
-    if (res.needsBilling) {
-      setDeleteTarget(null);
-      setBillingState(res.needsBilling);
-      return;
-    }
-    if (res.done) {
-      setDeleteTarget(null);
-      load();
-    }
+  const reloadEntreprise = (id: string) => {
+    loadVehicules(id);
+    loadClients();
   };
+
+  const clientsFiltres = useMemo(() => {
+    let list = clients;
+    if (isCommercial && commercialFilter === "mes_clients" && user) {
+      list = list.filter((c) => c.commercial_id === user.id);
+    }
+    if (search.trim()) {
+      const s = search.trim().toLowerCase();
+      list = list.filter((c) => c.nom.toLowerCase().includes(s));
+    }
+    return list;
+  }, [clients, isCommercial, commercialFilter, user, search]);
+
+  const totalClients = clientsFiltres.length;
+  const totalVehicules = clientsFiltres.reduce((s, c) => s + c.nb_vehicules_total, 0);
+  const totalMRR = clientsFiltres.reduce((s, c) => s + (c.montant_net_mensuel ?? 0), 0);
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto">
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-foreground">Véhicules</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {list.length} véhicule{list.length > 1 ? "s" : ""} suivi{list.length > 1 ? "s" : ""}
+          {totalVehicules} véhicule{totalVehicules > 1 ? "s" : ""} suivi
+          {totalVehicules > 1 ? "s" : ""} chez {totalClients} client
+          {totalClients > 1 ? "s" : ""}
+          {isAdminStaff && totalMRR > 0 && (
+            <span className="ml-3 font-medium text-foreground">
+              · MRR total : {formatCurrency(totalMRR)} HT / mois
+            </span>
+          )}
         </p>
       </header>
 
       <Card className="p-4 mb-6 shadow-card border-border/60">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par immatriculation, marque, modèle ou client..."
-            className="pl-10"
-          />
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher par nom de client..."
+              className="pl-10"
+            />
+          </div>
+          <Select value={statutFilter} onValueChange={(v) => setStatutFilter(v as StatutFilter)}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tous">Tous les véhicules</SelectItem>
+              <SelectItem value="actifs">Actifs</SelectItem>
+              <SelectItem value="en_attente">En attente de validation</SelectItem>
+            </SelectContent>
+          </Select>
+          {isCommercial && (
+            <Select
+              value={commercialFilter}
+              onValueChange={(v) => setCommercialFilter(v as CommercialFilter)}
+            >
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tous">Tous les clients</SelectItem>
+                <SelectItem value="mes_clients">Mes clients</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          <Select value={tri} onValueChange={(v) => setTri(v as TriOpt)}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alphabetique">Tri alphabétique</SelectItem>
+              <SelectItem value="plus_vehicules">Plus de véhicules</SelectItem>
+              <SelectItem value="mrr_decroissant">MRR décroissant</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </Card>
 
       {loading ? (
-        <p className="text-muted-foreground text-sm">Chargement...</p>
-      ) : filtered.length === 0 ? (
+        <div className="flex items-center justify-center py-16 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Chargement...
+        </div>
+      ) : clientsFiltres.length === 0 ? (
         <Card className="p-12 text-center shadow-card border-border/60">
-          <Car className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">
-            {list.length === 0 ? "Aucun véhicule pour le moment." : "Aucun résultat."}
-          </p>
+          <Car className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">
+            {clients.length === 0
+              ? "Aucune flotte enregistrée pour le moment"
+              : "Aucun résultat"}
+          </h3>
+          {clients.length === 0 && (
+            <>
+              <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                Commencez par assigner des véhicules à vos clients actifs.
+              </p>
+              <Button asChild>
+                <Link to="/admin/clients">Aller aux clients</Link>
+              </Button>
+            </>
+          )}
         </Card>
       ) : (
-        <div className="grid gap-3">
-          {filtered.map((v) => {
-            const typeLabel = getVehiculeLabel(v.type_vehicule);
-            const title =
-              v.marque || v.modele
-                ? `${v.marque ?? ""} ${v.modele ?? ""}`.trim()
-                : "Véhicule";
+        <div className="space-y-3">
+          {clientsFiltres.map((c) => {
+            const isOpen = openIds.has(c.entreprise_id);
+            const bucket = vehiculesMap[c.entreprise_id];
             return (
-              <Link
-                key={v.id}
-                to="/admin/vehicules/$id"
-                params={{ id: v.id }}
-                className="block"
+              <CartClientPliable
+                key={c.entreprise_id}
+                client={c}
+                isOpen={isOpen}
+                onToggle={() => onToggle(c.entreprise_id)}
+                onAddVehicule={() => setAddDialogFor(c.entreprise_id)}
               >
-                <Card className="p-5 cursor-pointer transition-all duration-150 ease-out hover:bg-muted/40 hover:shadow-strong hover:border-primary/30 shadow-card border-border/60">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <VehiculeThumbnail photoPath={v.photo_path} alt={title} />
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-foreground truncate">{title}</h3>
-                        <p className="font-mono text-xs text-primary mt-0.5">{v.immatriculation}</p>
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {v.entreprises?.nom ?? "—"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="secondary" className="hidden sm:inline-flex">
-                        {typeLabel}
-                      </Badge>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onEdit(v);
-                        }}
-                        aria-label="Modifier"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDeleteTarget(v);
-                        }}
-                        aria-label="Supprimer"
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                {bucket?.loading ? (
+                  <div className="flex items-center justify-center py-6 text-muted-foreground text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Chargement des véhicules...
                   </div>
-                </Card>
-              </Link>
+                ) : bucket && bucket.data.length === 0 ? (
+                  <div className="py-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Aucun véhicule pour ce client
+                    </p>
+                    <Button size="sm" onClick={() => setAddDialogFor(c.entreprise_id)}>
+                      + Ajouter un premier véhicule
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    {bucket?.data.slice(0, 10).map((v) => (
+                      <LigneVehiculeAdmin
+                        key={v.id}
+                        vehicule={v}
+                        commercialSignataireId={
+                          v.contrats?.commercial_signataire_id ?? c.commercial_id
+                        }
+                        onChanged={() => reloadEntreprise(c.entreprise_id)}
+                      />
+                    ))}
+                    {c.nb_vehicules_total > 10 && (
+                      <div className="pt-2 text-center">
+                        <Link
+                          to="/admin/clients/$id"
+                          params={{ id: c.entreprise_id }}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Voir les {c.nb_vehicules_total - 10} véhicules restants sur la fiche
+                          client →
+                        </Link>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CartClientPliable>
             );
           })}
         </div>
       )}
 
       <AddVehiculeDialog
-        open={editOpen}
+        open={!!addDialogFor}
         onOpenChange={(o) => {
-          setEditOpen(o);
-          if (!o) setEditing(null);
+          if (!o) setAddDialogFor(null);
         }}
-        vehicule={editing}
-        entrepriseId={editing?.entreprise_id}
-        onCreated={load}
-      />
-
-      <AlertDialog
-        open={!!deleteTarget}
-        onOpenChange={(o) => !o && setDeleteTarget(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce véhicule ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Le véhicule {deleteTarget?.immatriculation} sera
-              définitivement supprimé.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                onDelete();
-              }}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Supprimer"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <FacturationPrealableDialog
-        state={billingState}
-        onClose={() => setBillingState(null)}
-        onResolved={() => load()}
+        entrepriseId={addDialogFor ?? undefined}
+        onCreated={() => {
+          if (addDialogFor) reloadEntreprise(addDialogFor);
+          setAddDialogFor(null);
+        }}
       />
     </div>
   );
