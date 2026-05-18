@@ -351,9 +351,9 @@ export function AddVehiculeDialog({
             />
           </div>
 
-          {isClientMode && (
+          {!isEdit && (
             <div>
-              <Label className="mb-2 block">Formule souhaitée *</Label>
+              <Label className="mb-2 block">Formule *</Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {getAllPacks().map((p) => {
                   const active = packSouhaite === p.type;
@@ -377,13 +377,15 @@ export function AddVehiculeDialog({
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-3 italic">
-                Tarif HT par véhicule selon votre palier actuel. Ajout effectif après validation par notre équipe.
-              </p>
+              {needsValidation && (
+                <p className="text-xs text-muted-foreground mt-3 italic">
+                  Tarif HT par véhicule selon votre palier actuel. Ajout effectif après validation par notre équipe.
+                </p>
+              )}
             </div>
           )}
 
-          {isClientMode && upsell && (
+          {upsell && (
             <Card className="p-4 border-primary/40 bg-primary-soft">
               <div className="flex gap-3">
                 <TrendingUp className="h-5 w-5 text-primary shrink-0 mt-0.5" />
@@ -407,15 +409,19 @@ export function AddVehiculeDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               Annuler
             </Button>
-            <Button type="submit" variant="izox" disabled={submitting}>
+            <Button
+              type="submit"
+              variant="izox"
+              disabled={submitting || (!isEdit && !packSouhaite)}
+            >
               {submitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : isEdit ? (
                 "Enregistrer"
-              ) : isClientMode ? (
+              ) : needsValidation ? (
                 "Envoyer la demande"
               ) : (
-                "Ajouter"
+                "Ajouter le véhicule"
               )}
             </Button>
           </div>
