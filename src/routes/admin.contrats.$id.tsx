@@ -1116,60 +1116,16 @@ function ValidateVehiculeDialog({
   const handleConfirm = async () => {
     setSubmitting(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-
-      // Validate vehicle
-      const { error: e1 } = await supabase
-        .from("vehicules")
-        .update({ statut: "actif", contrat_id: contrat.id })
-        .eq("id", vehicule.id);
-      if (e1) throw e1;
-
-      // If replacement: archive old
-      if (bascule) {
-        const { error: e2 } = await supabase
-          .from("vehicules")
-          .update({ statut: "remplace", contrat_id: null })
-          .eq("id", bascule.ancien_vehicule_id);
-        if (e2) throw e2;
-
-        await supabase.from("admin_actions_log").insert({
-          action: "bascule_automatique_remplacement",
-          user_id: userData.user?.id ?? null,
-          details: {
-            contrat_id: contrat.id,
-            ancien_vehicule_id: bascule.ancien_vehicule_id,
-            ancien_immat: bascule.ancien_immat,
-            nouveau_vehicule_id: vehicule.id,
-            nouveau_immat: vehicule.immatriculation,
-          },
-        });
-      }
-
-      await supabase.from("admin_actions_log").insert({
-        action: "validation_vehicule_attente",
-        user_id: userData.user?.id ?? null,
-        details: {
-          contrat_id: contrat.id,
-          vehicule_id: vehicule.id,
-          vehicule_immat: vehicule.immatriculation,
-          palier_avant: palierAvant,
-          palier_apres: palierApres,
-        },
+      const { error } = await supabase.rpc("valider_vehicule", {
+        p_vehicule_id: vehicule.id,
       });
+      if (error) throw error;
 
       const newLabel =
         `${vehicule.marque ?? ""} ${vehicule.modele ?? ""}`.trim() || "Véhicule";
-
-      if (bascule) {
-        toast.success(
-          `${newLabel} (${vehicule.immatriculation}) validé. ${bascule.ancien_label} (${bascule.ancien_immat}) a été automatiquement archivé comme remplacé. Le contrat ${contrat.numero_contrat ?? ""} reste actif.`
-        );
-      } else {
-        toast.success(
-          `${newLabel} (${vehicule.immatriculation}) validé et ajouté au contrat ${contrat.numero_contrat ?? ""}.`
-        );
-      }
+      toast.success(
+        `${newLabel} (${vehicule.immatriculation}) validé et ajouté au contrat ${contrat.numero_contrat ?? ""}.`
+      );
 
       onDone();
       onClose();
