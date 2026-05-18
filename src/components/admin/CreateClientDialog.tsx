@@ -91,6 +91,10 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.commercial_id) {
+      toast.error("Commercial responsable obligatoire");
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-client-account", {
@@ -104,6 +108,7 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
             email_contact: form.email_contact || null,
             telephone: form.telephone || null,
             type_client: form.type_client,
+            commercial_id: form.commercial_id,
           },
           user: {
             prenom: form.prenom,
