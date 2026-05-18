@@ -34,6 +34,7 @@ import {
   FacturationPrealableDialog,
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
+import { ValidationVehiculeBadge } from "@/components/admin/ValidationVehiculeBadge";
 
 export const Route = createFileRoute("/admin/vehicules/$id")({
   component: AdminVehiculeDetail,
@@ -54,7 +55,9 @@ interface Vehicule {
   type_pack_souhaite: string | null;
   contrat_id: string | null;
   entreprise_id: string;
+  created_by: string | null;
   entreprises: { id: string; nom: string } | null;
+  contrats: { commercial_signataire_id: string | null } | null;
 }
 
 const STATUT_LABELS: Record<string, string> = {
@@ -80,7 +83,7 @@ function AdminVehiculeDetail() {
     const { data } = await supabase
       .from("vehicules")
       .select(
-        "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id, entreprise_id, entreprises ( id, nom )"
+        "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id, entreprise_id, created_by, entreprises ( id, nom ), contrats ( commercial_signataire_id )"
       )
       .eq("id", id)
       .maybeSingle();
@@ -166,18 +169,31 @@ function AdminVehiculeDetail() {
           <p className="font-mono text-base text-primary mt-1">{vehicule.immatriculation}</p>
           <div className="flex items-center gap-2 mt-3 flex-wrap">
             <Badge variant="secondary">{typeLabel}</Badge>
-            <Badge
-              variant={vehicule.statut === "actif" ? "outline" : "secondary"}
-              className="capitalize"
-            >
-              {STATUT_LABELS[vehicule.statut] ?? vehicule.statut.replace("_", " ")}
-            </Badge>
+            {vehicule.statut !== "en_attente_validation" && (
+              <Badge
+                variant={vehicule.statut === "actif" ? "outline" : "secondary"}
+                className="capitalize"
+              >
+                {STATUT_LABELS[vehicule.statut] ?? vehicule.statut.replace("_", " ")}
+              </Badge>
+            )}
             {vehicule.type_pack_souhaite && (
               <Badge variant="outline">
                 {getPackLabel(vehicule.type_pack_souhaite)}
               </Badge>
             )}
           </div>
+          {vehicule.statut === "en_attente_validation" && (
+            <div className="mt-3">
+              <ValidationVehiculeBadge
+                vehiculeId={vehicule.id}
+                statut={vehicule.statut}
+                createdBy={vehicule.created_by}
+                commercialSignataireId={vehicule.contrats?.commercial_signataire_id ?? null}
+                onChanged={load}
+              />
+            </div>
+          )}
         </div>
       </Card>
 

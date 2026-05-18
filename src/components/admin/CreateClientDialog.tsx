@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,9 @@ interface Props {
 export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ email: string; password: string } | null>(null);
+  const [commerciaux, setCommerciaux] = useState<
+    Array<{ id: string; prenom: string | null; nom: string | null }>
+  >([]);
 
   const [form, setForm] = useState({
     nom: "",
@@ -39,10 +42,31 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
     email_contact: "",
     telephone: "",
     type_client: "flotte",
+    commercial_id: "",
     prenom: "",
     nom_user: "",
     email_user: "",
   });
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "commercial");
+      const ids = (roles ?? []).map((r) => r.user_id);
+      if (ids.length === 0) {
+        setCommerciaux([]);
+        return;
+      }
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, prenom, nom")
+        .in("id", ids);
+      setCommerciaux((profs as any) ?? []);
+    })();
+  }, [open]);
 
   const update = (k: keyof typeof form) => (v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -57,6 +81,7 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
       email_contact: "",
       telephone: "",
       type_client: "flotte",
+      commercial_id: "",
       prenom: "",
       nom_user: "",
       email_user: "",
@@ -66,6 +91,10 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.commercial_id) {
+      toast.error("Commercial responsable obligatoire");
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-client-account", {
@@ -79,6 +108,7 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
             email_contact: form.email_contact || null,
             telephone: form.telephone || null,
             type_client: form.type_client,
+            commercial_id: form.commercial_id,
           },
           user: {
             prenom: form.prenom,
@@ -178,6 +208,30 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
                         <SelectItem value="concession">Concession</SelectItem>
                         <SelectItem value="vtc">VTC</SelectItem>
                         <SelectItem value="autre">Autre</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Commercial responsable *</Label>
+                    <Select
+                      value={form.commercial_id}
+                      onValueChange={update("commercial_id")}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un commercial..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {commerciaux.length === 0 ? (
+                          <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                            Aucun commercial disponible
+                          </div>
+                        ) : (
+                          commerciaux.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {[c.prenom, c.nom].filter(Boolean).join(" ") || "Sans nom"}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

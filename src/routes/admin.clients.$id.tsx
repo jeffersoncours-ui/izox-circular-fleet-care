@@ -29,6 +29,7 @@ import {
   FacturationPrealableDialog,
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
+import { ReassignCommercialDialog } from "@/components/admin/ReassignCommercialDialog";
 
 export const Route = createFileRoute("/admin/clients/$id")({
   component: ClientDetailPage,
@@ -78,6 +79,8 @@ function ClientDetailPage() {
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [nbContratsActifs, setNbContratsActifs] = useState(0);
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
+  const [reassignOpen, setReassignOpen] = useState(false);
+  const [commercialNom, setCommercialNom] = useState<string | null>(null);
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
@@ -113,6 +116,23 @@ function ClientDetailPage() {
       setNbContratsActifs(count ?? 0);
     })();
   }, [loadEntreprise, loadVehicules, id]);
+
+  useEffect(() => {
+    if (!entreprise?.commercial_id) {
+      setCommercialNom(null);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("prenom, nom")
+        .eq("id", entreprise.commercial_id!)
+        .maybeSingle();
+      setCommercialNom(
+        data ? `${data.prenom ?? ""} ${data.nom ?? ""}`.trim() || null : null
+      );
+    })();
+  }, [entreprise?.commercial_id]);
 
   const handleEdit = (v: Vehicule) => {
     setEditVehicule(v);
@@ -176,6 +196,28 @@ function ClientDetailPage() {
             <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
               <Row label="Email" value={entreprise.email_contact} />
               <Row label="Ville" value={entreprise.ville} />
+              <div className="sm:col-span-2">
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  Commercial responsable
+                </dt>
+                <dd className="text-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+                  <span>
+                    {commercialNom ?? (
+                      <span className="italic text-muted-foreground">
+                        Aucun commercial dédié
+                      </span>
+                    )}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setReassignOpen(true)}
+                  >
+                    Réassigner
+                  </Button>
+                </dd>
+              </div>
             </dl>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
@@ -376,6 +418,14 @@ function ClientDetailPage() {
         state={billingState}
         onClose={() => setBillingState(null)}
         onResolved={() => loadVehicules()}
+      />
+
+      <ReassignCommercialDialog
+        open={reassignOpen}
+        onOpenChange={setReassignOpen}
+        entrepriseId={entreprise.id}
+        currentCommercialId={entreprise.commercial_id}
+        onReassigned={loadEntreprise}
       />
     </div>
   );

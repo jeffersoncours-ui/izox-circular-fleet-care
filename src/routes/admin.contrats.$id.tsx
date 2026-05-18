@@ -64,6 +64,7 @@ import { GelContratDialog } from "@/components/admin/GelContratDialog";
 import { ReactiverContratDialog } from "@/components/admin/ReactiverContratDialog";
 import { GelInfoBanner } from "@/components/admin/GelInfoBanner";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
+import { RemiseCommercialeDialog } from "@/components/admin/RemiseCommercialeDialog";
 
 export const Route = createFileRoute("/admin/contrats/$id")({
   component: ContratDetailPage,
@@ -117,6 +118,13 @@ interface Contrat {
   gel_notifier_client: boolean;
   entreprise: { id: string; nom: string } | null;
   lignes: Array<{ type_pack: string; nb_vehicules: number }>;
+  montant_brut_mensuel: number | null;
+  montant_net_mensuel: number | null;
+  remise_pct: number | null;
+  remise_commerciale_pct: number | null;
+  remise_commerciale_justification: string | null;
+  remise_commerciale_date: string | null;
+  commercial_signataire_id: string | null;
 }
 
 interface Vehicule {
@@ -170,6 +178,7 @@ function ContratDetailPage() {
 
   const [validateVeh, setValidateVeh] = useState<Vehicule | null>(null);
   const [refuseVeh, setRefuseVeh] = useState<Vehicule | null>(null);
+  const [remiseOpen, setRemiseOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -181,6 +190,9 @@ function ContratDetailPage() {
          mode_paiement, engagement_annuel, passages_mois, passages_restants_mois,
          passages_reportes, entreprise_id,
          gel_actif, gel_type, gel_date_debut, gel_date_fin, gel_commentaire, gel_notifier_client,
+         montant_brut_mensuel, montant_net_mensuel, remise_pct,
+         remise_commerciale_pct, remise_commerciale_justification, remise_commerciale_date,
+         commercial_signataire_id,
          entreprise:entreprises ( id, nom ),
          lignes:contrat_lignes ( type_pack, nb_vehicules )`
       )
@@ -456,6 +468,30 @@ function ContratDetailPage() {
                 Palier : {PALIER_LABEL[palier]}
               </Badge>
             </div>
+
+            <div className="mt-4 pt-4 border-t border-primary/20 flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  Remise commerciale
+                </p>
+                <p className="font-semibold text-foreground tabular-nums">
+                  {Math.round(Number(contrat.remise_commerciale_pct ?? 0) * 100)}%
+                  {contrat.montant_net_mensuel != null && (
+                    <span className="ml-2 text-muted-foreground font-normal">
+                      → net mensuel : {Number(contrat.montant_net_mensuel).toFixed(2)} €
+                    </span>
+                  )}
+                </p>
+                {contrat.remise_commerciale_justification && (
+                  <p className="text-xs text-muted-foreground mt-1 italic">
+                    {contrat.remise_commerciale_justification}
+                  </p>
+                )}
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setRemiseOpen(true)}>
+                Modifier la remise
+              </Button>
+            </div>
             {facture && (
               <div className="mt-4 pt-4 border-t border-primary/20 space-y-1.5 text-sm">
                 {facture.lignesDetail
@@ -729,6 +765,16 @@ function ContratDetailPage() {
           onDone={load}
         />
       )}
+
+      <RemiseCommercialeDialog
+        open={remiseOpen}
+        onOpenChange={setRemiseOpen}
+        contratId={contrat.id}
+        montantBrut={Number(contrat.montant_brut_mensuel ?? 0)}
+        remiseActuelle={Number(contrat.remise_commerciale_pct ?? 0)}
+        remisePalier={Number(contrat.remise_pct ?? 0)}
+        onApplied={load}
+      />
     </div>
   );
 }
@@ -1116,60 +1162,16 @@ function ValidateVehiculeDialog({
   const handleConfirm = async () => {
     setSubmitting(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-
-      // Validate vehicle
-      const { error: e1 } = await supabase
-        .from("vehicules")
-        .update({ statut: "actif", contrat_id: contrat.id })
-        .eq("id", vehicule.id);
-      if (e1) throw e1;
-
-      // If replacement: archive old
-      if (bascule) {
-        const { error: e2 } = await supabase
-          .from("vehicules")
-          .update({ statut: "remplace", contrat_id: null })
-          .eq("id", bascule.ancien_vehicule_id);
-        if (e2) throw e2;
-
-        await supabase.from("admin_actions_log").insert({
-          action: "bascule_automatique_remplacement",
-          user_id: userData.user?.id ?? null,
-          details: {
-            contrat_id: contrat.id,
-            ancien_vehicule_id: bascule.ancien_vehicule_id,
-            ancien_immat: bascule.ancien_immat,
-            nouveau_vehicule_id: vehicule.id,
-            nouveau_immat: vehicule.immatriculation,
-          },
-        });
-      }
-
-      await supabase.from("admin_actions_log").insert({
-        action: "validation_vehicule_attente",
-        user_id: userData.user?.id ?? null,
-        details: {
-          contrat_id: contrat.id,
-          vehicule_id: vehicule.id,
-          vehicule_immat: vehicule.immatriculation,
-          palier_avant: palierAvant,
-          palier_apres: palierApres,
-        },
+      const { error } = await supabase.rpc("valider_vehicule", {
+        p_vehicule_id: vehicule.id,
       });
+      if (error) throw error;
 
       const newLabel =
         `${vehicule.marque ?? ""} ${vehicule.modele ?? ""}`.trim() || "Véhicule";
-
-      if (bascule) {
-        toast.success(
-          `${newLabel} (${vehicule.immatriculation}) validé. ${bascule.ancien_label} (${bascule.ancien_immat}) a été automatiquement archivé comme remplacé. Le contrat ${contrat.numero_contrat ?? ""} reste actif.`
-        );
-      } else {
-        toast.success(
-          `${newLabel} (${vehicule.immatriculation}) validé et ajouté au contrat ${contrat.numero_contrat ?? ""}.`
-        );
-      }
+      toast.success(
+        `${newLabel} (${vehicule.immatriculation}) validé et ajouté au contrat ${contrat.numero_contrat ?? ""}.`
+      );
 
       onDone();
       onClose();
@@ -1276,25 +1278,17 @@ function RefuseVehiculeDialog({
   const [motif, setMotif] = useState("");
 
   const handleConfirm = async () => {
+    if (motif.trim().length < 5) {
+      toast.error("Motif obligatoire (min 5 caractères)");
+      return;
+    }
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("vehicules")
-        .update({ statut: "refuse" })
-        .eq("id", vehicule.id);
-      if (error) throw error;
-
-      const { data: userData } = await supabase.auth.getUser();
-      await supabase.from("admin_actions_log").insert({
-        action: "refus_vehicule_attente",
-        user_id: userData.user?.id ?? null,
-        details: {
-          contrat_id: contrat.id,
-          vehicule_id: vehicule.id,
-          vehicule_immat: vehicule.immatriculation,
-          motif: motif || null,
-        },
+      const { error } = await supabase.rpc("rejeter_vehicule", {
+        p_vehicule_id: vehicule.id,
+        p_raison: motif.trim(),
       });
+      if (error) throw error;
 
       toast.success(`Véhicule ${vehicule.immatriculation} refusé.`);
       onDone();
@@ -1323,7 +1317,7 @@ function RefuseVehiculeDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="refus-motif">Motif du refus (optionnel)</Label>
+          <Label htmlFor="refus-motif">Motif du refus * (min 5 caractères)</Label>
           <Textarea
             id="refus-motif"
             value={motif}
