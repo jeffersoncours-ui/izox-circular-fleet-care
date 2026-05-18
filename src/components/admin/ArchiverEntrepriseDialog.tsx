@@ -41,10 +41,10 @@ export function ArchiverEntrepriseDialog({
     }
     setSubmitting(true);
     try {
-      const { error } = await supabase.rpc("archiver_entreprise" as never, {
+      const { error } = await supabase.rpc("archiver_entreprise", {
         p_entreprise_id: entrepriseId,
         p_reason: reason.trim(),
-      } as never);
+      });
       if (error) throw error;
       toast.success(`Client "${entrepriseNom}" archivé`);
       onOpenChange(false);

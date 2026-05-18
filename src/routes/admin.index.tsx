@@ -23,7 +23,7 @@ function AdminDashboard() {
   useEffect(() => {
     (async () => {
       const [c, v] = await Promise.all([
-        supabase.from("v_entreprises_actives" as never).select("id", { count: "exact", head: true }),
+        supabase.from("v_entreprises_actives").select("id", { count: "exact", head: true }),
         supabase.from("vehicules").select("id", { count: "exact", head: true }).not("contrat_id", "is", null),
       ]);
       setStats({

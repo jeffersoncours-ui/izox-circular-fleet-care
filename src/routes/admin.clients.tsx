@@ -32,7 +32,7 @@ function ClientsPage() {
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("v_entreprises_actives" as never)
+      .from("v_entreprises_actives")
       .select("id, nom, ville, type_client, email_contact, compte_active, created_at")
       .order("created_at", { ascending: false });
     setList((data as Entreprise[]) ?? []);
