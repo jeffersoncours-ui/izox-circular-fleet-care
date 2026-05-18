@@ -98,7 +98,15 @@ function ClientDetailPage() {
   useEffect(() => {
     loadEntreprise();
     loadVehicules();
-  }, [loadEntreprise, loadVehicules]);
+    (async () => {
+      const { count } = await supabase
+        .from("contrats")
+        .select("id", { count: "exact", head: true })
+        .eq("entreprise_id", id)
+        .in("statut", ["actif", "en_attente_validation"]);
+      setNbContratsActifs(count ?? 0);
+    })();
+  }, [loadEntreprise, loadVehicules, id]);
 
   const handleEdit = (v: Vehicule) => {
     setEditVehicule(v);
