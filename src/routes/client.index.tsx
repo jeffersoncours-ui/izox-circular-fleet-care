@@ -39,16 +39,16 @@ function ClientHome() {
         .from("vehicules")
         .select("id", { count: "exact", head: true })
         .eq("entreprise_id", profile.entreprise_id!)
-        .eq("statut", "actif");
+        .in("statut", ["actif", "en_attente_validation"]);
       const count = v.count ?? 0;
       setVehiculeCount(count);
 
-      // Récupère le contrat actif (le plus récent) pour calculer le palier
+      // Récupère le contrat (le plus récent) — inclut en_attente_validation
       const { data: contrat } = await supabase
         .from("contrats")
         .select("numero_contrat, statut")
         .eq("entreprise_id", profile.entreprise_id!)
-        .eq("statut", "actif")
+        .in("statut", ["actif", "en_attente_validation"])
         .order("date_debut", { ascending: false })
         .limit(1)
         .maybeSingle();
