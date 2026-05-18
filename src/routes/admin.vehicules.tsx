@@ -16,9 +16,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Search, Car, Pencil, Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { getVehiculeLabel } from "@/components/client/VehiculeIcons";
+import { supprimerVehicule } from "@/lib/supprimer-vehicule";
+import {
+  FacturationPrealableDialog,
+  type FacturationPrealableState,
+} from "@/components/admin/FacturationPrealableDialog";
+import { toast } from "sonner";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 
 export const Route = createFileRoute("/admin/vehicules")({
@@ -57,6 +62,7 @@ function AdminVehiculesList() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<VehiculeRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -97,16 +103,17 @@ function AdminVehiculesList() {
   const onDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    try {
-      const { error } = await supabase.from("vehicules").delete().eq("id", deleteTarget.id);
-      if (error) throw error;
-      toast.success("Véhicule supprimé");
+    const target = deleteTarget;
+    const res = await supprimerVehicule(target.id);
+    setDeleting(false);
+    if (res.needsBilling) {
+      setDeleteTarget(null);
+      setBillingState(res.needsBilling);
+      return;
+    }
+    if (res.done) {
       setDeleteTarget(null);
       load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur");
-    } finally {
-      setDeleting(false);
     }
   };
 
