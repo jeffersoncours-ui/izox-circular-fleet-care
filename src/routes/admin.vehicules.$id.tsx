@@ -34,6 +34,7 @@ import {
   FacturationPrealableDialog,
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
+import { ValidationVehiculeBadge } from "@/components/admin/ValidationVehiculeBadge";
 
 export const Route = createFileRoute("/admin/vehicules/$id")({
   component: AdminVehiculeDetail,
