@@ -315,6 +315,14 @@ function ClientDetailPage() {
         onUpdated={loadEntreprise}
       />
 
+      <ArchiverEntrepriseDialog
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
+        entrepriseId={entreprise.id}
+        entrepriseNom={entreprise.nom}
+        hasActiveContrats={nbContratsActifs > 0}
+      />
+
       <AddVehiculeDialog
         open={addOpen}
         onOpenChange={setAddOpen}
