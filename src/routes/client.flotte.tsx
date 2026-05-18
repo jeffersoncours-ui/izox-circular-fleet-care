@@ -17,11 +17,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Car, Pencil, Trash2, Loader2, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { ReplaceVehiculeDialog } from "@/components/client/ReplaceVehiculeDialog";
 import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
+import { supprimerVehicule } from "@/lib/supprimer-vehicule";
+import {
+  FacturationPrealableDialog,
+  type FacturationPrealableState,
+} from "@/components/admin/FacturationPrealableDialog";
 
 export const Route = createFileRoute("/client/flotte")({
   component: MaFlotte,
@@ -59,6 +64,7 @@ function MaFlotte() {
   const [replaceTarget, setReplaceTarget] = useState<Vehicule | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
 
   const load = async () => {
     if (!profile?.entreprise_id) return;
@@ -110,16 +116,16 @@ function MaFlotte() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    try {
-      const { error } = await supabase.from("vehicules").delete().eq("id", deleteTarget.id);
-      if (error) throw error;
-      toast.success("Véhicule supprimé");
+    const res = await supprimerVehicule(deleteTarget.id);
+    setDeleting(false);
+    if (res.needsBilling) {
+      setDeleteTarget(null);
+      setBillingState(res.needsBilling);
+      return;
+    }
+    if (res.done) {
       setDeleteTarget(null);
       load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur");
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -221,6 +227,12 @@ function MaFlotte() {
           setReplaceTarget(null);
           load();
         }}
+      />
+
+      <FacturationPrealableDialog
+        state={billingState}
+        onClose={() => setBillingState(null)}
+        onResolved={() => load()}
       />
     </div>
   );

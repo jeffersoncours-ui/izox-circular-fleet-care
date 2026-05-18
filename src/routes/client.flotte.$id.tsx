@@ -16,9 +16,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets } from "lucide-react";
-import { toast } from "sonner";
+
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
+import { supprimerVehicule } from "@/lib/supprimer-vehicule";
+import {
+  FacturationPrealableDialog,
+  type FacturationPrealableState,
+} from "@/components/admin/FacturationPrealableDialog";
 
 export const Route = createFileRoute("/client/flotte/$id")({
   component: VehiculeDetail,
@@ -49,6 +54,7 @@ function VehiculeDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,14 +74,16 @@ function VehiculeDetail() {
 
   const handleDelete = async () => {
     setDeleting(true);
-    try {
-      const { error } = await supabase.from("vehicules").delete().eq("id", id);
-      if (error) throw error;
-      toast.success("Véhicule supprimé");
+    const res = await supprimerVehicule(id);
+    setDeleting(false);
+    if (res.needsBilling) {
+      setConfirmOpen(false);
+      setBillingState(res.needsBilling);
+      return;
+    }
+    if (res.done) {
       navigate({ to: "/client/flotte" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur");
-      setDeleting(false);
+    } else {
       setConfirmOpen(false);
     }
   };
@@ -218,6 +226,12 @@ function VehiculeDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <FacturationPrealableDialog
+        state={billingState}
+        onClose={() => setBillingState(null)}
+        onResolved={() => navigate({ to: "/client/flotte" })}
+      />
     </div>
   );
 }
