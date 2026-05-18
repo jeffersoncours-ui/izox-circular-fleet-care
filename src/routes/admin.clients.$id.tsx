@@ -79,6 +79,8 @@ function ClientDetailPage() {
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [nbContratsActifs, setNbContratsActifs] = useState(0);
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
+  const [reassignOpen, setReassignOpen] = useState(false);
+  const [commercialNom, setCommercialNom] = useState<string | null>(null);
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
