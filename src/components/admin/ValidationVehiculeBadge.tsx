@@ -34,7 +34,7 @@ export function ValidationVehiculeBadge({
   onChanged,
 }: Props) {
   const { user, profile } = useAuth();
-  const role = (profile as any)?.role as string | undefined;
+  const role = profile?.role as string | undefined;
   const [validateOpen, setValidateOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
