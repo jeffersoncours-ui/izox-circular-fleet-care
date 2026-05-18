@@ -1232,25 +1232,17 @@ function RefuseVehiculeDialog({
   const [motif, setMotif] = useState("");
 
   const handleConfirm = async () => {
+    if (motif.trim().length < 5) {
+      toast.error("Motif obligatoire (min 5 caractères)");
+      return;
+    }
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("vehicules")
-        .update({ statut: "refuse" })
-        .eq("id", vehicule.id);
-      if (error) throw error;
-
-      const { data: userData } = await supabase.auth.getUser();
-      await supabase.from("admin_actions_log").insert({
-        action: "refus_vehicule_attente",
-        user_id: userData.user?.id ?? null,
-        details: {
-          contrat_id: contrat.id,
-          vehicule_id: vehicule.id,
-          vehicule_immat: vehicule.immatriculation,
-          motif: motif || null,
-        },
+      const { error } = await supabase.rpc("rejeter_vehicule", {
+        p_vehicule_id: vehicule.id,
+        p_raison: motif.trim(),
       });
+      if (error) throw error;
 
       toast.success(`Véhicule ${vehicule.immatriculation} refusé.`);
       onDone();
