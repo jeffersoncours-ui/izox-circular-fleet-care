@@ -228,6 +228,12 @@ function MaFlotte() {
           load();
         }}
       />
+
+      <FacturationPrealableDialog
+        state={billingState}
+        onClose={() => setBillingState(null)}
+        onResolved={() => load()}
+      />
     </div>
   );
 }
