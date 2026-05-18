@@ -178,6 +178,7 @@ function ContratDetailPage() {
 
   const [validateVeh, setValidateVeh] = useState<Vehicule | null>(null);
   const [refuseVeh, setRefuseVeh] = useState<Vehicule | null>(null);
+  const [remiseOpen, setRemiseOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
