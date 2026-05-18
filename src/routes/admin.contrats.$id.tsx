@@ -1271,7 +1271,7 @@ function RefuseVehiculeDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="refus-motif">Motif du refus (optionnel)</Label>
+          <Label htmlFor="refus-motif">Motif du refus * (min 5 caractères)</Label>
           <Textarea
             id="refus-motif"
             value={motif}
