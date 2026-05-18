@@ -47,6 +47,7 @@ interface Props {
   onCreated?: () => void;
   entrepriseId?: string;
   vehicule?: VehiculeData | null;
+  /** @deprecated le rôle de l'utilisateur connecté détermine désormais le comportement automatiquement */
   mode?: "admin" | "client";
   nbVehiculesActifs?: number;
 }
@@ -57,13 +58,16 @@ export function AddVehiculeDialog({
   onCreated,
   entrepriseId,
   vehicule,
-  mode = "admin",
   nbVehiculesActifs = 0,
 }: Props) {
   const { profile } = useAuth();
   const targetEntrepriseId = entrepriseId ?? profile?.entreprise_id ?? null;
   const isEdit = !!vehicule;
-  const isClientMode = mode === "client" && !isEdit;
+  // L'action se règle automatiquement selon le rôle :
+  // admin/staff → activation directe, autres → en attente de validation.
+  const role = profile?.role;
+  const isStaffSide = role === "admin" || role === "staff";
+  const needsValidation = !isEdit && !isStaffSide;
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<VehiculeType | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -81,7 +85,8 @@ export function AddVehiculeDialog({
   });
 
   const nouveauTotal = nbVehiculesActifs + 1;
-  const changementPalier = isClientMode && getPalier(nbVehiculesActifs) !== getPalier(nouveauTotal);
+  // L'upsell n'est pertinent que côté client (pas pour admin/staff en interne)
+  const changementPalier = needsValidation && getPalier(nbVehiculesActifs) !== getPalier(nouveauTotal);
   const upsell = changementPalier ? getProchainPalier(nbVehiculesActifs) : null;
 
 
@@ -134,22 +139,16 @@ export function AddVehiculeDialog({
       toast.error("Sélectionnez un type de véhicule");
       return;
     }
-    if (isClientMode && !packSouhaite) {
-      toast.error("Sélectionnez une formule souhaitée");
+    // Pack obligatoire pour TOUTE création (admin comme client)
+    if (!isEdit && !packSouhaite) {
+      toast.error("Sélectionnez une formule");
       return;
     }
     setSubmitting(true);
     try {
-      const payload = {
-        immatriculation: form.immatriculation.toUpperCase().trim(),
-        marque: form.marque || null,
-        modele: form.modele || null,
-        annee: form.annee ? parseInt(form.annee.replace(/\D/g, ""), 10) || null : null,
-        couleur: form.couleur || null,
-        kilometrage: form.kilometrage ? parseInt(form.kilometrage.replace(/\D/g, ""), 10) || null : null,
-        notes: form.notes || null,
-        type_vehicule: type,
-      };
+      const immat = form.immatriculation.toUpperCase().trim();
+      const annee = form.annee ? parseInt(form.annee.replace(/\D/g, ""), 10) || null : null;
+      const kilometrage = form.kilometrage ? parseInt(form.kilometrage.replace(/\D/g, ""), 10) || null : null;
 
       let vehiculeId = vehicule?.id;
       let entrepriseForPath = targetEntrepriseId;
@@ -157,28 +156,67 @@ export function AddVehiculeDialog({
       if (isEdit && vehicule) {
         const { error: updErr } = await supabase
           .from("vehicules")
-          .update(payload)
+          .update({
+            immatriculation: immat,
+            marque: form.marque || null,
+            modele: form.modele || null,
+            annee,
+            couleur: form.couleur || null,
+            kilometrage,
+            notes: form.notes || null,
+            type_vehicule: type,
+          })
           .eq("id", vehicule.id);
         if (updErr) throw updErr;
       } else {
-        const insertPayload = {
-          ...payload,
-          entreprise_id: targetEntrepriseId!,
-          ...(isClientMode
-            ? { statut: "en_attente_validation" as const, type_pack_souhaite: packSouhaite }
-            : {}),
-        };
-        const { data: created, error: vehErr } = await supabase
-          .from("vehicules")
-          .insert(insertPayload)
-          .select("id, entreprise_id")
-          .single();
-        if (vehErr) throw vehErr;
-        vehiculeId = created.id;
-        entrepriseForPath = created.entreprise_id;
+        // Création : RPC unifiée ajouter_vehicule() qui gère création/greffe du contrat
+        const { data, error: rpcErr } = await supabase.rpc("ajouter_vehicule", {
+          p_entreprise_id: targetEntrepriseId!,
+          p_type_vehicule: type,
+          p_immatriculation: immat,
+          p_pack: packSouhaite!,
+          p_marque: form.marque || undefined,
+          p_modele: form.modele || undefined,
+          p_annee: annee ?? undefined,
+          p_couleur: form.couleur || undefined,
+          p_kilometrage: kilometrage ?? undefined,
+          p_photo_path: undefined,
+          p_notes: form.notes || undefined,
+        });
+        if (rpcErr) throw rpcErr;
+        const result = data as {
+          vehicule_id: string;
+          contrat_cree: boolean;
+          statut_vehicule: string;
+          numero_contrat: string | null;
+        } | null;
+        if (!result?.vehicule_id) throw new Error("Réponse invalide de la fonction d'ajout");
+        vehiculeId = result.vehicule_id;
+        entrepriseForPath = targetEntrepriseId!;
+
+        if (photo && vehiculeId && entrepriseForPath) {
+          const compressed = await compressImage(photo, { maxSize: 1200, quality: 0.85 });
+          const path = `${entrepriseForPath}/${vehiculeId}/photo.jpg`;
+          const { error: upErr } = await supabase.storage
+            .from("vehicules")
+            .upload(path, compressed, { upsert: true, contentType: "image/jpeg" });
+          if (upErr) throw upErr;
+          await supabase.from("vehicules").update({ photo_path: path }).eq("id", vehiculeId);
+        }
+
+        // Toast contextualisé selon création/greffe et statut
+        if (result.contrat_cree && result.statut_vehicule === "actif") {
+          toast.success(`Véhicule et contrat ${result.numero_contrat ?? ""} créés`);
+        } else if (result.contrat_cree) {
+          toast.success("Demande envoyée, validation sous 24h");
+        } else if (result.statut_vehicule === "actif") {
+          toast.success("Véhicule ajouté au contrat existant");
+        } else {
+          toast.success("Demande d'ajout envoyée, validation sous 24h");
+        }
       }
 
-      if (photo && vehiculeId && entrepriseForPath) {
+      if (isEdit && photo && vehiculeId && entrepriseForPath) {
         const compressed = await compressImage(photo, { maxSize: 1200, quality: 0.85 });
         const path = `${entrepriseForPath}/${vehiculeId}/photo.jpg`;
         const { error: upErr } = await supabase.storage
@@ -186,16 +224,9 @@ export function AddVehiculeDialog({
           .upload(path, compressed, { upsert: true, contentType: "image/jpeg" });
         if (upErr) throw upErr;
         await supabase.from("vehicules").update({ photo_path: path }).eq("id", vehiculeId);
-      }
-
-      if (isEdit) {
         toast.success("Véhicule mis à jour");
-      } else if (isClientMode) {
-        toast.success(
-          "Votre demande a été envoyée. Notre équipe vous recontactera sous 24h pour valider votre contrat."
-        );
-      } else {
-        toast.success("Véhicule ajouté");
+      } else if (isEdit) {
+        toast.success("Véhicule mis à jour");
       }
       onCreated?.();
       onOpenChange(false);
@@ -320,9 +351,9 @@ export function AddVehiculeDialog({
             />
           </div>
 
-          {isClientMode && (
+          {!isEdit && (
             <div>
-              <Label className="mb-2 block">Formule souhaitée *</Label>
+              <Label className="mb-2 block">Formule *</Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {getAllPacks().map((p) => {
                   const active = packSouhaite === p.type;
@@ -346,13 +377,15 @@ export function AddVehiculeDialog({
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-3 italic">
-                Tarif HT par véhicule selon votre palier actuel. Ajout effectif après validation par notre équipe.
-              </p>
+              {needsValidation && (
+                <p className="text-xs text-muted-foreground mt-3 italic">
+                  Tarif HT par véhicule selon votre palier actuel. Ajout effectif après validation par notre équipe.
+                </p>
+              )}
             </div>
           )}
 
-          {isClientMode && upsell && (
+          {upsell && (
             <Card className="p-4 border-primary/40 bg-primary-soft">
               <div className="flex gap-3">
                 <TrendingUp className="h-5 w-5 text-primary shrink-0 mt-0.5" />
@@ -376,15 +409,19 @@ export function AddVehiculeDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               Annuler
             </Button>
-            <Button type="submit" variant="izox" disabled={submitting}>
+            <Button
+              type="submit"
+              variant="izox"
+              disabled={submitting || (!isEdit && !packSouhaite)}
+            >
               {submitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : isEdit ? (
                 "Enregistrer"
-              ) : isClientMode ? (
+              ) : needsValidation ? (
                 "Envoyer la demande"
               ) : (
-                "Ajouter"
+                "Ajouter le véhicule"
               )}
             </Button>
           </div>

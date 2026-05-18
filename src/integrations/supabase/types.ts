@@ -185,6 +185,24 @@ export type Database = {
           },
         ]
       }
+      contrat_sequences: {
+        Row: {
+          annee_mois: string
+          derniere_sequence: number
+          updated_at: string
+        }
+        Insert: {
+          annee_mois: string
+          derniere_sequence?: number
+          updated_at?: string
+        }
+        Update: {
+          annee_mois?: string
+          derniere_sequence?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contrats: {
         Row: {
           created_at: string
@@ -208,9 +226,12 @@ export type Database = {
           gel_type: Database["public"]["Enums"]["gel_type_enum"] | null
           id: string
           mode_paiement: Database["public"]["Enums"]["mode_paiement_enum"]
+          montant_net_mensuel: number | null
           multiplicateur_prix: number | null
+          nb_vehicules_actifs: number | null
           numero_contrat: string | null
           paiement_anticipe_total: boolean
+          palier: string | null
           passages_mois: number
           passages_reportes: number
           passages_restants_mois: number
@@ -246,9 +267,12 @@ export type Database = {
           gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
           id?: string
           mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          montant_net_mensuel?: number | null
           multiplicateur_prix?: number | null
+          nb_vehicules_actifs?: number | null
           numero_contrat?: string | null
           paiement_anticipe_total?: boolean
+          palier?: string | null
           passages_mois?: number
           passages_reportes?: number
           passages_restants_mois?: number
@@ -284,9 +308,12 @@ export type Database = {
           gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
           id?: string
           mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          montant_net_mensuel?: number | null
           multiplicateur_prix?: number | null
+          nb_vehicules_actifs?: number | null
           numero_contrat?: string | null
           paiement_anticipe_total?: boolean
+          palier?: string | null
           passages_mois?: number
           passages_reportes?: number
           passages_restants_mois?: number
@@ -1190,6 +1217,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ajouter_vehicule: {
+        Args: {
+          p_annee?: number
+          p_couleur?: string
+          p_entreprise_id: string
+          p_immatriculation: string
+          p_kilometrage?: number
+          p_marque?: string
+          p_modele?: string
+          p_notes?: string
+          p_pack: string
+          p_photo_path?: string
+          p_type_vehicule: string
+        }
+        Returns: Json
+      }
       annuler_facture_via_avoir: {
         Args: {
           p_facture_id: string
@@ -1199,6 +1242,13 @@ export type Database = {
         }
         Returns: string
       }
+      calculer_palier_remise: {
+        Args: { p_nb_vehicules: number }
+        Returns: {
+          palier: string
+          remise_pct: number
+        }[]
+      }
       cron_cloture_mensuelle: { Args: never; Returns: undefined }
       cron_maintenance_quotidienne: { Args: never; Returns: undefined }
       emettre_facture: { Args: { p_facture_id: string }; Returns: string }
@@ -1206,6 +1256,7 @@ export type Database = {
         Args: { p_annee: number; p_contrat_id: string; p_mois: number }
         Returns: string
       }
+      generer_numero_contrat: { Args: never; Returns: string }
       get_user_entreprise: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
@@ -1225,7 +1276,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "staff" | "commercial" | "operateur" | "client"
-      contrat_statut_enum: "actif" | "suspendu" | "resilie" | "en_cours_gel"
+      contrat_statut_enum:
+        | "actif"
+        | "suspendu"
+        | "resilie"
+        | "en_cours_gel"
+        | "en_attente_validation"
       engagement_type_enum: "mensuel" | "trimestriel" | "annuel"
       gel_type_enum: "programme" | "sinistre"
       mode_paiement_enum: "sepa" | "virement" | "stripe"
@@ -1386,7 +1442,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "staff", "commercial", "operateur", "client"],
-      contrat_statut_enum: ["actif", "suspendu", "resilie", "en_cours_gel"],
+      contrat_statut_enum: [
+        "actif",
+        "suspendu",
+        "resilie",
+        "en_cours_gel",
+        "en_attente_validation",
+      ],
       engagement_type_enum: ["mensuel", "trimestriel", "annuel"],
       gel_type_enum: ["programme", "sinistre"],
       mode_paiement_enum: ["sepa", "virement", "stripe"],
