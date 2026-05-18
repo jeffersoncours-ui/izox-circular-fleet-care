@@ -419,6 +419,14 @@ function ClientDetailPage() {
         onClose={() => setBillingState(null)}
         onResolved={() => loadVehicules()}
       />
+
+      <ReassignCommercialDialog
+        open={reassignOpen}
+        onOpenChange={setReassignOpen}
+        entrepriseId={entreprise.id}
+        currentCommercialId={entreprise.commercial_id}
+        onReassigned={loadEntreprise}
+      />
     </div>
   );
 }
