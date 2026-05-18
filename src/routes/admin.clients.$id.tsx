@@ -178,6 +178,20 @@ function ClientDetailPage() {
             <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
               <Pencil className="h-4 w-4" /> Modifier
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setArchiveOpen(true)}
+              disabled={nbContratsActifs > 0}
+              title={
+                nbContratsActifs > 0
+                  ? "Résilier le contrat avant d'archiver"
+                  : "Masquer le client tout en conservant ses données"
+              }
+              className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 disabled:opacity-40"
+            >
+              <Archive className="h-4 w-4" /> Archiver
+            </Button>
           </div>
         </div>
       </Card>
