@@ -70,6 +70,8 @@ function ClientDetailPage() {
   const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [editEntrepriseOpen, setEditEntrepriseOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [nbContratsActifs, setNbContratsActifs] = useState(0);
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
