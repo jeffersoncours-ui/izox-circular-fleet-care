@@ -24,6 +24,11 @@ import { EditEntrepriseDialog } from "@/components/admin/EditEntrepriseDialog";
 import { ArchiverEntrepriseDialog } from "@/components/admin/ArchiverEntrepriseDialog";
 import { calculerFactureFlotte, getPackLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
+import { supprimerVehicule } from "@/lib/supprimer-vehicule";
+import {
+  FacturationPrealableDialog,
+  type FacturationPrealableState,
+} from "@/components/admin/FacturationPrealableDialog";
 
 export const Route = createFileRoute("/admin/clients/$id")({
   component: ClientDetailPage,
@@ -72,6 +77,7 @@ function ClientDetailPage() {
   const [editEntrepriseOpen, setEditEntrepriseOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [nbContratsActifs, setNbContratsActifs] = useState(0);
+  const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
@@ -116,16 +122,17 @@ function ClientDetailPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    try {
-      const { error } = await supabase.from("vehicules").delete().eq("id", deleteTarget.id);
-      if (error) throw error;
-      toast.success("Véhicule supprimé");
+    const target = deleteTarget;
+    const res = await supprimerVehicule(target.id);
+    setDeleting(false);
+    if (res.needsBilling) {
+      setDeleteTarget(null);
+      setBillingState(res.needsBilling);
+      return;
+    }
+    if (res.done) {
       setDeleteTarget(null);
       loadVehicules();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur");
-    } finally {
-      setDeleting(false);
     }
   };
 

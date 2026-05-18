@@ -289,6 +289,12 @@ function AdminVehiculeDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <FacturationPrealableDialog
+        state={billingState}
+        onClose={() => setBillingState(null)}
+        onResolved={() => navigate({ to: "/admin/vehicules" })}
+      />
     </div>
   );
 }
