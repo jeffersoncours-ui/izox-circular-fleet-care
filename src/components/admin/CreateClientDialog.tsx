@@ -211,6 +211,30 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Commercial responsable *</Label>
+                    <Select
+                      value={form.commercial_id}
+                      onValueChange={update("commercial_id")}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un commercial..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {commerciaux.length === 0 ? (
+                          <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                            Aucun commercial disponible
+                          </div>
+                        ) : (
+                          commerciaux.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {[c.prenom, c.nom].filter(Boolean).join(" ") || "Sans nom"}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </section>
 
