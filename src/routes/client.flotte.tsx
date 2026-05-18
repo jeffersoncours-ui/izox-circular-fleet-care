@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Car, Pencil, Trash2, Loader2, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { ReplaceVehiculeDialog } from "@/components/client/ReplaceVehiculeDialog";
 import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
