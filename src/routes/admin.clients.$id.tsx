@@ -29,6 +29,7 @@ import {
   FacturationPrealableDialog,
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
+import { ReassignCommercialDialog } from "@/components/admin/ReassignCommercialDialog";
 
 export const Route = createFileRoute("/admin/clients/$id")({
   component: ClientDetailPage,
