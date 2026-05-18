@@ -468,6 +468,30 @@ function ContratDetailPage() {
                 Palier : {PALIER_LABEL[palier]}
               </Badge>
             </div>
+
+            <div className="mt-4 pt-4 border-t border-primary/20 flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  Remise commerciale
+                </p>
+                <p className="font-semibold text-foreground tabular-nums">
+                  {Math.round(Number(contrat.remise_commerciale_pct ?? 0) * 100)}%
+                  {contrat.montant_net_mensuel != null && (
+                    <span className="ml-2 text-muted-foreground font-normal">
+                      → net mensuel : {Number(contrat.montant_net_mensuel).toFixed(2)} €
+                    </span>
+                  )}
+                </p>
+                {contrat.remise_commerciale_justification && (
+                  <p className="text-xs text-muted-foreground mt-1 italic">
+                    {contrat.remise_commerciale_justification}
+                  </p>
+                )}
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setRemiseOpen(true)}>
+                Modifier la remise
+              </Button>
+            </div>
             {facture && (
               <div className="mt-4 pt-4 border-t border-primary/20 space-y-1.5 text-sm">
                 {facture.lignesDetail
