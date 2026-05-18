@@ -64,6 +64,7 @@ import { GelContratDialog } from "@/components/admin/GelContratDialog";
 import { ReactiverContratDialog } from "@/components/admin/ReactiverContratDialog";
 import { GelInfoBanner } from "@/components/admin/GelInfoBanner";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
+import { RemiseCommercialeDialog } from "@/components/admin/RemiseCommercialeDialog";
 
 export const Route = createFileRoute("/admin/contrats/$id")({
   component: ContratDetailPage,
