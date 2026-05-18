@@ -47,6 +47,7 @@ interface Props {
   onCreated?: () => void;
   entrepriseId?: string;
   vehicule?: VehiculeData | null;
+  /** @deprecated le rôle de l'utilisateur connecté détermine désormais le comportement automatiquement */
   mode?: "admin" | "client";
   nbVehiculesActifs?: number;
 }
@@ -57,13 +58,16 @@ export function AddVehiculeDialog({
   onCreated,
   entrepriseId,
   vehicule,
-  mode = "admin",
   nbVehiculesActifs = 0,
 }: Props) {
   const { profile } = useAuth();
   const targetEntrepriseId = entrepriseId ?? profile?.entreprise_id ?? null;
   const isEdit = !!vehicule;
-  const isClientMode = mode === "client" && !isEdit;
+  // L'action se règle automatiquement selon le rôle :
+  // admin/staff → activation directe, autres → en attente de validation.
+  const role = profile?.role;
+  const isStaffSide = role === "admin" || role === "staff";
+  const needsValidation = !isEdit && !isStaffSide;
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<VehiculeType | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
