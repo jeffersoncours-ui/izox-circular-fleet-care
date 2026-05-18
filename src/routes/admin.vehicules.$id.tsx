@@ -26,7 +26,7 @@ import {
   Droplets,
   Building2,
 } from "lucide-react";
-import { toast } from "sonner";
+
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
 import { supprimerVehicule } from "@/lib/supprimer-vehicule";
