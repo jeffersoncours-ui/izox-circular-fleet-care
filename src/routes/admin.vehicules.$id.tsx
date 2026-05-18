@@ -83,7 +83,7 @@ function AdminVehiculeDetail() {
     const { data } = await supabase
       .from("vehicules")
       .select(
-        "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id, entreprise_id, entreprises ( id, nom )"
+        "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id, entreprise_id, created_by, entreprises ( id, nom ), contrats ( commercial_signataire_id )"
       )
       .eq("id", id)
       .maybeSingle();
