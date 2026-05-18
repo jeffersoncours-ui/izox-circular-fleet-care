@@ -250,6 +250,12 @@ function AdminVehiculesList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <FacturationPrealableDialog
+        state={billingState}
+        onClose={() => setBillingState(null)}
+        onResolved={() => load()}
+      />
     </div>
   );
 }
