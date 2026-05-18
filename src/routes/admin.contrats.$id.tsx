@@ -117,6 +117,13 @@ interface Contrat {
   gel_notifier_client: boolean;
   entreprise: { id: string; nom: string } | null;
   lignes: Array<{ type_pack: string; nb_vehicules: number }>;
+  montant_brut_mensuel: number | null;
+  montant_net_mensuel: number | null;
+  remise_pct: number | null;
+  remise_commerciale_pct: number | null;
+  remise_commerciale_justification: string | null;
+  remise_commerciale_date: string | null;
+  commercial_signataire_id: string | null;
 }
 
 interface Vehicule {
