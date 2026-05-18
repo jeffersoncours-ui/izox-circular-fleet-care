@@ -169,18 +169,31 @@ function AdminVehiculeDetail() {
           <p className="font-mono text-base text-primary mt-1">{vehicule.immatriculation}</p>
           <div className="flex items-center gap-2 mt-3 flex-wrap">
             <Badge variant="secondary">{typeLabel}</Badge>
-            <Badge
-              variant={vehicule.statut === "actif" ? "outline" : "secondary"}
-              className="capitalize"
-            >
-              {STATUT_LABELS[vehicule.statut] ?? vehicule.statut.replace("_", " ")}
-            </Badge>
+            {vehicule.statut !== "en_attente_validation" && (
+              <Badge
+                variant={vehicule.statut === "actif" ? "outline" : "secondary"}
+                className="capitalize"
+              >
+                {STATUT_LABELS[vehicule.statut] ?? vehicule.statut.replace("_", " ")}
+              </Badge>
+            )}
             {vehicule.type_pack_souhaite && (
               <Badge variant="outline">
                 {getPackLabel(vehicule.type_pack_souhaite)}
               </Badge>
             )}
           </div>
+          {vehicule.statut === "en_attente_validation" && (
+            <div className="mt-3">
+              <ValidationVehiculeBadge
+                vehiculeId={vehicule.id}
+                statut={vehicule.statut}
+                createdBy={vehicule.created_by}
+                commercialSignataireId={vehicule.contrats?.commercial_signataire_id ?? null}
+                onChanged={load}
+              />
+            </div>
+          )}
         </div>
       </Card>
 
