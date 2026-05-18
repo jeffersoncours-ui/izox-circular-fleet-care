@@ -1,0 +1,1 @@
+ALTER VIEW public.v_entreprises_vehicules_resume SET (security_invoker = true);
