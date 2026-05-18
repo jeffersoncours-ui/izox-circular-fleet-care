@@ -600,6 +600,52 @@ export type Database = {
         }
         Relationships: []
       }
+      entreprise_acces_commerciaux: {
+        Row: {
+          commercial_id: string
+          entreprise_id: string
+          granted_at: string
+          granted_reason: string | null
+          id: string
+        }
+        Insert: {
+          commercial_id: string
+          entreprise_id: string
+          granted_at?: string
+          granted_reason?: string | null
+          id?: string
+        }
+        Update: {
+          commercial_id?: string
+          entreprise_id?: string
+          granted_at?: string
+          granted_reason?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entreprise_acces_commerciaux_commercial_id_fkey"
+            columns: ["commercial_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entreprise_acces_commerciaux_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entreprise_acces_commerciaux_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entreprises: {
         Row: {
           adresse: string | null
@@ -1354,6 +1400,7 @@ export type Database = {
           contrat_id: string | null
           couleur: string | null
           created_at: string
+          created_by: string | null
           entreprise_id: string
           id: string
           immatriculation: string
@@ -1365,12 +1412,14 @@ export type Database = {
           statut: Database["public"]["Enums"]["statut_vehicule"]
           type_pack_souhaite: string | null
           type_vehicule: Database["public"]["Enums"]["type_vehicule"] | null
+          updated_at: string
         }
         Insert: {
           annee?: number | null
           contrat_id?: string | null
           couleur?: string | null
           created_at?: string
+          created_by?: string | null
           entreprise_id: string
           id?: string
           immatriculation: string
@@ -1382,12 +1431,14 @@ export type Database = {
           statut?: Database["public"]["Enums"]["statut_vehicule"]
           type_pack_souhaite?: string | null
           type_vehicule?: Database["public"]["Enums"]["type_vehicule"] | null
+          updated_at?: string
         }
         Update: {
           annee?: number | null
           contrat_id?: string | null
           couleur?: string | null
           created_at?: string
+          created_by?: string | null
           entreprise_id?: string
           id?: string
           immatriculation?: string
@@ -1399,6 +1450,7 @@ export type Database = {
           statut?: Database["public"]["Enums"]["statut_vehicule"]
           type_pack_souhaite?: string | null
           type_vehicule?: Database["public"]["Enums"]["type_vehicule"] | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -1616,6 +1668,14 @@ export type Database = {
         }
         Returns: string
       }
+      appliquer_remise_commerciale: {
+        Args: {
+          p_contrat_id: string
+          p_justification: string
+          p_remise_pct: number
+        }
+        Returns: Json
+      }
       archiver_entreprise: {
         Args: { p_entreprise_id: string; p_reason?: string }
         Returns: Json
@@ -1651,6 +1711,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      reassigner_commercial: {
+        Args: { p_entreprise_id: string; p_nouveau_commercial_id: string }
+        Returns: Json
+      }
+      rejeter_vehicule: {
+        Args: { p_raison: string; p_vehicule_id: string }
+        Returns: Json
+      }
       supprimer_vehicule: {
         Args: { p_force_facturation?: boolean; p_vehicule_id: string }
         Returns: Json
@@ -1659,6 +1727,7 @@ export type Database = {
         Args: { p_notification_id: string }
         Returns: Json
       }
+      valider_vehicule: { Args: { p_vehicule_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "staff" | "commercial" | "operateur" | "client"
