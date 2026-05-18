@@ -335,6 +335,13 @@ export type Database = {
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
         ]
       }
       creneaux_recurrents_garantis: {
@@ -441,6 +448,13 @@ export type Database = {
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "demandes_rdv_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
         ]
       }
       disponibilites_operateurs: {
@@ -488,6 +502,9 @@ export type Database = {
       entreprises: {
         Row: {
           adresse: string | null
+          archived_at: string | null
+          archived_by: string | null
+          archived_reason: string | null
           code_postal: string | null
           commercial_id: string | null
           compte_active: boolean
@@ -503,6 +520,9 @@ export type Database = {
         }
         Insert: {
           adresse?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
           code_postal?: string | null
           commercial_id?: string | null
           compte_active?: boolean
@@ -518,6 +538,9 @@ export type Database = {
         }
         Update: {
           adresse?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
           code_postal?: string | null
           commercial_id?: string | null
           compte_active?: boolean
@@ -531,7 +554,15 @@ export type Database = {
           type_client?: Database["public"]["Enums"]["type_client"]
           ville?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "entreprises_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       factures: {
         Row: {
@@ -640,6 +671,13 @@ export type Database = {
             columns: ["entreprise_id"]
             isOneToOne: false
             referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
           },
           {
@@ -828,6 +866,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "interventions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "interventions_vehicule_id_fkey"
             columns: ["vehicule_id"]
             isOneToOne: false
@@ -977,10 +1022,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "parrainages_filleul_id_fkey"
+            columns: ["filleul_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "parrainages_parrain_id_fkey"
             columns: ["parrain_id"]
             isOneToOne: false
             referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parrainages_parrain_id_fkey"
+            columns: ["parrain_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
           },
         ]
@@ -1058,6 +1117,13 @@ export type Database = {
             columns: ["entreprise_id"]
             isOneToOne: false
             referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
             referencedColumns: ["id"]
           },
         ]
@@ -1210,11 +1276,82 @@ export type Database = {
             referencedRelation: "entreprises"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vehicules_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      v_entreprises_actives: {
+        Row: {
+          adresse: string | null
+          archived_at: string | null
+          archived_by: string | null
+          archived_reason: string | null
+          code_postal: string | null
+          commercial_id: string | null
+          compte_active: boolean | null
+          created_at: string | null
+          email_contact: string | null
+          id: string | null
+          nom: string | null
+          palier_remise: Database["public"]["Enums"]["palier_remise"] | null
+          siret: string | null
+          telephone: string | null
+          type_client: Database["public"]["Enums"]["type_client"] | null
+          ville: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
+          code_postal?: string | null
+          commercial_id?: string | null
+          compte_active?: boolean | null
+          created_at?: string | null
+          email_contact?: string | null
+          id?: string | null
+          nom?: string | null
+          palier_remise?: Database["public"]["Enums"]["palier_remise"] | null
+          siret?: string | null
+          telephone?: string | null
+          type_client?: Database["public"]["Enums"]["type_client"] | null
+          ville?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
+          code_postal?: string | null
+          commercial_id?: string | null
+          compte_active?: boolean | null
+          created_at?: string | null
+          email_contact?: string | null
+          id?: string | null
+          nom?: string | null
+          palier_remise?: Database["public"]["Enums"]["palier_remise"] | null
+          siret?: string | null
+          telephone?: string | null
+          type_client?: Database["public"]["Enums"]["type_client"] | null
+          ville?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entreprises_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       ajouter_vehicule: {
@@ -1242,6 +1379,10 @@ export type Database = {
         }
         Returns: string
       }
+      archiver_entreprise: {
+        Args: { p_entreprise_id: string; p_reason?: string }
+        Returns: Json
+      }
       calculer_palier_remise: {
         Args: { p_nb_vehicules: number }
         Returns: {
@@ -1251,6 +1392,10 @@ export type Database = {
       }
       cron_cloture_mensuelle: { Args: never; Returns: undefined }
       cron_maintenance_quotidienne: { Args: never; Returns: undefined }
+      desarchiver_entreprise: {
+        Args: { p_entreprise_id: string }
+        Returns: Json
+      }
       emettre_facture: { Args: { p_facture_id: string }; Returns: string }
       generer_facture: {
         Args: { p_annee: number; p_contrat_id: string; p_mois: number }

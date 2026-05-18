@@ -63,8 +63,10 @@ function AdminVehiculesList() {
     const { data, error } = await supabase
       .from("vehicules")
       .select(
-        "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, entreprise_id, entreprises ( id, nom )"
+        "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, entreprise_id, entreprises!inner ( id, nom, archived_at )"
       )
+      .not("contrat_id", "is", null)
+      .is("entreprises.archived_at", null)
       .order("created_at", { ascending: false });
     if (error) {
       toast.error(error.message);

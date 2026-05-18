@@ -16,11 +16,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2, FileText, Info } from "lucide-react";
+import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2, FileText, Info, Archive } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 import { EditEntrepriseDialog } from "@/components/admin/EditEntrepriseDialog";
+import { ArchiverEntrepriseDialog } from "@/components/admin/ArchiverEntrepriseDialog";
 import { calculerFactureFlotte, getPackLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,8 @@ function ClientDetailPage() {
   const [deleteTarget, setDeleteTarget] = useState<Vehicule | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [editEntrepriseOpen, setEditEntrepriseOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [nbContratsActifs, setNbContratsActifs] = useState(0);
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
@@ -95,7 +98,15 @@ function ClientDetailPage() {
   useEffect(() => {
     loadEntreprise();
     loadVehicules();
-  }, [loadEntreprise, loadVehicules]);
+    (async () => {
+      const { count } = await supabase
+        .from("contrats")
+        .select("id", { count: "exact", head: true })
+        .eq("entreprise_id", id)
+        .in("statut", ["actif", "en_attente_validation"]);
+      setNbContratsActifs(count ?? 0);
+    })();
+  }, [loadEntreprise, loadVehicules, id]);
 
   const handleEdit = (v: Vehicule) => {
     setEditVehicule(v);
@@ -166,6 +177,20 @@ function ClientDetailPage() {
             </Button>
             <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
               <Pencil className="h-4 w-4" /> Modifier
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setArchiveOpen(true)}
+              disabled={nbContratsActifs > 0}
+              title={
+                nbContratsActifs > 0
+                  ? "Résilier le contrat avant d'archiver"
+                  : "Masquer le client tout en conservant ses données"
+              }
+              className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 disabled:opacity-40"
+            >
+              <Archive className="h-4 w-4" /> Archiver
             </Button>
           </div>
         </div>
@@ -288,6 +313,14 @@ function ClientDetailPage() {
         onOpenChange={setEditEntrepriseOpen}
         entreprise={entreprise}
         onUpdated={loadEntreprise}
+      />
+
+      <ArchiverEntrepriseDialog
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
+        entrepriseId={entreprise.id}
+        entrepriseNom={entreprise.nom}
+        hasActiveContrats={nbContratsActifs > 0}
       />
 
       <AddVehiculeDialog
