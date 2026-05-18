@@ -175,13 +175,13 @@ export function AddVehiculeDialog({
           p_type_vehicule: type,
           p_immatriculation: immat,
           p_pack: packSouhaite!,
-          p_marque: form.marque || null,
-          p_modele: form.modele || null,
-          p_annee: annee,
-          p_couleur: form.couleur || null,
-          p_kilometrage: kilometrage,
-          p_photo_path: null,
-          p_notes: form.notes || null,
+          p_marque: form.marque || undefined,
+          p_modele: form.modele || undefined,
+          p_annee: annee ?? undefined,
+          p_couleur: form.couleur || undefined,
+          p_kilometrage: kilometrage ?? undefined,
+          p_photo_path: undefined,
+          p_notes: form.notes || undefined,
         });
         if (rpcErr) throw rpcErr;
         const result = data as {
