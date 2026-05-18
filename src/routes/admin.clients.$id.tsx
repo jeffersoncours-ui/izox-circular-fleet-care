@@ -16,11 +16,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2, FileText, Info } from "lucide-react";
+import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2, FileText, Info, Archive } from "lucide-react";
 import { toast } from "sonner";
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 import { EditEntrepriseDialog } from "@/components/admin/EditEntrepriseDialog";
+import { ArchiverEntrepriseDialog } from "@/components/admin/ArchiverEntrepriseDialog";
 import { calculerFactureFlotte, getPackLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
