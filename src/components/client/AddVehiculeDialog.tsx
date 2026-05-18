@@ -85,7 +85,8 @@ export function AddVehiculeDialog({
   });
 
   const nouveauTotal = nbVehiculesActifs + 1;
-  const changementPalier = isClientMode && getPalier(nbVehiculesActifs) !== getPalier(nouveauTotal);
+  // L'upsell n'est pertinent que côté client (pas pour admin/staff en interne)
+  const changementPalier = needsValidation && getPalier(nbVehiculesActifs) !== getPalier(nouveauTotal);
   const upsell = changementPalier ? getProchainPalier(nbVehiculesActifs) : null;
 
 
@@ -138,22 +139,16 @@ export function AddVehiculeDialog({
       toast.error("Sélectionnez un type de véhicule");
       return;
     }
-    if (isClientMode && !packSouhaite) {
-      toast.error("Sélectionnez une formule souhaitée");
+    // Pack obligatoire pour TOUTE création (admin comme client)
+    if (!isEdit && !packSouhaite) {
+      toast.error("Sélectionnez une formule");
       return;
     }
     setSubmitting(true);
     try {
-      const payload = {
-        immatriculation: form.immatriculation.toUpperCase().trim(),
-        marque: form.marque || null,
-        modele: form.modele || null,
-        annee: form.annee ? parseInt(form.annee.replace(/\D/g, ""), 10) || null : null,
-        couleur: form.couleur || null,
-        kilometrage: form.kilometrage ? parseInt(form.kilometrage.replace(/\D/g, ""), 10) || null : null,
-        notes: form.notes || null,
-        type_vehicule: type,
-      };
+      const immat = form.immatriculation.toUpperCase().trim();
+      const annee = form.annee ? parseInt(form.annee.replace(/\D/g, ""), 10) || null : null;
+      const kilometrage = form.kilometrage ? parseInt(form.kilometrage.replace(/\D/g, ""), 10) || null : null;
 
       let vehiculeId = vehicule?.id;
       let entrepriseForPath = targetEntrepriseId;
@@ -161,28 +156,67 @@ export function AddVehiculeDialog({
       if (isEdit && vehicule) {
         const { error: updErr } = await supabase
           .from("vehicules")
-          .update(payload)
+          .update({
+            immatriculation: immat,
+            marque: form.marque || null,
+            modele: form.modele || null,
+            annee,
+            couleur: form.couleur || null,
+            kilometrage,
+            notes: form.notes || null,
+            type_vehicule: type,
+          })
           .eq("id", vehicule.id);
         if (updErr) throw updErr;
       } else {
-        const insertPayload = {
-          ...payload,
-          entreprise_id: targetEntrepriseId!,
-          ...(isClientMode
-            ? { statut: "en_attente_validation" as const, type_pack_souhaite: packSouhaite }
-            : {}),
-        };
-        const { data: created, error: vehErr } = await supabase
-          .from("vehicules")
-          .insert(insertPayload)
-          .select("id, entreprise_id")
-          .single();
-        if (vehErr) throw vehErr;
-        vehiculeId = created.id;
-        entrepriseForPath = created.entreprise_id;
+        // Création : RPC unifiée ajouter_vehicule() qui gère création/greffe du contrat
+        const { data, error: rpcErr } = await supabase.rpc("ajouter_vehicule", {
+          p_entreprise_id: targetEntrepriseId!,
+          p_type_vehicule: type,
+          p_immatriculation: immat,
+          p_pack: packSouhaite!,
+          p_marque: form.marque || null,
+          p_modele: form.modele || null,
+          p_annee: annee,
+          p_couleur: form.couleur || null,
+          p_kilometrage: kilometrage,
+          p_photo_path: null,
+          p_notes: form.notes || null,
+        });
+        if (rpcErr) throw rpcErr;
+        const result = data as {
+          vehicule_id: string;
+          contrat_cree: boolean;
+          statut_vehicule: string;
+          numero_contrat: string | null;
+        } | null;
+        if (!result?.vehicule_id) throw new Error("Réponse invalide de la fonction d'ajout");
+        vehiculeId = result.vehicule_id;
+        entrepriseForPath = targetEntrepriseId!;
+
+        if (photo && vehiculeId && entrepriseForPath) {
+          const compressed = await compressImage(photo, { maxSize: 1200, quality: 0.85 });
+          const path = `${entrepriseForPath}/${vehiculeId}/photo.jpg`;
+          const { error: upErr } = await supabase.storage
+            .from("vehicules")
+            .upload(path, compressed, { upsert: true, contentType: "image/jpeg" });
+          if (upErr) throw upErr;
+          await supabase.from("vehicules").update({ photo_path: path }).eq("id", vehiculeId);
+        }
+
+        // Toast contextualisé selon création/greffe et statut
+        if (result.contrat_cree && result.statut_vehicule === "actif") {
+          toast.success(`Véhicule et contrat ${result.numero_contrat ?? ""} créés`);
+        } else if (result.contrat_cree) {
+          toast.success("Demande envoyée, validation sous 24h");
+        } else if (result.statut_vehicule === "actif") {
+          toast.success("Véhicule ajouté au contrat existant");
+        } else {
+          toast.success("Demande d'ajout envoyée, validation sous 24h");
+        }
       }
 
-      if (photo && vehiculeId && entrepriseForPath) {
+      if (isEdit && photo && vehiculeId && entrepriseForPath) {
         const compressed = await compressImage(photo, { maxSize: 1200, quality: 0.85 });
         const path = `${entrepriseForPath}/${vehiculeId}/photo.jpg`;
         const { error: upErr } = await supabase.storage
@@ -190,16 +224,9 @@ export function AddVehiculeDialog({
           .upload(path, compressed, { upsert: true, contentType: "image/jpeg" });
         if (upErr) throw upErr;
         await supabase.from("vehicules").update({ photo_path: path }).eq("id", vehiculeId);
-      }
-
-      if (isEdit) {
         toast.success("Véhicule mis à jour");
-      } else if (isClientMode) {
-        toast.success(
-          "Votre demande a été envoyée. Notre équipe vous recontactera sous 24h pour valider votre contrat."
-        );
-      } else {
-        toast.success("Véhicule ajouté");
+      } else if (isEdit) {
+        toast.success("Véhicule mis à jour");
       }
       onCreated?.();
       onOpenChange(false);
