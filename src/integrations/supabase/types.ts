@@ -145,6 +145,27 @@ export type Database = {
             referencedRelation: "contrats"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contrat_lignes: {
@@ -183,6 +204,27 @@ export type Database = {
             referencedRelation: "contrats"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contrat_sequences: {
@@ -205,6 +247,7 @@ export type Database = {
       }
       contrats: {
         Row: {
+          commercial_signataire_id: string | null
           created_at: string
           date_anniversaire: string | null
           date_debut: string
@@ -212,6 +255,7 @@ export type Database = {
           date_fin: string | null
           date_fin_engagement: string | null
           date_paiement_anticipe: string | null
+          date_resiliation: string | null
           engagement_annuel: boolean
           engagement_type:
             | Database["public"]["Enums"]["engagement_type_enum"]
@@ -226,6 +270,7 @@ export type Database = {
           gel_type: Database["public"]["Enums"]["gel_type_enum"] | null
           id: string
           mode_paiement: Database["public"]["Enums"]["mode_paiement_enum"]
+          montant_brut_mensuel: number | null
           montant_net_mensuel: number | null
           multiplicateur_prix: number | null
           nb_vehicules_actifs: number | null
@@ -241,11 +286,17 @@ export type Database = {
             | null
           preavis_deadline: string | null
           preavis_envoye_le: string | null
+          remise_commerciale_auteur_id: string | null
+          remise_commerciale_date: string | null
+          remise_commerciale_justification: string | null
+          remise_commerciale_pct: number
+          remise_pct: number | null
           status_cycle: Database["public"]["Enums"]["status_cycle_enum"]
           statut: Database["public"]["Enums"]["contrat_statut_enum"]
           updated_at: string
         }
         Insert: {
+          commercial_signataire_id?: string | null
           created_at?: string
           date_anniversaire?: string | null
           date_debut?: string
@@ -253,6 +304,7 @@ export type Database = {
           date_fin?: string | null
           date_fin_engagement?: string | null
           date_paiement_anticipe?: string | null
+          date_resiliation?: string | null
           engagement_annuel?: boolean
           engagement_type?:
             | Database["public"]["Enums"]["engagement_type_enum"]
@@ -267,6 +319,7 @@ export type Database = {
           gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
           id?: string
           mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          montant_brut_mensuel?: number | null
           montant_net_mensuel?: number | null
           multiplicateur_prix?: number | null
           nb_vehicules_actifs?: number | null
@@ -282,11 +335,17 @@ export type Database = {
             | null
           preavis_deadline?: string | null
           preavis_envoye_le?: string | null
+          remise_commerciale_auteur_id?: string | null
+          remise_commerciale_date?: string | null
+          remise_commerciale_justification?: string | null
+          remise_commerciale_pct?: number
+          remise_pct?: number | null
           status_cycle?: Database["public"]["Enums"]["status_cycle_enum"]
           statut?: Database["public"]["Enums"]["contrat_statut_enum"]
           updated_at?: string
         }
         Update: {
+          commercial_signataire_id?: string | null
           created_at?: string
           date_anniversaire?: string | null
           date_debut?: string
@@ -294,6 +353,7 @@ export type Database = {
           date_fin?: string | null
           date_fin_engagement?: string | null
           date_paiement_anticipe?: string | null
+          date_resiliation?: string | null
           engagement_annuel?: boolean
           engagement_type?:
             | Database["public"]["Enums"]["engagement_type_enum"]
@@ -308,6 +368,7 @@ export type Database = {
           gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
           id?: string
           mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          montant_brut_mensuel?: number | null
           montant_net_mensuel?: number | null
           multiplicateur_prix?: number | null
           nb_vehicules_actifs?: number | null
@@ -323,11 +384,23 @@ export type Database = {
             | null
           preavis_deadline?: string | null
           preavis_envoye_le?: string | null
+          remise_commerciale_auteur_id?: string | null
+          remise_commerciale_date?: string | null
+          remise_commerciale_justification?: string | null
+          remise_commerciale_pct?: number
+          remise_pct?: number | null
           status_cycle?: Database["public"]["Enums"]["status_cycle_enum"]
           statut?: Database["public"]["Enums"]["contrat_statut_enum"]
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "contrats_commercial_signataire_id_fkey"
+            columns: ["commercial_signataire_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contrats_entreprise_id_fkey"
             columns: ["entreprise_id"]
@@ -340,6 +413,13 @@ export type Database = {
             columns: ["entreprise_id"]
             isOneToOne: false
             referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_remise_commerciale_auteur_id_fkey"
+            columns: ["remise_commerciale_auteur_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -399,6 +479,27 @@ export type Database = {
             columns: ["contrat_id"]
             isOneToOne: false
             referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
             referencedColumns: ["id"]
           },
         ]
@@ -667,6 +768,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "factures_entreprise_id_fkey"
             columns: ["entreprise_id"]
             isOneToOne: false
@@ -789,6 +911,7 @@ export type Database = {
           checklist_exterieur: Json
           checklist_interieur: Json
           cles_documents_localisation: string | null
+          contrat_ligne_id: string | null
           controle_cles_documents: boolean
           controle_degradations: boolean
           controle_objets_valeur: boolean
@@ -813,6 +936,7 @@ export type Database = {
           checklist_exterieur?: Json
           checklist_interieur?: Json
           cles_documents_localisation?: string | null
+          contrat_ligne_id?: string | null
           controle_cles_documents?: boolean
           controle_degradations?: boolean
           controle_objets_valeur?: boolean
@@ -837,6 +961,7 @@ export type Database = {
           checklist_exterieur?: Json
           checklist_interieur?: Json
           cles_documents_localisation?: string | null
+          contrat_ligne_id?: string | null
           controle_cles_documents?: boolean
           controle_degradations?: boolean
           controle_objets_valeur?: boolean
@@ -858,6 +983,20 @@ export type Database = {
           vehicule_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "interventions_contrat_ligne_id_fkey"
+            columns: ["contrat_ligne_id"]
+            isOneToOne: false
+            referencedRelation: "contrat_lignes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_contrat_ligne_id_fkey"
+            columns: ["contrat_ligne_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_ligne_id"]
+          },
           {
             foreignKeyName: "interventions_entreprise_id_fkey"
             columns: ["entreprise_id"]
@@ -1270,6 +1409,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "vehicules_entreprise_id_fkey"
             columns: ["entreprise_id"]
             isOneToOne: false
@@ -1287,6 +1447,83 @@ export type Database = {
       }
     }
     Views: {
+      v_contrats_passages_restants: {
+        Row: {
+          contrat_id: string | null
+          contrat_ligne_id: string | null
+          entreprise_id: string | null
+          nb_vehicules: number | null
+          numero_contrat: string | null
+          passages_effectues_mois: number | null
+          passages_mois_pack: number | null
+          passages_mois_total: number | null
+          passages_restants_mois: number | null
+          type_pack: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_contrats_resume: {
+        Row: {
+          commercial_signataire_id: string | null
+          contrat_id: string | null
+          created_at: string | null
+          date_debut: string | null
+          date_fin: string | null
+          date_resiliation: string | null
+          entreprise_id: string | null
+          id: string | null
+          montant_brut_mensuel: number | null
+          montant_net_mensuel: number | null
+          nb_vehicules_actifs: number | null
+          numero_contrat: string | null
+          palier: string | null
+          passages_effectues_total: number | null
+          passages_mois_total: number | null
+          passages_restants_total: number | null
+          remise_commerciale_pct: number | null
+          remise_palier: number | null
+          statut: Database["public"]["Enums"]["contrat_statut_enum"] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_commercial_signataire_id_fkey"
+            columns: ["commercial_signataire_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_entreprises_actives: {
         Row: {
           adresse: string | null
@@ -1413,6 +1650,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      supprimer_vehicule: {
+        Args: { p_force_facturation?: boolean; p_vehicule_id: string }
+        Returns: Json
       }
       toggle_epingle_equipe: {
         Args: { p_notification_id: string }
