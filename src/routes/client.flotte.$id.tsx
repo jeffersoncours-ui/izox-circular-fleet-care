@@ -226,6 +226,12 @@ function VehiculeDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <FacturationPrealableDialog
+        state={billingState}
+        onClose={() => setBillingState(null)}
+        onResolved={() => navigate({ to: "/client/flotte" })}
+      />
     </div>
   );
 }
