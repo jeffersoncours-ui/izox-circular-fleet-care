@@ -29,6 +29,9 @@ interface Props {
 export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ email: string; password: string } | null>(null);
+  const [commerciaux, setCommerciaux] = useState<
+    Array<{ id: string; prenom: string | null; nom: string | null }>
+  >([]);
 
   const [form, setForm] = useState({
     nom: "",
@@ -39,10 +42,31 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
     email_contact: "",
     telephone: "",
     type_client: "flotte",
+    commercial_id: "",
     prenom: "",
     nom_user: "",
     email_user: "",
   });
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "commercial");
+      const ids = (roles ?? []).map((r) => r.user_id);
+      if (ids.length === 0) {
+        setCommerciaux([]);
+        return;
+      }
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, prenom, nom")
+        .in("id", ids);
+      setCommerciaux((profs as any) ?? []);
+    })();
+  }, [open]);
 
   const update = (k: keyof typeof form) => (v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -57,6 +81,7 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
       email_contact: "",
       telephone: "",
       type_client: "flotte",
+      commercial_id: "",
       prenom: "",
       nom_user: "",
       email_user: "",
