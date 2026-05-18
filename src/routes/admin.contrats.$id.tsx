@@ -741,6 +741,16 @@ function ContratDetailPage() {
           onDone={load}
         />
       )}
+
+      <RemiseCommercialeDialog
+        open={remiseOpen}
+        onOpenChange={setRemiseOpen}
+        contratId={contrat.id}
+        montantBrut={Number(contrat.montant_brut_mensuel ?? 0)}
+        remiseActuelle={Number(contrat.remise_commerciale_pct ?? 0)}
+        remisePalier={Number(contrat.remise_pct ?? 0)}
+        onApplied={load}
+      />
     </div>
   );
 }
