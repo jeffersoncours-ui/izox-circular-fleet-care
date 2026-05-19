@@ -1914,6 +1914,10 @@ export type Database = {
       }
     }
     Functions: {
+      _recalculer_caches_contrat: {
+        Args: { p_contrat_id: string }
+        Returns: undefined
+      }
       ajouter_vehicule: {
         Args: {
           p_annee?: number
@@ -1958,13 +1962,71 @@ export type Database = {
           remise_pct: number
         }[]
       }
+      calculer_quota_gel_consomme: {
+        Args: { p_entreprise_id: string }
+        Returns: number
+      }
+      confirmer_demande_rdv: {
+        Args: {
+          p_date_intervention: string
+          p_demande_id: string
+          p_type_pack: string
+          p_vehicule_id: string
+        }
+        Returns: Json
+      }
+      creer_demande_rdv: {
+        Args: {
+          p_commentaires: string
+          p_creneaux_preferes: Json
+          p_nb_vehicules?: number
+        }
+        Returns: Json
+      }
       cron_cloture_mensuelle: { Args: never; Returns: undefined }
       cron_maintenance_quotidienne: { Args: never; Returns: undefined }
+      degeler_contrat: {
+        Args: { p_contrat_id: string; p_source?: string }
+        Returns: Json
+      }
+      degeler_vehicule: {
+        Args: { p_source?: string; p_vehicule_id: string }
+        Returns: Json
+      }
+      demander_gel: {
+        Args: {
+          p_contrat_id: string
+          p_date_debut: string
+          p_date_fin: string
+          p_motif: string
+          p_type_demande: string
+          p_vehicule_ids: string[]
+        }
+        Returns: Json
+      }
       desarchiver_entreprise: {
         Args: { p_entreprise_id: string }
         Returns: Json
       }
       emettre_facture: { Args: { p_facture_id: string }; Returns: string }
+      geler_contrat: {
+        Args: {
+          p_contrat_id: string
+          p_date_debut: string
+          p_date_fin: string
+          p_motif: string
+        }
+        Returns: Json
+      }
+      geler_vehicule: {
+        Args: {
+          p_date_debut: string
+          p_date_fin: string
+          p_motif: string
+          p_vehicule_id: string
+        }
+        Returns: Json
+      }
       generer_facture: {
         Args: { p_annee: number; p_contrat_id: string; p_mois: number }
         Returns: string
@@ -1986,6 +2048,14 @@ export type Database = {
         Args: { p_entreprise_id: string; p_nouveau_commercial_id: string }
         Returns: Json
       }
+      refuser_demande_rdv: {
+        Args: { p_demande_id: string; p_motif: string }
+        Returns: Json
+      }
+      refuser_gel: {
+        Args: { p_demande_id: string; p_motif_refus: string }
+        Returns: Json
+      }
       rejeter_vehicule: {
         Args: { p_raison: string; p_vehicule_id: string }
         Returns: Json
@@ -1998,6 +2068,7 @@ export type Database = {
         Args: { p_notification_id: string }
         Returns: Json
       }
+      valider_gel: { Args: { p_demande_id: string }; Returns: Json }
       valider_vehicule: { Args: { p_vehicule_id: string }; Returns: Json }
     }
     Enums: {
