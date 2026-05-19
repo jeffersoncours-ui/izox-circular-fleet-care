@@ -87,6 +87,7 @@ export function LigneVehiculeAdmin({ vehicule, commercialSignataireId, onChanged
         statut={vehicule.statut}
         createdBy={vehicule.created_by}
         commercialSignataireId={commercialSignataireId}
+        variant="compact"
         onChanged={onChanged}
       />
       <div className="flex items-center gap-1">
