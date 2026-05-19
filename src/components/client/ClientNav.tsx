@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Home, Car, CalendarDays, Wrench, FileText, FolderOpen, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { NotificationCenter } from "@/components/admin/NotificationCenter";
 
 const TABS = [
   { to: "/client", label: "Accueil", icon: Home, exact: true },
