@@ -532,6 +532,134 @@ export type Database = {
           },
         ]
       }
+      demandes_gel: {
+        Row: {
+          contrat_id: string
+          created_at: string
+          created_by: string
+          date_debut: string
+          date_fin_effective: string | null
+          date_fin_prevue: string
+          entreprise_id: string
+          id: string
+          motif: string
+          refus_motif: string | null
+          statut: string
+          type_demande: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          vehicule_ids: string[] | null
+        }
+        Insert: {
+          contrat_id: string
+          created_at?: string
+          created_by: string
+          date_debut: string
+          date_fin_effective?: string | null
+          date_fin_prevue: string
+          entreprise_id: string
+          id?: string
+          motif: string
+          refus_motif?: string | null
+          statut?: string
+          type_demande: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          vehicule_ids?: string[] | null
+        }
+        Update: {
+          contrat_id?: string
+          created_at?: string
+          created_by?: string
+          date_debut?: string
+          date_fin_effective?: string | null
+          date_fin_prevue?: string
+          entreprise_id?: string
+          id?: string
+          motif?: string
+          refus_motif?: string | null
+          statut?: string
+          type_demande?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          vehicule_ids?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demandes_rdv: {
         Row: {
           commentaires: string | null
@@ -1020,6 +1148,7 @@ export type Database = {
           created_at: string
           date_intervention: string | null
           degradations_description: string | null
+          demande_rdv_id: string | null
           entreprise_id: string | null
           id: string
           motif_refus: string | null
@@ -1045,6 +1174,7 @@ export type Database = {
           created_at?: string
           date_intervention?: string | null
           degradations_description?: string | null
+          demande_rdv_id?: string | null
           entreprise_id?: string | null
           id?: string
           motif_refus?: string | null
@@ -1070,6 +1200,7 @@ export type Database = {
           created_at?: string
           date_intervention?: string | null
           degradations_description?: string | null
+          demande_rdv_id?: string | null
           entreprise_id?: string | null
           id?: string
           motif_refus?: string | null
@@ -1098,6 +1229,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_contrats_passages_restants"
             referencedColumns: ["contrat_ligne_id"]
+          },
+          {
+            foreignKeyName: "interventions_demande_rdv_id_fkey"
+            columns: ["demande_rdv_id"]
+            isOneToOne: false
+            referencedRelation: "demandes_rdv"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "interventions_entreprise_id_fkey"
@@ -1890,6 +2028,7 @@ export type Database = {
         | "remplace"
         | "archive"
         | "refuse"
+        | "gele"
       type_client: "flotte" | "concession" | "vtc" | "autre"
       type_prestation_enum:
         | "pack_interieur"
@@ -2058,6 +2197,7 @@ export const Constants = {
         "remplace",
         "archive",
         "refuse",
+        "gele",
       ],
       type_client: ["flotte", "concession", "vtc", "autre"],
       type_prestation_enum: [
