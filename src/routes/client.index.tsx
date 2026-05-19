@@ -98,11 +98,21 @@ function ClientHome() {
           sub="aucune prestation"
         />
         {palier ? (
-          <PalierCard
-            palier={palier}
-            vehiculeCount={vehiculeCount}
-            numeroContrat={numeroContrat}
-          />
+          contratId ? (
+            <Link to="/client/contrats/$id" params={{ id: contratId }}>
+              <PalierCard
+                palier={palier}
+                vehiculeCount={vehiculeCount}
+                numeroContrat={numeroContrat}
+              />
+            </Link>
+          ) : (
+            <PalierCard
+              palier={palier}
+              vehiculeCount={vehiculeCount}
+              numeroContrat={numeroContrat}
+            />
+          )
         ) : (
           <SummaryCard
             icon={Award}
