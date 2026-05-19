@@ -524,6 +524,7 @@ interface NotificationItemProps {
   getTime: (dateStr: string) => string;
   isArchive?: boolean;
   isEpingleSection?: boolean;
+  hideTeamPin?: boolean;
 }
 
 function NotificationItem({
@@ -538,6 +539,7 @@ function NotificationItem({
   getTime,
   isArchive = false,
   isEpingleSection = false,
+  hideTeamPin = false,
 }: NotificationItemProps) {
   return (
     <Card
