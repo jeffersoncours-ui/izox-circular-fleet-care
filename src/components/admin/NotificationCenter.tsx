@@ -307,7 +307,10 @@ export function NotificationCenter({
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className={
+            triggerClassName ??
+            "relative text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          }
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
