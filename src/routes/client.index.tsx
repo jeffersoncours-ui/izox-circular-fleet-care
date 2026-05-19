@@ -31,6 +31,7 @@ function ClientHome() {
   const [vehiculeCount, setVehiculeCount] = useState(0);
   const [palier, setPalier] = useState<string>("");
   const [numeroContrat, setNumeroContrat] = useState<string>("");
+  const [contratId, setContratId] = useState<string>("");
 
   useEffect(() => {
     if (!profile?.entreprise_id) return;
@@ -46,7 +47,7 @@ function ClientHome() {
       // Récupère le contrat (le plus récent) — inclut en_attente_validation
       const { data: contrat } = await supabase
         .from("contrats")
-        .select("numero_contrat, statut")
+        .select("id, numero_contrat, statut")
         .eq("entreprise_id", profile.entreprise_id!)
         .in("statut", ["actif", "en_attente_validation"])
         .order("date_debut", { ascending: false })
@@ -54,14 +55,15 @@ function ClientHome() {
         .maybeSingle();
 
       if (contrat) {
-        // Calcul du palier depuis le nb de véhicules actifs
         const p =
           count >= 20 ? "premium" : count >= 10 ? "business" : count >= 5 ? "pro" : "starter";
         setPalier(p);
         setNumeroContrat(contrat.numero_contrat ?? "");
+        setContratId(contrat.id);
       } else {
         setPalier("");
         setNumeroContrat("");
+        setContratId("");
       }
     })();
   }, [profile]);
