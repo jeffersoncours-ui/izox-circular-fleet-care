@@ -1826,6 +1826,110 @@ export type Database = {
           },
         ]
       }
+      v_demandes_gel_with_quota: {
+        Row: {
+          commercial_signataire_id: string | null
+          contrat_id: string | null
+          created_at: string | null
+          created_by: string | null
+          date_debut: string | null
+          date_fin_effective: string | null
+          date_fin_prevue: string | null
+          duree_jours_demandee: number | null
+          entreprise_id: string | null
+          entreprise_nom: string | null
+          id: string | null
+          motif: string | null
+          numero_contrat: string | null
+          quota_consomme_actuel: number | null
+          refus_motif: string | null
+          statut: string | null
+          type_demande: string | null
+          updated_at: string | null
+          validated_at: string | null
+          validated_by: string | null
+          vehicule_ids: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_commercial_signataire_id_fkey"
+            columns: ["commercial_signataire_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_entreprises_actives: {
         Row: {
           adresse: string | null
@@ -1902,6 +2006,7 @@ export type Database = {
           montant_net_mensuel: number | null
           nb_vehicules_actifs: number | null
           nb_vehicules_en_attente: number | null
+          nb_vehicules_gele: number | null
           nb_vehicules_total: number | null
           nom: string | null
           numero_contrat: string | null
