@@ -53,7 +53,15 @@ interface Notification {
   epingle_at: string | null;
 }
 
-export function NotificationCenter() {
+interface NotificationCenterProps {
+  hideTeamPin?: boolean;
+  triggerClassName?: string;
+}
+
+export function NotificationCenter({
+  hideTeamPin = false,
+  triggerClassName,
+}: NotificationCenterProps = {}) {
   const { user } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -299,7 +307,10 @@ export function NotificationCenter() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className={
+            triggerClassName ??
+            "relative text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          }
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
@@ -358,6 +369,7 @@ export function NotificationCenter() {
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
+                    hideTeamPin={hideTeamPin}
                     isEpingleSection
                   />
                 ))}
@@ -381,6 +393,7 @@ export function NotificationCenter() {
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
+                    hideTeamPin={hideTeamPin}
                   />
                 ))}
               </div>
@@ -403,6 +416,7 @@ export function NotificationCenter() {
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
+                    hideTeamPin={hideTeamPin}
                   />
                 ))}
               </div>
@@ -439,6 +453,7 @@ export function NotificationCenter() {
                       getIcon={getNotifIcon}
                       getClasses={getSeveriteClasses}
                       getTime={getRelativeTime}
+                      hideTeamPin={hideTeamPin}
                     />
                   ))}
               </div>
@@ -490,6 +505,7 @@ export function NotificationCenter() {
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
+                    hideTeamPin={hideTeamPin}
                     isArchive
                   />
                 ))}
@@ -513,6 +529,7 @@ interface NotificationItemProps {
   getTime: (dateStr: string) => string;
   isArchive?: boolean;
   isEpingleSection?: boolean;
+  hideTeamPin?: boolean;
 }
 
 function NotificationItem({
@@ -527,6 +544,7 @@ function NotificationItem({
   getTime,
   isArchive = false,
   isEpingleSection = false,
+  hideTeamPin = false,
 }: NotificationItemProps) {
   return (
     <Card
@@ -591,23 +609,25 @@ function NotificationItem({
                 <Star className="h-3.5 w-3.5" />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={onTogglePin}
-              title={
-                notif.epingle_equipe
-                  ? "Désépingler de l'équipe"
-                  : "Épingler pour l'équipe"
-              }
-            >
-              {notif.epingle_equipe ? (
-                <PinOff className="h-3.5 w-3.5 text-blue-600" />
-              ) : (
-                <Pin className="h-3.5 w-3.5" />
-              )}
-            </Button>
+            {!hideTeamPin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={onTogglePin}
+                title={
+                  notif.epingle_equipe
+                    ? "Désépingler de l'équipe"
+                    : "Épingler pour l'équipe"
+                }
+              >
+                {notif.epingle_equipe ? (
+                  <PinOff className="h-3.5 w-3.5 text-blue-600" />
+                ) : (
+                  <Pin className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"

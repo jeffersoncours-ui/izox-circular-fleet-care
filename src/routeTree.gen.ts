@@ -30,6 +30,7 @@ import { Route as AdminContratsRouteImport } from './routes/admin.contrats'
 import { Route as AdminClientsRouteImport } from './routes/admin.clients'
 import { Route as TerrainInterventionIdRouteImport } from './routes/terrain.intervention.$id'
 import { Route as ClientFlotteIdRouteImport } from './routes/client.flotte.$id'
+import { Route as ClientContratsIdRouteImport } from './routes/client.contrats.$id'
 import { Route as AdminVehiculesIdRouteImport } from './routes/admin.vehicules.$id'
 import { Route as AdminInterventionsIdRouteImport } from './routes/admin.interventions.$id'
 import { Route as AdminContratsIdRouteImport } from './routes/admin.contrats.$id'
@@ -140,6 +141,11 @@ const ClientFlotteIdRoute = ClientFlotteIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ClientFlotteRoute,
 } as any)
+const ClientContratsIdRoute = ClientContratsIdRouteImport.update({
+  id: '/contrats/$id',
+  path: '/contrats/$id',
+  getParentRoute: () => ClientRoute,
+} as any)
 const AdminVehiculesIdRoute = AdminVehiculesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
+  '/client/contrats/$id': typeof ClientContratsIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
 }
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
+  '/client/contrats/$id': typeof ClientContratsIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
 }
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
+  '/client/contrats/$id': typeof ClientContratsIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
 }
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/admin/contrats/$id'
     | '/admin/interventions/$id'
     | '/admin/vehicules/$id'
+    | '/client/contrats/$id'
     | '/client/flotte/$id'
     | '/terrain/intervention/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/admin/contrats/$id'
     | '/admin/interventions/$id'
     | '/admin/vehicules/$id'
+    | '/client/contrats/$id'
     | '/client/flotte/$id'
     | '/terrain/intervention/$id'
   id:
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/admin/contrats/$id'
     | '/admin/interventions/$id'
     | '/admin/vehicules/$id'
+    | '/client/contrats/$id'
     | '/client/flotte/$id'
     | '/terrain/intervention/$id'
   fileRoutesById: FileRoutesById
@@ -480,6 +492,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientFlotteIdRouteImport
       parentRoute: typeof ClientFlotteRoute
     }
+    '/client/contrats/$id': {
+      id: '/client/contrats/$id'
+      path: '/contrats/$id'
+      fullPath: '/client/contrats/$id'
+      preLoaderRoute: typeof ClientContratsIdRouteImport
+      parentRoute: typeof ClientRoute
+    }
     '/admin/vehicules/$id': {
       id: '/admin/vehicules/$id'
       path: '/$id'
@@ -601,6 +620,7 @@ interface ClientRouteChildren {
   ClientInterventionsRoute: typeof ClientInterventionsRoute
   ClientRendezVousRoute: typeof ClientRendezVousRoute
   ClientIndexRoute: typeof ClientIndexRoute
+  ClientContratsIdRoute: typeof ClientContratsIdRoute
 }
 
 const ClientRouteChildren: ClientRouteChildren = {
@@ -610,6 +630,7 @@ const ClientRouteChildren: ClientRouteChildren = {
   ClientInterventionsRoute: ClientInterventionsRoute,
   ClientRendezVousRoute: ClientRendezVousRoute,
   ClientIndexRoute: ClientIndexRoute,
+  ClientContratsIdRoute: ClientContratsIdRoute,
 }
 
 const ClientRouteWithChildren =
@@ -636,12 +657,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
