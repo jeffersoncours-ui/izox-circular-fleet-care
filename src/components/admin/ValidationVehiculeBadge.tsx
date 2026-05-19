@@ -72,7 +72,7 @@ export function ValidationVehiculeBadge({
     return (
       <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300">
         <Clock className="h-3 w-3 mr-1" />
-        En attente de validation
+        {variant === "compact" ? "En attente" : "En attente de validation"}
       </Badge>
     );
   }
