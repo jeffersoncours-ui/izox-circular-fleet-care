@@ -17,12 +17,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Props {
   vehiculeId: string;
   statut: string;
   createdBy: string | null;
   commercialSignataireId: string | null;
+  variant?: "default" | "compact";
   onChanged?: () => void;
 }
 
