@@ -38,6 +38,7 @@ export function ValidationVehiculeBadge({
   statut,
   createdBy,
   commercialSignataireId,
+  variant = "default",
   onChanged,
 }: Props) {
   const { user, profile } = useAuth();
