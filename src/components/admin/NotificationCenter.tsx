@@ -53,7 +53,15 @@ interface Notification {
   epingle_at: string | null;
 }
 
-export function NotificationCenter() {
+interface NotificationCenterProps {
+  hideTeamPin?: boolean;
+  triggerClassName?: string;
+}
+
+export function NotificationCenter({
+  hideTeamPin = false,
+  triggerClassName,
+}: NotificationCenterProps = {}) {
   const { user } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
