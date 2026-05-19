@@ -369,6 +369,7 @@ export function NotificationCenter({
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
+                    hideTeamPin={hideTeamPin}
                     isEpingleSection
                   />
                 ))}
@@ -392,6 +393,7 @@ export function NotificationCenter({
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
+                    hideTeamPin={hideTeamPin}
                   />
                 ))}
               </div>
@@ -414,6 +416,7 @@ export function NotificationCenter({
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
+                    hideTeamPin={hideTeamPin}
                   />
                 ))}
               </div>
@@ -450,6 +453,7 @@ export function NotificationCenter({
                       getIcon={getNotifIcon}
                       getClasses={getSeveriteClasses}
                       getTime={getRelativeTime}
+                      hideTeamPin={hideTeamPin}
                     />
                   ))}
               </div>
@@ -501,6 +505,7 @@ export function NotificationCenter({
                     getIcon={getNotifIcon}
                     getClasses={getSeveriteClasses}
                     getTime={getRelativeTime}
+                    hideTeamPin={hideTeamPin}
                     isArchive
                   />
                 ))}
