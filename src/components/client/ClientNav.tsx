@@ -25,7 +25,11 @@ export function ClientHeader() {
     <header className="bg-primary text-primary-foreground sticky top-0 z-30">
       <div className="px-4 py-3 flex items-center justify-between">
         <img src="/logo-izox.png" alt="IZOX" className="h-7 w-auto object-contain" />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <NotificationCenter
+            hideTeamPin
+            triggerClassName="relative text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground h-8 w-8"
+          />
           <span className="text-xs hidden sm:inline">{profile?.prenom} {profile?.nom}</span>
           <Button
             size="icon"
