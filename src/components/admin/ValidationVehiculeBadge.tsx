@@ -17,12 +17,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Props {
   vehiculeId: string;
   statut: string;
   createdBy: string | null;
   commercialSignataireId: string | null;
+  variant?: "default" | "compact";
   onChanged?: () => void;
 }
 
@@ -31,6 +38,7 @@ export function ValidationVehiculeBadge({
   statut,
   createdBy,
   commercialSignataireId,
+  variant = "default",
   onChanged,
 }: Props) {
   const { user, profile } = useAuth();
@@ -64,7 +72,7 @@ export function ValidationVehiculeBadge({
     return (
       <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300">
         <Clock className="h-3 w-3 mr-1" />
-        En attente de validation
+        {variant === "compact" ? "En attente" : "En attente de validation"}
       </Badge>
     );
   }
@@ -107,33 +115,75 @@ export function ValidationVehiculeBadge({
     onChanged?.();
   };
 
+  const compact = variant === "compact";
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300">
         <Clock className="h-3 w-3 mr-1" />
-        En attente de validation
+        {compact ? "En attente" : "En attente de validation"}
       </Badge>
-      <Button
-        size="sm"
-        variant="default"
-        className="bg-emerald-600 hover:bg-emerald-700 text-white"
-        onClick={() => setValidateOpen(true)}
-      >
-        <Check className="h-4 w-4" /> Valider
-      </Button>
-      <Button
-        size="sm"
-        variant="destructive"
-        disabled={!peutRejeter}
-        title={
-          peutRejeter
-            ? "Rejeter ce véhicule"
-            : "Pour supprimer ce véhicule, utilisez la suppression standard"
-        }
-        onClick={() => setRejectOpen(true)}
-      >
-        <X className="h-4 w-4" /> Rejeter
-      </Button>
+      {compact ? (
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50"
+                onClick={() => setValidateOpen(true)}
+                aria-label="Valider le véhicule"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Valider le véhicule</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  disabled={!peutRejeter}
+                  onClick={() => setRejectOpen(true)}
+                  aria-label="Rejeter le véhicule"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              {peutRejeter ? "Rejeter le véhicule" : "Suppression standard requise"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        <>
+          <Button
+            size="sm"
+            variant="default"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={() => setValidateOpen(true)}
+          >
+            <Check className="h-4 w-4" /> Valider
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            disabled={!peutRejeter}
+            title={
+              peutRejeter
+                ? "Rejeter ce véhicule"
+                : "Pour supprimer ce véhicule, utilisez la suppression standard"
+            }
+            onClick={() => setRejectOpen(true)}
+          >
+            <X className="h-4 w-4" /> Rejeter
+          </Button>
+        </>
+      )}
 
       <AlertDialog open={validateOpen} onOpenChange={setValidateOpen}>
         <AlertDialogContent>
