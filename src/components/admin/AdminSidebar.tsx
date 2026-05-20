@@ -9,6 +9,7 @@ import {
   Wrench,
   Users,
   Receipt,
+  Snowflake,
   LogOut,
   Menu,
 } from "lucide-react";
@@ -16,13 +17,16 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { NotificationCenter } from "@/components/admin/NotificationCenter";
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavItem {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
   adminOnly?: boolean;
+  badgeKey?: "gel" | "rdv";
 }
 
 const NAV: NavItem[] = [
@@ -31,14 +35,46 @@ const NAV: NavItem[] = [
   { to: "/admin/vehicules", label: "Véhicules", icon: Car },
   { to: "/admin/contrats", label: "Contrats", icon: FileText },
   { to: "/admin/rendez-vous", label: "Rendez-vous", icon: CalendarDays },
+  { to: "/admin/demandes-rdv", label: "Demandes RDV", icon: CalendarDays, badgeKey: "rdv" },
+  { to: "/admin/demandes-gel", label: "Demandes de gel", icon: Snowflake, badgeKey: "gel" },
   { to: "/admin/interventions", label: "Interventions", icon: Wrench },
   { to: "/admin/equipe", label: "Équipe", icon: Users, adminOnly: true },
   { to: "/admin/facturation", label: "Facturation", icon: Receipt, adminOnly: true },
 ];
 
+function useDemandesCounts() {
+  const [counts, setCounts] = useState({ gel: 0, rdv: 0 });
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      const [g, r] = await Promise.all([
+        supabase
+          .from("demandes_gel")
+          .select("id", { count: "exact", head: true })
+          .eq("statut", "en_attente"),
+        supabase
+          .from("demandes_rdv")
+          .select("id", { count: "exact", head: true })
+          .eq("statut", "en_attente"),
+      ]);
+      if (alive) {
+        setCounts({ gel: g.count ?? 0, rdv: r.count ?? 0 });
+      }
+    };
+    load();
+    const interval = setInterval(load, 30_000);
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
+  }, []);
+  return counts;
+}
+
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const { profile } = useAuth();
   const location = useLocation();
+  const counts = useDemandesCounts();
   const isAdmin = profile?.role === "admin";
   const items = NAV.filter((i) => !i.adminOnly || isAdmin);
 
@@ -50,6 +86,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
             ? location.pathname === "/admin"
             : location.pathname.startsWith(item.to);
         const Icon = item.icon;
+        const badge = item.badgeKey ? counts[item.badgeKey] : 0;
         return (
           <li key={item.to}>
             <Link
@@ -63,7 +100,12 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              {badge > 0 && (
+                <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">
+                  {badge}
+                </Badge>
+              )}
             </Link>
           </li>
         );

@@ -30,6 +30,7 @@ import {
   FacturationPrealableDialog,
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
+import { DemanderGelDialog } from "@/components/client/DemanderGelDialog";
 
 interface ContratLigne {
   id: string;
@@ -391,25 +392,15 @@ export function FicheContratClient() {
         }}
       />
 
-      {/* Placeholder gel */}
-      <Dialog open={gelOpen} onOpenChange={setGelOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Snowflake className="h-5 w-5 text-blue-600" />
-              Demander un gel
-            </DialogTitle>
-            <DialogDescription>
-              La demande de gel de contrat ou de véhicule sera disponible
-              prochainement. Pour toute demande urgente, contactez directement votre
-              commercial référent.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={() => setGelOpen(false)}>Fermer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {profile?.entreprise_id && (
+        <DemanderGelDialog
+          open={gelOpen}
+          onOpenChange={setGelOpen}
+          contratId={contrat.id}
+          entrepriseId={profile.entreprise_id}
+          onSubmitted={load}
+        />
+      )}
     </div>
   );
 }

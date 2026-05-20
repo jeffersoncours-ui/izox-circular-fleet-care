@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientIndexRouteImport } from './routes/client.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ClientRendezVousRouteImport } from './routes/client.rendez-vous'
+import { Route as ClientPrestationsRouteImport } from './routes/client.prestations'
 import { Route as ClientInterventionsRouteImport } from './routes/client.interventions'
 import { Route as ClientFlotteRouteImport } from './routes/client.flotte'
 import { Route as ClientFacturesRouteImport } from './routes/client.factures'
@@ -26,6 +27,8 @@ import { Route as AdminRendezVousRouteImport } from './routes/admin.rendez-vous'
 import { Route as AdminInterventionsRouteImport } from './routes/admin.interventions'
 import { Route as AdminFacturationRouteImport } from './routes/admin.facturation'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
+import { Route as AdminDemandesRdvRouteImport } from './routes/admin.demandes-rdv'
+import { Route as AdminDemandesGelRouteImport } from './routes/admin.demandes-gel'
 import { Route as AdminContratsRouteImport } from './routes/admin.contrats'
 import { Route as AdminClientsRouteImport } from './routes/admin.clients'
 import { Route as TerrainInterventionIdRouteImport } from './routes/terrain.intervention.$id'
@@ -76,6 +79,11 @@ const ClientRendezVousRoute = ClientRendezVousRouteImport.update({
   path: '/rendez-vous',
   getParentRoute: () => ClientRoute,
 } as any)
+const ClientPrestationsRoute = ClientPrestationsRouteImport.update({
+  id: '/prestations',
+  path: '/prestations',
+  getParentRoute: () => ClientRoute,
+} as any)
 const ClientInterventionsRoute = ClientInterventionsRouteImport.update({
   id: '/interventions',
   path: '/interventions',
@@ -119,6 +127,16 @@ const AdminFacturationRoute = AdminFacturationRouteImport.update({
 const AdminEquipeRoute = AdminEquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDemandesRdvRoute = AdminDemandesRdvRouteImport.update({
+  id: '/demandes-rdv',
+  path: '/demandes-rdv',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDemandesGelRoute = AdminDemandesGelRouteImport.update({
+  id: '/demandes-gel',
+  path: '/demandes-gel',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminContratsRoute = AdminContratsRouteImport.update({
@@ -175,6 +193,8 @@ export interface FileRoutesByFullPath {
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
+  '/admin/demandes-gel': typeof AdminDemandesGelRoute
+  '/admin/demandes-rdv': typeof AdminDemandesRdvRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
@@ -184,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/client/factures': typeof ClientFacturesRoute
   '/client/flotte': typeof ClientFlotteRouteWithChildren
   '/client/interventions': typeof ClientInterventionsRoute
+  '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
@@ -201,6 +222,8 @@ export interface FileRoutesByTo {
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
+  '/admin/demandes-gel': typeof AdminDemandesGelRoute
+  '/admin/demandes-rdv': typeof AdminDemandesRdvRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
@@ -210,6 +233,7 @@ export interface FileRoutesByTo {
   '/client/factures': typeof ClientFacturesRoute
   '/client/flotte': typeof ClientFlotteRouteWithChildren
   '/client/interventions': typeof ClientInterventionsRoute
+  '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
@@ -230,6 +254,8 @@ export interface FileRoutesById {
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
+  '/admin/demandes-gel': typeof AdminDemandesGelRoute
+  '/admin/demandes-rdv': typeof AdminDemandesRdvRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
@@ -239,6 +265,7 @@ export interface FileRoutesById {
   '/client/factures': typeof ClientFacturesRoute
   '/client/flotte': typeof ClientFlotteRouteWithChildren
   '/client/interventions': typeof ClientInterventionsRoute
+  '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
@@ -260,6 +287,8 @@ export interface FileRouteTypes {
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
+    | '/admin/demandes-gel'
+    | '/admin/demandes-rdv'
     | '/admin/equipe'
     | '/admin/facturation'
     | '/admin/interventions'
@@ -269,6 +298,7 @@ export interface FileRouteTypes {
     | '/client/factures'
     | '/client/flotte'
     | '/client/interventions'
+    | '/client/prestations'
     | '/client/rendez-vous'
     | '/admin/'
     | '/client/'
@@ -286,6 +316,8 @@ export interface FileRouteTypes {
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
+    | '/admin/demandes-gel'
+    | '/admin/demandes-rdv'
     | '/admin/equipe'
     | '/admin/facturation'
     | '/admin/interventions'
@@ -295,6 +327,7 @@ export interface FileRouteTypes {
     | '/client/factures'
     | '/client/flotte'
     | '/client/interventions'
+    | '/client/prestations'
     | '/client/rendez-vous'
     | '/admin'
     | '/client'
@@ -314,6 +347,8 @@ export interface FileRouteTypes {
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
+    | '/admin/demandes-gel'
+    | '/admin/demandes-rdv'
     | '/admin/equipe'
     | '/admin/facturation'
     | '/admin/interventions'
@@ -323,6 +358,7 @@ export interface FileRouteTypes {
     | '/client/factures'
     | '/client/flotte'
     | '/client/interventions'
+    | '/client/prestations'
     | '/client/rendez-vous'
     | '/admin/'
     | '/client/'
@@ -401,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientRendezVousRouteImport
       parentRoute: typeof ClientRoute
     }
+    '/client/prestations': {
+      id: '/client/prestations'
+      path: '/prestations'
+      fullPath: '/client/prestations'
+      preLoaderRoute: typeof ClientPrestationsRouteImport
+      parentRoute: typeof ClientRoute
+    }
     '/client/interventions': {
       id: '/client/interventions'
       path: '/interventions'
@@ -462,6 +505,20 @@ declare module '@tanstack/react-router' {
       path: '/equipe'
       fullPath: '/admin/equipe'
       preLoaderRoute: typeof AdminEquipeRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/demandes-rdv': {
+      id: '/admin/demandes-rdv'
+      path: '/demandes-rdv'
+      fullPath: '/admin/demandes-rdv'
+      preLoaderRoute: typeof AdminDemandesRdvRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/demandes-gel': {
+      id: '/admin/demandes-gel'
+      path: '/demandes-gel'
+      fullPath: '/admin/demandes-gel'
+      preLoaderRoute: typeof AdminDemandesGelRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/contrats': {
@@ -580,6 +637,8 @@ const AdminVehiculesRouteWithChildren = AdminVehiculesRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminClientsRoute: typeof AdminClientsRouteWithChildren
   AdminContratsRoute: typeof AdminContratsRouteWithChildren
+  AdminDemandesGelRoute: typeof AdminDemandesGelRoute
+  AdminDemandesRdvRoute: typeof AdminDemandesRdvRoute
   AdminEquipeRoute: typeof AdminEquipeRoute
   AdminFacturationRoute: typeof AdminFacturationRoute
   AdminInterventionsRoute: typeof AdminInterventionsRouteWithChildren
@@ -591,6 +650,8 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminClientsRoute: AdminClientsRouteWithChildren,
   AdminContratsRoute: AdminContratsRouteWithChildren,
+  AdminDemandesGelRoute: AdminDemandesGelRoute,
+  AdminDemandesRdvRoute: AdminDemandesRdvRoute,
   AdminEquipeRoute: AdminEquipeRoute,
   AdminFacturationRoute: AdminFacturationRoute,
   AdminInterventionsRoute: AdminInterventionsRouteWithChildren,
@@ -618,6 +679,7 @@ interface ClientRouteChildren {
   ClientFacturesRoute: typeof ClientFacturesRoute
   ClientFlotteRoute: typeof ClientFlotteRouteWithChildren
   ClientInterventionsRoute: typeof ClientInterventionsRoute
+  ClientPrestationsRoute: typeof ClientPrestationsRoute
   ClientRendezVousRoute: typeof ClientRendezVousRoute
   ClientIndexRoute: typeof ClientIndexRoute
   ClientContratsIdRoute: typeof ClientContratsIdRoute
@@ -628,6 +690,7 @@ const ClientRouteChildren: ClientRouteChildren = {
   ClientFacturesRoute: ClientFacturesRoute,
   ClientFlotteRoute: ClientFlotteRouteWithChildren,
   ClientInterventionsRoute: ClientInterventionsRoute,
+  ClientPrestationsRoute: ClientPrestationsRoute,
   ClientRendezVousRoute: ClientRendezVousRoute,
   ClientIndexRoute: ClientIndexRoute,
   ClientContratsIdRoute: ClientContratsIdRoute,

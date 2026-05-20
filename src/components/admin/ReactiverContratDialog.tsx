@@ -54,42 +54,14 @@ export function ReactiverContratDialog({
     if (!contrat) return;
     setSubmitting(true);
     try {
-      const { error: updateError } = await supabase
-        .from("contrats")
-        .update({
-          gel_actif: false,
-          statut: "actif",
-          gel_type: null,
-          gel_date_debut: null,
-          gel_date_fin: null,
-          gel_commentaire: null,
-          gel_notifier_client: true,
-        })
-        .eq("id", contrat.id);
-
-      if (updateError) throw updateError;
-
-      const { error: logError } = await supabase
-        .from("admin_actions_log")
-        .insert({
-          action: "reactivation_contrat",
-          details: {
-            contrat_id: contrat.id,
-            numero_contrat: contrat.numero_contrat,
-            gel_date_debut_origine: contrat.gel_date_debut,
-            gel_date_fin_origine: contrat.gel_date_fin,
-            gel_commentaire_origine: contrat.gel_commentaire,
-            date_reactivation: new Date().toISOString(),
-          },
-          nb_entites_impactees: 1,
-        });
-
-      if (logError) {
-        console.error("Erreur log mais réactivation appliquée :", logError);
-      }
+      const { error } = await supabase.rpc("degeler_contrat", {
+        p_contrat_id: contrat.id,
+        p_source: "manuel",
+      });
+      if (error) throw error;
 
       toast.success(
-        `Contrat ${contrat.numero_contrat ?? ""} réactivé avec succès`
+        `Contrat ${contrat.numero_contrat ?? ""} réactivé avec succès`,
       );
 
       onReactivated?.();
@@ -97,7 +69,7 @@ export function ReactiverContratDialog({
     } catch (error: any) {
       console.error("Erreur réactivation :", error);
       toast.error(
-        `Erreur lors de la réactivation : ${error?.message ?? "inconnue"}`
+        `Erreur lors de la réactivation : ${error?.message ?? "inconnue"}`,
       );
     } finally {
       setSubmitting(false);

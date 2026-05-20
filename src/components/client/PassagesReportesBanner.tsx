@@ -52,7 +52,7 @@ export function PassagesReportesBanner() {
           </p>
           <div className="mt-3">
             <Button asChild size="sm" variant="izox">
-              <Link to="/client/rendez-vous">
+              <Link to="/client/prestations">
                 <CalendarPlus className="h-4 w-4" /> Prendre un RDV
               </Link>
             </Button>

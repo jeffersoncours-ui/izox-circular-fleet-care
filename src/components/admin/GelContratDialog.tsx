@@ -19,11 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 export interface GelContratInput {
@@ -45,85 +42,47 @@ export function GelContratDialog({
   contrat,
   onGeled,
 }: GelContratDialogProps) {
-  const [type, setType] = useState<"programme" | "sinistre">("programme");
   const [dateDebut, setDateDebut] = useState<Date | undefined>(new Date());
   const [dateFin, setDateFin] = useState<Date | undefined>(undefined);
-  const [dureeIndeterminee, setDureeIndeterminee] = useState(false);
-  const [commentaire, setCommentaire] = useState("");
-  const [notifierClient, setNotifierClient] = useState(true);
+  const [motif, setMotif] = useState("");
   const [debutOpen, setDebutOpen] = useState(false);
   const [finOpen, setFinOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const resetState = () => {
-    setType("programme");
     setDateDebut(new Date());
     setDateFin(undefined);
-    setDureeIndeterminee(false);
-    setCommentaire("");
-    setNotifierClient(true);
+    setMotif("");
   };
 
   const handleConfirm = async () => {
     if (!contrat) return;
-
-    if (!dateDebut) {
-      toast.error("Veuillez saisir une date de début");
+    if (!dateDebut || !dateFin) {
+      toast.error("Veuillez saisir les dates de début et de fin");
       return;
     }
-    if (!dureeIndeterminee && !dateFin) {
-      toast.error('Veuillez saisir une date de fin ou cocher "Durée indéterminée"');
-      return;
-    }
-    if (!dureeIndeterminee && dateFin && dateFin <= dateDebut) {
+    if (dateFin <= dateDebut) {
       toast.error("La date de fin doit être postérieure à la date de début");
+      return;
+    }
+    if (motif.trim().length < 10) {
+      toast.error("Motif min. 10 caractères");
       return;
     }
 
     setSubmitting(true);
     try {
-      const finIso =
-        dureeIndeterminee || !dateFin ? null : format(dateFin, "yyyy-MM-dd");
-      const debutIso = format(dateDebut, "yyyy-MM-dd");
+      const { error } = await supabase.rpc("geler_contrat", {
+        p_contrat_id: contrat.id,
+        p_date_debut: format(dateDebut, "yyyy-MM-dd"),
+        p_date_fin: format(dateFin, "yyyy-MM-dd"),
+        p_motif: motif.trim(),
+      });
 
-      const { error: updateError } = await supabase
-        .from("contrats")
-        .update({
-          gel_actif: true,
-          statut: "en_cours_gel",
-          gel_type: type,
-          gel_date_debut: debutIso,
-          gel_date_fin: finIso,
-          gel_commentaire: commentaire.trim() || null,
-          gel_notifier_client: notifierClient,
-        })
-        .eq("id", contrat.id);
-
-      if (updateError) throw updateError;
-
-      const { error: logError } = await supabase
-        .from("admin_actions_log")
-        .insert({
-          action: "gel_contrat",
-          details: {
-            contrat_id: contrat.id,
-            numero_contrat: contrat.numero_contrat,
-            gel_type: type,
-            gel_date_debut: debutIso,
-            gel_date_fin: finIso,
-            duree_indeterminee: dureeIndeterminee,
-            commentaire: commentaire.trim() || null,
-            notifier_client: notifierClient,
-          },
-          nb_entites_impactees: 1,
-        });
-
-      if (logError) {
-        console.error("Erreur log mais gel appliqué :", logError);
-      }
+      if (error) throw error;
 
       toast.success(
-        `Contrat ${contrat.numero_contrat} placé en veille temporaire`
+        `Contrat ${contrat.numero_contrat ?? ""} placé en veille temporaire`,
       );
 
       onGeled?.();
@@ -159,54 +118,14 @@ export function GelContratDialog({
                 <span className="font-semibold text-foreground">
                   {contrat?.raison_sociale_client}
                 </span>{" "}
-                sera placé en statut « En veille temporaire ».
-              </p>
-              <p>
-                Les véhicules restent rattachés mais les passages facturés
-                cesseront d'être programmés pendant cette période. Vous pouvez
-                réactiver le contrat à tout moment.
+                sera placé en « En gel ». Les véhicules sont marqués gelés et
+                exclus de la facturation jusqu'à la date de fin.
               </p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="space-y-4">
-          {/* Type */}
-          <div className="space-y-2">
-            <Label>Type de mise en veille</Label>
-            <RadioGroup
-              value={type}
-              onValueChange={(v) => setType(v as "programme" | "sinistre")}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-2"
-            >
-              <label
-                htmlFor="gel-type-programme"
-                className="flex items-start gap-2 rounded-md border p-3 cursor-pointer hover:bg-accent/40"
-              >
-                <RadioGroupItem value="programme" id="gel-type-programme" className="mt-0.5" />
-                <div className="space-y-0.5">
-                  <div className="text-sm font-medium text-foreground">Programmée</div>
-                  <div className="text-xs text-muted-foreground">
-                    Vacances, congés, demande anticipée
-                  </div>
-                </div>
-              </label>
-              <label
-                htmlFor="gel-type-sinistre"
-                className="flex items-start gap-2 rounded-md border p-3 cursor-pointer hover:bg-accent/40"
-              >
-                <RadioGroupItem value="sinistre" id="gel-type-sinistre" className="mt-0.5" />
-                <div className="space-y-0.5">
-                  <div className="text-sm font-medium text-foreground">Sinistre</div>
-                  <div className="text-xs text-muted-foreground">
-                    Panne, accident, force majeure
-                  </div>
-                </div>
-              </label>
-            </RadioGroup>
-          </div>
-
-          {/* Dates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Date de début</Label>
@@ -216,11 +135,13 @@ export function GelContratDialog({
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !dateDebut && "text-muted-foreground"
+                      !dateDebut && "text-muted-foreground",
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateDebut ? format(dateDebut, "dd/MM/yyyy", { locale: fr }) : "Choisir"}
+                    {dateDebut
+                      ? format(dateDebut, "dd/MM/yyyy", { locale: fr })
+                      : "Choisir"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -240,26 +161,20 @@ export function GelContratDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Date de fin prévue</Label>
-              <Popover
-                open={finOpen}
-                onOpenChange={(o) => !dureeIndeterminee && setFinOpen(o)}
-              >
+              <Label>Date de fin</Label>
+              <Popover open={finOpen} onOpenChange={setFinOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    disabled={dureeIndeterminee}
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !dateFin && "text-muted-foreground"
+                      !dateFin && "text-muted-foreground",
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dureeIndeterminee
-                      ? "Durée indéterminée"
-                      : dateFin
-                        ? format(dateFin, "dd/MM/yyyy", { locale: fr })
-                        : "Choisir"}
+                    {dateFin
+                      ? format(dateFin, "dd/MM/yyyy", { locale: fr })
+                      : "Choisir"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -280,54 +195,15 @@ export function GelContratDialog({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="gel-duree-indet"
-              checked={dureeIndeterminee}
-              onCheckedChange={(c) => {
-                const v = c === true;
-                setDureeIndeterminee(v);
-                if (v) setDateFin(undefined);
-              }}
-            />
-            <Label htmlFor="gel-duree-indet" className="cursor-pointer text-sm font-normal">
-              Durée indéterminée
-            </Label>
-          </div>
-
-          {/* Commentaire */}
           <div className="space-y-2">
-            <Label htmlFor="gel-commentaire">Commentaire (optionnel)</Label>
+            <Label htmlFor="gel-motif">Motif (min. 10 caractères)</Label>
             <Textarea
-              id="gel-commentaire"
-              value={commentaire}
-              onChange={(e) => setCommentaire(e.target.value)}
-              placeholder="Ex: Vacances du dirigeant 2-23 août, panne du Renault Master CT-AB-456..."
+              id="gel-motif"
+              value={motif}
+              onChange={(e) => setMotif(e.target.value)}
+              placeholder="Ex: Vacances du dirigeant, panne véhicule, sinistre…"
               rows={3}
             />
-          </div>
-
-          {/* Notifier client */}
-          <div className="space-y-2 rounded-md border p-3">
-            <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="gel-notifier" className="cursor-pointer">
-                Notifier le client par email
-              </Label>
-              <Switch
-                id="gel-notifier"
-                checked={notifierClient}
-                onCheckedChange={setNotifierClient}
-              />
-            </div>
-            {notifierClient ? (
-              <p className="text-xs text-muted-foreground">
-                Le client sera informé de la mise en veille et des dates.
-              </p>
-            ) : (
-              <p className="text-xs italic text-muted-foreground">
-                Gel administratif interne, aucune notification.
-              </p>
-            )}
           </div>
         </div>
 
