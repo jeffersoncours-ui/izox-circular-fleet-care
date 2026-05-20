@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
-import { Home, Car, CalendarDays, Wrench, FileText, FolderOpen, LogOut } from "lucide-react";
+import { Home, Car, ClipboardList, Receipt, FolderOpen, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/admin/NotificationCenter";
@@ -8,9 +8,8 @@ import { NotificationCenter } from "@/components/admin/NotificationCenter";
 const TABS = [
   { to: "/client", label: "Accueil", icon: Home, exact: true },
   { to: "/client/flotte", label: "Ma flotte", icon: Car },
-  { to: "/client/rendez-vous", label: "RDV", icon: CalendarDays },
-  { to: "/client/interventions", label: "Interventions", icon: Wrench },
-  { to: "/client/factures", label: "Factures", icon: FileText },
+  { to: "/client/prestations", label: "Prestations", icon: ClipboardList },
+  { to: "/client/factures", label: "Factures", icon: Receipt },
   { to: "/client/documents", label: "Documents", icon: FolderOpen },
 ];
 
@@ -49,7 +48,7 @@ export function ClientBottomNav() {
   const location = useLocation();
   return (
     <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border safe-area">
-      <ul className="grid grid-cols-6 max-w-3xl mx-auto">
+      <ul className="grid grid-cols-5 max-w-3xl mx-auto">
         {TABS.map((tab) => {
           const active = tab.exact
             ? location.pathname === tab.to
