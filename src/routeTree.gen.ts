@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientIndexRouteImport } from './routes/client.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ClientRendezVousRouteImport } from './routes/client.rendez-vous'
+import { Route as ClientPrestationsRouteImport } from './routes/client.prestations'
 import { Route as ClientInterventionsRouteImport } from './routes/client.interventions'
 import { Route as ClientFlotteRouteImport } from './routes/client.flotte'
 import { Route as ClientFacturesRouteImport } from './routes/client.factures'
@@ -74,6 +75,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const ClientRendezVousRoute = ClientRendezVousRouteImport.update({
   id: '/rendez-vous',
   path: '/rendez-vous',
+  getParentRoute: () => ClientRoute,
+} as any)
+const ClientPrestationsRoute = ClientPrestationsRouteImport.update({
+  id: '/prestations',
+  path: '/prestations',
   getParentRoute: () => ClientRoute,
 } as any)
 const ClientInterventionsRoute = ClientInterventionsRouteImport.update({
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/client/factures': typeof ClientFacturesRoute
   '/client/flotte': typeof ClientFlotteRouteWithChildren
   '/client/interventions': typeof ClientInterventionsRoute
+  '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/client/factures': typeof ClientFacturesRoute
   '/client/flotte': typeof ClientFlotteRouteWithChildren
   '/client/interventions': typeof ClientInterventionsRoute
+  '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/client/factures': typeof ClientFacturesRoute
   '/client/flotte': typeof ClientFlotteRouteWithChildren
   '/client/interventions': typeof ClientInterventionsRoute
+  '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
@@ -269,6 +278,7 @@ export interface FileRouteTypes {
     | '/client/factures'
     | '/client/flotte'
     | '/client/interventions'
+    | '/client/prestations'
     | '/client/rendez-vous'
     | '/admin/'
     | '/client/'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/client/factures'
     | '/client/flotte'
     | '/client/interventions'
+    | '/client/prestations'
     | '/client/rendez-vous'
     | '/admin'
     | '/client'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/client/factures'
     | '/client/flotte'
     | '/client/interventions'
+    | '/client/prestations'
     | '/client/rendez-vous'
     | '/admin/'
     | '/client/'
@@ -399,6 +411,13 @@ declare module '@tanstack/react-router' {
       path: '/rendez-vous'
       fullPath: '/client/rendez-vous'
       preLoaderRoute: typeof ClientRendezVousRouteImport
+      parentRoute: typeof ClientRoute
+    }
+    '/client/prestations': {
+      id: '/client/prestations'
+      path: '/prestations'
+      fullPath: '/client/prestations'
+      preLoaderRoute: typeof ClientPrestationsRouteImport
       parentRoute: typeof ClientRoute
     }
     '/client/interventions': {
@@ -618,6 +637,7 @@ interface ClientRouteChildren {
   ClientFacturesRoute: typeof ClientFacturesRoute
   ClientFlotteRoute: typeof ClientFlotteRouteWithChildren
   ClientInterventionsRoute: typeof ClientInterventionsRoute
+  ClientPrestationsRoute: typeof ClientPrestationsRoute
   ClientRendezVousRoute: typeof ClientRendezVousRoute
   ClientIndexRoute: typeof ClientIndexRoute
   ClientContratsIdRoute: typeof ClientContratsIdRoute
@@ -628,6 +648,7 @@ const ClientRouteChildren: ClientRouteChildren = {
   ClientFacturesRoute: ClientFacturesRoute,
   ClientFlotteRoute: ClientFlotteRouteWithChildren,
   ClientInterventionsRoute: ClientInterventionsRoute,
+  ClientPrestationsRoute: ClientPrestationsRoute,
   ClientRendezVousRoute: ClientRendezVousRoute,
   ClientIndexRoute: ClientIndexRoute,
   ClientContratsIdRoute: ClientContratsIdRoute,
@@ -657,12 +678,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
