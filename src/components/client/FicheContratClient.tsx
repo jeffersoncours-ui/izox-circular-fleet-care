@@ -30,6 +30,7 @@ import {
   FacturationPrealableDialog,
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
+import { DemanderGelDialog } from "@/components/client/DemanderGelDialog";
 
 interface ContratLigne {
   id: string;
