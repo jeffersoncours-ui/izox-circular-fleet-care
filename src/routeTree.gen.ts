@@ -27,6 +27,7 @@ import { Route as AdminRendezVousRouteImport } from './routes/admin.rendez-vous'
 import { Route as AdminInterventionsRouteImport } from './routes/admin.interventions'
 import { Route as AdminFacturationRouteImport } from './routes/admin.facturation'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
+import { Route as AdminDemandesGelRouteImport } from './routes/admin.demandes-gel'
 import { Route as AdminContratsRouteImport } from './routes/admin.contrats'
 import { Route as AdminClientsRouteImport } from './routes/admin.clients'
 import { Route as TerrainInterventionIdRouteImport } from './routes/terrain.intervention.$id'
@@ -127,6 +128,11 @@ const AdminEquipeRoute = AdminEquipeRouteImport.update({
   path: '/equipe',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDemandesGelRoute = AdminDemandesGelRouteImport.update({
+  id: '/demandes-gel',
+  path: '/demandes-gel',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminContratsRoute = AdminContratsRouteImport.update({
   id: '/contrats',
   path: '/contrats',
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
+  '/admin/demandes-gel': typeof AdminDemandesGelRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
+  '/admin/demandes-gel': typeof AdminDemandesGelRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
+  '/admin/demandes-gel': typeof AdminDemandesGelRoute
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
@@ -269,6 +278,7 @@ export interface FileRouteTypes {
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
+    | '/admin/demandes-gel'
     | '/admin/equipe'
     | '/admin/facturation'
     | '/admin/interventions'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
+    | '/admin/demandes-gel'
     | '/admin/equipe'
     | '/admin/facturation'
     | '/admin/interventions'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
+    | '/admin/demandes-gel'
     | '/admin/equipe'
     | '/admin/facturation'
     | '/admin/interventions'
@@ -483,6 +495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEquipeRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/demandes-gel': {
+      id: '/admin/demandes-gel'
+      path: '/demandes-gel'
+      fullPath: '/admin/demandes-gel'
+      preLoaderRoute: typeof AdminDemandesGelRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/contrats': {
       id: '/admin/contrats'
       path: '/contrats'
@@ -599,6 +618,7 @@ const AdminVehiculesRouteWithChildren = AdminVehiculesRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminClientsRoute: typeof AdminClientsRouteWithChildren
   AdminContratsRoute: typeof AdminContratsRouteWithChildren
+  AdminDemandesGelRoute: typeof AdminDemandesGelRoute
   AdminEquipeRoute: typeof AdminEquipeRoute
   AdminFacturationRoute: typeof AdminFacturationRoute
   AdminInterventionsRoute: typeof AdminInterventionsRouteWithChildren
@@ -610,6 +630,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminClientsRoute: AdminClientsRouteWithChildren,
   AdminContratsRoute: AdminContratsRouteWithChildren,
+  AdminDemandesGelRoute: AdminDemandesGelRoute,
   AdminEquipeRoute: AdminEquipeRoute,
   AdminFacturationRoute: AdminFacturationRoute,
   AdminInterventionsRoute: AdminInterventionsRouteWithChildren,
