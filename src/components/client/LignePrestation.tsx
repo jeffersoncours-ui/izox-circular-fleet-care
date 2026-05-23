@@ -10,6 +10,7 @@ export interface PrestationItem {
   statut: string;
   type_prestation: string;
   date_intervention: string | null;
+  demande_rdv_id?: string | null;
   vehicules: {
     immatriculation: string;
     marque: string | null;

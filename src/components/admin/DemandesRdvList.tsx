@@ -16,6 +16,8 @@ import {
   GererDemandeRdvDialog,
   type AdminDemandeRdv,
 } from "@/components/admin/GererDemandeRdvDialog";
+import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
+import { Route as RendezVousRoute } from "@/routes/admin.rendez-vous";
 
 interface Row extends AdminDemandeRdv {
   entreprises?: { nom: string } | null;
@@ -54,6 +56,14 @@ export function DemandesRdvList() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const search = RendezVousRoute.useSearch();
+  useAutoOpenFromSearch<Row>(
+    search.demande,
+    rows,
+    "id",
+    (r) => setSelected({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
+  );
 
   const filtered = filter === "all" ? rows : rows.filter((r) => r.statut === filter);
   const nbEnAttente = rows.filter((r) => r.statut === "en_attente").length;

@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { CalendarPlus, ClipboardList, Loader2, X } from "lucide-react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { CalendarPlus, ClipboardList, Loader2, X, CalendarCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ export function MesPrestationsPage() {
       supabase
         .from("interventions")
         .select(
-          "id, statut, type_prestation, date_intervention, vehicules(immatriculation, marque, modele)",
+          "id, statut, type_prestation, date_intervention, demande_rdv_id, vehicules(immatriculation, marque, modele)",
         )
         .eq("entreprise_id", profile.entreprise_id)
         .order("date_intervention", { ascending: false }),
@@ -66,6 +66,16 @@ export function MesPrestationsPage() {
     .filter((i) => i.statut === "planifiee")
     .sort((a, b) => (a.date_intervention ?? "").localeCompare(b.date_intervention ?? ""));
   const interventionsValidees = interventions.filter((i) => i.statut === "validee");
+
+  const interventionParDemande = useMemo(() => {
+    const map = new Map<string, PrestationItem>();
+    for (const intervention of interventions) {
+      if (intervention.demande_rdv_id) {
+        map.set(intervention.demande_rdv_id, intervention);
+      }
+    }
+    return map;
+  }, [interventions]);
 
   const nbAVenir =
     demandesEnAttente.length + demandesConfirmees.length + interventionsPlanifiees.length;
@@ -126,9 +136,31 @@ export function MesPrestationsPage() {
               )}
               {demandesConfirmees.length > 0 && (
                 <Section title="RDV confirmés">
-                  {demandesConfirmees.map((d) => (
-                    <LigneDemandeRdv key={d.id} demande={d} />
-                  ))}
+                  {demandesConfirmees.map((d) => {
+                    const interventionLiee = interventionParDemande.get(d.id);
+                    return (
+                      <div key={d.id} className="space-y-1">
+                        <LigneDemandeRdv demande={d} />
+                        {interventionLiee?.date_intervention && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+                            <CalendarCheck className="h-3.5 w-3.5 text-primary" />
+                            <span>
+                              Intervention planifiée le{" "}
+                              <strong className="text-foreground">
+                                {new Date(
+                                  interventionLiee.date_intervention,
+                                ).toLocaleDateString("fr-FR", {
+                                  day: "2-digit",
+                                  month: "long",
+                                  year: "numeric",
+                                })}
+                              </strong>
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </Section>
               )}
               {interventionsPlanifiees.length > 0 && (

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { Loader2, Snowflake } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { fr } from "date-fns/locale";
+import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -15,9 +15,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GererDemandeGelDialog } from "@/components/admin/GererDemandeGelDialog";
+import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
+
+const demandesGelSearchSchema = z.object({
+  demande: z.string().uuid().optional(),
+});
 
 export const Route = createFileRoute("/admin/demandes-gel")({
   component: DemandesGelPage,
+  validateSearch: demandesGelSearchSchema,
 });
 
 interface Row {
@@ -65,6 +71,9 @@ function DemandesGelPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const search = Route.useSearch();
+  useAutoOpenFromSearch<Row>(search.demande, rows, "id", (r) => setSelected(r));
 
   const filtered = filter === "all" ? rows : rows.filter((r) => r.statut === filter);
   const nbEnAttente = rows.filter((r) => r.statut === "en_attente").length;

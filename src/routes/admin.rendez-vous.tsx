@@ -1,14 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDays, ListChecks } from "lucide-react";
 import { CalendrierRdvPlaceholder } from "@/components/admin/CalendrierRdvPlaceholder";
 import { DemandesRdvList } from "@/components/admin/DemandesRdvList";
 
+const rendezVousSearchSchema = z.object({
+  demande: z.string().uuid().optional(),
+  tab: z.enum(["calendrier", "demandes"]).optional(),
+});
+
 export const Route = createFileRoute("/admin/rendez-vous")({
   component: AdminRendezVousPage,
+  validateSearch: rendezVousSearchSchema,
 });
 
 function AdminRendezVousPage() {
+  const search = Route.useSearch();
+  const defaultTab = search.tab ?? (search.demande ? "demandes" : "demandes");
+
   return (
     <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-6">
       <header>
@@ -21,7 +31,7 @@ function AdminRendezVousPage() {
         </p>
       </header>
 
-      <Tabs defaultValue="demandes" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
           <TabsTrigger value="calendrier" className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4" />
