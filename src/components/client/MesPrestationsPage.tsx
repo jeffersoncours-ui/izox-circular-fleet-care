@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { CalendarPlus, ClipboardList, Loader2 } from "lucide-react";
+import { CalendarPlus, ClipboardList, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   type PrestationItem,
 } from "@/components/client/LignePrestation";
 import { CreerDemandeRdvDialog } from "@/components/client/CreerDemandeRdvDialog";
+import { AnnulerDemandeDialog } from "@/components/client/AnnulerDemandeDialog";
 
 export function MesPrestationsPage() {
   const { profile } = useAuth();
@@ -21,6 +22,11 @@ export function MesPrestationsPage() {
   const [demandes, setDemandes] = useState<DemandeRdv[]>([]);
   const [interventions, setInterventions] = useState<PrestationItem[]>([]);
   const [showCreer, setShowCreer] = useState(false);
+  const [annulation, setAnnulation] = useState<{
+    open: boolean;
+    type: "gel" | "rdv";
+    id: string;
+  }>({ open: false, type: "rdv", id: "" });
 
   const load = useCallback(async () => {
     if (!profile?.entreprise_id) {
