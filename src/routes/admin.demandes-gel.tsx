@@ -41,20 +41,6 @@ interface Row {
   quota_consomme_actuel: number | null;
   entreprise_id: string;
 }
-  id: string;
-  entreprise_nom: string | null;
-  numero_contrat: string | null;
-  type_demande: string;
-  vehicule_ids: string[] | null;
-  date_debut: string;
-  date_fin_prevue: string;
-  motif: string;
-  statut: string;
-  created_at: string;
-  duree_jours_demandee: number | null;
-  quota_consomme_actuel: number | null;
-  entreprise_id: string;
-}
 
 const STATUTS = ["en_attente", "validee", "active", "close", "refusee", "annulee"];
 const STATUT_LABEL: Record<string, string> = {
