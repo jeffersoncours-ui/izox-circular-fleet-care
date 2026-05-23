@@ -193,6 +193,30 @@ function VehiculeDetail() {
         </Card>
       )}
 
+      {vehicule.contrat_id && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+          {vehicule.statut === "actif" ? (
+            <>
+              <Button variant="default" onClick={() => setRdvOpen(true)}>
+                <CalendarPlus className="h-4 w-4" /> Demander un RDV
+              </Button>
+              <Button variant="outline" onClick={() => setGelOpen(true)}>
+                <Snowflake className="h-4 w-4" /> Demander un gel
+              </Button>
+            </>
+          ) : vehicule.statut === "gele" ? (
+            <>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300 justify-center py-2">
+                <Snowflake className="h-3.5 w-3.5 mr-1" /> En gel
+              </Badge>
+              <Button variant="outline" disabled>
+                RDV indisponible
+              </Button>
+            </>
+          ) : null}
+        </div>
+      )}
+
       <div className="flex gap-2">
         <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
           <Pencil className="h-4 w-4" /> Modifier
@@ -201,6 +225,24 @@ function VehiculeDetail() {
           <Trash2 className="h-4 w-4" /> Supprimer
         </Button>
       </div>
+
+      <CreerDemandeRdvDialog
+        open={rdvOpen}
+        onOpenChange={setRdvOpen}
+        defaultVehiculeId={vehicule.id}
+        onSubmitted={load}
+      />
+
+      {vehicule.contrat_id && profile?.entreprise_id && (
+        <DemanderGelDialog
+          open={gelOpen}
+          onOpenChange={setGelOpen}
+          contratId={vehicule.contrat_id}
+          entrepriseId={profile.entreprise_id}
+          defaultVehiculeId={vehicule.id}
+          onSubmitted={load}
+        />
+      )}
 
       <AddVehiculeDialog
         open={editOpen}
