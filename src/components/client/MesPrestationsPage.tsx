@@ -108,7 +108,19 @@ export function MesPrestationsPage() {
               {demandesEnAttente.length > 0 && (
                 <Section title="Demandes en attente">
                   {demandesEnAttente.map((d) => (
-                    <LigneDemandeRdv key={d.id} demande={d} />
+                    <div key={d.id} className="space-y-1">
+                      <LigneDemandeRdv demande={d} />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive h-7"
+                        onClick={() =>
+                          setAnnulation({ open: true, type: "rdv", id: d.id })
+                        }
+                      >
+                        <X className="h-3.5 w-3.5" /> Annuler ma demande
+                      </Button>
+                    </div>
                   ))}
                 </Section>
               )}
