@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { Loader2, Snowflake } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { fr } from "date-fns/locale";
+import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -15,12 +15,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GererDemandeGelDialog } from "@/components/admin/GererDemandeGelDialog";
+import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
+
+const demandesGelSearchSchema = z.object({
+  demande: z.string().uuid().optional(),
+});
 
 export const Route = createFileRoute("/admin/demandes-gel")({
   component: DemandesGelPage,
+  validateSearch: demandesGelSearchSchema,
 });
 
 interface Row {
+  id: string;
+  entreprise_nom: string | null;
+  numero_contrat: string | null;
+  type_demande: string;
+  vehicule_ids: string[] | null;
+  date_debut: string;
+  date_fin_prevue: string;
+  motif: string;
+  statut: string;
+  created_at: string;
+  duree_jours_demandee: number | null;
+  quota_consomme_actuel: number | null;
+  entreprise_id: string;
+}
   id: string;
   entreprise_nom: string | null;
   numero_contrat: string | null;
