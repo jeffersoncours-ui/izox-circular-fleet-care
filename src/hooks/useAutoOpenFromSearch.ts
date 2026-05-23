@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
  * N'agit qu'une seule fois par targetId (mémorisé dans un ref) afin que la
  * fermeture manuelle du dialog par l'utilisateur ne le ré-ouvre pas.
  */
-export function useAutoOpenFromSearch<T extends Record<string, unknown>>(
+export function useAutoOpenFromSearch<T>(
   targetId: string | undefined,
   items: T[] | undefined,
   idKey: keyof T,
