@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets, CalendarPlus, Snowflake } from "lucide-react";
 
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
@@ -24,6 +24,9 @@ import {
   FacturationPrealableDialog,
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
+import { CreerDemandeRdvDialog } from "@/components/client/CreerDemandeRdvDialog";
+import { DemanderGelDialog } from "@/components/client/DemanderGelDialog";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/client/flotte/$id")({
   component: VehiculeDetail,
