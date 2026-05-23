@@ -136,9 +136,31 @@ export function MesPrestationsPage() {
               )}
               {demandesConfirmees.length > 0 && (
                 <Section title="RDV confirmés">
-                  {demandesConfirmees.map((d) => (
-                    <LigneDemandeRdv key={d.id} demande={d} />
-                  ))}
+                  {demandesConfirmees.map((d) => {
+                    const interventionLiee = interventionParDemande.get(d.id);
+                    return (
+                      <div key={d.id} className="space-y-1">
+                        <LigneDemandeRdv demande={d} />
+                        {interventionLiee?.date_intervention && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+                            <CalendarCheck className="h-3.5 w-3.5 text-primary" />
+                            <span>
+                              Intervention planifiée le{" "}
+                              <strong className="text-foreground">
+                                {new Date(
+                                  interventionLiee.date_intervention,
+                                ).toLocaleDateString("fr-FR", {
+                                  day: "2-digit",
+                                  month: "long",
+                                  year: "numeric",
+                                })}
+                              </strong>
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </Section>
               )}
               {interventionsPlanifiees.length > 0 && (
