@@ -156,7 +156,7 @@ export function CreerDemandeRdvDialog({
       const { error } = await supabase.rpc("creer_demande_rdv", {
         p_vehicule_ids: selectedVehiculeIds,
         p_creneaux_preferes: formatCreneauxPourRPC(payload) as any,
-        p_commentaires: commentaires.trim() || null,
+        p_commentaires: commentaires.trim(),
       });
       if (error) throw error;
       toast.success("Demande de rendez-vous envoyée");
