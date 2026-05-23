@@ -57,6 +57,14 @@ export function DemandesRdvList() {
     load();
   }, [load]);
 
+  const search = RendezVousRoute.useSearch();
+  useAutoOpenFromSearch<Row>(
+    search.demande,
+    rows,
+    "id",
+    (r) => setSelected({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
+  );
+
   const filtered = filter === "all" ? rows : rows.filter((r) => r.statut === filter);
   const nbEnAttente = rows.filter((r) => r.statut === "en_attente").length;
 
