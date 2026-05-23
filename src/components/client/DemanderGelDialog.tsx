@@ -89,8 +89,8 @@ export function DemanderGelDialog({
   }, [open, contratId, entrepriseId]);
 
   const reset = () => {
-    setType("contrat");
-    setSelectedIds([]);
+    setType(defaultVehiculeId ? "vehicules" : "contrat");
+    setSelectedIds(defaultVehiculeId ? [defaultVehiculeId] : []);
     setDateDebut(undefined);
     setDateFin(undefined);
     setMotif("");
