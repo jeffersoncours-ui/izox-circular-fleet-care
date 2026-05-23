@@ -67,6 +67,16 @@ export function MesPrestationsPage() {
     .sort((a, b) => (a.date_intervention ?? "").localeCompare(b.date_intervention ?? ""));
   const interventionsValidees = interventions.filter((i) => i.statut === "validee");
 
+  const interventionParDemande = useMemo(() => {
+    const map = new Map<string, PrestationItem>();
+    for (const intervention of interventions) {
+      if (intervention.demande_rdv_id) {
+        map.set(intervention.demande_rdv_id, intervention);
+      }
+    }
+    return map;
+  }, [interventions]);
+
   const nbAVenir =
     demandesEnAttente.length + demandesConfirmees.length + interventionsPlanifiees.length;
   const nbHisto = interventionsValidees.length + demandesGriseesHisto.length;
