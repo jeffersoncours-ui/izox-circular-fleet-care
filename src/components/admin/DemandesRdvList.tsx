@@ -16,6 +16,8 @@ import {
   GererDemandeRdvDialog,
   type AdminDemandeRdv,
 } from "@/components/admin/GererDemandeRdvDialog";
+import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
+import { Route as RendezVousRoute } from "@/routes/admin.rendez-vous";
 
 interface Row extends AdminDemandeRdv {
   entreprises?: { nom: string } | null;
