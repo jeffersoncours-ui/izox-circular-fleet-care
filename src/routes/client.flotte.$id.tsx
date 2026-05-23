@@ -51,6 +51,7 @@ interface Vehicule {
 function VehiculeDetail() {
   const { id } = useParams({ from: "/client/flotte/$id" });
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [vehicule, setVehicule] = useState<Vehicule | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,6 +59,8 @@ function VehiculeDetail() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
+  const [rdvOpen, setRdvOpen] = useState(false);
+  const [gelOpen, setGelOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
