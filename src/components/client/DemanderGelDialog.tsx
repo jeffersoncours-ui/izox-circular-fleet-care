@@ -37,6 +37,7 @@ interface DemanderGelDialogProps {
   contratId: string;
   entrepriseId: string;
   onSubmitted?: () => void;
+  defaultVehiculeId?: string;
 }
 
 const SUGGESTIONS = [
@@ -51,10 +52,15 @@ export function DemanderGelDialog({
   contratId,
   entrepriseId,
   onSubmitted,
+  defaultVehiculeId,
 }: DemanderGelDialogProps) {
-  const [type, setType] = useState<"contrat" | "vehicules">("contrat");
+  const [type, setType] = useState<"contrat" | "vehicules">(
+    defaultVehiculeId ? "vehicules" : "contrat",
+  );
   const [vehicules, setVehicules] = useState<Vehicule[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    defaultVehiculeId ? [defaultVehiculeId] : [],
+  );
   const [dateDebut, setDateDebut] = useState<Date | undefined>();
   const [dateFin, setDateFin] = useState<Date | undefined>();
   const [debutOpen, setDebutOpen] = useState(false);
@@ -83,8 +89,8 @@ export function DemanderGelDialog({
   }, [open, contratId, entrepriseId]);
 
   const reset = () => {
-    setType("contrat");
-    setSelectedIds([]);
+    setType(defaultVehiculeId ? "vehicules" : "contrat");
+    setSelectedIds(defaultVehiculeId ? [defaultVehiculeId] : []);
     setDateDebut(undefined);
     setDateFin(undefined);
     setMotif("");

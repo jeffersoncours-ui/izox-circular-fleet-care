@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets, CalendarPlus, Snowflake } from "lucide-react";
 
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
@@ -24,6 +24,9 @@ import {
   FacturationPrealableDialog,
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
+import { CreerDemandeRdvDialog } from "@/components/client/CreerDemandeRdvDialog";
+import { DemanderGelDialog } from "@/components/client/DemanderGelDialog";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/client/flotte/$id")({
   component: VehiculeDetail,
@@ -48,6 +51,7 @@ interface Vehicule {
 function VehiculeDetail() {
   const { id } = useParams({ from: "/client/flotte/$id" });
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [vehicule, setVehicule] = useState<Vehicule | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,6 +59,8 @@ function VehiculeDetail() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
+  const [rdvOpen, setRdvOpen] = useState(false);
+  const [gelOpen, setGelOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -187,6 +193,30 @@ function VehiculeDetail() {
         </Card>
       )}
 
+      {vehicule.contrat_id && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+          {vehicule.statut === "actif" ? (
+            <>
+              <Button variant="default" onClick={() => setRdvOpen(true)}>
+                <CalendarPlus className="h-4 w-4" /> Demander un RDV
+              </Button>
+              <Button variant="outline" onClick={() => setGelOpen(true)}>
+                <Snowflake className="h-4 w-4" /> Demander un gel
+              </Button>
+            </>
+          ) : vehicule.statut === "gele" ? (
+            <>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300 justify-center py-2">
+                <Snowflake className="h-3.5 w-3.5 mr-1" /> En gel
+              </Badge>
+              <Button variant="outline" disabled>
+                RDV indisponible
+              </Button>
+            </>
+          ) : null}
+        </div>
+      )}
+
       <div className="flex gap-2">
         <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
           <Pencil className="h-4 w-4" /> Modifier
@@ -195,6 +225,24 @@ function VehiculeDetail() {
           <Trash2 className="h-4 w-4" /> Supprimer
         </Button>
       </div>
+
+      <CreerDemandeRdvDialog
+        open={rdvOpen}
+        onOpenChange={setRdvOpen}
+        defaultVehiculeId={vehicule.id}
+        onSubmitted={load}
+      />
+
+      {vehicule.contrat_id && profile?.entreprise_id && (
+        <DemanderGelDialog
+          open={gelOpen}
+          onOpenChange={setGelOpen}
+          contratId={vehicule.contrat_id}
+          entrepriseId={profile.entreprise_id}
+          defaultVehiculeId={vehicule.id}
+          onSubmitted={load}
+        />
+      )}
 
       <AddVehiculeDialog
         open={editOpen}
