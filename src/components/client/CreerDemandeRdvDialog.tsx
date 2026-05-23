@@ -94,10 +94,12 @@ export function CreerDemandeRdvDialog({
           date: format(c.date!, "yyyy-MM-dd"),
           plage: c.plage,
         }));
+      // NOTE c.11.2.1 partie 1/2 : signature RPC refactorée (p_vehicule_ids requis).
+      // Le composant sera réécrit en PARTIE 2/2 pour collecter les véhicules.
       const { error } = await supabase.rpc("creer_demande_rdv", {
+        p_vehicule_ids: [] as string[],
         p_creneaux_preferes: payload as any,
         p_commentaires: commentaires.trim(),
-        p_nb_vehicules: nbVehicules,
       });
       if (error) throw error;
       toast.success("Demande de rendez-vous envoyée");

@@ -665,37 +665,46 @@ export type Database = {
           commentaires: string | null
           created_at: string
           creneaux_preferes: Json
+          date_confirmee: string | null
           derogation_min_vehicules: boolean
           derogation_motif: string | null
           entreprise_id: string
           id: string
-          nb_vehicules_rdv: number
+          nb_vehicules_rdv: number | null
           statut: string
           updated_at: string
+          vehicule_confirme_id: string | null
+          vehicule_ids: string[]
         }
         Insert: {
           commentaires?: string | null
           created_at?: string
           creneaux_preferes?: Json
+          date_confirmee?: string | null
           derogation_min_vehicules?: boolean
           derogation_motif?: string | null
           entreprise_id: string
           id?: string
-          nb_vehicules_rdv?: number
+          nb_vehicules_rdv?: number | null
           statut?: string
           updated_at?: string
+          vehicule_confirme_id?: string | null
+          vehicule_ids?: string[]
         }
         Update: {
           commentaires?: string | null
           created_at?: string
           creneaux_preferes?: Json
+          date_confirmee?: string | null
           derogation_min_vehicules?: boolean
           derogation_motif?: string | null
           entreprise_id?: string
           id?: string
-          nb_vehicules_rdv?: number
+          nb_vehicules_rdv?: number | null
           statut?: string
           updated_at?: string
+          vehicule_confirme_id?: string | null
+          vehicule_ids?: string[]
         }
         Relationships: [
           {
@@ -2039,6 +2048,8 @@ export type Database = {
         }
         Returns: Json
       }
+      annuler_demande_gel: { Args: { p_demande_id: string }; Returns: Json }
+      annuler_demande_rdv: { Args: { p_demande_id: string }; Returns: Json }
       annuler_facture_via_avoir: {
         Args: {
           p_facture_id: string
@@ -2075,7 +2086,6 @@ export type Database = {
         Args: {
           p_date_intervention: string
           p_demande_id: string
-          p_type_pack: string
           p_vehicule_id: string
         }
         Returns: Json
@@ -2084,7 +2094,7 @@ export type Database = {
         Args: {
           p_commentaires: string
           p_creneaux_preferes: Json
-          p_nb_vehicules?: number
+          p_vehicule_ids: string[]
         }
         Returns: Json
       }
@@ -2137,6 +2147,7 @@ export type Database = {
         Returns: string
       }
       generer_numero_contrat: { Args: never; Returns: string }
+      get_max_vehicules_par_demande: { Args: never; Returns: number }
       get_user_entreprise: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
