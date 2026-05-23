@@ -171,6 +171,14 @@ export function MesPrestationsPage() {
         onOpenChange={setShowCreer}
         onSubmitted={load}
       />
+
+      <AnnulerDemandeDialog
+        open={annulation.open}
+        onOpenChange={(o) => setAnnulation((s) => ({ ...s, open: o }))}
+        demandeType={annulation.type}
+        demandeId={annulation.id}
+        onSuccess={load}
+      />
     </div>
   );
 }
