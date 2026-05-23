@@ -76,13 +76,14 @@ export function CreerDemandeRdvDialog({
 
   // Load vehicules + max
   useEffect(() => {
-    if (!open || !profile?.entreprise_id) return;
+    const entrepriseId = profile?.entreprise_id;
+    if (!open || !entrepriseId) return;
     (async () => {
       const [{ data: vehData }, { data: maxData }] = await Promise.all([
         supabase
           .from("vehicules")
           .select("id, immatriculation, marque, modele")
-          .eq("entreprise_id", profile.entreprise_id)
+          .eq("entreprise_id", entrepriseId)
           .eq("statut", "actif")
           .order("immatriculation"),
         supabase.rpc("get_max_vehicules_par_demande"),
