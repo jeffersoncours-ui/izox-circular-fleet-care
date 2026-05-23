@@ -43,7 +43,7 @@ export function MesPrestationsPage() {
       supabase
         .from("interventions")
         .select(
-          "id, statut, type_prestation, date_intervention, vehicules(immatriculation, marque, modele)",
+          "id, statut, type_prestation, date_intervention, demande_rdv_id, vehicules(immatriculation, marque, modele)",
         )
         .eq("entreprise_id", profile.entreprise_id)
         .order("date_intervention", { ascending: false }),
