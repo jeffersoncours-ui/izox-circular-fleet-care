@@ -72,6 +72,9 @@ function DemandesGelPage() {
     load();
   }, [load]);
 
+  const search = Route.useSearch();
+  useAutoOpenFromSearch<Row>(search.demande, rows, "id", (r) => setSelected(r));
+
   const filtered = filter === "all" ? rows : rows.filter((r) => r.statut === filter);
   const nbEnAttente = rows.filter((r) => r.statut === "en_attente").length;
 
