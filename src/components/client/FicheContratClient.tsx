@@ -472,21 +472,34 @@ function formatDate(d: string) {
 }
 
 function VehiculeMiniList({ items }: { items: VehiculeLite[] }) {
+  const navigate = useNavigate();
   return (
     <div className="space-y-1.5">
       {items.map((v) => (
-        <div
+        <button
           key={v.id}
-          className="flex items-center justify-between gap-2 p-2 border rounded-md"
+          type="button"
+          onClick={() =>
+            navigate({ to: "/client/flotte/$id", params: { id: v.id } })
+          }
+          className="w-full flex items-center justify-between gap-2 p-2 border rounded-md text-left hover:bg-muted/30 transition-colors"
         >
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium truncate">{v.immatriculation}</p>
             <p className="text-xs text-muted-foreground truncate">
               {[v.marque, v.modele].filter(Boolean).join(" ") || "—"}
             </p>
+            {v.type_pack_souhaite && (
+              <p className="text-xs text-muted-foreground">
+                {getPackLabel(v.type_pack_souhaite)}
+              </p>
+            )}
           </div>
-          <StatutBadge type="vehicule" statut={v.statut} size="sm" />
-        </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <StatutBadge type="vehicule" statut={v.statut} size="sm" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </button>
       ))}
     </div>
   );
