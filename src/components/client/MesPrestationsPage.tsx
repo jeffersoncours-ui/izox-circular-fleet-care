@@ -22,10 +22,16 @@ interface DemandeGelClient {
   id: string;
   type_demande: "vehicules" | "contrat" | string;
   motif: string | null;
-  date_debut_souhaitee: string | null;
-  date_fin_souhaitee: string | null;
+  date_debut: string | null;
+  date_fin_prevue: string | null;
+  statut: "en_attente" | "validee" | string;
+  vehicule_ids: string[] | null;
   created_at: string;
-  vehicules?: { immatriculation: string; marque: string | null; modele: string | null } | null;
+}
+
+interface VehiculeLite {
+  id: string;
+  immatriculation: string;
 }
 
 function formatDateFR(iso: string): string {
