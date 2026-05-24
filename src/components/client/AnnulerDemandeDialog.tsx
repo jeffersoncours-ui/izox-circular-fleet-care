@@ -43,8 +43,8 @@ export function AnnulerDemandeDialog({
       toast.success(
         `Votre demande de ${demandeType === "gel" ? "gel" : "RDV"} a été annulée`,
       );
-      queryClient.invalidateQueries({ queryKey: ["demandes-gel"] });
-      queryClient.invalidateQueries({ queryKey: ["demandes-rdv"] });
+
+
 
       onSuccess?.();
       onOpenChange(false);
