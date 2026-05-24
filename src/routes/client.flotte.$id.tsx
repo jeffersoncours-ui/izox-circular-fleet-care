@@ -70,10 +70,29 @@ function VehiculeDetail() {
       .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id")
       .eq("id", id)
       .maybeSingle();
-    setVehicule((data as Vehicule) ?? null);
+    const v = (data as Vehicule) ?? null;
+    setVehicule(v);
     setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
+
+    // Détecte une demande de gel en attente (par véhicule ou par contrat)
+    if (v && profile?.entreprise_id) {
+      const orFilter = v.contrat_id
+        ? `vehicule_id.eq.${v.id},and(type_demande.eq.contrat,contrat_id.eq.${v.contrat_id})`
+        : `vehicule_id.eq.${v.id}`;
+      const { data: gel } = await supabase
+        .from("demandes_gel")
+        .select("id")
+        .eq("entreprise_id", profile.entreprise_id)
+        .eq("statut", "en_attente")
+        .or(orFilter)
+        .limit(1)
+        .maybeSingle();
+      setDemandeGelEnAttente(!!gel);
+    } else {
+      setDemandeGelEnAttente(false);
+    }
     setLoading(false);
-  }, [id]);
+  }, [id, profile?.entreprise_id]);
 
   useEffect(() => {
     load();
