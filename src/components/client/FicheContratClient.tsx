@@ -277,6 +277,47 @@ export function FicheContratClient() {
         </CardContent>
       </Card>
 
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Véhicules</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          {vehicules.length === 0 ? (
+            <p className="text-muted-foreground">Aucun véhicule</p>
+          ) : (
+            <>
+              {vehiculesActifs.length > 0 && (
+                <section>
+                  <h4 className="font-medium mb-2">
+                    Véhicules actifs ({vehiculesActifs.length})
+                  </h4>
+                  <VehiculeMiniList items={vehiculesActifs} />
+                </section>
+              )}
+              {vehiculesEnAttente.length > 0 && (
+                <section>
+                  <h4 className="font-medium mb-2 text-orange-700">
+                    En attente de validation ({vehiculesEnAttente.length})
+                  </h4>
+                  <VehiculeMiniList items={vehiculesEnAttente} />
+                </section>
+              )}
+              {vehiculesGeles.length > 0 && (
+                <section>
+                  <h4 className="font-medium mb-2 text-blue-700 flex items-center gap-2">
+                    <Snowflake className="h-4 w-4" />
+                    Véhicules gelés ({vehiculesGeles.length})
+                  </h4>
+                  <div className="opacity-60">
+                    <VehiculeMiniList items={vehiculesGeles} />
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Button
           variant="outline"
