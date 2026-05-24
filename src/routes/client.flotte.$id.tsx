@@ -94,13 +94,6 @@ function VehiculeDetail() {
     } else {
       setRdvLiesCount({ futur: 0, passe: 0 });
     }
-      .from("vehicules")
-      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id")
-      .eq("id", id)
-      .maybeSingle();
-    const v = (data as Vehicule) ?? null;
-    setVehicule(v);
-    setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
 
     // Détecte une demande de gel en attente (par véhicule ou par contrat)
     if (v && profile?.entreprise_id) {
