@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { useNavigate } from "@tanstack/react-router";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";

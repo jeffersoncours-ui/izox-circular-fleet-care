@@ -47,7 +47,14 @@ function AdminRendezVousPage() {
           <CalendrierRdvPlaceholder />
         </TabsContent>
 
-        <TabsContent value="demandes" className="mt-6">
+        {/* forceMount : empêche le démontage de DemandesRdvList au changement
+            d'onglet, pour préserver lastHandledIdRef du hook useAutoOpenFromSearch.
+            data-[state=inactive]:hidden masque visuellement quand inactif. */}
+        <TabsContent
+          value="demandes"
+          forceMount
+          className="mt-6 data-[state=inactive]:hidden"
+        >
           <DemandesRdvList />
         </TabsContent>
       </Tabs>
