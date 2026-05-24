@@ -178,10 +178,16 @@ export function DemandesRdvList() {
 
       <GererDemandeRdvDialog
         open={!!selected}
-        onOpenChange={(o) => !o && setSelected(null)}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSelected(null);
+            clearDemandeParam();
+          }
+        }}
         demande={selected}
         onProcessed={() => {
           setSelected(null);
+          clearDemandeParam();
           load();
         }}
       />
