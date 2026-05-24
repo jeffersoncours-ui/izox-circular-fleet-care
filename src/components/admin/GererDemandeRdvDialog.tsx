@@ -117,7 +117,6 @@ export function GererDemandeRdvDialog({
         p_demande_id: demande.id,
         p_date_intervention: iso,
         p_vehicule_id: vehiculeId,
-        p_type_pack: typePack,
       });
       if (error) throw error;
       toast.success("RDV confirmé. Intervention créée et notifiée au client.");
