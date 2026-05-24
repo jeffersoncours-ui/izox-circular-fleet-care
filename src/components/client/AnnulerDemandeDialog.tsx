@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ export function AnnulerDemandeDialog({
   onSuccess,
 }: AnnulerDemandeDialogProps) {
   const [loading, setLoading] = useState(false);
-  const queryClient = useQueryClient();
+  
 
   const handleAnnuler = async () => {
     if (!demandeId) return;
@@ -44,8 +43,8 @@ export function AnnulerDemandeDialog({
       toast.success(
         `Votre demande de ${demandeType === "gel" ? "gel" : "RDV"} a été annulée`,
       );
-      queryClient.invalidateQueries({ queryKey: ["demandes-gel"] });
-      queryClient.invalidateQueries({ queryKey: ["demandes-rdv"] });
+
+
 
       onSuccess?.();
       onOpenChange(false);
