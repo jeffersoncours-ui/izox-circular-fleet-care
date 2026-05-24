@@ -62,6 +62,7 @@ function VehiculeDetail() {
   const [rdvOpen, setRdvOpen] = useState(false);
   const [gelOpen, setGelOpen] = useState(false);
   const [demandeGelEnAttente, setDemandeGelEnAttente] = useState(false);
+  const [rdvLiesCount, setRdvLiesCount] = useState({ futur: 0, passe: 0 });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,6 +74,26 @@ function VehiculeDetail() {
     const v = (data as Vehicule) ?? null;
     setVehicule(v);
     setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
+
+    if (v) {
+      const today = new Date().toISOString().split("T")[0];
+      const [{ count: countFutur }, { count: countPasse }] = await Promise.all([
+        supabase
+          .from("demandes_rdv")
+          .select("id", { count: "exact", head: true })
+          .eq("statut", "confirmee")
+          .gte("date_confirmee", today)
+          .contains("vehicule_ids", [v.id]),
+        supabase
+          .from("interventions")
+          .select("id", { count: "exact", head: true })
+          .eq("vehicule_id", v.id)
+          .in("statut", ["validee", "en_revision"]),
+      ]);
+      setRdvLiesCount({ futur: countFutur ?? 0, passe: countPasse ?? 0 });
+    } else {
+      setRdvLiesCount({ futur: 0, passe: 0 });
+    }
 
     // Détecte une demande de gel en attente (par véhicule ou par contrat)
     if (v && profile?.entreprise_id) {
@@ -212,6 +233,37 @@ function VehiculeDetail() {
           </ul>
         </Card>
       )}
+
+      <Card className="p-5 shadow-card border-border/60 mb-5">
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">
+          Rendez-vous liés
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-primary">
+              {rdvLiesCount.futur}
+            </span>
+            <span className="text-xs text-muted-foreground">À venir</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-muted-foreground">
+              {rdvLiesCount.passe}
+            </span>
+            <span className="text-xs text-muted-foreground">Réalisés</span>
+          </div>
+        </div>
+        {(rdvLiesCount.futur > 0 || rdvLiesCount.passe > 0) && (
+          <Button
+            variant="link"
+            size="sm"
+            className="mt-2 p-0 h-auto"
+            onClick={() => navigate({ to: "/client/prestations" })}
+          >
+            Voir tous les rendez-vous →
+          </Button>
+        )}
+      </Card>
+
 
       {vehicule.contrat_id && vehicule.statut === "actif" && demandeGelEnAttente && (
         <Badge

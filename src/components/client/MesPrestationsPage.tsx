@@ -15,6 +15,7 @@ import {
 } from "@/components/client/LignePrestation";
 import { CreerDemandeRdvDialog } from "@/components/client/CreerDemandeRdvDialog";
 import { AnnulerDemandeDialog } from "@/components/client/AnnulerDemandeDialog";
+import { DetailDemandeRdvDialog } from "@/components/client/DetailDemandeRdvDialog";
 import { Badge } from "@/components/ui/badge";
 
 interface DemandeGelClient {
@@ -47,6 +48,13 @@ export function MesPrestationsPage() {
     type: "gel" | "rdv";
     id: string;
   }>({ open: false, type: "rdv", id: "" });
+  const [detailRdvId, setDetailRdvId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const openDetail = (id: string) => {
+    setDetailRdvId(id);
+    setDetailOpen(true);
+  };
 
 
   const load = useCallback(async () => {
@@ -151,19 +159,14 @@ export function MesPrestationsPage() {
               {demandesEnAttente.length > 0 && (
                 <Section title="Demandes en attente">
                   {demandesEnAttente.map((d) => (
-                    <div key={d.id} className="space-y-1">
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => openDetail(d.id)}
+                      className="block w-full text-left rounded-lg transition-colors hover:bg-muted/30"
+                    >
                       <LigneDemandeRdv demande={d} />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive h-7"
-                        onClick={() =>
-                          setAnnulation({ open: true, type: "rdv", id: d.id })
-                        }
-                      >
-                        <X className="h-3.5 w-3.5" /> Annuler ma demande
-                      </Button>
-                    </div>
+                    </button>
                   ))}
                 </Section>
               )}
@@ -172,7 +175,12 @@ export function MesPrestationsPage() {
                   {demandesConfirmees.map((d) => {
                     const interventionLiee = interventionParDemande.get(d.id);
                     return (
-                      <div key={d.id} className="space-y-1">
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => openDetail(d.id)}
+                        className="block w-full text-left rounded-lg transition-colors hover:bg-muted/30 space-y-1"
+                      >
                         <LigneDemandeRdv demande={d} />
                         {interventionLiee?.date_intervention && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
@@ -191,7 +199,7 @@ export function MesPrestationsPage() {
                             </span>
                           </div>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </Section>
@@ -296,6 +304,13 @@ export function MesPrestationsPage() {
         onOpenChange={(o) => setAnnulation((s) => ({ ...s, open: o }))}
         demandeType={annulation.type}
         demandeId={annulation.id}
+        onSuccess={load}
+      />
+
+      <DetailDemandeRdvDialog
+        demandeId={detailRdvId}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
         onSuccess={load}
       />
     </div>

@@ -110,7 +110,7 @@ export function FicheContratClient() {
       .from("vehicules")
       .select("id, immatriculation, marque, modele, statut")
       .eq("contrat_id", id)
-      .in("statut", ["actif", "en_attente_validation"])
+      .in("statut", ["actif", "en_attente_validation", "gele"])
       .order("created_at", { ascending: true });
     setVehicules((vehData ?? []) as VehiculeLite[]);
 
@@ -167,6 +167,8 @@ export function FicheContratClient() {
   }
 
   const vehiculesActifs = vehicules.filter((v) => v.statut === "actif");
+  const vehiculesEnAttente = vehicules.filter((v) => v.statut === "en_attente_validation");
+  const vehiculesGeles = vehicules.filter((v) => v.statut === "gele");
   const isDernierVehicule = vehiculesActifs.length <= 1;
 
   return (
@@ -271,6 +273,47 @@ export function FicheContratClient() {
                 </span>
               </div>
             ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Véhicules</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          {vehicules.length === 0 ? (
+            <p className="text-muted-foreground">Aucun véhicule</p>
+          ) : (
+            <>
+              {vehiculesActifs.length > 0 && (
+                <section>
+                  <h4 className="font-medium mb-2">
+                    Véhicules actifs ({vehiculesActifs.length})
+                  </h4>
+                  <VehiculeMiniList items={vehiculesActifs} />
+                </section>
+              )}
+              {vehiculesEnAttente.length > 0 && (
+                <section>
+                  <h4 className="font-medium mb-2 text-orange-700">
+                    En attente de validation ({vehiculesEnAttente.length})
+                  </h4>
+                  <VehiculeMiniList items={vehiculesEnAttente} />
+                </section>
+              )}
+              {vehiculesGeles.length > 0 && (
+                <section>
+                  <h4 className="font-medium mb-2 text-blue-700 flex items-center gap-2">
+                    <Snowflake className="h-4 w-4" />
+                    Véhicules gelés ({vehiculesGeles.length})
+                  </h4>
+                  <div className="opacity-60">
+                    <VehiculeMiniList items={vehiculesGeles} />
+                  </div>
+                </section>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -424,4 +467,25 @@ function formatDate(d: string) {
   } catch {
     return d;
   }
+}
+
+function VehiculeMiniList({ items }: { items: VehiculeLite[] }) {
+  return (
+    <div className="space-y-1.5">
+      {items.map((v) => (
+        <div
+          key={v.id}
+          className="flex items-center justify-between gap-2 p-2 border rounded-md"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{v.immatriculation}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {[v.marque, v.modele].filter(Boolean).join(" ") || "—"}
+            </p>
+          </div>
+          <StatutBadge type="vehicule" statut={v.statut} size="sm" />
+        </div>
+      ))}
+    </div>
+  );
 }
