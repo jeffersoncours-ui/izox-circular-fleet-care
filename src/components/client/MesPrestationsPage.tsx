@@ -40,6 +40,7 @@ export function MesPrestationsPage() {
   const [loading, setLoading] = useState(true);
   const [demandes, setDemandes] = useState<DemandeRdv[]>([]);
   const [interventions, setInterventions] = useState<PrestationItem[]>([]);
+  const [demandesGel, setDemandesGel] = useState<DemandeGelClient[]>([]);
   const [showCreer, setShowCreer] = useState(false);
   const [annulation, setAnnulation] = useState<{
     open: boolean;
@@ -54,7 +55,7 @@ export function MesPrestationsPage() {
       return;
     }
     setLoading(true);
-    const [dRes, iRes] = await Promise.all([
+    const [dRes, iRes, gRes] = await Promise.all([
       supabase
         .from("demandes_rdv")
         .select("*")
@@ -67,9 +68,18 @@ export function MesPrestationsPage() {
         )
         .eq("entreprise_id", profile.entreprise_id)
         .order("date_intervention", { ascending: false }),
+      supabase
+        .from("demandes_gel")
+        .select(
+          "id, type_demande, motif, date_debut_souhaitee, date_fin_souhaitee, created_at, vehicules!demandes_gel_vehicule_id_fkey(immatriculation, marque, modele)",
+        )
+        .eq("entreprise_id", profile.entreprise_id)
+        .eq("statut", "en_attente")
+        .order("created_at", { ascending: false }),
     ]);
     setDemandes((dRes.data ?? []) as unknown as DemandeRdv[]);
     setInterventions((iRes.data ?? []) as unknown as PrestationItem[]);
+    setDemandesGel((gRes.data ?? []) as unknown as DemandeGelClient[]);
     setLoading(false);
   }, [profile?.entreprise_id]);
 
