@@ -9,7 +9,7 @@
  * - Créneaux : matin (8h-12h) ou après-midi (14h-18h)
  */
 
-import { addDays, isBefore, isSameDay, isWeekend, startOfDay } from "date-fns";
+import { addDays, endOfMonth, isBefore, isSameDay, isWeekend, startOfDay } from "date-fns";
 
 export function getJoursFeriesFr(year: number): Date[] {
   const fixes = [
