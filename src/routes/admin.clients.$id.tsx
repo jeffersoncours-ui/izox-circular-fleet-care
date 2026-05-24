@@ -629,6 +629,11 @@ function VehiculesGroupes({
               {[v.marque, v.modele].filter(Boolean).join(" ") || "Véhicule"}
             </p>
             <p className="font-mono text-xs text-primary">{v.immatriculation}</p>
+            {v.type_pack_souhaite && (
+              <p className="text-xs text-muted-foreground">
+                {getPackLabel(v.type_pack_souhaite)}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <Button
