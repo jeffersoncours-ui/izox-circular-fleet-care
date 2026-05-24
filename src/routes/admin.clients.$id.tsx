@@ -68,6 +68,7 @@ interface Vehicule {
   notes: string | null;
   photo_path: string | null;
   statut: string;
+  type_pack_souhaite: string | null;
 }
 
 function ClientDetailPage() {
