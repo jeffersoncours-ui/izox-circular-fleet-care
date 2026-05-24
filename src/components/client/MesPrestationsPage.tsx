@@ -48,6 +48,7 @@ export function MesPrestationsPage() {
   const [demandes, setDemandes] = useState<DemandeRdv[]>([]);
   const [interventions, setInterventions] = useState<PrestationItem[]>([]);
   const [demandesGel, setDemandesGel] = useState<DemandeGelClient[]>([]);
+  const [vehiculesMap, setVehiculesMap] = useState<Record<string, string>>({});
   const [showCreer, setShowCreer] = useState(false);
   const [annulation, setAnnulation] = useState<{
     open: boolean;
