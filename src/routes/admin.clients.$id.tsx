@@ -299,58 +299,15 @@ function ClientDetailPage() {
             ) : vehicules.length === 0 ? (
               <p className="text-sm text-muted-foreground">Aucun véhicule enregistré.</p>
             ) : (
-              <div className="grid sm:grid-cols-2 gap-3">
-                {vehicules.map((v) => (
-                  <Link
-                    key={v.id}
-                    to="/admin/vehicules/$id"
-                    params={{ id: v.id }}
-                    className="flex items-center gap-3 p-3 bg-muted rounded-md transition-colors hover:bg-muted/70"
-                  >
-                    <VehiculeThumbnail
-                      photoPath={v.photo_path}
-                      alt={[v.marque, v.modele].filter(Boolean).join(" ") || v.immatriculation}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">
-                        {[v.marque, v.modele].filter(Boolean).join(" ") || "Véhicule"}
-                      </p>
-                      <p className="font-mono text-xs text-primary">{v.immatriculation}</p>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleEdit(v);
-                        }}
-                        aria-label="Modifier"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDeleteTarget(v);
-                        }}
-                        aria-label="Supprimer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <VehiculesGroupes
+                vehicules={vehicules}
+                onEdit={handleEdit}
+                onDelete={(v) => setDeleteTarget(v)}
+              />
             )}
           </Card>
         </TabsContent>
+
 
         <TabsContent value="contrats" className="mt-6">
           <ContratsTab entrepriseId={id} onAddVehicule={() => setAddOpen(true)} />
