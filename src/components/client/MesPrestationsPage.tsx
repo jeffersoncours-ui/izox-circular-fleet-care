@@ -15,6 +15,25 @@ import {
 } from "@/components/client/LignePrestation";
 import { CreerDemandeRdvDialog } from "@/components/client/CreerDemandeRdvDialog";
 import { AnnulerDemandeDialog } from "@/components/client/AnnulerDemandeDialog";
+import { Badge } from "@/components/ui/badge";
+
+interface DemandeGelClient {
+  id: string;
+  type_demande: "vehicules" | "contrat" | string;
+  motif: string | null;
+  date_debut_souhaitee: string | null;
+  date_fin_souhaitee: string | null;
+  created_at: string;
+  vehicules?: { immatriculation: string; marque: string | null; modele: string | null } | null;
+}
+
+function formatDateFR(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export function MesPrestationsPage() {
   const { profile } = useAuth();
