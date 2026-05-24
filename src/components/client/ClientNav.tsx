@@ -8,7 +8,7 @@ import { NotificationCenter } from "@/components/admin/NotificationCenter";
 const TABS = [
   { to: "/client", label: "Accueil", icon: Home, exact: true },
   { to: "/client/flotte", label: "Ma flotte", icon: Car },
-  { to: "/client/prestations", label: "Prestations", icon: ClipboardList },
+  { to: "/client/prestations", label: "Mes prestations", icon: ClipboardList },
   { to: "/client/factures", label: "Factures", icon: Receipt },
   { to: "/client/documents", label: "Documents", icon: FolderOpen },
 ];

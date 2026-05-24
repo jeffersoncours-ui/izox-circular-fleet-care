@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar as CalendarIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, Calendar as CalendarIcon, Info, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -139,10 +139,17 @@ export function CreerDemandeRdvDialog({
   const maxDate = useMemo(() => getMaxDateSelectable(), [open]);
 
   const creneauxRemplis = creneaux.filter((c) => c.date);
+  const hasDoublonCreneaux = (() => {
+    const cles = creneauxRemplis.map(
+      (c) => `${format(c.date!, "yyyy-MM-dd")}-${c.creneau}`,
+    );
+    return new Set(cles).size !== cles.length;
+  })();
   const canSubmit =
     selectedVehiculeIds.length >= 1 &&
     selectedVehiculeIds.length <= maxVehicules &&
     creneauxRemplis.length >= 1 &&
+    !hasDoublonCreneaux &&
     !submitting;
 
   const handleSubmit = async () => {
@@ -233,6 +240,17 @@ export function CreerDemandeRdvDialog({
                 </ul>
               )}
             </ScrollArea>
+            {selectedVehiculeIds.length === 2 && (
+              <Alert className="bg-blue-50 border-blue-200">
+                <Info className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-900 text-sm">
+                  Les <strong>2 véhicules</strong> seront traités{" "}
+                  <strong>lors du même passage</strong>. L'équipe interviendra à
+                  l'heure exacte communiquée par l'admin après validation, et
+                  enchaînera les véhicules sur place.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Créneaux */}
@@ -318,12 +336,23 @@ export function CreerDemandeRdvDialog({
                 <Plus className="h-4 w-4" /> Ajouter un autre créneau
               </Button>
             )}
+            {hasDoublonCreneaux && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Deux créneaux identiques (même date et même demi-journée) ne
+                  sont pas autorisés. Veuillez modifier ou supprimer l'un d'entre
+                  eux.
+                </AlertDescription>
+              </Alert>
+            )}
             <Alert>
               <AlertDescription className="text-xs">
-                Sélection possible du{" "}
-                <strong>{format(minDate, "d MMM yyyy", { locale: fr })}</strong>{" "}
-                au <strong>{format(maxDate, "d MMM yyyy", { locale: fr })}</strong>.
-                Hors weekends et jours fériés.
+                <strong>
+                  Sélection possible jusqu'au{" "}
+                  {format(maxDate, "d MMMM yyyy", { locale: fr })}
+                </strong>{" "}
+                (fin du mois en cours, hors weekends et jours fériés).
               </AlertDescription>
             </Alert>
           </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { CalendarPlus, ClipboardList, Loader2, X, CalendarCheck } from "lucide-react";
+import { CalendarPlus, ClipboardList, Loader2, X, CalendarCheck, Snowflake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,32 @@ import {
 } from "@/components/client/LignePrestation";
 import { CreerDemandeRdvDialog } from "@/components/client/CreerDemandeRdvDialog";
 import { AnnulerDemandeDialog } from "@/components/client/AnnulerDemandeDialog";
+import { Badge } from "@/components/ui/badge";
+
+interface DemandeGelClient {
+  id: string;
+  type_demande: "vehicules" | "contrat" | string;
+  motif: string | null;
+  date_debut_souhaitee: string | null;
+  date_fin_souhaitee: string | null;
+  created_at: string;
+  vehicules?: { immatriculation: string; marque: string | null; modele: string | null } | null;
+}
+
+function formatDateFR(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export function MesPrestationsPage() {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [demandes, setDemandes] = useState<DemandeRdv[]>([]);
   const [interventions, setInterventions] = useState<PrestationItem[]>([]);
+  const [demandesGel, setDemandesGel] = useState<DemandeGelClient[]>([]);
   const [showCreer, setShowCreer] = useState(false);
   const [annulation, setAnnulation] = useState<{
     open: boolean;
@@ -35,7 +55,7 @@ export function MesPrestationsPage() {
       return;
     }
     setLoading(true);
-    const [dRes, iRes] = await Promise.all([
+    const [dRes, iRes, gRes] = await Promise.all([
       supabase
         .from("demandes_rdv")
         .select("*")
@@ -48,9 +68,18 @@ export function MesPrestationsPage() {
         )
         .eq("entreprise_id", profile.entreprise_id)
         .order("date_intervention", { ascending: false }),
+      supabase
+        .from("demandes_gel")
+        .select(
+          "id, type_demande, motif, date_debut_souhaitee, date_fin_souhaitee, created_at, vehicules!demandes_gel_vehicule_id_fkey(immatriculation, marque, modele)",
+        )
+        .eq("entreprise_id", profile.entreprise_id)
+        .eq("statut", "en_attente")
+        .order("created_at", { ascending: false }),
     ]);
     setDemandes((dRes.data ?? []) as unknown as DemandeRdv[]);
     setInterventions((iRes.data ?? []) as unknown as PrestationItem[]);
+    setDemandesGel((gRes.data ?? []) as unknown as DemandeGelClient[]);
     setLoading(false);
   }, [profile?.entreprise_id]);
 
@@ -79,7 +108,10 @@ export function MesPrestationsPage() {
   }, [interventions]);
 
   const nbAVenir =
-    demandesEnAttente.length + demandesConfirmees.length + interventionsPlanifiees.length;
+    demandesEnAttente.length +
+    demandesConfirmees.length +
+    interventionsPlanifiees.length +
+    demandesGel.length;
   const nbHisto = interventionsValidees.length + demandesGriseesHisto.length;
 
   if (loading) {
@@ -168,6 +200,60 @@ export function MesPrestationsPage() {
                 <Section title="Interventions planifiées">
                   {interventionsPlanifiees.map((i) => (
                     <LignePrestation key={i.id} item={i} variant="planifiee" />
+                  ))}
+                </Section>
+              )}
+              {demandesGel.length > 0 && (
+                <Section title={`Demandes de gel en attente (${demandesGel.length})`}>
+                  {demandesGel.map((dg) => (
+                    <Card key={dg.id} className="p-4 shadow-card border-border/60">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1">
+                          <Snowflake className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm">
+                              Demande de gel —{" "}
+                              {dg.type_demande === "vehicules" || dg.type_demande === "vehicule"
+                                ? `Véhicule ${dg.vehicules?.immatriculation ?? ""}`
+                                : "Contrat complet"}
+                            </div>
+                            {dg.date_debut_souhaitee && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Du {formatDateFR(dg.date_debut_souhaitee)}
+                                {dg.date_fin_souhaitee &&
+                                  ` au ${formatDateFR(dg.date_fin_souhaitee)}`}
+                              </div>
+                            )}
+                            {dg.motif && (
+                              <div className="text-xs text-muted-foreground mt-1 italic">
+                                Motif : {dg.motif}
+                              </div>
+                            )}
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Créée le {formatDateFR(dg.created_at)}
+                            </div>
+                          </div>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="bg-orange-50 text-orange-700 border-orange-200"
+                        >
+                          En attente
+                        </Badge>
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive h-7"
+                          onClick={() =>
+                            setAnnulation({ open: true, type: "gel", id: dg.id })
+                          }
+                        >
+                          <X className="h-3.5 w-3.5" /> Annuler ma demande
+                        </Button>
+                      </div>
+                    </Card>
                   ))}
                 </Section>
               )}

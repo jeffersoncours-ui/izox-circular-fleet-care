@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets, CalendarPlus, Snowflake } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets, CalendarPlus, Snowflake, Clock } from "lucide-react";
 
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
@@ -61,6 +61,7 @@ function VehiculeDetail() {
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
   const [rdvOpen, setRdvOpen] = useState(false);
   const [gelOpen, setGelOpen] = useState(false);
+  const [demandeGelEnAttente, setDemandeGelEnAttente] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,10 +70,29 @@ function VehiculeDetail() {
       .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id")
       .eq("id", id)
       .maybeSingle();
-    setVehicule((data as Vehicule) ?? null);
+    const v = (data as Vehicule) ?? null;
+    setVehicule(v);
     setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
+
+    // Détecte une demande de gel en attente (par véhicule ou par contrat)
+    if (v && profile?.entreprise_id) {
+      const orFilter = v.contrat_id
+        ? `vehicule_id.eq.${v.id},and(type_demande.eq.contrat,contrat_id.eq.${v.contrat_id})`
+        : `vehicule_id.eq.${v.id}`;
+      const { data: gel } = await supabase
+        .from("demandes_gel")
+        .select("id")
+        .eq("entreprise_id", profile.entreprise_id)
+        .eq("statut", "en_attente")
+        .or(orFilter)
+        .limit(1)
+        .maybeSingle();
+      setDemandeGelEnAttente(!!gel);
+    } else {
+      setDemandeGelEnAttente(false);
+    }
     setLoading(false);
-  }, [id]);
+  }, [id, profile?.entreprise_id]);
 
   useEffect(() => {
     load();
@@ -193,6 +213,15 @@ function VehiculeDetail() {
         </Card>
       )}
 
+      {vehicule.contrat_id && vehicule.statut === "actif" && demandeGelEnAttente && (
+        <Badge
+          variant="outline"
+          className="bg-orange-50 text-orange-700 border-orange-200 mb-3"
+        >
+          <Clock className="h-3 w-3 mr-1" /> Demande de gel en cours
+        </Badge>
+      )}
+
       {vehicule.contrat_id && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
           {vehicule.statut === "actif" ? (
@@ -200,8 +229,13 @@ function VehiculeDetail() {
               <Button variant="default" onClick={() => setRdvOpen(true)}>
                 <CalendarPlus className="h-4 w-4" /> Demander un RDV
               </Button>
-              <Button variant="outline" onClick={() => setGelOpen(true)}>
-                <Snowflake className="h-4 w-4" /> Demander un gel
+              <Button
+                variant="outline"
+                onClick={() => setGelOpen(true)}
+                disabled={demandeGelEnAttente}
+              >
+                <Snowflake className="h-4 w-4" />{" "}
+                {demandeGelEnAttente ? "Gel en cours de validation" : "Demander un gel"}
               </Button>
             </>
           ) : vehicule.statut === "gele" ? (

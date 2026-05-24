@@ -9,7 +9,7 @@
  * - Créneaux : matin (8h-12h) ou après-midi (14h-18h)
  */
 
-import { addDays, isBefore, isSameDay, isWeekend, startOfDay } from "date-fns";
+import { addDays, endOfMonth, isBefore, isSameDay, isWeekend, startOfDay } from "date-fns";
 
 export function getJoursFeriesFr(year: number): Date[] {
   const fixes = [
@@ -72,8 +72,13 @@ export function getMinDateSelectable(): Date {
   return candidate;
 }
 
+/**
+ * Date maximale sélectionnable pour une demande de RDV client.
+ * Contrainte produit (c.11.2.2.C.1) : la demande doit être planifiée dans le
+ * mois calendaire en cours. Pas de report au mois suivant (règle métier IZOX).
+ */
 export function getMaxDateSelectable(): Date {
-  return addDays(startOfDay(new Date()), 60);
+  return endOfMonth(startOfDay(new Date()));
 }
 
 export const CRENEAUX_HORAIRES = [
