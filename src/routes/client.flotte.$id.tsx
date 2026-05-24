@@ -61,6 +61,7 @@ function VehiculeDetail() {
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
   const [rdvOpen, setRdvOpen] = useState(false);
   const [gelOpen, setGelOpen] = useState(false);
+  const [demandeGelEnAttente, setDemandeGelEnAttente] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
