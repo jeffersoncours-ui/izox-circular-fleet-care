@@ -596,3 +596,136 @@ function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; on
   );
 }
 
+function VehiculesGroupes({
+  vehicules,
+  onEdit,
+  onDelete,
+}: {
+  vehicules: Vehicule[];
+  onEdit: (v: Vehicule) => void;
+  onDelete: (v: Vehicule) => void;
+}) {
+  const actifs = vehicules.filter((v) => v.statut === "actif");
+  const geles = vehicules.filter((v) => v.statut === "gele");
+  const enAttente = vehicules.filter((v) => v.statut === "en_attente_validation");
+  const useAccordion = vehicules.length > 5;
+
+  const renderGrid = (items: Vehicule[]) => (
+    <div className="grid sm:grid-cols-2 gap-3">
+      {items.map((v) => (
+        <Link
+          key={v.id}
+          to="/admin/vehicules/$id"
+          params={{ id: v.id }}
+          className="flex items-center gap-3 p-3 bg-muted rounded-md transition-colors hover:bg-muted/70"
+        >
+          <VehiculeThumbnail
+            photoPath={v.photo_path}
+            alt={[v.marque, v.modele].filter(Boolean).join(" ") || v.immatriculation}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-sm truncate">
+              {[v.marque, v.modele].filter(Boolean).join(" ") || "Véhicule"}
+            </p>
+            <p className="font-mono text-xs text-primary">{v.immatriculation}</p>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit(v);
+              }}
+              aria-label="Modifier"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete(v);
+              }}
+              aria-label="Supprimer"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+
+  if (useAccordion) {
+    return (
+      <Accordion type="multiple" defaultValue={["actifs"]}>
+        {actifs.length > 0 && (
+          <AccordionItem value="actifs">
+            <AccordionTrigger>
+              Véhicules actifs ({actifs.length})
+            </AccordionTrigger>
+            <AccordionContent>{renderGrid(actifs)}</AccordionContent>
+          </AccordionItem>
+        )}
+        {enAttente.length > 0 && (
+          <AccordionItem value="en_attente">
+            <AccordionTrigger className="text-orange-700">
+              En attente de validation ({enAttente.length})
+            </AccordionTrigger>
+            <AccordionContent>{renderGrid(enAttente)}</AccordionContent>
+          </AccordionItem>
+        )}
+        {geles.length > 0 && (
+          <AccordionItem value="geles">
+            <AccordionTrigger className="text-blue-700">
+              <span className="flex items-center gap-2">
+                <Snowflake className="h-4 w-4" />
+                Véhicules gelés ({geles.length})
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="opacity-60">
+              {renderGrid(geles)}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+      </Accordion>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      {actifs.length > 0 && (
+        <section>
+          <h3 className="text-sm font-medium mb-2">
+            Véhicules actifs ({actifs.length})
+          </h3>
+          {renderGrid(actifs)}
+        </section>
+      )}
+      {enAttente.length > 0 && (
+        <section>
+          <h3 className="text-sm font-medium mb-2 text-orange-700">
+            En attente de validation ({enAttente.length})
+          </h3>
+          {renderGrid(enAttente)}
+        </section>
+      )}
+      {geles.length > 0 && (
+        <section>
+          <h3 className="text-sm font-medium mb-2 text-blue-700 flex items-center gap-2">
+            <Snowflake className="h-4 w-4" />
+            Véhicules gelés ({geles.length})
+          </h3>
+          <div className="opacity-60">{renderGrid(geles)}</div>
+        </section>
+      )}
+    </div>
+  );
+}
+
