@@ -110,7 +110,7 @@ export function FicheContratClient() {
       .from("vehicules")
       .select("id, immatriculation, marque, modele, statut")
       .eq("contrat_id", id)
-      .in("statut", ["actif", "en_attente_validation"])
+      .in("statut", ["actif", "en_attente_validation", "gele"])
       .order("created_at", { ascending: true });
     setVehicules((vehData ?? []) as VehiculeLite[]);
 
