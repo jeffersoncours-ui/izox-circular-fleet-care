@@ -22,7 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Trash2, Snowflake, Loader2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Trash2, Snowflake, Loader2, AlertTriangle, ChevronRight } from "lucide-react";
+import { getPackLabel } from "@/lib/pricing";
 import { StatutBadge } from "@/components/shared/StatutBadge";
 import { formatCurrency } from "@/lib/format";
 import { supprimerVehicule } from "@/lib/supprimer-vehicule";
