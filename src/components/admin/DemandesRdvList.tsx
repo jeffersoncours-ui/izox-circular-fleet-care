@@ -43,6 +43,18 @@ export function DemandesRdvList() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("en_attente");
   const [selected, setSelected] = useState<AdminDemandeRdv | null>(null);
+  const navigate = useNavigate();
+
+  const clearDemandeParam = useCallback(() => {
+    navigate({
+      to: "/admin/rendez-vous",
+      search: (prev: Record<string, unknown>) => {
+        const { demande: _omit, ...rest } = prev ?? {};
+        return rest;
+      },
+      replace: true,
+    });
+  }, [navigate]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,6 +76,7 @@ export function DemandesRdvList() {
     rows,
     "id",
     (r) => setSelected({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
+    (r) => r.statut === "en_attente",
   );
 
   const filtered = filter === "all" ? rows : rows.filter((r) => r.statut === filter);
