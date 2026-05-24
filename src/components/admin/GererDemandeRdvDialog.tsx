@@ -1,11 +1,21 @@
-import { useEffect, useState } from "react";
-import { format, parseISO } from "date-fns";
+/**
+ * GererDemandeRdvDialog
+ * ---------------------
+ * Principe métier : l'admin VALIDE ou REFUSE une demande client.
+ * Il ne CHOISIT PAS à la place du client. Les champs date, créneau,
+ * véhicule et pack sont des INFORMATIONS issues de la demande,
+ * présentées en lecture seule (ou contraintes). Seules deux actions :
+ *   - Valider : confirmer_demande_rdv(p_demande_id, p_date_intervention, p_vehicule_id)
+ *   - Refuser : refuser_demande_rdv(p_demande_id, p_motif)
+ */
+import { useEffect, useMemo, useState } from "react";
+import { parseISO } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar as CalendarIcon, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -15,10 +25,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -36,6 +44,7 @@ export interface AdminDemandeRdv {
   creneaux_preferes: any;
   commentaires: string | null;
   nb_vehicules_rdv: number;
+  vehicule_ids?: string[] | null;
   created_at: string;
 }
 
@@ -46,13 +55,56 @@ interface Props {
   onProcessed?: () => void;
 }
 
-interface VehiculeOpt {
+interface VehiculeDemande {
   id: string;
   immatriculation: string;
+  marque: string | null;
+  modele: string | null;
+  type_pack_souhaite: string | null;
 }
-interface PackOpt {
-  code: string;
-  nom: string;
+
+interface Creneau {
+  date: string; // YYYY-MM-DD
+  plage: string; // "matin" | "apres_midi" (ou variantes legacy)
+}
+
+const HEURES_MATIN = [
+  "08:00", "08:30", "09:00", "09:30",
+  "10:00", "10:30", "11:00", "11:30",
+];
+const HEURES_AM = [
+  "14:00", "14:30", "15:00", "15:30",
+  "16:00", "16:30", "17:00", "17:30",
+];
+
+function isMatin(plage: string): boolean {
+  const p = (plage || "").toLowerCase();
+  return p.includes("matin") || p === "am" || p.startsWith("mat");
+}
+
+function formatDateFR(iso: string): string {
+  try {
+    return format(parseISO(iso), "EEEE d MMMM yyyy", { locale: fr });
+  } catch {
+    return iso;
+  }
+}
+
+function formatPlageLabel(plage: string): string {
+  return isMatin(plage) ? "Matin (8h00 – 12h00)" : "Après-midi (14h00 – 18h00)";
+}
+
+function formatPackLabel(code: string | null | undefined): string {
+  switch (code) {
+    case "pack_interieur":
+      return "Pack Intérieur";
+    case "pack_standard":
+      return "Pack Standard";
+    case "pack_vtc":
+      return "Pack VTC/Taxi";
+    default:
+      return code ?? "—";
+  }
 }
 
 export function GererDemandeRdvDialog({
@@ -61,62 +113,75 @@ export function GererDemandeRdvDialog({
   demande,
   onProcessed,
 }: Props) {
-  const [vehicules, setVehicules] = useState<VehiculeOpt[]>([]);
-  const [packs, setPacks] = useState<PackOpt[]>([]);
-  const [date, setDate] = useState<Date | undefined>();
-  const [heure, setHeure] = useState("09:00");
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [vehiculeId, setVehiculeId] = useState("");
-  const [typePack, setTypePack] = useState("");
+  const [vehiculesDemande, setVehiculesDemande] = useState<VehiculeDemande[]>([]);
+  const [creneauChoisiIdx, setCreneauChoisiIdx] = useState(0);
+  const [heure, setHeure] = useState<string>("");
+  const [vehiculeChoisiId, setVehiculeChoisiId] = useState<string>("");
   const [refusOpen, setRefusOpen] = useState(false);
   const [motif, setMotif] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const creneaux: Creneau[] = useMemo(
+    () => (Array.isArray(demande?.creneaux_preferes) ? demande!.creneaux_preferes : []),
+    [demande],
+  );
+
+  const creneauChoisi = creneaux[creneauChoisiIdx];
+  const matin = creneauChoisi ? isMatin(creneauChoisi.plage) : true;
+  const heuresOptions = matin ? HEURES_MATIN : HEURES_AM;
+
+  // Reset à l'ouverture
   useEffect(() => {
     if (!demande || !open) return;
-    setDate(undefined);
-    setHeure("09:00");
-    setVehiculeId("");
-    setTypePack("");
+    setCreneauChoisiIdx(0);
     setRefusOpen(false);
     setMotif("");
+    const ids = demande.vehicule_ids ?? [];
+    setVehiculeChoisiId(ids.length > 0 ? ids[0] : "");
+  }, [demande, open]);
+
+  // Reset heure quand le créneau change
+  useEffect(() => {
+    setHeure(matin ? "09:00" : "14:00");
+  }, [creneauChoisiIdx, matin]);
+
+  // Fetch véhicules concernés par la demande
+  useEffect(() => {
+    if (!demande || !open) return;
+    const ids = demande.vehicule_ids ?? [];
+    if (ids.length === 0) {
+      setVehiculesDemande([]);
+      return;
+    }
     (async () => {
-      const [vRes, pRes] = await Promise.all([
-        supabase
-          .from("vehicules")
-          .select("id, immatriculation")
-          .eq("entreprise_id", demande.entreprise_id)
-          .eq("statut", "actif")
-          .order("immatriculation"),
-        supabase
-          .from("prestations_catalogue")
-          .select("code, nom")
-          .order("nom"),
-      ]);
-      setVehicules((vRes.data ?? []) as VehiculeOpt[]);
-      setPacks((pRes.data ?? []) as PackOpt[]);
+      const { data } = await supabase
+        .from("vehicules")
+        .select("id, immatriculation, marque, modele, type_pack_souhaite")
+        .in("id", ids);
+      setVehiculesDemande((data ?? []) as VehiculeDemande[]);
     })();
   }, [demande, open]);
 
   if (!demande) return null;
 
-  const creneaux: Array<{ date: string; plage: string }> = Array.isArray(
-    demande.creneaux_preferes,
-  )
-    ? demande.creneaux_preferes
-    : [];
+  const vehiculeChoisi = vehiculesDemande.find((v) => v.id === vehiculeChoisiId);
 
-  const canConfirm = !!date && !!vehiculeId && !!typePack && !submitting;
+  const canConfirm =
+    !!creneauChoisi &&
+    vehiculeChoisiId.length > 0 &&
+    heure.length > 0 &&
+    vehiculesDemande.length > 0 &&
+    !submitting;
 
   const handleConfirmer = async () => {
-    if (!canConfirm) return;
+    if (!canConfirm || !creneauChoisi) return;
     setSubmitting(true);
     try {
-      const iso = `${format(date!, "yyyy-MM-dd")}T${heure}:00`;
+      const iso = new Date(`${creneauChoisi.date}T${heure}:00`).toISOString();
       const { error } = await supabase.rpc("confirmer_demande_rdv", {
         p_demande_id: demande.id,
         p_date_intervention: iso,
-        p_vehicule_id: vehiculeId,
+        p_vehicule_id: vehiculeChoisiId,
       });
       if (error) throw error;
       toast.success("RDV confirmé. Intervention créée et notifiée au client.");
@@ -152,6 +217,8 @@ export function GererDemandeRdvDialog({
     }
   };
 
+  const noVehiculeIds = (demande.vehicule_ids ?? []).length === 0;
+
   return (
     <>
       <Dialog
@@ -168,17 +235,19 @@ export function GererDemandeRdvDialog({
             </DialogDescription>
           </DialogHeader>
 
+          {/* Créneaux préférés du client (info brute) */}
           <div className="space-y-3 text-sm">
             <div>
-              <p className="text-muted-foreground text-xs mb-1">Créneaux préférés du client</p>
+              <p className="text-muted-foreground text-xs mb-1">
+                Créneaux préférés du client
+              </p>
               <ul className="bg-muted/40 rounded p-2 text-xs space-y-0.5">
                 {creneaux.length === 0 ? (
                   <li className="italic text-muted-foreground">Aucun</li>
                 ) : (
                   creneaux.map((c, i) => (
                     <li key={i}>
-                      · {format(parseISO(c.date), "EEEE d MMM yyyy", { locale: fr })} —{" "}
-                      {c.plage}
+                      · {formatDateFR(c.date)} — {isMatin(c.plage) ? "matin" : "après-midi"}
                     </li>
                   ))
                 )}
@@ -196,70 +265,133 @@ export function GererDemandeRdvDialog({
 
           <div className="space-y-3 border-t pt-3">
             <p className="text-sm font-semibold">Confirmer le RDV</p>
-            <div className="grid grid-cols-[1fr_100px] gap-2">
-              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "justify-start text-left font-normal",
-                      !date && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "dd/MM/yyyy", { locale: fr }) : "Date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(d) => {
-                      setDate(d);
-                      setPickerOpen(false);
-                    }}
-                    initialFocus
-                    locale={fr}
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-              <Input
-                type="time"
-                value={heure}
-                onChange={(e) => setHeure(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Véhicule</Label>
-              <Select value={vehiculeId} onValueChange={setVehiculeId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un véhicule" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vehicules.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.immatriculation}
-                    </SelectItem>
+
+            {/* B.1 — Sélection du créneau si plusieurs */}
+            {creneaux.length > 1 && (
+              <div className="space-y-2">
+                <Label className="text-xs">Créneau client à confirmer</Label>
+                <RadioGroup
+                  value={String(creneauChoisiIdx)}
+                  onValueChange={(v) => setCreneauChoisiIdx(Number(v))}
+                  className="gap-2"
+                >
+                  {creneaux.map((c, i) => (
+                    <label
+                      key={i}
+                      htmlFor={`creneau-${i}`}
+                      className="flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer hover:bg-muted/40"
+                    >
+                      <RadioGroupItem id={`creneau-${i}`} value={String(i)} />
+                      <span className="text-sm">
+                        Créneau {i + 1} — {formatDateFR(c.date)} ·{" "}
+                        {isMatin(c.plage) ? "matin" : "après-midi"}
+                      </span>
+                    </label>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Type de pack</Label>
-              <Select value={typePack} onValueChange={setTypePack}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un pack" />
-                </SelectTrigger>
-                <SelectContent>
-                  {packs.map((p) => (
-                    <SelectItem key={p.code} value={p.code}>
-                      {p.nom}
-                    </SelectItem>
+                </RadioGroup>
+              </div>
+            )}
+
+            {/* B.2 — Date lecture seule */}
+            {creneauChoisi && (
+              <div className="rounded-md border bg-muted/30 px-3 py-2">
+                <span className="text-xs text-muted-foreground">Date confirmée</span>
+                <div className="font-semibold capitalize">
+                  {formatDateFR(creneauChoisi.date)}
+                </div>
+                <span className="text-xs text-muted-foreground mt-0.5 block">
+                  {formatPlageLabel(creneauChoisi.plage)}
+                </span>
+              </div>
+            )}
+
+            {/* B.3 — Heure exacte dans la plage */}
+            {creneauChoisi && (
+              <div className="space-y-1">
+                <Label className="text-xs">Heure exacte d'arrivée</Label>
+                <Select value={heure} onValueChange={setHeure}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une heure" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {heuresOptions.map((h) => (
+                      <SelectItem key={h} value={h}>
+                        {h}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-xs text-muted-foreground">
+                  Plage du créneau : {matin ? "8h00 – 12h00" : "14h00 – 18h00"}
+                </span>
+              </div>
+            )}
+
+            {/* B.4 — Véhicule restreint */}
+            {noVehiculeIds ? (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                Aucun véhicule n'est associé à cette demande. Impossible de confirmer.
+              </div>
+            ) : vehiculesDemande.length === 1 ? (
+              <div className="rounded-md border bg-muted/30 px-3 py-2">
+                <span className="text-xs text-muted-foreground">Véhicule concerné</span>
+                <div className="font-semibold">
+                  {vehiculesDemande[0].immatriculation}
+                  {vehiculesDemande[0].marque || vehiculesDemande[0].modele ? (
+                    <span className="text-muted-foreground font-normal">
+                      {" "}
+                      — {vehiculesDemande[0].marque} {vehiculesDemande[0].modele}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            ) : vehiculesDemande.length > 1 ? (
+              <div className="space-y-2">
+                <Label className="text-xs">Véhicule à traiter en premier</Label>
+                <RadioGroup
+                  value={vehiculeChoisiId}
+                  onValueChange={setVehiculeChoisiId}
+                  className="gap-2"
+                >
+                  {vehiculesDemande.map((v) => (
+                    <label
+                      key={v.id}
+                      htmlFor={`veh-${v.id}`}
+                      className="flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer hover:bg-muted/40"
+                    >
+                      <RadioGroupItem id={`veh-${v.id}`} value={v.id} />
+                      <span className="text-sm">
+                        {v.immatriculation}
+                        {v.marque || v.modele ? (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            — {v.marque} {v.modele}
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </RadioGroup>
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground italic">
+                Chargement du véhicule…
+              </div>
+            )}
+
+            {/* B.5 — Pack lecture seule dérivé du véhicule */}
+            {vehiculeChoisi && (
+              <div className="rounded-md border bg-muted/30 px-3 py-2">
+                <span className="text-xs text-muted-foreground">Pack appliqué</span>
+                <div className="font-semibold flex items-center gap-2">
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                  {formatPackLabel(vehiculeChoisi.type_pack_souhaite)}
+                </div>
+                <span className="text-xs text-muted-foreground mt-1 block">
+                  Pack lié au contrat du véhicule. Non modifiable.
+                </span>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-2">
