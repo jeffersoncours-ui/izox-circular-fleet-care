@@ -62,10 +62,38 @@ function VehiculeDetail() {
   const [rdvOpen, setRdvOpen] = useState(false);
   const [gelOpen, setGelOpen] = useState(false);
   const [demandeGelEnAttente, setDemandeGelEnAttente] = useState(false);
+  const [rdvLiesCount, setRdvLiesCount] = useState({ futur: 0, passe: 0 });
 
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
+      .from("vehicules")
+      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id")
+      .eq("id", id)
+      .maybeSingle();
+    const v = (data as Vehicule) ?? null;
+    setVehicule(v);
+    setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
+
+    if (v) {
+      const today = new Date().toISOString().split("T")[0];
+      const [{ count: countFutur }, { count: countPasse }] = await Promise.all([
+        supabase
+          .from("demandes_rdv")
+          .select("id", { count: "exact", head: true })
+          .eq("statut", "confirmee")
+          .gte("date_confirmee", today)
+          .contains("vehicule_ids", [v.id]),
+        supabase
+          .from("interventions")
+          .select("id", { count: "exact", head: true })
+          .eq("vehicule_id", v.id)
+          .in("statut", ["validee", "en_revision"]),
+      ]);
+      setRdvLiesCount({ futur: countFutur ?? 0, passe: countPasse ?? 0 });
+    } else {
+      setRdvLiesCount({ futur: 0, passe: 0 });
+    }
       .from("vehicules")
       .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id")
       .eq("id", id)
