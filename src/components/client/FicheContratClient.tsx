@@ -468,3 +468,24 @@ function formatDate(d: string) {
     return d;
   }
 }
+
+function VehiculeMiniList({ items }: { items: VehiculeLite[] }) {
+  return (
+    <div className="space-y-1.5">
+      {items.map((v) => (
+        <div
+          key={v.id}
+          className="flex items-center justify-between gap-2 p-2 border rounded-md"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{v.immatriculation}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {[v.marque, v.modele].filter(Boolean).join(" ") || "—"}
+            </p>
+          </div>
+          <StatutBadge type="vehicule" statut={v.statut} size="sm" />
+        </div>
+      ))}
+    </div>
+  );
+}
