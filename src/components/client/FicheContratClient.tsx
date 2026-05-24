@@ -22,7 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Trash2, Snowflake, Loader2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Trash2, Snowflake, Loader2, AlertTriangle, ChevronRight } from "lucide-react";
+import { getPackLabel } from "@/lib/pricing";
 import { StatutBadge } from "@/components/shared/StatutBadge";
 import { formatCurrency } from "@/lib/format";
 import { supprimerVehicule } from "@/lib/supprimer-vehicule";
@@ -61,6 +62,7 @@ interface VehiculeLite {
   marque: string | null;
   modele: string | null;
   statut: string;
+  type_pack_souhaite: string | null;
 }
 
 interface PassageInfo {
@@ -108,7 +110,7 @@ export function FicheContratClient() {
 
     const { data: vehData } = await supabase
       .from("vehicules")
-      .select("id, immatriculation, marque, modele, statut")
+      .select("id, immatriculation, marque, modele, statut, type_pack_souhaite")
       .eq("contrat_id", id)
       .in("statut", ["actif", "en_attente_validation", "gele"])
       .order("created_at", { ascending: true });
@@ -470,21 +472,34 @@ function formatDate(d: string) {
 }
 
 function VehiculeMiniList({ items }: { items: VehiculeLite[] }) {
+  const navigate = useNavigate();
   return (
     <div className="space-y-1.5">
       {items.map((v) => (
-        <div
+        <button
           key={v.id}
-          className="flex items-center justify-between gap-2 p-2 border rounded-md"
+          type="button"
+          onClick={() =>
+            navigate({ to: "/client/flotte/$id", params: { id: v.id } })
+          }
+          className="w-full flex items-center justify-between gap-2 p-2 border rounded-md text-left hover:bg-muted/30 transition-colors"
         >
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium truncate">{v.immatriculation}</p>
             <p className="text-xs text-muted-foreground truncate">
               {[v.marque, v.modele].filter(Boolean).join(" ") || "—"}
             </p>
+            {v.type_pack_souhaite && (
+              <p className="text-xs text-muted-foreground">
+                {getPackLabel(v.type_pack_souhaite)}
+              </p>
+            )}
           </div>
-          <StatutBadge type="vehicule" statut={v.statut} size="sm" />
-        </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <StatutBadge type="vehicule" statut={v.statut} size="sm" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </button>
       ))}
     </div>
   );

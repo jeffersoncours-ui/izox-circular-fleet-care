@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets, CalendarPlus, Snowflake, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Trash2, Gauge, BookOpen, Droplets, CalendarPlus, Snowflake, Clock, Calendar as CalendarIcon } from "lucide-react";
 
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { getVehiculeIcon, getVehiculeLabel } from "@/components/client/VehiculeIcons";
@@ -61,7 +61,7 @@ function VehiculeDetail() {
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
   const [rdvOpen, setRdvOpen] = useState(false);
   const [gelOpen, setGelOpen] = useState(false);
-  const [demandeGelEnAttente, setDemandeGelEnAttente] = useState(false);
+  const [demandesGelActives, setDemandesGelActives] = useState<Array<{ id: string; statut: string; date_debut: string; date_fin_prevue: string }>>([]);
   const [rdvLiesCount, setRdvLiesCount] = useState({ futur: 0, passe: 0 });
 
   const load = useCallback(async () => {
@@ -95,22 +95,22 @@ function VehiculeDetail() {
       setRdvLiesCount({ futur: 0, passe: 0 });
     }
 
-    // Détecte une demande de gel en attente (par véhicule ou par contrat)
+    // Détecte les demandes de gel actives (en_attente / validee / active)
     if (v && profile?.entreprise_id) {
+      const arrayFilter = `vehicule_ids.cs.{${v.id}}`;
       const orFilter = v.contrat_id
-        ? `vehicule_id.eq.${v.id},and(type_demande.eq.contrat,contrat_id.eq.${v.contrat_id})`
-        : `vehicule_id.eq.${v.id}`;
-      const { data: gel } = await supabase
+        ? `${arrayFilter},and(type_demande.eq.contrat,contrat_id.eq.${v.contrat_id})`
+        : arrayFilter;
+      const { data: gels } = await supabase
         .from("demandes_gel")
-        .select("id")
+        .select("id, statut, date_debut, date_fin_prevue")
         .eq("entreprise_id", profile.entreprise_id)
-        .eq("statut", "en_attente")
+        .in("statut", ["en_attente", "validee", "active"])
         .or(orFilter)
-        .limit(1)
-        .maybeSingle();
-      setDemandeGelEnAttente(!!gel);
+        .order("date_debut", { ascending: true });
+      setDemandesGelActives((gels ?? []) as typeof demandesGelActives);
     } else {
-      setDemandeGelEnAttente(false);
+      setDemandesGelActives([]);
     }
     setLoading(false);
   }, [id, profile?.entreprise_id]);
@@ -265,43 +265,77 @@ function VehiculeDetail() {
       </Card>
 
 
-      {vehicule.contrat_id && vehicule.statut === "actif" && demandeGelEnAttente && (
-        <Badge
-          variant="outline"
-          className="bg-orange-50 text-orange-700 border-orange-200 mb-3"
-        >
-          <Clock className="h-3 w-3 mr-1" /> Demande de gel en cours
-        </Badge>
-      )}
+      {(() => {
+        const today = new Date();
+        const fmt = (s: string) =>
+          new Date(s).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+        const gelEnCours = demandesGelActives.find(
+          (d) =>
+            d.statut === "active" &&
+            new Date(d.date_debut) <= today &&
+            new Date(d.date_fin_prevue) >= today,
+        );
+        const gelProgramme = demandesGelActives.find(
+          (d) => d.statut === "validee" && new Date(d.date_debut) > today,
+        );
+        const demandeEnAttente = demandesGelActives.find((d) => d.statut === "en_attente");
+        const hasAnyDemandeGel = !!(gelEnCours || gelProgramme || demandeEnAttente);
 
-      {vehicule.contrat_id && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-          {vehicule.statut === "actif" ? (
-            <>
-              <Button variant="default" onClick={() => setRdvOpen(true)}>
-                <CalendarPlus className="h-4 w-4" /> Demander un RDV
-              </Button>
-              <Button
+        let gelBtnLabel = "Demander un gel";
+        if (gelEnCours) gelBtnLabel = "Véhicule actuellement en gel";
+        else if (gelProgramme) gelBtnLabel = "Gel déjà programmé";
+        else if (demandeEnAttente) gelBtnLabel = "Gel en cours de validation";
+
+        return (
+          <>
+            {vehicule.contrat_id && vehicule.statut === "actif" && gelProgramme && (
+              <Badge
                 variant="outline"
-                onClick={() => setGelOpen(true)}
-                disabled={demandeGelEnAttente}
+                className="bg-blue-50 text-blue-700 border-blue-200 mb-3"
               >
-                <Snowflake className="h-4 w-4" />{" "}
-                {demandeGelEnAttente ? "Gel en cours de validation" : "Demander un gel"}
-              </Button>
-            </>
-          ) : vehicule.statut === "gele" ? (
-            <>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300 justify-center py-2">
-                <Snowflake className="h-3.5 w-3.5 mr-1" /> En gel
+                <CalendarIcon className="h-3 w-3 mr-1" /> Gel programmé du{" "}
+                {fmt(gelProgramme.date_debut)} au {fmt(gelProgramme.date_fin_prevue)}
               </Badge>
-              <Button variant="outline" disabled>
-                RDV indisponible
-              </Button>
-            </>
-          ) : null}
-        </div>
-      )}
+            )}
+            {vehicule.contrat_id && vehicule.statut === "actif" && demandeEnAttente && !gelProgramme && (
+              <Badge
+                variant="outline"
+                className="bg-orange-50 text-orange-700 border-orange-200 mb-3"
+              >
+                <Clock className="h-3 w-3 mr-1" /> Demande de gel en cours
+              </Badge>
+            )}
+
+            {vehicule.contrat_id && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                {vehicule.statut === "actif" ? (
+                  <>
+                    <Button variant="default" onClick={() => setRdvOpen(true)}>
+                      <CalendarPlus className="h-4 w-4" /> Demander un RDV
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setGelOpen(true)}
+                      disabled={hasAnyDemandeGel}
+                    >
+                      <Snowflake className="h-4 w-4" /> {gelBtnLabel}
+                    </Button>
+                  </>
+                ) : vehicule.statut === "gele" ? (
+                  <>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300 justify-center py-2">
+                      <Snowflake className="h-3.5 w-3.5 mr-1" /> En gel
+                    </Badge>
+                    <Button variant="outline" disabled>
+                      RDV indisponible
+                    </Button>
+                  </>
+                ) : null}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       <div className="flex gap-2">
         <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>

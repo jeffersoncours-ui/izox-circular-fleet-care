@@ -139,6 +139,7 @@ export function CreerDemandeRdvDialog({
   const maxDate = useMemo(() => getMaxDateSelectable(), [open]);
 
   const creneauxRemplis = creneaux.filter((c) => c.date);
+  const hasCreneauxIncomplets = creneaux.some((c) => !c.date);
   const hasDoublonCreneaux = (() => {
     const cles = creneauxRemplis.map(
       (c) => `${format(c.date!, "yyyy-MM-dd")}-${c.creneau}`,
@@ -150,6 +151,7 @@ export function CreerDemandeRdvDialog({
     selectedVehiculeIds.length <= maxVehicules &&
     creneauxRemplis.length >= 1 &&
     !hasDoublonCreneaux &&
+    !hasCreneauxIncomplets &&
     !submitting;
 
   const handleSubmit = async () => {
@@ -257,7 +259,19 @@ export function CreerDemandeRdvDialog({
           <div className="space-y-2">
             <Label>Créneaux préférés *</Label>
             {creneaux.map((c, i) => (
-              <div key={i} className="space-y-2 rounded-md border p-2">
+              <div
+                key={i}
+                className={cn(
+                  "space-y-2 rounded-md border p-2",
+                  !c.date && "border-orange-300 bg-orange-50",
+                )}
+              >
+                {!c.date && (
+                  <p className="text-xs text-orange-700 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Veuillez sélectionner une date pour ce créneau
+                  </p>
+                )}
                 <div className="grid grid-cols-[1fr_auto] gap-2">
                   <Popover
                     open={openPicker === i}
@@ -285,9 +299,12 @@ export function CreerDemandeRdvDialog({
                           updateCreneau(i, { date: d });
                           setOpenPicker(null);
                         }}
-                        disabled={(d) => !isDateSelectable(d)}
+                        disabled={(d) => !isDateSelectable(d) || d > maxDate}
                         fromDate={minDate}
                         toDate={maxDate}
+                        fromMonth={minDate}
+                        toMonth={maxDate}
+                        defaultMonth={minDate}
                         initialFocus
                         locale={fr}
                         className={cn("p-3 pointer-events-auto")}

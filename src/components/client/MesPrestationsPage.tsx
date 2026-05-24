@@ -22,10 +22,16 @@ interface DemandeGelClient {
   id: string;
   type_demande: "vehicules" | "contrat" | string;
   motif: string | null;
-  date_debut_souhaitee: string | null;
-  date_fin_souhaitee: string | null;
+  date_debut: string | null;
+  date_fin_prevue: string | null;
+  statut: "en_attente" | "validee" | string;
+  vehicule_ids: string[] | null;
   created_at: string;
-  vehicules?: { immatriculation: string; marque: string | null; modele: string | null } | null;
+}
+
+interface VehiculeLite {
+  id: string;
+  immatriculation: string;
 }
 
 function formatDateFR(iso: string): string {
@@ -42,6 +48,7 @@ export function MesPrestationsPage() {
   const [demandes, setDemandes] = useState<DemandeRdv[]>([]);
   const [interventions, setInterventions] = useState<PrestationItem[]>([]);
   const [demandesGel, setDemandesGel] = useState<DemandeGelClient[]>([]);
+  const [vehiculesMap, setVehiculesMap] = useState<Record<string, string>>({});
   const [showCreer, setShowCreer] = useState(false);
   const [annulation, setAnnulation] = useState<{
     open: boolean;
@@ -63,7 +70,7 @@ export function MesPrestationsPage() {
       return;
     }
     setLoading(true);
-    const [dRes, iRes, gRes] = await Promise.all([
+    const [dRes, iRes, gRes, vRes] = await Promise.all([
       supabase
         .from("demandes_rdv")
         .select("*")
@@ -79,15 +86,24 @@ export function MesPrestationsPage() {
       supabase
         .from("demandes_gel")
         .select(
-          "id, type_demande, motif, date_debut_souhaitee, date_fin_souhaitee, created_at, vehicules!demandes_gel_vehicule_id_fkey(immatriculation, marque, modele)",
+          "id, type_demande, motif, date_debut, date_fin_prevue, statut, vehicule_ids, created_at",
         )
         .eq("entreprise_id", profile.entreprise_id)
-        .eq("statut", "en_attente")
+        .in("statut", ["en_attente", "validee"])
         .order("created_at", { ascending: false }),
+      supabase
+        .from("vehicules")
+        .select("id, immatriculation")
+        .eq("entreprise_id", profile.entreprise_id),
     ]);
     setDemandes((dRes.data ?? []) as unknown as DemandeRdv[]);
     setInterventions((iRes.data ?? []) as unknown as PrestationItem[]);
     setDemandesGel((gRes.data ?? []) as unknown as DemandeGelClient[]);
+    const map: Record<string, string> = {};
+    for (const v of (vRes.data ?? []) as VehiculeLite[]) {
+      map[v.id] = v.immatriculation;
+    }
+    setVehiculesMap(map);
     setLoading(false);
   }, [profile?.entreprise_id]);
 
@@ -212,57 +228,69 @@ export function MesPrestationsPage() {
                 </Section>
               )}
               {demandesGel.length > 0 && (
-                <Section title={`Demandes de gel en attente (${demandesGel.length})`}>
-                  {demandesGel.map((dg) => (
-                    <Card key={dg.id} className="p-4 shadow-card border-border/60">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1">
-                          <Snowflake className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm">
-                              Demande de gel —{" "}
-                              {dg.type_demande === "vehicules" || dg.type_demande === "vehicule"
-                                ? `Véhicule ${dg.vehicules?.immatriculation ?? ""}`
-                                : "Contrat complet"}
-                            </div>
-                            {dg.date_debut_souhaitee && (
+                <Section title={`Demandes de gel (${demandesGel.length})`}>
+                  {demandesGel.map((dg) => {
+                    const isProgramme = dg.statut === "validee";
+                    const immats = (dg.vehicule_ids ?? [])
+                      .map((vid) => vehiculesMap[vid])
+                      .filter(Boolean)
+                      .join(", ");
+                    return (
+                      <Card key={dg.id} className="p-4 shadow-card border-border/60">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1">
+                            <Snowflake className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm">
+                                Demande de gel —{" "}
+                                {dg.type_demande === "vehicules" || dg.type_demande === "vehicule"
+                                  ? `Véhicule${(dg.vehicule_ids ?? []).length > 1 ? "s" : ""} ${immats || ""}`
+                                  : "Contrat complet"}
+                              </div>
+                              {dg.date_debut && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {isProgramme ? "Programmé du" : "Du"}{" "}
+                                  {formatDateFR(dg.date_debut)}
+                                  {dg.date_fin_prevue &&
+                                    ` au ${formatDateFR(dg.date_fin_prevue)}`}
+                                </div>
+                              )}
+                              {dg.motif && (
+                                <div className="text-xs text-muted-foreground mt-1 italic">
+                                  Motif : {dg.motif}
+                                </div>
+                              )}
                               <div className="text-xs text-muted-foreground mt-1">
-                                Du {formatDateFR(dg.date_debut_souhaitee)}
-                                {dg.date_fin_souhaitee &&
-                                  ` au ${formatDateFR(dg.date_fin_souhaitee)}`}
+                                Créée le {formatDateFR(dg.created_at)}
                               </div>
-                            )}
-                            {dg.motif && (
-                              <div className="text-xs text-muted-foreground mt-1 italic">
-                                Motif : {dg.motif}
-                              </div>
-                            )}
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Créée le {formatDateFR(dg.created_at)}
                             </div>
                           </div>
+                          <Badge
+                            variant="outline"
+                            className={
+                              isProgramme
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : "bg-orange-50 text-orange-700 border-orange-200"
+                            }
+                          >
+                            {isProgramme ? "Programmé" : "En attente admin"}
+                          </Badge>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className="bg-orange-50 text-orange-700 border-orange-200"
-                        >
-                          En attente
-                        </Badge>
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive h-7"
-                          onClick={() =>
-                            setAnnulation({ open: true, type: "gel", id: dg.id })
-                          }
-                        >
-                          <X className="h-3.5 w-3.5" /> Annuler ma demande
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+                        <div className="mt-3 flex justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive h-7"
+                            onClick={() =>
+                              setAnnulation({ open: true, type: "gel", id: dg.id })
+                            }
+                          >
+                            <X className="h-3.5 w-3.5" /> Annuler ma demande
+                          </Button>
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </Section>
               )}
             </>

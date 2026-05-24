@@ -68,6 +68,7 @@ interface Vehicule {
   notes: string | null;
   photo_path: string | null;
   statut: string;
+  type_pack_souhaite: string | null;
 }
 
 function ClientDetailPage() {
@@ -92,7 +93,7 @@ function ClientDetailPage() {
     setLoadingVehicules(true);
     const { data } = await supabase
       .from("vehicules")
-      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, photo_path, statut")
+      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, photo_path, statut, type_pack_souhaite")
       .eq("entreprise_id", id)
       .order("created_at", { ascending: false });
     setVehicules((data as Vehicule[]) ?? []);
@@ -628,6 +629,11 @@ function VehiculesGroupes({
               {[v.marque, v.modele].filter(Boolean).join(" ") || "Véhicule"}
             </p>
             <p className="font-mono text-xs text-primary">{v.immatriculation}</p>
+            {v.type_pack_souhaite && (
+              <p className="text-xs text-muted-foreground">
+                {getPackLabel(v.type_pack_souhaite)}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <Button
