@@ -234,6 +234,37 @@ function VehiculeDetail() {
         </Card>
       )}
 
+      <Card className="p-5 shadow-card border-border/60 mb-5">
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">
+          Rendez-vous liés
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-primary">
+              {rdvLiesCount.futur}
+            </span>
+            <span className="text-xs text-muted-foreground">À venir</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-muted-foreground">
+              {rdvLiesCount.passe}
+            </span>
+            <span className="text-xs text-muted-foreground">Réalisés</span>
+          </div>
+        </div>
+        {(rdvLiesCount.futur > 0 || rdvLiesCount.passe > 0) && (
+          <Button
+            variant="link"
+            size="sm"
+            className="mt-2 p-0 h-auto"
+            onClick={() => navigate({ to: "/client/prestations" })}
+          >
+            Voir tous les rendez-vous →
+          </Button>
+        )}
+      </Card>
+
+
       {vehicule.contrat_id && vehicule.statut === "actif" && demandeGelEnAttente && (
         <Badge
           variant="outline"
