@@ -70,7 +70,7 @@ export function MesPrestationsPage() {
       return;
     }
     setLoading(true);
-    const [dRes, iRes, gRes] = await Promise.all([
+    const [dRes, iRes, gRes, vRes] = await Promise.all([
       supabase
         .from("demandes_rdv")
         .select("*")
@@ -86,15 +86,24 @@ export function MesPrestationsPage() {
       supabase
         .from("demandes_gel")
         .select(
-          "id, type_demande, motif, date_debut_souhaitee, date_fin_souhaitee, created_at, vehicules!demandes_gel_vehicule_id_fkey(immatriculation, marque, modele)",
+          "id, type_demande, motif, date_debut, date_fin_prevue, statut, vehicule_ids, created_at",
         )
         .eq("entreprise_id", profile.entreprise_id)
-        .eq("statut", "en_attente")
+        .in("statut", ["en_attente", "validee"])
         .order("created_at", { ascending: false }),
+      supabase
+        .from("vehicules")
+        .select("id, immatriculation")
+        .eq("entreprise_id", profile.entreprise_id),
     ]);
     setDemandes((dRes.data ?? []) as unknown as DemandeRdv[]);
     setInterventions((iRes.data ?? []) as unknown as PrestationItem[]);
     setDemandesGel((gRes.data ?? []) as unknown as DemandeGelClient[]);
+    const map: Record<string, string> = {};
+    for (const v of (vRes.data ?? []) as VehiculeLite[]) {
+      map[v.id] = v.immatriculation;
+    }
+    setVehiculesMap(map);
     setLoading(false);
   }, [profile?.entreprise_id]);
 
