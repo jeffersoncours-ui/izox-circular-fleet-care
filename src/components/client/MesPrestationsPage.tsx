@@ -203,6 +203,60 @@ export function MesPrestationsPage() {
                   ))}
                 </Section>
               )}
+              {demandesGel.length > 0 && (
+                <Section title={`Demandes de gel en attente (${demandesGel.length})`}>
+                  {demandesGel.map((dg) => (
+                    <Card key={dg.id} className="p-4 shadow-card border-border/60">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1">
+                          <Snowflake className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm">
+                              Demande de gel —{" "}
+                              {dg.type_demande === "vehicules" || dg.type_demande === "vehicule"
+                                ? `Véhicule ${dg.vehicules?.immatriculation ?? ""}`
+                                : "Contrat complet"}
+                            </div>
+                            {dg.date_debut_souhaitee && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Du {formatDateFR(dg.date_debut_souhaitee)}
+                                {dg.date_fin_souhaitee &&
+                                  ` au ${formatDateFR(dg.date_fin_souhaitee)}`}
+                              </div>
+                            )}
+                            {dg.motif && (
+                              <div className="text-xs text-muted-foreground mt-1 italic">
+                                Motif : {dg.motif}
+                              </div>
+                            )}
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Créée le {formatDateFR(dg.created_at)}
+                            </div>
+                          </div>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="bg-orange-50 text-orange-700 border-orange-200"
+                        >
+                          En attente
+                        </Badge>
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive h-7"
+                          onClick={() =>
+                            setAnnulation({ open: true, type: "gel", id: dg.id })
+                          }
+                        >
+                          <X className="h-3.5 w-3.5" /> Annuler ma demande
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </Section>
+              )}
             </>
           )}
         </TabsContent>
