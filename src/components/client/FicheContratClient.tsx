@@ -62,6 +62,7 @@ interface VehiculeLite {
   marque: string | null;
   modele: string | null;
   statut: string;
+  type_pack_souhaite: string | null;
 }
 
 interface PassageInfo {
