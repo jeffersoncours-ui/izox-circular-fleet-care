@@ -95,22 +95,22 @@ function VehiculeDetail() {
       setRdvLiesCount({ futur: 0, passe: 0 });
     }
 
-    // Détecte une demande de gel en attente (par véhicule ou par contrat)
+    // Détecte les demandes de gel actives (en_attente / validee / active)
     if (v && profile?.entreprise_id) {
+      const arrayFilter = `vehicule_ids.cs.{${v.id}}`;
       const orFilter = v.contrat_id
-        ? `vehicule_id.eq.${v.id},and(type_demande.eq.contrat,contrat_id.eq.${v.contrat_id})`
-        : `vehicule_id.eq.${v.id}`;
-      const { data: gel } = await supabase
+        ? `${arrayFilter},and(type_demande.eq.contrat,contrat_id.eq.${v.contrat_id})`
+        : arrayFilter;
+      const { data: gels } = await supabase
         .from("demandes_gel")
-        .select("id")
+        .select("id, statut, date_debut, date_fin_prevue")
         .eq("entreprise_id", profile.entreprise_id)
-        .eq("statut", "en_attente")
+        .in("statut", ["en_attente", "validee", "active"])
         .or(orFilter)
-        .limit(1)
-        .maybeSingle();
-      setDemandeGelEnAttente(!!gel);
+        .order("date_debut", { ascending: true });
+      setDemandesGelActives((gels ?? []) as typeof demandesGelActives);
     } else {
-      setDemandeGelEnAttente(false);
+      setDemandesGelActives([]);
     }
     setLoading(false);
   }, [id, profile?.entreprise_id]);
