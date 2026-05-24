@@ -48,6 +48,13 @@ export function MesPrestationsPage() {
     type: "gel" | "rdv";
     id: string;
   }>({ open: false, type: "rdv", id: "" });
+  const [detailRdvId, setDetailRdvId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const openDetail = (id: string) => {
+    setDetailRdvId(id);
+    setDetailOpen(true);
+  };
 
 
   const load = useCallback(async () => {
