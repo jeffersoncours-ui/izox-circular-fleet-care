@@ -4,17 +4,8 @@ import { routeTree } from "./routeTree.gen";
 function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
 
-  // 🔴 TEMP DIAGNOSTIC (c.11.2.2.B) — à retirer après identification du crash MesPrestations
-  if (typeof window !== "undefined") {
-    // eslint-disable-next-line no-console
-    console.error("🔴 ERROR BOUNDARY CAUGHT:", {
-      message: error?.message,
-      name: error?.name,
-      stack: error?.stack,
-      url: window.location.href,
-      error,
-    });
-  }
+
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
