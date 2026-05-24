@@ -306,6 +306,13 @@ export function MesPrestationsPage() {
         demandeId={annulation.id}
         onSuccess={load}
       />
+
+      <DetailDemandeRdvDialog
+        demandeId={detailRdvId}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onSuccess={load}
+      />
     </div>
   );
 }
