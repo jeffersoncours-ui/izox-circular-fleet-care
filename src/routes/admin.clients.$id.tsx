@@ -93,7 +93,7 @@ function ClientDetailPage() {
     setLoadingVehicules(true);
     const { data } = await supabase
       .from("vehicules")
-      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, photo_path, statut")
+      .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, photo_path, statut, type_pack_souhaite")
       .eq("entreprise_id", id)
       .order("created_at", { ascending: false });
     setVehicules((data as Vehicule[]) ?? []);
