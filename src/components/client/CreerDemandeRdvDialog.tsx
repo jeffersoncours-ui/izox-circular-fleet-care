@@ -285,9 +285,12 @@ export function CreerDemandeRdvDialog({
                           updateCreneau(i, { date: d });
                           setOpenPicker(null);
                         }}
-                        disabled={(d) => !isDateSelectable(d)}
+                        disabled={(d) => !isDateSelectable(d) || d > maxDate}
                         fromDate={minDate}
                         toDate={maxDate}
+                        fromMonth={minDate}
+                        toMonth={maxDate}
+                        defaultMonth={minDate}
                         initialFocus
                         locale={fr}
                         className={cn("p-3 pointer-events-auto")}
