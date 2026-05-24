@@ -139,6 +139,7 @@ export function CreerDemandeRdvDialog({
   const maxDate = useMemo(() => getMaxDateSelectable(), [open]);
 
   const creneauxRemplis = creneaux.filter((c) => c.date);
+  const hasCreneauxIncomplets = creneaux.some((c) => !c.date);
   const hasDoublonCreneaux = (() => {
     const cles = creneauxRemplis.map(
       (c) => `${format(c.date!, "yyyy-MM-dd")}-${c.creneau}`,
@@ -150,6 +151,7 @@ export function CreerDemandeRdvDialog({
     selectedVehiculeIds.length <= maxVehicules &&
     creneauxRemplis.length >= 1 &&
     !hasDoublonCreneaux &&
+    !hasCreneauxIncomplets &&
     !submitting;
 
   const handleSubmit = async () => {
