@@ -336,12 +336,23 @@ export function CreerDemandeRdvDialog({
                 <Plus className="h-4 w-4" /> Ajouter un autre créneau
               </Button>
             )}
+            {hasDoublonCreneaux && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Deux créneaux identiques (même date et même demi-journée) ne
+                  sont pas autorisés. Veuillez modifier ou supprimer l'un d'entre
+                  eux.
+                </AlertDescription>
+              </Alert>
+            )}
             <Alert>
               <AlertDescription className="text-xs">
-                Sélection possible du{" "}
-                <strong>{format(minDate, "d MMM yyyy", { locale: fr })}</strong>{" "}
-                au <strong>{format(maxDate, "d MMM yyyy", { locale: fr })}</strong>.
-                Hors weekends et jours fériés.
+                <strong>
+                  Sélection possible jusqu'au{" "}
+                  {format(maxDate, "d MMMM yyyy", { locale: fr })}
+                </strong>{" "}
+                (fin du mois en cours, hors weekends et jours fériés).
               </AlertDescription>
             </Alert>
           </div>
