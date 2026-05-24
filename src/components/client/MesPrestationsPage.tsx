@@ -108,7 +108,10 @@ export function MesPrestationsPage() {
   }, [interventions]);
 
   const nbAVenir =
-    demandesEnAttente.length + demandesConfirmees.length + interventionsPlanifiees.length;
+    demandesEnAttente.length +
+    demandesConfirmees.length +
+    interventionsPlanifiees.length +
+    demandesGel.length;
   const nbHisto = interventionsValidees.length + demandesGriseesHisto.length;
 
   if (loading) {
