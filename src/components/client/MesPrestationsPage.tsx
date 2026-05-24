@@ -28,26 +28,6 @@ export function MesPrestationsPage() {
     id: string;
   }>({ open: false, type: "rdv", id: "" });
 
-  useEffect(() => {
-    console.log("🟢 MesPrestationsPage mounted at", new Date().toISOString());
-    const errorHandler = (evt: ErrorEvent) => {
-      console.error("🔴 RUNTIME ERROR:", {
-        message: evt.message,
-        filename: evt.filename,
-        lineno: evt.lineno,
-        colno: evt.colno,
-      });
-    };
-    const rejectionHandler = (evt: PromiseRejectionEvent) => {
-      console.error("🔴 UNHANDLED PROMISE REJECTION:", evt.reason);
-    };
-    window.addEventListener("error", errorHandler);
-    window.addEventListener("unhandledrejection", rejectionHandler);
-    return () => {
-      window.removeEventListener("error", errorHandler);
-      window.removeEventListener("unhandledrejection", rejectionHandler);
-    };
-  }, []);
 
   const load = useCallback(async () => {
     if (!profile?.entreprise_id) {
