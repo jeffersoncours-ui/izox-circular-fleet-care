@@ -110,7 +110,7 @@ export function FicheContratClient() {
 
     const { data: vehData } = await supabase
       .from("vehicules")
-      .select("id, immatriculation, marque, modele, statut")
+      .select("id, immatriculation, marque, modele, statut, type_pack_souhaite")
       .eq("contrat_id", id)
       .in("statut", ["actif", "en_attente_validation", "gele"])
       .order("created_at", { ascending: true });
