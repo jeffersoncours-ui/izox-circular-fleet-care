@@ -29,7 +29,7 @@ export function AnnulerDemandeDialog({
   onSuccess,
 }: AnnulerDemandeDialogProps) {
   const [loading, setLoading] = useState(false);
-  const queryClient = useQueryClient();
+  
 
   const handleAnnuler = async () => {
     if (!demandeId) return;
