@@ -2,11 +2,13 @@
  * GererDemandeRdvDialog
  * ---------------------
  * Principe métier : l'admin VALIDE ou REFUSE une demande client.
- * Il ne CHOISIT PAS à la place du client. Les champs date, créneau,
- * véhicule et pack sont des INFORMATIONS issues de la demande,
- * présentées en lecture seule (ou contraintes). Seules deux actions :
- *   - Valider : confirmer_demande_rdv(p_demande_id, p_date_intervention, p_vehicule_id)
- *   - Refuser : refuser_demande_rdv(p_demande_id, p_motif)
+ * Pour les demandes multi-véhicules (1 à N véhicules sur le même créneau),
+ * TOUS les véhicules sont traités lors d'une même visite terrain — l'équipe
+ * enchaîne les véhicules sur site. Aucun choix "véhicule à traiter en premier" :
+ * c'est une décision opérationnelle terrain, pas une décision admin.
+ *
+ * Appel RPC unifié : `confirmer_demande_rdv_multi` (crée 1 à N interventions
+ * atomiquement sur un créneau commun, peu importe le nombre de véhicules).
  */
 import { useEffect, useMemo, useState } from "react";
 import { parseISO } from "date-fns";
@@ -64,8 +66,8 @@ interface VehiculeDemande {
 }
 
 interface Creneau {
-  date: string; // YYYY-MM-DD
-  plage: string; // "matin" | "apres_midi" (ou variantes legacy)
+  date: string;
+  plage: string;
 }
 
 const HEURES_MATIN = [
@@ -116,7 +118,6 @@ export function GererDemandeRdvDialog({
   const [vehiculesDemande, setVehiculesDemande] = useState<VehiculeDemande[]>([]);
   const [creneauChoisiIdx, setCreneauChoisiIdx] = useState(0);
   const [heure, setHeure] = useState<string>("");
-  const [vehiculeChoisiId, setVehiculeChoisiId] = useState<string>("");
   const [refusOpen, setRefusOpen] = useState(false);
   const [motif, setMotif] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -130,22 +131,17 @@ export function GererDemandeRdvDialog({
   const matin = creneauChoisi ? isMatin(creneauChoisi.plage) : true;
   const heuresOptions = matin ? HEURES_MATIN : HEURES_AM;
 
-  // Reset à l'ouverture
   useEffect(() => {
     if (!demande || !open) return;
     setCreneauChoisiIdx(0);
     setRefusOpen(false);
     setMotif("");
-    const ids = demande.vehicule_ids ?? [];
-    setVehiculeChoisiId(ids.length > 0 ? ids[0] : "");
   }, [demande, open]);
 
-  // Reset heure quand le créneau change
   useEffect(() => {
     setHeure(matin ? "09:00" : "14:00");
   }, [creneauChoisiIdx, matin]);
 
-  // Fetch véhicules concernés par la demande
   useEffect(() => {
     if (!demande || !open) return;
     const ids = demande.vehicule_ids ?? [];
@@ -164,11 +160,8 @@ export function GererDemandeRdvDialog({
 
   if (!demande) return null;
 
-  const vehiculeChoisi = vehiculesDemande.find((v) => v.id === vehiculeChoisiId);
-
   const canConfirm =
     !!creneauChoisi &&
-    vehiculeChoisiId.length > 0 &&
     heure.length > 0 &&
     vehiculesDemande.length > 0 &&
     !submitting;
@@ -178,13 +171,16 @@ export function GererDemandeRdvDialog({
     setSubmitting(true);
     try {
       const iso = new Date(`${creneauChoisi.date}T${heure}:00`).toISOString();
-      const { error } = await supabase.rpc("confirmer_demande_rdv", {
+      const { error } = await supabase.rpc("confirmer_demande_rdv_multi", {
         p_demande_id: demande.id,
         p_date_intervention: iso,
-        p_vehicule_id: vehiculeChoisiId,
       });
       if (error) throw error;
-      toast.success("RDV confirmé. Intervention créée et notifiée au client.");
+      toast.success(
+        vehiculesDemande.length === 1
+          ? "RDV confirmé"
+          : `RDV confirmé — ${vehiculesDemande.length} interventions planifiées`,
+      );
       onOpenChange(false);
       onProcessed?.();
     } catch (e: any) {
@@ -235,7 +231,6 @@ export function GererDemandeRdvDialog({
             </DialogDescription>
           </DialogHeader>
 
-          {/* Créneaux préférés du client (info brute) */}
           <div className="space-y-3 text-sm">
             <div>
               <p className="text-muted-foreground text-xs mb-1">
@@ -266,7 +261,6 @@ export function GererDemandeRdvDialog({
           <div className="space-y-3 border-t pt-3">
             <p className="text-sm font-semibold">Confirmer le RDV</p>
 
-            {/* B.1 — Sélection du créneau si plusieurs */}
             {creneaux.length > 1 && (
               <div className="space-y-2">
                 <Label className="text-xs">Créneau client à confirmer</Label>
@@ -292,7 +286,6 @@ export function GererDemandeRdvDialog({
               </div>
             )}
 
-            {/* B.2 — Date lecture seule */}
             {creneauChoisi && (
               <div className="rounded-md border bg-muted/30 px-3 py-2">
                 <span className="text-xs text-muted-foreground">Date confirmée</span>
@@ -305,7 +298,6 @@ export function GererDemandeRdvDialog({
               </div>
             )}
 
-            {/* B.3 — Heure exacte dans la plage */}
             {creneauChoisi && (
               <div className="space-y-1">
                 <Label className="text-xs">Heure exacte d'arrivée</Label>
@@ -327,69 +319,46 @@ export function GererDemandeRdvDialog({
               </div>
             )}
 
-            {/* B.4 — Véhicule restreint */}
+            {/* B.4 — Véhicules en lecture seule, tous affichés avec leur pack */}
             {noVehiculeIds ? (
               <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
                 Aucun véhicule n'est associé à cette demande. Impossible de confirmer.
               </div>
-            ) : vehiculesDemande.length === 1 ? (
-              <div className="rounded-md border bg-muted/30 px-3 py-2">
-                <span className="text-xs text-muted-foreground">Véhicule concerné</span>
-                <div className="font-semibold">
-                  {vehiculesDemande[0].immatriculation}
-                  {vehiculesDemande[0].marque || vehiculesDemande[0].modele ? (
-                    <span className="text-muted-foreground font-normal">
-                      {" "}
-                      — {vehiculesDemande[0].marque} {vehiculesDemande[0].modele}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            ) : vehiculesDemande.length > 1 ? (
-              <div className="space-y-2">
-                <Label className="text-xs">Véhicule à traiter en premier</Label>
-                <RadioGroup
-                  value={vehiculeChoisiId}
-                  onValueChange={setVehiculeChoisiId}
-                  className="gap-2"
-                >
-                  {vehiculesDemande.map((v) => (
-                    <label
-                      key={v.id}
-                      htmlFor={`veh-${v.id}`}
-                      className="flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer hover:bg-muted/40"
-                    >
-                      <RadioGroupItem id={`veh-${v.id}`} value={v.id} />
-                      <span className="text-sm">
-                        {v.immatriculation}
-                        {v.marque || v.modele ? (
-                          <span className="text-muted-foreground">
-                            {" "}
-                            — {v.marque} {v.modele}
-                          </span>
-                        ) : null}
-                      </span>
-                    </label>
-                  ))}
-                </RadioGroup>
+            ) : vehiculesDemande.length === 0 ? (
+              <div className="text-xs text-muted-foreground italic">
+                Chargement des véhicules…
               </div>
             ) : (
-              <div className="text-xs text-muted-foreground italic">
-                Chargement du véhicule…
-              </div>
-            )}
-
-            {/* B.5 — Pack lecture seule dérivé du véhicule */}
-            {vehiculeChoisi && (
-              <div className="rounded-md border bg-muted/30 px-3 py-2">
-                <span className="text-xs text-muted-foreground">Pack appliqué</span>
-                <div className="font-semibold flex items-center gap-2">
-                  <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                  {formatPackLabel(vehiculeChoisi.type_pack_souhaite)}
+              <div className="space-y-2">
+                <Label className="text-xs">
+                  Véhicules à traiter ({vehiculesDemande.length})
+                </Label>
+                <div className="rounded-md border bg-muted/30 px-3 py-2 space-y-3">
+                  {vehiculesDemande.map((vehicule) => (
+                    <div key={vehicule.id} className="flex items-start gap-3">
+                      <Lock className="h-3.5 w-3.5 text-muted-foreground mt-1 shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-semibold text-sm">
+                          {vehicule.immatriculation}
+                          {(vehicule.marque || vehicule.modele) && (
+                            <span className="text-muted-foreground font-normal ml-2">
+                              — {vehicule.marque} {vehicule.modele}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          Pack : {formatPackLabel(vehicule.type_pack_souhaite)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <span className="text-xs text-muted-foreground mt-1 block">
-                  Pack lié au contrat du véhicule. Non modifiable.
-                </span>
+                {vehiculesDemande.length > 1 && (
+                  <p className="text-xs text-muted-foreground italic">
+                    L'équipe traitera les {vehiculesDemande.length} véhicules lors
+                    de la même visite, dans l'ordre opérationnel optimal.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -407,7 +376,10 @@ export function GererDemandeRdvDialog({
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <CheckCircle2 className="h-4 w-4" /> Confirmer le RDV
+                  <CheckCircle2 className="h-4 w-4" />
+                  {vehiculesDemande.length <= 1
+                    ? "Confirmer le RDV"
+                    : `Confirmer le RDV (${vehiculesDemande.length} interventions seront créées)`}
                 </>
               )}
             </Button>
