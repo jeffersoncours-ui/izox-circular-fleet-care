@@ -15,6 +15,7 @@ import {
 } from "@/components/client/LignePrestation";
 import { CreerDemandeRdvDialog } from "@/components/client/CreerDemandeRdvDialog";
 import { AnnulerDemandeDialog } from "@/components/client/AnnulerDemandeDialog";
+import { DetailDemandeRdvDialog } from "@/components/client/DetailDemandeRdvDialog";
 import { Badge } from "@/components/ui/badge";
 
 interface DemandeGelClient {
