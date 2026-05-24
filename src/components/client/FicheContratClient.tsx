@@ -167,6 +167,8 @@ export function FicheContratClient() {
   }
 
   const vehiculesActifs = vehicules.filter((v) => v.statut === "actif");
+  const vehiculesEnAttente = vehicules.filter((v) => v.statut === "en_attente_validation");
+  const vehiculesGeles = vehicules.filter((v) => v.statut === "gele");
   const isDernierVehicule = vehiculesActifs.length <= 1;
 
   return (
