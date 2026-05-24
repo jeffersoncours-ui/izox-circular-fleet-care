@@ -240,6 +240,17 @@ export function CreerDemandeRdvDialog({
                 </ul>
               )}
             </ScrollArea>
+            {selectedVehiculeIds.length === 2 && (
+              <Alert className="bg-blue-50 border-blue-200">
+                <Info className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-900 text-sm">
+                  Les <strong>2 véhicules</strong> seront traités{" "}
+                  <strong>lors du même passage</strong>. L'équipe interviendra à
+                  l'heure exacte communiquée par l'admin après validation, et
+                  enchaînera les véhicules sur place.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Créneaux */}
