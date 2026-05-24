@@ -2090,6 +2090,10 @@ export type Database = {
         }
         Returns: Json
       }
+      confirmer_demande_rdv_multi: {
+        Args: { p_date_intervention: string; p_demande_id: string }
+        Returns: Json
+      }
       creer_demande_rdv: {
         Args: {
           p_commentaires: string
