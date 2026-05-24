@@ -159,19 +159,14 @@ export function MesPrestationsPage() {
               {demandesEnAttente.length > 0 && (
                 <Section title="Demandes en attente">
                   {demandesEnAttente.map((d) => (
-                    <div key={d.id} className="space-y-1">
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => openDetail(d.id)}
+                      className="block w-full text-left rounded-lg transition-colors hover:bg-muted/30"
+                    >
                       <LigneDemandeRdv demande={d} />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive h-7"
-                        onClick={() =>
-                          setAnnulation({ open: true, type: "rdv", id: d.id })
-                        }
-                      >
-                        <X className="h-3.5 w-3.5" /> Annuler ma demande
-                      </Button>
-                    </div>
+                    </button>
                   ))}
                 </Section>
               )}
@@ -180,7 +175,12 @@ export function MesPrestationsPage() {
                   {demandesConfirmees.map((d) => {
                     const interventionLiee = interventionParDemande.get(d.id);
                     return (
-                      <div key={d.id} className="space-y-1">
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => openDetail(d.id)}
+                        className="block w-full text-left rounded-lg transition-colors hover:bg-muted/30 space-y-1"
+                      >
                         <LigneDemandeRdv demande={d} />
                         {interventionLiee?.date_intervention && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
@@ -199,7 +199,7 @@ export function MesPrestationsPage() {
                             </span>
                           </div>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </Section>
