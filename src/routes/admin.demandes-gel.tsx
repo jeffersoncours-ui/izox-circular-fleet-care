@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { GererDemandeGelDialog } from "@/components/admin/GererDemandeGelDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
+import { computeQuotaGelDecompose, type DemandeGelRow } from "@/lib/quota-gel";
 
 const demandesGelSearchSchema = z.object({
   demande: z.string().uuid().optional(),
@@ -54,6 +55,9 @@ const STATUT_LABEL: Record<string, string> = {
 
 function DemandesGelPage() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [decomposeByEnt, setDecomposeByEnt] = useState<
+    Record<string, { joursActifs: number; joursProgrammes: number; total: number }>
+  >({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("en_attente");
   const [selected, setSelected] = useState<Row | null>(null);
@@ -64,7 +68,32 @@ function DemandesGelPage() {
       .from("v_demandes_gel_with_quota")
       .select("*")
       .order("created_at", { ascending: false });
-    setRows((data ?? []) as unknown as Row[]);
+    const list = (data ?? []) as unknown as Row[];
+    setRows(list);
+
+    const entIds = Array.from(new Set(list.map((r) => r.entreprise_id))).filter(Boolean);
+    if (entIds.length > 0) {
+      const minDate = new Date();
+      minDate.setDate(minDate.getDate() - 365);
+      const minISO = minDate.toISOString().split("T")[0];
+      const { data: gels } = await supabase
+        .from("demandes_gel")
+        .select("entreprise_id, statut, date_debut, date_fin_prevue, date_fin_effective")
+        .in("entreprise_id", entIds)
+        .in("statut", ["en_attente", "validee", "active", "close"])
+        .gte("date_debut", minISO);
+      const acc: Record<string, DemandeGelRow[]> = {};
+      for (const g of (gels ?? []) as Array<DemandeGelRow & { entreprise_id: string }>) {
+        (acc[g.entreprise_id] ??= []).push(g);
+      }
+      const map: Record<string, { joursActifs: number; joursProgrammes: number; total: number }> = {};
+      for (const [eid, rs] of Object.entries(acc)) {
+        map[eid] = computeQuotaGelDecompose(rs);
+      }
+      setDecomposeByEnt(map);
+    } else {
+      setDecomposeByEnt({});
+    }
     setLoading(false);
   }, []);
 
@@ -145,7 +174,11 @@ function DemandesGelPage() {
                         {format(parseISO(r.date_debut), "dd/MM/yyyy")} →{" "}
                         {format(parseISO(r.date_fin_prevue), "dd/MM/yyyy")} ·{" "}
                         {r.duree_jours_demandee ?? "—"}j · Quota{" "}
-                        {r.quota_consomme_actuel ?? 0}/90
+                        {(() => {
+                          const d = decomposeByEnt[r.entreprise_id];
+                          if (!d) return `${r.quota_consomme_actuel ?? 0}/90`;
+                          return `${d.total}/90 (${d.joursActifs} en cours · ${d.joursProgrammes} programmés)`;
+                        })()}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1 italic line-clamp-1">
                         {r.motif}

@@ -24,6 +24,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { QuotaGelDecompose } from "@/components/client/QuotaGelDecompose";
 
 interface Vehicule {
   id: string;
@@ -293,18 +294,12 @@ export function DemanderGelDialog({
             </div>
           </div>
 
-          {/* Indicateur durée + quota */}
-          {duree > 0 && (
-            <Alert variant={quotaDepasse || dureeInvalide ? "destructive" : "default"}>
-              <AlertDescription className="space-y-1 text-xs">
-                <div>
-                  Durée demandée :{" "}
-                  <strong>
-                    {duree} jour{duree > 1 ? "s" : ""}
-                  </strong>{" "}
-                  · Quota consommé sur 365j :{" "}
-                  <strong>{quota}/90</strong>
-                </div>
+          {/* Décomposition quota (actifs / programmés / total) */}
+          <QuotaGelDecompose entrepriseId={entrepriseId} dureeDemandeeJours={duree} />
+
+          {duree > 0 && (dureeInvalide || quotaDepasse) && (
+            <Alert variant="destructive">
+              <AlertDescription className="text-xs">
                 {dureeInvalide && (
                   <div>
                     ⚠{" "}
