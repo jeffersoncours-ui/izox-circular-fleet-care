@@ -441,6 +441,21 @@ function VehiculeDetail() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AnnulerDemandeDialog
+        open={annulerOpen}
+        onOpenChange={setAnnulerOpen}
+        demandeType="gel"
+        demandeId={demandeCibleId ?? ""}
+        onSuccess={load}
+      />
+
+      <LeverGelAnticipeDialog
+        open={leverOpen}
+        onOpenChange={setLeverOpen}
+        demandeId={demandeCibleId ?? ""}
+        onSuccess={load}
+      />
+
       <FacturationPrealableDialog
         state={billingState}
         onClose={() => setBillingState(null)}
