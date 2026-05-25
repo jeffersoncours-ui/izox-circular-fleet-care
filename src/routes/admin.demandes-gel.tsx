@@ -174,7 +174,11 @@ function DemandesGelPage() {
                         {format(parseISO(r.date_debut), "dd/MM/yyyy")} →{" "}
                         {format(parseISO(r.date_fin_prevue), "dd/MM/yyyy")} ·{" "}
                         {r.duree_jours_demandee ?? "—"}j · Quota{" "}
-                        {r.quota_consomme_actuel ?? 0}/90
+                        {(() => {
+                          const d = decomposeByEnt[r.entreprise_id];
+                          if (!d) return `${r.quota_consomme_actuel ?? 0}/90`;
+                          return `${d.total}/90 (${d.joursActifs} en cours · ${d.joursProgrammes} programmés)`;
+                        })()}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1 italic line-clamp-1">
                         {r.motif}
