@@ -63,8 +63,11 @@ function VehiculeDetail() {
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
   const [rdvOpen, setRdvOpen] = useState(false);
   const [gelOpen, setGelOpen] = useState(false);
-  const [demandesGelActives, setDemandesGelActives] = useState<Array<{ id: string; statut: string; date_debut: string; date_fin_prevue: string }>>([]);
+  const [demandesGelActives, setDemandesGelActives] = useState<Array<{ id: string; statut: string; date_debut: string; date_fin_prevue: string; created_at: string }>>([]);
   const [rdvLiesCount, setRdvLiesCount] = useState({ futur: 0, passe: 0 });
+  const [annulerOpen, setAnnulerOpen] = useState(false);
+  const [leverOpen, setLeverOpen] = useState(false);
+  const [demandeCibleId, setDemandeCibleId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
