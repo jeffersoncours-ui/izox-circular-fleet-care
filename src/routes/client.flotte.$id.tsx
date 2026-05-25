@@ -108,7 +108,7 @@ function VehiculeDetail() {
         : arrayFilter;
       const { data: gels } = await supabase
         .from("demandes_gel")
-        .select("id, statut, date_debut, date_fin_prevue")
+        .select("id, statut, date_debut, date_fin_prevue, created_at")
         .eq("entreprise_id", profile.entreprise_id)
         .in("statut", ["en_attente", "validee", "active"])
         .or(orFilter)
