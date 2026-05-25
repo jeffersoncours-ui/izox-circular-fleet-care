@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { GererDemandeGelDialog } from "@/components/admin/GererDemandeGelDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
+import { computeQuotaGelDecompose, type DemandeGelRow } from "@/lib/quota-gel";
 
 const demandesGelSearchSchema = z.object({
   demande: z.string().uuid().optional(),
