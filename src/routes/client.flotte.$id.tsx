@@ -26,6 +26,8 @@ import {
 } from "@/components/admin/FacturationPrealableDialog";
 import { CreerDemandeRdvDialog } from "@/components/client/CreerDemandeRdvDialog";
 import { DemanderGelDialog } from "@/components/client/DemanderGelDialog";
+import { AnnulerDemandeDialog } from "@/components/client/AnnulerDemandeDialog";
+import { LeverGelAnticipeDialog } from "@/components/client/LeverGelAnticipeDialog";
 import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/client/flotte/$id")({
