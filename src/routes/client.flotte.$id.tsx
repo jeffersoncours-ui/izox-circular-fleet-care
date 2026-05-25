@@ -294,21 +294,67 @@ function VehiculeDetail() {
         return (
           <>
             {vehicule.contrat_id && vehicule.statut === "actif" && gelProgramme && (
-              <Badge
-                variant="outline"
-                className="bg-blue-50 text-blue-700 border-blue-200 mb-3"
-              >
-                <CalendarIcon className="h-3 w-3 mr-1" /> Gel programmé du{" "}
-                {fmt(gelProgramme.date_debut)} au {fmt(gelProgramme.date_fin_prevue)}
-              </Badge>
+              <Card className="bg-blue-50 border-blue-200 p-3 mb-2 text-xs text-blue-900">
+                <div className="flex items-center gap-1.5 font-medium">
+                  <CalendarIcon className="h-3.5 w-3.5" /> Gel programmé
+                </div>
+                <div className="mt-1">
+                  Du {fmt(gelProgramme.date_debut)} au {fmt(gelProgramme.date_fin_prevue)}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2 text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={() => {
+                    setDemandeCibleId(gelProgramme.id);
+                    setAnnulerOpen(true);
+                  }}
+                >
+                  Annuler le gel programmé
+                </Button>
+              </Card>
             )}
             {vehicule.contrat_id && vehicule.statut === "actif" && demandeEnAttente && !gelProgramme && (
-              <Badge
-                variant="outline"
-                className="bg-orange-50 text-orange-700 border-orange-200 mb-3"
-              >
-                <Clock className="h-3 w-3 mr-1" /> Demande de gel en cours
-              </Badge>
+              <Card className="bg-orange-50 border-orange-200 p-3 mb-2 text-xs text-orange-900">
+                <div className="flex items-center gap-1.5 font-medium">
+                  <Clock className="h-3.5 w-3.5" /> Demande de gel en attente de validation admin
+                </div>
+                <div className="mt-1">
+                  Créée le {fmt(demandeEnAttente.created_at)}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2 text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={() => {
+                    setDemandeCibleId(demandeEnAttente.id);
+                    setAnnulerOpen(true);
+                  }}
+                >
+                  Annuler la demande de gel
+                </Button>
+              </Card>
+            )}
+            {vehicule.statut === "gele" && gelEnCours && (
+              <Card className="bg-blue-100 border-blue-300 p-3 mb-2 text-xs text-blue-900">
+                <div className="flex items-center gap-1.5 font-medium">
+                  <Snowflake className="h-3.5 w-3.5" /> Gel en cours
+                </div>
+                <div className="mt-1">
+                  Du {fmt(gelEnCours.date_debut)} au {fmt(gelEnCours.date_fin_prevue)}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2 text-orange-600 border-orange-200 hover:bg-orange-50"
+                  onClick={() => {
+                    setDemandeCibleId(gelEnCours.id);
+                    setLeverOpen(true);
+                  }}
+                >
+                  Mettre fin au gel anticipativement
+                </Button>
+              </Card>
             )}
 
             {vehicule.contrat_id && (
@@ -327,14 +373,9 @@ function VehiculeDetail() {
                     </Button>
                   </>
                 ) : vehicule.statut === "gele" ? (
-                  <>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300 justify-center py-2">
-                      <Snowflake className="h-3.5 w-3.5 mr-1" /> En gel
-                    </Badge>
-                    <Button variant="outline" disabled>
-                      RDV indisponible
-                    </Button>
-                  </>
+                  <Button variant="outline" disabled>
+                    RDV indisponible
+                  </Button>
                 ) : null}
               </div>
             )}
