@@ -134,8 +134,7 @@ export function MesPrestationsPage() {
   const nbAVenir =
     demandesEnAttente.length +
     demandesConfirmees.length +
-    interventionsPlanifiees.length +
-    demandesGel.length;
+    interventionsPlanifiees.length;
   const nbHisto = interventionsValidees.length + demandesGriseesHisto.length;
 
   if (loading) {
