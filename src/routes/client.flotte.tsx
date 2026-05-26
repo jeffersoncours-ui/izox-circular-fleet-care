@@ -86,7 +86,7 @@ function MaFlotte() {
       <div className="min-w-0 flex-1">
         <p className="font-medium text-sm font-mono truncate">{v.immatriculation}</p>
         <p className="text-xs text-muted-foreground truncate">
-          {getPackLabel(v.type_pack_souhaite)}
+          {v.type_pack_souhaite ? getPackLabel(v.type_pack_souhaite) : "Pack non défini"}
           {tone === "gele" && " · gelé"}
           {tone === "en_attente" && " · en attente"}
         </p>
