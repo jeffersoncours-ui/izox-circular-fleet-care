@@ -439,6 +439,13 @@ const STATUT_BADGE: Record<string, string> = {
   resilie: "bg-destructive/15 text-destructive",
 };
 
+interface ContratVehicule {
+  id: string;
+  immatriculation: string;
+  statut: string;
+  type_pack_souhaite: string | null;
+}
+
 interface ContratItem {
   id: string;
   numero_contrat: string | null;
@@ -449,11 +456,15 @@ interface ContratItem {
   lignes: Array<{ type_pack: string; nb_vehicules: number }>;
   mensualiteNetteHt: number;
   palier: string;
+  vehiculesActifs: ContratVehicule[];
+  vehiculesGeles: ContratVehicule[];
+  vehiculesEnAttente: ContratVehicule[];
 }
 
 function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; onAddVehicule: () => void }) {
   const [contrats, setContrats] = useState<ContratItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDetail, setShowDetail] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     (async () => {
@@ -471,7 +482,16 @@ function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; on
         setLoading(false);
         return;
       }
-      const computed: ContratItem[] = (data ?? []).map((c: any) => {
+      const baseList = (data ?? []) as any[];
+      const vehiculesParContrat = await Promise.all(
+        baseList.map((c) =>
+          supabase
+            .from("vehicules")
+            .select("id, immatriculation, statut, type_pack_souhaite")
+            .eq("contrat_id", c.id)
+        )
+      );
+      const computed: ContratItem[] = baseList.map((c, idx) => {
         const lignes = (c.lignes ?? []) as Array<{ type_pack: string; nb_vehicules: number }>;
         const facture =
           lignes.length > 0
@@ -480,6 +500,7 @@ function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; on
                 engagementAnnuel: c.engagement_annuel,
               })
             : null;
+        const allV = (vehiculesParContrat[idx].data as ContratVehicule[]) ?? [];
         return {
           id: c.id,
           numero_contrat: c.numero_contrat,
@@ -490,6 +511,9 @@ function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; on
           lignes,
           mensualiteNetteHt: facture?.totalAbonnementHt ?? 0,
           palier: facture?.palier ?? "starter",
+          vehiculesActifs: allV.filter((v) => v.statut === "actif"),
+          vehiculesGeles: allV.filter((v) => v.statut === "gele"),
+          vehiculesEnAttente: allV.filter((v) => v.statut === "en_attente_validation"),
         };
       });
       setContrats(computed);
@@ -505,6 +529,8 @@ function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; on
       return d;
     }
   };
+
+  const packLabel = (p: string | null) => (p ? getPackLabel(p) : "Pack non défini");
 
   if (loading) {
     return (
@@ -533,69 +559,128 @@ function ContratsTab({ entrepriseId, onAddVehicule }: { entrepriseId: string; on
 
   return (
     <div className="grid gap-4">
-      {contrats.map((c) => (
-        <Card key={c.id} className="p-5 shadow-card border-border/60">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-foreground">
-                  {c.numero_contrat ?? "Sans numéro"}
-                </h3>
-                <Badge className={cn(STATUT_BADGE[c.statut] ?? "")}>
-                  {STATUT_LABEL[c.statut] ?? c.statut}
-                </Badge>
-                <Badge className={cn(PALIER_BADGE[c.palier])}>{PALIER_LABEL[c.palier]}</Badge>
-                {c.engagement_annuel && (
-                  <Badge variant="outline" className="text-[10px]">
-                    Engagement annuel
+      {contrats.map((c) => {
+        const isOpen = !!showDetail[c.id];
+        return (
+          <Card key={c.id} className="p-5 shadow-card border-border/60">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-semibold text-foreground">
+                    {c.numero_contrat ?? "Sans numéro"}
+                  </h3>
+                  <Badge className={cn(STATUT_BADGE[c.statut] ?? "")}>
+                    {STATUT_LABEL[c.statut] ?? c.statut}
                   </Badge>
+                  <Badge className={cn(PALIER_BADGE[c.palier])}>{PALIER_LABEL[c.palier]}</Badge>
+                  {c.engagement_annuel && (
+                    <Badge variant="outline" className="text-[10px]">
+                      Engagement annuel
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Début : {formatDate(c.date_debut)} · Anniversaire :{" "}
+                  {formatDate(c.date_anniversaire)}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-xs text-muted-foreground">Mensualité nette HT</p>
+                <p className="text-2xl font-bold text-primary tabular-nums">
+                  {c.mensualiteNetteHt.toFixed(2)} €
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t pt-3 mb-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
+                Véhicules
+              </p>
+              <div className="flex items-center gap-4 flex-wrap text-sm">
+                <span>
+                  {c.vehiculesActifs.length} véhicule{c.vehiculesActifs.length > 1 ? "s" : ""} actif
+                  {c.vehiculesActifs.length > 1 ? "s" : ""}
+                </span>
+                {c.vehiculesGeles.length > 0 && (
+                  <span className="flex items-center gap-1 text-blue-700">
+                    <Snowflake className="h-3.5 w-3.5" />
+                    {c.vehiculesGeles.length} gelé{c.vehiculesGeles.length > 1 ? "s" : ""}
+                  </span>
+                )}
+                {c.vehiculesEnAttente.length > 0 && (
+                  <span className="flex items-center gap-1 text-orange-700">
+                    <Clock className="h-3.5 w-3.5" />
+                    {c.vehiculesEnAttente.length} en attente
+                  </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Début : {formatDate(c.date_debut)} · Anniversaire :{" "}
-                {formatDate(c.date_anniversaire)}
-              </p>
             </div>
-            <div className="text-right shrink-0">
-              <p className="text-xs text-muted-foreground">Mensualité nette HT</p>
-              <p className="text-2xl font-bold text-primary tabular-nums">
-                {c.mensualiteNetteHt.toFixed(2)} €
+
+            <div className="border-t pt-3 mb-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
+                Packs
               </p>
+              <ul className="space-y-1 text-sm">
+                {c.lignes.length === 0 ? (
+                  <li className="text-muted-foreground">—</li>
+                ) : (
+                  c.lignes.map((l, i) => (
+                    <li key={i} className="flex items-center justify-between">
+                      <span>{getPackLabel(l.type_pack)}</span>
+                      <span className="font-medium tabular-nums">×{l.nb_vehicules} véh.</span>
+                    </li>
+                  ))
+                )}
+              </ul>
             </div>
-          </div>
 
-          <div className="border-t pt-3 mb-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
-              Packs
-            </p>
-            <ul className="space-y-1 text-sm">
-              {c.lignes.length === 0 ? (
-                <li className="text-muted-foreground">—</li>
-              ) : (
-                c.lignes.map((l, i) => (
-                  <li key={i} className="flex items-center justify-between">
-                    <span>{getPackLabel(l.type_pack)}</span>
-                    <span className="font-medium tabular-nums">×{l.nb_vehicules} véh.</span>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+                onClick={() =>
+                  setShowDetail((prev) => ({ ...prev, [c.id]: !prev[c.id] }))
+                }
+              >
+                {isOpen ? "Masquer le détail" : "Voir le détail"}
+              </Button>
+            </div>
 
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => toast.info("Détail contrat — bientôt disponible.")}
-            >
-              <FileText className="h-4 w-4" /> Voir le détail
-            </Button>
-          </div>
-        </Card>
-      ))}
+            {isOpen && (
+              <div className="mt-3 pl-3 border-l-2 border-muted text-xs space-y-1">
+                {c.vehiculesActifs.length === 0 &&
+                  c.vehiculesGeles.length === 0 &&
+                  c.vehiculesEnAttente.length === 0 && (
+                    <p className="text-muted-foreground">Aucun véhicule rattaché.</p>
+                  )}
+                {c.vehiculesActifs.map((v) => (
+                  <p key={v.id}>
+                    ✓ <span className="font-mono">{v.immatriculation}</span> ·{" "}
+                    {packLabel(v.type_pack_souhaite)}
+                  </p>
+                ))}
+                {c.vehiculesGeles.map((v) => (
+                  <p key={v.id} className="text-blue-700">
+                    ❄ <span className="font-mono">{v.immatriculation}</span> ·{" "}
+                    {packLabel(v.type_pack_souhaite)} (gelé)
+                  </p>
+                ))}
+                {c.vehiculesEnAttente.map((v) => (
+                  <p key={v.id} className="text-orange-700">
+                    ⏳ <span className="font-mono">{v.immatriculation}</span> ·{" "}
+                    {packLabel(v.type_pack_souhaite)} (en attente)
+                  </p>
+                ))}
+              </div>
+            )}
+          </Card>
+        );
+      })}
     </div>
   );
 }
+
 
 function VehiculesGroupes({
   vehicules,
