@@ -183,6 +183,7 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.generate_impact_records(UUID) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.generate_impact_records(UUID) FROM anon;
 
 
 -- ────────────────────────────────────────────────────────────
@@ -241,3 +242,4 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_client_impact_summary(UUID) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_client_impact_summary(UUID) FROM anon;
