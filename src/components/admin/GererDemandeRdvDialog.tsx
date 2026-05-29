@@ -18,6 +18,7 @@ import { Loader2, CheckCircle2, XCircle, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { sendEmail } from "@/lib/email";
 import {
   Dialog,
   DialogContent,
@@ -176,6 +177,7 @@ export function GererDemandeRdvDialog({
         p_date_intervention: iso,
       });
       if (error) throw error;
+      sendEmail("rdv_confirmee", demande.id);
       toast.success(
         vehiculesDemande.length === 1
           ? "RDV confirmé"

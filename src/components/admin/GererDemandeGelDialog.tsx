@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { fr } from "date-fns/locale";
+import { sendEmail } from "@/lib/email";
 
 interface DemandeGel {
   id: string;
@@ -81,6 +82,7 @@ export function GererDemandeGelDialog({
     try {
       const { error } = await supabase.rpc("valider_gel", { p_demande_id: demande.id });
       if (error) throw error;
+      sendEmail("gel_validee", demande.id);
       const aujourdhui = format(new Date(), "yyyy-MM-dd");
       const msg =
         demande.date_debut <= aujourdhui

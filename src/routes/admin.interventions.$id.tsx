@@ -16,6 +16,7 @@ import {
 import { ArrowLeft, Check, X, Loader2, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { sendEmail } from "@/lib/email";
 import { toast } from "sonner";
 import {
   statutColor,
@@ -130,6 +131,7 @@ function AdminInterventionDetail() {
       toast.error("Validation impossible");
       return;
     }
+    sendEmail("intervention_close", data.id);
     toast.success("Fiche validée");
     load();
   };

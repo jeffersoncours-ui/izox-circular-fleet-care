@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { sendEmail } from "@/lib/email";
 
 import {
   Dialog,
@@ -117,7 +118,7 @@ export function DemanderGelDialog({
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.rpc("demander_gel", {
+      const { data: result, error } = await supabase.rpc("demander_gel", {
         p_contrat_id: contratId,
         p_type_demande: type,
         p_vehicule_ids: type === "vehicules" ? selectedIds : [],
@@ -126,6 +127,8 @@ export function DemanderGelDialog({
         p_motif: motif.trim(),
       });
       if (error) throw error;
+      const demandeId = (result as { demande_id?: string } | null)?.demande_id;
+      if (demandeId) sendEmail("staff_notification", demandeId);
       toast.success("Demande envoyée — Notification adressée à votre équipe IZOX");
       reset();
       onOpenChange(false);
