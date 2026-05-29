@@ -97,11 +97,7 @@ export async function generateImpactRecords(interventionId: string): Promise<voi
 }
 
 export async function fetchImpactCoefficients(): Promise<ImpactCoefficient[]> {
-  const { data, error } = await db
-    .from("impact_coefficients")
-    .select("*")
-    .order("category")
-    .order("code");
+  const { data, error } = await db.rpc("get_impact_coefficients");
   if (error) throw error;
   return (data ?? []) as ImpactCoefficient[];
 }
@@ -110,19 +106,15 @@ export async function updateCoefficient(
   id: string,
   patch: Partial<Pick<ImpactCoefficient, "label" | "value" | "unit" | "source" | "esrs_topic" | "active">>,
 ): Promise<void> {
-  const { error } = await db
-    .from("impact_coefficients")
-    .update({ ...patch, updated_at: new Date().toISOString() })
-    .eq("id", id);
+  const { error } = await db.rpc("update_impact_coefficient", {
+    p_id: id,
+    p_updates: patch,
+  });
   if (error) throw error;
 }
 
 export async function fetchEstimatedRecords(): Promise<ImpactRecord[]> {
-  const { data, error } = await db
-    .from("impact_records")
-    .select("*, interventions(date_intervention, vehicule_id, vehicules(immatriculation)), entreprises(nom)")
-    .eq("status", "estimated")
-    .order("created_at", { ascending: false });
+  const { data, error } = await db.rpc("get_estimated_impact_records");
   if (error) throw error;
   return (data ?? []) as ImpactRecord[];
 }
@@ -131,12 +123,10 @@ export async function validateRecordsByIntervention(
   interventionId: string,
   userId: string,
 ): Promise<void> {
-  const now = new Date().toISOString();
-  const { error } = await db
-    .from("impact_records")
-    .update({ status: "validated", validated_by: userId, validated_at: now })
-    .eq("intervention_id", interventionId)
-    .eq("status", "estimated");
+  const { error } = await db.rpc("validate_impact_records_by_intervention", {
+    p_intervention_id: interventionId,
+    p_validated_by: userId,
+  });
   if (error) throw error;
 }
 

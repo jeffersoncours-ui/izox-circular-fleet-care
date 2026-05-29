@@ -36,10 +36,6 @@ function AdminImpactPage() {
           Gérez les coefficients de calcul d'impact et validez les enregistrements générés
           après chaque prestation.
         </p>
-        {/* DIAGNOSTIC TEMPORAIRE — à supprimer après vérification */}
-        <p className="text-[10px] font-mono bg-yellow-100 text-yellow-800 px-2 py-1 rounded mt-2 break-all">
-          DB: {import.meta.env.VITE_SUPABASE_URL ?? "non défini"}
-        </p>
       </header>
 
       <Tabs defaultValue="coefficients" className="w-full">
