@@ -32,12 +32,10 @@ ALTER TABLE impact_coefficients ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "impact_coefficients_admin_staff_all" ON impact_coefficients
   FOR ALL TO authenticated
   USING (
-    has_role(auth.uid(), 'admin'::app_role)
-    OR has_role(auth.uid(), 'staff'::app_role)
+    EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role IN ('admin','staff'))
   )
   WITH CHECK (
-    has_role(auth.uid(), 'admin'::app_role)
-    OR has_role(auth.uid(), 'staff'::app_role)
+    EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role IN ('admin','staff'))
   );
 
 -- Client/commercial/operateur : lecture seule des coefficients actifs
@@ -82,12 +80,10 @@ ALTER TABLE impact_records ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "impact_records_admin_staff_all" ON impact_records
   FOR ALL TO authenticated
   USING (
-    has_role(auth.uid(), 'admin'::app_role)
-    OR has_role(auth.uid(), 'staff'::app_role)
+    EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role IN ('admin','staff'))
   )
   WITH CHECK (
-    has_role(auth.uid(), 'admin'::app_role)
-    OR has_role(auth.uid(), 'staff'::app_role)
+    EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role IN ('admin','staff'))
   );
 
 -- Client : lecture uniquement SES records VALIDÉS (pas les estimations)
@@ -205,9 +201,7 @@ DECLARE
   v_totals   JSON;
   v_timeline JSON;
 BEGIN
-  v_ok := has_role(auth.uid(), 'admin'::app_role)
-    OR has_role(auth.uid(), 'staff'::app_role)
-    OR has_role(auth.uid(), 'commercial'::app_role)
+  v_ok := EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role IN ('admin','staff','commercial'))
     OR get_user_entreprise(auth.uid()) = p_entreprise_id;
 
   IF NOT v_ok THEN RAISE EXCEPTION 'Accès refusé'; END IF;
