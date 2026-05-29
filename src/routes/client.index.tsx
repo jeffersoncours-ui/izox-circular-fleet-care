@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Car, CalendarDays, Sparkles, Award } from "lucide-react";
+import { Car, CalendarDays, Sparkles, Award, Leaf } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
 import { cn } from "@/lib/utils";
@@ -124,7 +124,26 @@ function ClientHome() {
         )}
       </div>
 
-      <Card className="mt-6 p-5 bg-primary text-primary-foreground border-none shadow-strong">
+      {/* Card Impact RSE — lien vers /client/impact */}
+      <Link to="/client/impact" className="block mt-4">
+        <Card className="p-4 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Leaf className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-primary">Mon Impact RSE</p>
+              <p className="text-xs text-muted-foreground">
+                Eau économisée · Pollution évitée · Compost produit
+              </p>
+            </div>
+            <span className="ml-auto text-xs font-medium text-primary px-2 py-0.5
+              rounded-full bg-primary/10">Voir →</span>
+          </div>
+        </Card>
+      </Link>
+
+      <Card className="mt-4 p-5 bg-primary text-primary-foreground border-none shadow-strong">
         <h2 className="font-semibold text-lg">Bienvenue chez IZOX</h2>
         <p className="text-sm text-primary-foreground/85 mt-1">
           Gérez votre flotte et suivez les prestations de nettoyage circulaire en un coup d'œil.

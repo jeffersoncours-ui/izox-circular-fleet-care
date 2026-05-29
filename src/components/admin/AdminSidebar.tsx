@@ -10,6 +10,7 @@ import {
   Users,
   Receipt,
   Snowflake,
+  Leaf,
   LogOut,
   Menu,
 } from "lucide-react";
@@ -39,6 +40,7 @@ const NAV: NavItem[] = [
   { to: "/admin/interventions", label: "Interventions", icon: Wrench },
   { to: "/admin/equipe", label: "Équipe", icon: Users, adminOnly: true },
   { to: "/admin/facturation", label: "Facturation", icon: Receipt, adminOnly: true },
+  { to: "/admin/impact", label: "Impact RSE", icon: Leaf, adminOnly: false },
 ];
 
 function useDemandesCounts() {

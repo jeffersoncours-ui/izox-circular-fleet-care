@@ -17,6 +17,7 @@ import { ArrowLeft, Check, X, Loader2, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { sendEmail } from "@/lib/email";
+import { generateImpactRecords } from "@/lib/impact";
 import { toast } from "sonner";
 import {
   statutColor,
@@ -132,6 +133,7 @@ function AdminInterventionDetail() {
       return;
     }
     sendEmail("intervention_close", data.id);
+    generateImpactRecords(data.id);
     toast.success("Fiche validée");
     load();
   };
