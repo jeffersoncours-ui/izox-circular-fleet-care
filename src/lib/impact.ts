@@ -58,20 +58,112 @@ export interface ImpactSummaryResult {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Coefficients hardcodés (pas de DB)
+// Coefficients par défaut
 // ─────────────────────────────────────────────────────────────
 
-const COEFFICIENTS = {
-  water_saved:     { code: "water_saved",     label: "Eau économisée / prestation",         category: "water"     as ImpactCategory, esrs_topic: "E3", value: 140,  unit: "L",      source: "IZOX estimate" },
-  pollution_avoided: { code: "pollution_avoided", label: "Eaux polluées évitées / prestation", category: "pollution" as ImpactCategory, esrs_topic: "E2", value: 140,  unit: "L",      source: "IZOX estimate" },
-  compost_produced:  { code: "compost_produced",  label: "Compost / terreau produit / prestation", category: "circular" as ImpactCategory, esrs_topic: "E5", value: 0.2,  unit: "kg",     source: "IZOX estimate" },
-  co2_avoided:       { code: "co2_avoided",       label: "CO2 évité / prestation",              category: "ghg"      as ImpactCategory, esrs_topic: "E1", value: 0.5,  unit: "kgCO2e", source: "PLACEHOLDER" },
-};
-
-const COEFF_LIST = Object.values(COEFFICIENTS);
+const DEFAULT_COEFFICIENTS: ImpactCoefficient[] = [
+  { code: "water_saved",      label: "Eau économisée / prestation",          category: "water",     esrs_topic: "E3", value: 140,  unit: "L",      source: "IZOX estimate" },
+  { code: "pollution_avoided",label: "Eaux polluées évitées / prestation",   category: "pollution", esrs_topic: "E2", value: 140,  unit: "L",      source: "IZOX estimate" },
+  { code: "compost_produced", label: "Compost / terreau produit / prestation", category: "circular",esrs_topic: "E5", value: 0.2,  unit: "kg",     source: "IZOX estimate" },
+  { code: "co2_avoided",      label: "CO2 évité / prestation",               category: "ghg",       esrs_topic: "E1", value: 0.5,  unit: "kgCO2e", source: "PLACEHOLDER"   },
+];
 
 // ─────────────────────────────────────────────────────────────
-// Helpers
+// localStorage helpers
+// ─────────────────────────────────────────────────────────────
+
+const LS_COEFFS   = "izox_impact_coeffs";
+const LS_REVIEWED = "izox_impact_reviewed";
+
+function getStoredOverrides(): Record<string, Partial<ImpactCoefficient>> {
+  try { return JSON.parse(localStorage.getItem(LS_COEFFS) ?? "{}"); }
+  catch { return {}; }
+}
+
+function getReviewedSet(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(LS_REVIEWED) ?? "[]")); }
+  catch { return new Set(); }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Coefficients — merged defaults + localStorage overrides
+// ─────────────────────────────────────────────────────────────
+
+function getActiveCoefficients(): ImpactCoefficient[] {
+  const overrides = getStoredOverrides();
+  return DEFAULT_COEFFICIENTS.map((c) => ({ ...c, ...(overrides[c.code] ?? {}) }));
+}
+
+export async function fetchImpactCoefficients(): Promise<ImpactCoefficient[]> {
+  return getActiveCoefficients();
+}
+
+export async function updateCoefficient(
+  code: string,
+  patch: Partial<Pick<ImpactCoefficient, "label" | "value" | "unit" | "source" | "esrs_topic">>
+): Promise<void> {
+  const overrides = getStoredOverrides();
+  overrides[code] = { ...(overrides[code] ?? {}), ...patch };
+  localStorage.setItem(LS_COEFFS, JSON.stringify(overrides));
+}
+
+// ─────────────────────────────────────────────────────────────
+// Validation queue (localStorage-tracked)
+// ─────────────────────────────────────────────────────────────
+
+export async function fetchEstimatedRecords(): Promise<ImpactRecord[]> {
+  const reviewed = getReviewedSet();
+
+  const { data, error } = await supabase
+    .from("interventions")
+    .select("id, date_intervention, entreprise_id, vehicule_id, vehicules(immatriculation), entreprises(nom)")
+    .eq("statut", "validee")
+    .order("date_intervention", { ascending: false })
+    .limit(200);
+
+  if (error) throw error;
+
+  const coeffs = getActiveCoefficients();
+  const records: ImpactRecord[] = [];
+
+  (data ?? [])
+    .filter((inter) => !reviewed.has(inter.id))
+    .forEach((inter) => {
+      coeffs.forEach((coeff) => {
+        records.push({
+          id: `${inter.id}-${coeff.code}`,
+          intervention_id: inter.id,
+          contrat_id: null,
+          entreprise_id: inter.entreprise_id,
+          coefficient_snapshot: coeff as Record<string, unknown>,
+          category: coeff.category,
+          quantity: coeff.value,
+          unit: coeff.unit,
+          status: "estimated",
+          validated_by: null,
+          validated_at: null,
+          created_at: inter.date_intervention ?? new Date().toISOString(),
+          interventions: {
+            date_intervention: inter.date_intervention,
+            vehicule_id: inter.vehicule_id,
+            vehicules: (inter.vehicules as { immatriculation: string } | null),
+          },
+          entreprises: (inter.entreprises as { nom: string } | null),
+        });
+      });
+    });
+
+  return records;
+}
+
+export async function validateRecordsByIntervention(interventionId: string, _userId: string): Promise<void> {
+  const reviewed = getReviewedSet();
+  reviewed.add(interventionId);
+  localStorage.setItem(LS_REVIEWED, JSON.stringify(Array.from(reviewed)));
+}
+
+// ─────────────────────────────────────────────────────────────
+// Client impact — calculated from validated interventions
 // ─────────────────────────────────────────────────────────────
 
 async function fetchValidatedInterventions(entrepriseId: string) {
@@ -85,14 +177,11 @@ async function fetchValidatedInterventions(entrepriseId: string) {
   return data ?? [];
 }
 
-// ─────────────────────────────────────────────────────────────
-// Public APIs — calculated from interventions, no new table
-// ─────────────────────────────────────────────────────────────
-
 export async function getClientImpactSummary(entrepriseId: string): Promise<ImpactSummaryResult> {
   const interventions = await fetchValidatedInterventions(entrepriseId);
+  const coeffs = getActiveCoefficients();
 
-  const totals: ImpactCategoryTotal[] = COEFF_LIST.map((c) => ({
+  const totals: ImpactCategoryTotal[] = coeffs.map((c) => ({
     category: c.category,
     total: Math.round(interventions.length * c.value * 100) / 100,
     unit: c.unit,
@@ -107,20 +196,17 @@ export async function getClientImpactSummary(entrepriseId: string): Promise<Impa
       timelineMap.set(month, { month, water: 0, pollution: 0, circular: 0, ghg: 0 });
     }
     const entry = timelineMap.get(month)!;
-    entry.water    += COEFFICIENTS.water_saved.value;
-    entry.pollution += COEFFICIENTS.pollution_avoided.value;
-    entry.circular  += COEFFICIENTS.compost_produced.value;
-    entry.ghg       += COEFFICIENTS.co2_avoided.value;
+    coeffs.forEach((c) => { (entry as any)[c.category] += c.value; });
   });
 
   const timeline = Array.from(timelineMap.values())
     .sort((a, b) => a.month.localeCompare(b.month))
     .map((e) => ({
       month: e.month,
-      water:    Math.round(e.water    * 100) / 100,
+      water:     Math.round(e.water     * 100) / 100,
       pollution: Math.round(e.pollution * 100) / 100,
-      circular: Math.round(e.circular  * 100) / 100,
-      ghg:      Math.round(e.ghg       * 100) / 100,
+      circular:  Math.round(e.circular  * 100) / 100,
+      ghg:       Math.round(e.ghg       * 100) / 100,
     }));
 
   return { totals, timeline };
@@ -128,9 +214,11 @@ export async function getClientImpactSummary(entrepriseId: string): Promise<Impa
 
 export async function fetchClientRecords(entrepriseId: string): Promise<ImpactRecord[]> {
   const interventions = await fetchValidatedInterventions(entrepriseId);
+  const coeffs = getActiveCoefficients();
   const records: ImpactRecord[] = [];
+
   interventions.forEach((inter) => {
-    COEFF_LIST.forEach((coeff) => {
+    coeffs.forEach((coeff) => {
       records.push({
         id: `${inter.id}-${coeff.code}`,
         intervention_id: inter.id,
@@ -152,27 +240,12 @@ export async function fetchClientRecords(entrepriseId: string): Promise<ImpactRe
       });
     });
   });
-  return records;
-}
 
-export async function fetchImpactCoefficients(): Promise<ImpactCoefficient[]> {
-  return COEFF_LIST;
+  return records;
 }
 
 export async function generateImpactRecords(_interventionId: string): Promise<void> {
   // no-op: impact calculated on-the-fly
-}
-
-export async function validateRecordsByIntervention(_interventionId: string, _userId: string): Promise<void> {
-  // no-op: all validated interventions are counted automatically
-}
-
-export async function fetchEstimatedRecords(): Promise<ImpactRecord[]> {
-  return [];
-}
-
-export async function updateCoefficient(_id: string, _patch: unknown): Promise<void> {
-  // no-op: coefficients are hardcoded
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -183,10 +256,10 @@ export const CATEGORY_META: Record<
   ImpactCategory,
   { label: string; unit: string; color: string; fillColor: string }
 > = {
-  water:    { label: "Eau économisée", unit: "L",       color: "#2563eb", fillColor: "#dbeafe" },
-  pollution: { label: "Pollution évitée", unit: "L",    color: "#059669", fillColor: "#d1fae5" },
-  circular: { label: "Compost produit", unit: "kg",     color: "#d97706", fillColor: "#fef3c7" },
-  ghg:      { label: "CO₂ évité",       unit: "kgCO₂e", color: "#7c3aed", fillColor: "#ede9fe" },
+  water:     { label: "Eau économisée",  unit: "L",       color: "#2563eb", fillColor: "#dbeafe" },
+  pollution: { label: "Pollution évitée", unit: "L",      color: "#059669", fillColor: "#d1fae5" },
+  circular:  { label: "Compost produit", unit: "kg",      color: "#d97706", fillColor: "#fef3c7" },
+  ghg:       { label: "CO₂ évité",       unit: "kgCO₂e", color: "#7c3aed", fillColor: "#ede9fe" },
 };
 
 // ─────────────────────────────────────────────────────────────

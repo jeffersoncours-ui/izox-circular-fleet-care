@@ -7,7 +7,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { updateCoefficient, type ImpactCoefficient } from "@/lib/impact";
 
 const ESRS_OPTIONS = ["E1", "E2", "E3", "E5"];
@@ -20,13 +19,12 @@ interface Props {
 }
 
 export function ImpactCoefficientDialog({ open, onOpenChange, coefficient, onSaved }: Props) {
-  const [label, setLabel]       = useState("");
-  const [value, setValue]       = useState("");
-  const [unit, setUnit]         = useState("");
-  const [source, setSource]     = useState("");
-  const [esrs, setEsrs]         = useState("");
-  const [active, setActive]     = useState(true);
-  const [saving, setSaving]     = useState(false);
+  const [label, setLabel]   = useState("");
+  const [value, setValue]   = useState("");
+  const [unit, setUnit]     = useState("");
+  const [source, setSource] = useState("");
+  const [esrs, setEsrs]     = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!coefficient) return;
@@ -35,7 +33,6 @@ export function ImpactCoefficientDialog({ open, onOpenChange, coefficient, onSav
     setUnit(coefficient.unit);
     setSource(coefficient.source ?? "");
     setEsrs(coefficient.esrs_topic ?? "");
-    setActive(coefficient.active);
   }, [coefficient]);
 
   const handleSave = async () => {
@@ -45,13 +42,12 @@ export function ImpactCoefficientDialog({ open, onOpenChange, coefficient, onSav
     if (!label.trim()) { toast.error("Libellé obligatoire"); return; }
     setSaving(true);
     try {
-      await updateCoefficient(coefficient.id, {
+      await updateCoefficient(coefficient.code, {
         label: label.trim(),
         value: num,
         unit: unit.trim(),
         source: source.trim() || null,
         esrs_topic: esrs || null,
-        active,
       });
       toast.success("Coefficient mis à jour");
       onOpenChange(false);
@@ -106,16 +102,6 @@ export function ImpactCoefficientDialog({ open, onOpenChange, coefficient, onSav
             <Input id="coeff-source" placeholder="ex: ADEME Base Empreinte v23"
               value={source} onChange={(e) => setSource(e.target.value)} className="mt-1" />
           </div>
-
-          <div className="flex items-center gap-3">
-            <Switch id="coeff-active" checked={active} onCheckedChange={setActive} />
-            <Label htmlFor="coeff-active">Coefficient actif (utilisé dans les nouveaux calculs)</Label>
-          </div>
-          {!active && (
-            <p className="text-xs text-amber-600">
-              ⚠️ Les calculs en cours et passés ne sont PAS affectés (grâce au snapshot JSONB).
-            </p>
-          )}
         </div>
 
         <DialogFooter>
