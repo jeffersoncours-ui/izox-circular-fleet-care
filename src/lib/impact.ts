@@ -127,15 +127,15 @@ export async function fetchEstimatedRecords(): Promise<ImpactRecord[]> {
   const records: ImpactRecord[] = [];
 
   (data ?? [])
-    .filter((inter) => !reviewed.has(inter.id))
+    .filter((inter) => !reviewed.has(inter.id) && inter.entreprise_id !== null)
     .forEach((inter) => {
       coeffs.forEach((coeff) => {
         records.push({
           id: `${inter.id}-${coeff.code}`,
           intervention_id: inter.id,
           contrat_id: null,
-          entreprise_id: inter.entreprise_id,
-          coefficient_snapshot: coeff as Record<string, unknown>,
+          entreprise_id: inter.entreprise_id as string,
+          coefficient_snapshot: coeff as unknown as Record<string, unknown>,
           category: coeff.category,
           quantity: coeff.value,
           unit: coeff.unit,
@@ -223,8 +223,8 @@ export async function fetchClientRecords(entrepriseId: string): Promise<ImpactRe
         id: `${inter.id}-${coeff.code}`,
         intervention_id: inter.id,
         contrat_id: null,
-        entreprise_id: inter.entreprise_id,
-        coefficient_snapshot: coeff as Record<string, unknown>,
+        entreprise_id: inter.entreprise_id as string,
+        coefficient_snapshot: coeff as unknown as Record<string, unknown>,
         category: coeff.category,
         quantity: coeff.value,
         unit: coeff.unit,
