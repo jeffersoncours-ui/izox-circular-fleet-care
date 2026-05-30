@@ -19,12 +19,14 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ClientRendezVousRouteImport } from './routes/client.rendez-vous'
 import { Route as ClientPrestationsRouteImport } from './routes/client.prestations'
 import { Route as ClientInterventionsRouteImport } from './routes/client.interventions'
+import { Route as ClientImpactRouteImport } from './routes/client.impact'
 import { Route as ClientFlotteRouteImport } from './routes/client.flotte'
 import { Route as ClientFacturesRouteImport } from './routes/client.factures'
 import { Route as ClientDocumentsRouteImport } from './routes/client.documents'
 import { Route as AdminVehiculesRouteImport } from './routes/admin.vehicules'
 import { Route as AdminRendezVousRouteImport } from './routes/admin.rendez-vous'
 import { Route as AdminInterventionsRouteImport } from './routes/admin.interventions'
+import { Route as AdminImpactRouteImport } from './routes/admin.impact'
 import { Route as AdminFacturationRouteImport } from './routes/admin.facturation'
 import { Route as AdminEquipeRouteImport } from './routes/admin.equipe'
 import { Route as AdminDemandesRdvRouteImport } from './routes/admin.demandes-rdv'
@@ -38,8 +40,6 @@ import { Route as AdminVehiculesIdRouteImport } from './routes/admin.vehicules.$
 import { Route as AdminInterventionsIdRouteImport } from './routes/admin.interventions.$id'
 import { Route as AdminContratsIdRouteImport } from './routes/admin.contrats.$id'
 import { Route as AdminClientsIdRouteImport } from './routes/admin.clients.$id'
-import { Route as ClientImpactRouteImport } from './routes/client.impact'
-import { Route as AdminImpactRouteImport } from './routes/admin.impact'
 
 const TerrainRoute = TerrainRouteImport.update({
   id: '/terrain',
@@ -91,6 +91,11 @@ const ClientInterventionsRoute = ClientInterventionsRouteImport.update({
   path: '/interventions',
   getParentRoute: () => ClientRoute,
 } as any)
+const ClientImpactRoute = ClientImpactRouteImport.update({
+  id: '/impact',
+  path: '/impact',
+  getParentRoute: () => ClientRoute,
+} as any)
 const ClientFlotteRoute = ClientFlotteRouteImport.update({
   id: '/flotte',
   path: '/flotte',
@@ -119,6 +124,11 @@ const AdminRendezVousRoute = AdminRendezVousRouteImport.update({
 const AdminInterventionsRoute = AdminInterventionsRouteImport.update({
   id: '/interventions',
   path: '/interventions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminImpactRoute = AdminImpactRouteImport.update({
+  id: '/impact',
+  path: '/impact',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFacturationRoute = AdminFacturationRouteImport.update({
@@ -186,16 +196,6 @@ const AdminClientsIdRoute = AdminClientsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminClientsRoute,
 } as any)
-const ClientImpactRoute = ClientImpactRouteImport.update({
-  id: '/impact',
-  path: '/impact',
-  getParentRoute: () => ClientRoute,
-} as any)
-const AdminImpactRoute = AdminImpactRouteImport.update({
-  id: '/impact',
-  path: '/impact',
-  getParentRoute: () => AdminRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -215,8 +215,8 @@ export interface FileRoutesByFullPath {
   '/admin/vehicules': typeof AdminVehiculesRouteWithChildren
   '/client/documents': typeof ClientDocumentsRoute
   '/client/factures': typeof ClientFacturesRoute
-  '/client/impact': typeof ClientImpactRoute
   '/client/flotte': typeof ClientFlotteRouteWithChildren
+  '/client/impact': typeof ClientImpactRoute
   '/client/interventions': typeof ClientInterventionsRoute
   '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
@@ -246,8 +246,8 @@ export interface FileRoutesByTo {
   '/admin/vehicules': typeof AdminVehiculesRouteWithChildren
   '/client/documents': typeof ClientDocumentsRoute
   '/client/factures': typeof ClientFacturesRoute
-  '/client/impact': typeof ClientImpactRoute
   '/client/flotte': typeof ClientFlotteRouteWithChildren
+  '/client/impact': typeof ClientImpactRoute
   '/client/interventions': typeof ClientInterventionsRoute
   '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
@@ -280,8 +280,8 @@ export interface FileRoutesById {
   '/admin/vehicules': typeof AdminVehiculesRouteWithChildren
   '/client/documents': typeof ClientDocumentsRoute
   '/client/factures': typeof ClientFacturesRoute
-  '/client/impact': typeof ClientImpactRoute
   '/client/flotte': typeof ClientFlotteRouteWithChildren
+  '/client/impact': typeof ClientImpactRoute
   '/client/interventions': typeof ClientInterventionsRoute
   '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
@@ -475,6 +475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientInterventionsRouteImport
       parentRoute: typeof ClientRoute
     }
+    '/client/impact': {
+      id: '/client/impact'
+      path: '/impact'
+      fullPath: '/client/impact'
+      preLoaderRoute: typeof ClientImpactRouteImport
+      parentRoute: typeof ClientRoute
+    }
     '/client/flotte': {
       id: '/client/flotte'
       path: '/flotte'
@@ -517,13 +524,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInterventionsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/facturation': {
-      id: '/admin/facturation'
-      path: '/facturation'
-      fullPath: '/admin/facturation'
-      preLoaderRoute: typeof AdminFacturationRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/impact': {
       id: '/admin/impact'
       path: '/impact'
@@ -531,12 +531,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminImpactRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/client/impact': {
-      id: '/client/impact'
-      path: '/impact'
-      fullPath: '/client/impact'
-      preLoaderRoute: typeof ClientImpactRouteImport
-      parentRoute: typeof ClientRoute
+    '/admin/facturation': {
+      id: '/admin/facturation'
+      path: '/facturation'
+      fullPath: '/admin/facturation'
+      preLoaderRoute: typeof AdminFacturationRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/equipe': {
       id: '/admin/equipe'
