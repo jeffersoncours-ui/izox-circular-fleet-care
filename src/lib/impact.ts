@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+// supabase direct client kept only for functions.invoke
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -111,15 +112,7 @@ export async function validateRecordsByIntervention(
 }
 
 export async function fetchClientRecords(entrepriseId: string): Promise<ImpactRecord[]> {
-  const { data, error } = await supabase
-    .from("impact_records")
-    .select("*, interventions(date_intervention, vehicule_id, vehicules(immatriculation))")
-    .eq("entreprise_id", entrepriseId)
-    .eq("status", "validated")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return (data ?? []) as ImpactRecord[];
+  return callComputeImpact("get_client_records", { entreprise_id: entrepriseId });
 }
 
 // ─────────────────────────────────────────────────────────────

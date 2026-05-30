@@ -203,7 +203,23 @@ serve(async (req: Request) => {
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
 
-    // 5. Get estimated records
+    // 5. Get client records (validated, with joins)
+    if (action === "get_client_records") {
+      const { data, error: err } = await db
+        .from("impact_records")
+        .select(
+          `*,
+           interventions(date_intervention, vehicule_id, vehicules(immatriculation))`
+        )
+        .eq("entreprise_id", entreprise_id)
+        .eq("status", "validated")
+        .order("created_at", { ascending: false });
+
+      if (err) throw err;
+      return new Response(JSON.stringify(data || []), { status: 200 });
+    }
+
+    // 6. Get estimated records
     if (action === "get_estimated") {
       const { data, error: err } = await db
         .from("impact_records")

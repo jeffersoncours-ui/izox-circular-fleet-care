@@ -6,13 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/lib/auth-context";
 import {
   fetchImpactCoefficients,
   fetchEstimatedRecords,
   validateRecordsByIntervention,
-  updateCoefficient,
   CATEGORY_META,
   type ImpactCoefficient,
   type ImpactRecord,
@@ -71,14 +69,6 @@ function CoefficientsTab() {
 
   useEffect(() => { load(); }, []);
 
-  const toggleActive = async (c: ImpactCoefficient) => {
-    try {
-      await updateCoefficient(c.id, { active: !c.active });
-      toast.success(c.active ? "Coefficient désactivé" : "Coefficient activé");
-      load();
-    } catch (e: unknown) { toast.error((e as Error).message); }
-  };
-
   if (loading) return <Loader className="mt-10" />;
 
   return (
@@ -99,7 +89,6 @@ function CoefficientsTab() {
                 <th className="px-4 py-3 font-medium text-muted-foreground">Unité</th>
                 <th className="px-4 py-3 font-medium text-muted-foreground">ESRS</th>
                 <th className="px-4 py-3 font-medium text-muted-foreground">Source</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Actif</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -107,7 +96,7 @@ function CoefficientsTab() {
               {coeffs.map((c) => {
                 const meta = CATEGORY_META[c.category];
                 return (
-                  <tr key={c.id} className={c.active ? "" : "opacity-50"}>
+                  <tr key={c.code}>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{c.code}</td>
                     <td className="px-4 py-3 font-medium">{c.label}</td>
                     <td className="px-4 py-3">
@@ -128,9 +117,6 @@ function CoefficientsTab() {
                     </td>
                     <td className="px-4 py-3 max-w-[180px]">
                       <span className="text-xs text-muted-foreground line-clamp-2">{c.source ?? "—"}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
                     </td>
                     <td className="px-4 py-3">
                       <Button
