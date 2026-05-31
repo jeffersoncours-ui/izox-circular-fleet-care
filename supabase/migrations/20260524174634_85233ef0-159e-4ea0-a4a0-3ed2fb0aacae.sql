@@ -28,6 +28,7 @@ UPDATE public.profiles SET entreprise_id = NULL WHERE role = 'client';
 
 DELETE FROM public.contrat_sequences;
 
+CREATE SEQUENCE IF NOT EXISTS public.seq_facture_b2b_2027 START 1 INCREMENT 1 MINVALUE 1 MAXVALUE 999999 NO CYCLE;
 ALTER SEQUENCE public.seq_facture_b2b_2026 RESTART WITH 1;
 ALTER SEQUENCE public.seq_facture_b2b_2027 RESTART WITH 1;
 ALTER SEQUENCE public.seq_facture_b2c_2026 RESTART WITH 1;
