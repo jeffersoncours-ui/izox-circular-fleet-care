@@ -66,6 +66,11 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     end: endOfISOWeek(currentWeekStart),
   }).slice(0, 5);
 
+  // Clé stable de la semaine (string) — voir note dans PlanningCalendar :
+  // addDays() retourne un nouvel objet Date à chaque render, ce qui ferait
+  // boucler le useEffect de chargement de l'occupation.
+  const weekStartStr = format(currentWeekStart, "yyyy-MM-dd");
+
   // Load operators once
   useEffect(() => {
     if (!open) return;
@@ -88,15 +93,16 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
   const loadOccupancy = useCallback(async () => {
     if (!selectedOperator) return;
     setLoadingOccupancy(true);
+    const weekEndStr = format(addDays(new Date(weekStartStr), 4), "yyyy-MM-dd");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase.rpc as any)("get_slot_occupancy", {
       p_operator_id: selectedOperator,
-      p_date_debut: format(currentWeekStart, "yyyy-MM-dd"),
-      p_date_fin: format(weekEnd, "yyyy-MM-dd"),
+      p_date_debut: weekStartStr,
+      p_date_fin: weekEndStr,
     });
     setOccupancy((data ?? []) as OccupancyRow[]);
     setLoadingOccupancy(false);
-  }, [selectedOperator, currentWeekStart, weekEnd]);
+  }, [selectedOperator, weekStartStr]);
 
   useEffect(() => {
     loadOccupancy();
@@ -106,13 +112,21 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     const row = occupancy.find(
       (o) => o.intervention_date === date && o.time_slot === slot
     );
-    return row?.count ?? 0;
+    // COUNT(*) revient en bigint, parfois sérialisé en string par PostgREST.
+    return row ? Number(row.count) : 0;
   };
 
   const isFull = (date: string, slot: string) => getCount(date, slot) >= MAX_PER_SLOT;
 
+  const nbVehicules = demande?.vehicule_ids?.length ?? 0;
+  const hasVehicules = nbVehicules > 0;
+
   const canConfirm =
-    !!selectedOperator && !!selectedDate && !!selectedSlot && !submitting;
+    !!selectedOperator &&
+    !!selectedDate &&
+    !!selectedSlot &&
+    hasVehicules &&
+    !submitting;
 
   const handleConfirm = async () => {
     if (!canConfirm || !demande) return;
@@ -157,6 +171,13 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
         </DialogHeader>
 
         <div className="space-y-5">
+          {!hasVehicules && (
+            <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+              Aucun véhicule n'est associé à cette demande. Impossible de planifier
+              une intervention.
+            </div>
+          )}
+
           {/* Operator selection */}
           <div className="space-y-2">
             <p className="text-sm font-semibold">1. Sélectionner un opérateur</p>

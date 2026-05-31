@@ -175,8 +175,14 @@ export function PlanningCalendar() {
 
   const weekEnd = addDays(currentWeekStart, 4); // vendredi
 
+  // Clé stable de la semaine (string) pour éviter une boucle de re-fetch :
+  // addDays() crée un nouvel objet Date à chaque render, donc on ne peut pas
+  // l'utiliser directement comme dépendance.
+  const weekStartStr = format(currentWeekStart, "yyyy-MM-dd");
+
   const loadData = useCallback(async () => {
     setLoading(true);
+    const weekEndStr = format(addDays(new Date(weekStartStr), 4), "yyyy-MM-dd");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [opsRes, intsRes] = await Promise.all([
       (supabase.from as any)("operators").select("*").order("name"),
@@ -184,13 +190,13 @@ export function PlanningCalendar() {
         .from("interventions")
         .select("id, operator_id, time_slot, date_intervention, vehicules(immatriculation), entreprises(nom)")
         .not("operator_id", "is", null)
-        .gte("date_intervention", format(currentWeekStart, "yyyy-MM-dd"))
-        .lte("date_intervention", format(weekEnd, "yyyy-MM-dd")),
+        .gte("date_intervention", weekStartStr)
+        .lte("date_intervention", weekEndStr),
     ]);
     setOperators(((opsRes as { data: unknown }).data ?? []) as Operator[]);
     setInterventions(((intsRes as { data: unknown }).data ?? []) as unknown as Intervention[]);
     setLoading(false);
-  }, [currentWeekStart, weekEnd]);
+  }, [weekStartStr]);
 
   useEffect(() => {
     loadData();
