@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, CalendarPlus } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -17,6 +17,7 @@ import {
   GererDemandeRdvDialog,
   type AdminDemandeRdv,
 } from "@/components/admin/GererDemandeRdvDialog";
+import { AssignerRdvDialog } from "@/components/admin/AssignerRdvDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
 import { Route as RendezVousRoute } from "@/routes/admin.rendez-vous";
 
@@ -43,6 +44,7 @@ export function DemandesRdvList() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("en_attente");
   const [selected, setSelected] = useState<AdminDemandeRdv | null>(null);
+  const [assigning, setAssigning] = useState<AdminDemandeRdv | null>(null);
   const navigate = useNavigate();
 
   const clearDemandeParam = useCallback(() => {
@@ -121,6 +123,20 @@ export function DemandesRdvList() {
               : [];
             return (
               <li key={r.id}>
+                {r.statut === "en_attente" && (
+                  <div className="flex gap-2 mb-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAssigning({ ...r, entreprise_nom: r.entreprises?.nom ?? null })
+                      }
+                      className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-xs text-primary hover:bg-primary/10 transition-colors"
+                    >
+                      <CalendarPlus className="h-3.5 w-3.5" />
+                      Assigner & Planifier
+                    </button>
+                  </div>
+                )}
                 <button
                   type="button"
                   disabled={r.statut !== "en_attente"}
@@ -188,6 +204,18 @@ export function DemandesRdvList() {
         onProcessed={() => {
           setSelected(null);
           clearDemandeParam();
+          load();
+        }}
+      />
+
+      <AssignerRdvDialog
+        open={!!assigning}
+        onOpenChange={(o) => {
+          if (!o) setAssigning(null);
+        }}
+        demande={assigning}
+        onAssigned={() => {
+          setAssigning(null);
           load();
         }}
       />

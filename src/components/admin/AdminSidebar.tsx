@@ -13,6 +13,7 @@ import {
   Leaf,
   LogOut,
   Menu,
+  CalendarRange,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ const NAV: NavItem[] = [
   { to: "/admin/vehicules", label: "Véhicules", icon: Car },
   { to: "/admin/contrats", label: "Contrats", icon: FileText },
   { to: "/admin/rendez-vous", label: "Rendez-vous", icon: CalendarDays, badgeKey: "rdv" },
+  { to: "/admin/planning", label: "Planning", icon: CalendarRange, adminOnly: true },
   { to: "/admin/demandes-gel", label: "Demandes de gel", icon: Snowflake, badgeKey: "gel" },
   { to: "/admin/interventions", label: "Interventions", icon: Wrench },
   { to: "/admin/equipe", label: "Équipe", icon: Users, adminOnly: true },
