@@ -8,6 +8,24 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function buildResetText(link: string): string {
+  return `Bonjour,
+
+Une demande de réinitialisation de mot de passe a été effectuée pour votre compte IZOX.
+
+Cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe :
+
+${link}
+
+Ce lien est valable 24 heures. Passé ce délai, une nouvelle demande sera nécessaire.
+
+Si vous n'avez pas demandé cette réinitialisation, ignorez cet email — votre mot de passe reste inchangé.
+
+---
+© 2026 IZOX — izox.fr
+Nettoyage automobile éco-responsable`;
+}
+
 function buildResetHtml(link: string): string {
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -82,8 +100,10 @@ async function sendResetEmail(
       body: JSON.stringify({
         from,
         to: [to],
+        reply_to: "contact@izox.fr",
         subject: "Réinitialisation de votre mot de passe IZOX",
         html: buildResetHtml(link),
+        text: buildResetText(link),
       }),
     });
     if (res.ok) return { ok: true, error: null };

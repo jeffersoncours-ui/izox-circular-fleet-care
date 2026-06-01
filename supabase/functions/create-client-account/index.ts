@@ -28,6 +28,24 @@ interface Payload {
   };
 }
 
+function buildWelcomeText(prenom: string, link: string): string {
+  return `Bonjour ${prenom},
+
+Votre compte IZOX vient d'être créé.
+
+Cliquez sur le lien ci-dessous pour définir votre mot de passe et accéder à votre espace client :
+
+${link}
+
+Ce lien est valable 24 heures. Passé ce délai, contactez votre équipe IZOX pour obtenir un nouveau lien.
+
+Si vous n'attendiez pas cet email, vous pouvez l'ignorer en toute sécurité.
+
+---
+© 2026 IZOX — izox.fr
+Nettoyage automobile éco-responsable`;
+}
+
 function buildWelcomeHtml(prenom: string, link: string): string {
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -104,8 +122,10 @@ async function sendWelcomeEmail(
       body: JSON.stringify({
         from,
         to: [to],
+        reply_to: "contact@izox.fr",
         subject: "Bienvenue chez IZOX — Définissez votre mot de passe",
         html: buildWelcomeHtml(prenom, link),
+        text: buildWelcomeText(prenom, link),
       }),
     });
     const body = await res.json().catch(() => ({}));
@@ -228,16 +248,19 @@ Deno.serve(async (req) => {
       const r = await sendWelcomeEmail(resendKey, emailFrom, payload.user.email, payload.user.prenom, inviteLink);
       emailSent = r.ok;
       emailError = r.ok ? null : r.detail;
-      // Log full Resend response for diagnostics (success stores the email id)
-      await admin.from("email_logs").insert({
-        type: "welcome_account",
-        target_id: userId,
-        email_to: payload.user.email,
-        status: r.ok ? "sent" : "failed",
-        error_message: r.detail,
-      });
+      try {
+        await admin.from("email_logs").insert({
+          type: "welcome_account",
+          target_id: userId,
+          email_to: payload.user.email,
+          status: r.ok ? "sent" : "failed",
+          error_message: r.detail,
+        });
+      } catch { /* log failure is non-fatal */ }
     } else if (!resendKey) {
       emailError = "RESEND_API_KEY non configurée";
+    } else if (!inviteLink) {
+      emailError = "Génération du lien échouée — email non envoyé";
     }
 
     return new Response(JSON.stringify({
