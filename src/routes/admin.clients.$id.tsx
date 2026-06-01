@@ -162,7 +162,7 @@ function ClientDetailPage() {
       if (data?.email_sent) {
         toast.success("Email de réinitialisation envoyé au client");
       } else {
-        toast.success("Lien de réinitialisation généré (email non envoyé — RESEND_API_KEY non configurée)");
+        toast.error(`Email non envoyé : ${data?.email_error ?? "raison inconnue"}`);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erreur lors de la réinitialisation");
