@@ -115,6 +115,7 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
             nom: form.nom_user,
             email: form.email_user,
           },
+          redirect_to: `${window.location.origin}/login`,
         },
       });
       if (error) throw error;

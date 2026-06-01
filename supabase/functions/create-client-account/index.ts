@@ -26,6 +26,28 @@ interface Payload {
     nom: string;
     email: string;
   };
+  // Where the "set password" link should land. Passed by the frontend so the
+  // link always points at the origin the app is actually served from
+  // (Vercel today, izox.fr after migration). Falls back to SITE_URL.
+  redirect_to?: string;
+}
+
+function buildWelcomeText(prenom: string, link: string): string {
+  return `Bonjour ${prenom},
+
+Votre compte IZOX vient d'être créé.
+
+Cliquez sur le lien ci-dessous pour définir votre mot de passe et accéder à votre espace client :
+
+${link}
+
+Ce lien est valable 24 heures. Passé ce délai, contactez votre équipe IZOX pour obtenir un nouveau lien.
+
+Si vous n'attendiez pas cet email, vous pouvez l'ignorer en toute sécurité.
+
+---
+© 2026 IZOX — izox.fr
+Nettoyage automobile éco-responsable`;
 }
 
 function buildWelcomeHtml(prenom: string, link: string): string {
@@ -89,10 +111,11 @@ function buildWelcomeHtml(prenom: string, link: string): string {
 
 async function sendWelcomeEmail(
   resendKey: string,
+  from: string,
   to: string,
   prenom: string,
   link: string,
-): Promise<boolean> {
+): Promise<{ ok: boolean; detail: string }> {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -101,15 +124,18 @@ async function sendWelcomeEmail(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "IZOX <noreply@izox.fr>",
+        from,
         to: [to],
+        reply_to: "contact@izox.fr",
         subject: "Bienvenue chez IZOX — Définissez votre mot de passe",
         html: buildWelcomeHtml(prenom, link),
+        text: buildWelcomeText(prenom, link),
       }),
     });
-    return res.ok;
-  } catch {
-    return false;
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok, detail: `HTTP ${res.status} ${JSON.stringify(body)}` };
+  } catch (e) {
+    return { ok: false, detail: e instanceof Error ? e.message : String(e) };
   }
 }
 
@@ -131,6 +157,7 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const resendKey = Deno.env.get("RESEND_API_KEY");
     const siteUrl = Deno.env.get("SITE_URL") ?? "https://izox.fr";
+    const emailFrom = Deno.env.get("EMAIL_FROM") ?? "IZOX <noreply@izox.fr>";
 
     // Verify caller is admin or staff
     const userClient = createClient(url, anonKey, {
@@ -166,8 +193,8 @@ Deno.serve(async (req) => {
       .single();
     if (entErr) throw new Error(`Entreprise: ${entErr.message}`);
 
-    // 2. Create auth user (temp password never exposed)
-    const tempPassword = `${crypto.randomUUID()}-${crypto.randomUUID()}`;
+    // 2. Create auth user (temp password never exposed; <72 bytes for bcrypt)
+    const tempPassword = crypto.randomUUID();
     const { data: authUser, error: authErr } = await admin.auth.admin.createUser({
       email: payload.user.email,
       password: tempPassword,
@@ -205,19 +232,39 @@ Deno.serve(async (req) => {
       throw e;
     }
 
-    // 5. Generate a "set password" recovery link
+    // 5. Generate a "set password" recovery link (non-fatal if it fails)
     let inviteLink: string | null = null;
-    const { data: linkData } = await admin.auth.admin.generateLink({
-      type: "recovery",
-      email: payload.user.email,
-      options: { redirectTo: `${siteUrl}/login` },
-    });
-    inviteLink = linkData?.properties?.action_link ?? null;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "recovery",
+        email: payload.user.email,
+        options: { redirectTo: payload.redirect_to || `${siteUrl}/login` },
+      });
+      inviteLink = linkData?.properties?.action_link ?? null;
+    } catch {
+      // Account was created — link generation failure is non-fatal
+    }
 
-    // 6. Send welcome email via Resend
+    // 6. Send welcome email via Resend (non-fatal if it fails)
     let emailSent = false;
+    let emailError: string | null = null;
     if (resendKey && inviteLink) {
-      emailSent = await sendWelcomeEmail(resendKey, payload.user.email, payload.user.prenom, inviteLink);
+      const r = await sendWelcomeEmail(resendKey, emailFrom, payload.user.email, payload.user.prenom, inviteLink);
+      emailSent = r.ok;
+      emailError = r.ok ? null : r.detail;
+      try {
+        await admin.from("email_logs").insert({
+          type: "welcome_account",
+          target_id: userId,
+          email_to: payload.user.email,
+          status: r.ok ? "sent" : "failed",
+          error_message: r.detail,
+        });
+      } catch { /* log failure is non-fatal */ }
+    } else if (!resendKey) {
+      emailError = "RESEND_API_KEY non configurée";
+    } else if (!inviteLink) {
+      emailError = "Génération du lien échouée — email non envoyé";
     }
 
     return new Response(JSON.stringify({
@@ -226,6 +273,7 @@ Deno.serve(async (req) => {
       user_id: userId,
       email: payload.user.email,
       email_sent: emailSent,
+      email_error: emailError,
       // Expose link as fallback only if email sending failed
       invite_link: emailSent ? null : inviteLink,
     }), { headers: jsonHeaders });
