@@ -70,8 +70,15 @@ function LoginPage() {
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
     setForgotLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
-      redirectTo: `${window.location.origin}/login`,
+    // Use our own edge function (branded email via the Resend API) instead of
+    // the native SMTP flow, which was failing with "535 Authentication
+    // credentials invalid". The function is anti-enumeration: it always
+    // succeeds, so we don't reveal whether the account exists.
+    const { error } = await supabase.functions.invoke("request-password-reset", {
+      body: {
+        email: forgotEmail.trim(),
+        redirect_to: `${window.location.origin}/login`,
+      },
     });
     setForgotLoading(false);
     if (error) {
