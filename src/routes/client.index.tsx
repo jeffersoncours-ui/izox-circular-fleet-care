@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Car, CalendarDays, Sparkles, Award, Leaf } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Car, CalendarDays, Sparkles, Award, Leaf, KeyRound, UserCog } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
+import { ChangePasswordDialog } from "@/components/client/ChangePasswordDialog";
+import { EditMyInfoDialog } from "@/components/client/EditMyInfoDialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/client/")({
@@ -32,6 +35,8 @@ function ClientHome() {
   const [palier, setPalier] = useState<string>("");
   const [numeroContrat, setNumeroContrat] = useState<string>("");
   const [contratId, setContratId] = useState<string>("");
+  const [pwOpen, setPwOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   useEffect(() => {
     if (!profile?.entreprise_id) return;
@@ -149,6 +154,27 @@ function ClientHome() {
           Gérez votre flotte et suivez les prestations de nettoyage circulaire en un coup d'œil.
         </p>
       </Card>
+
+      {/* Mon compte — self-service for the client */}
+      <Card className="mt-4 p-5 shadow-card border-border/60">
+        <h2 className="font-semibold text-base text-foreground">Mon compte</h2>
+        <p className="text-xs text-muted-foreground mt-1 mb-4">
+          Gérez vos informations et votre mot de passe.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button variant="outline" className="justify-start" onClick={() => setInfoOpen(true)}>
+            <UserCog className="h-4 w-4" />
+            Modifier mes informations
+          </Button>
+          <Button variant="outline" className="justify-start" onClick={() => setPwOpen(true)}>
+            <KeyRound className="h-4 w-4" />
+            Changer mon mot de passe
+          </Button>
+        </div>
+      </Card>
+
+      <ChangePasswordDialog open={pwOpen} onOpenChange={setPwOpen} />
+      <EditMyInfoDialog open={infoOpen} onOpenChange={setInfoOpen} />
     </div>
   );
 }
