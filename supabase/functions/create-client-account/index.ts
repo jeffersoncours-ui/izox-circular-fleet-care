@@ -26,6 +26,10 @@ interface Payload {
     nom: string;
     email: string;
   };
+  // Where the "set password" link should land. Passed by the frontend so the
+  // link always points at the origin the app is actually served from
+  // (Vercel today, izox.fr after migration). Falls back to SITE_URL.
+  redirect_to?: string;
 }
 
 function buildWelcomeText(prenom: string, link: string): string {
@@ -234,7 +238,7 @@ Deno.serve(async (req) => {
       const { data: linkData } = await admin.auth.admin.generateLink({
         type: "recovery",
         email: payload.user.email,
-        options: { redirectTo: `${siteUrl}/login` },
+        options: { redirectTo: payload.redirect_to || `${siteUrl}/login` },
       });
       inviteLink = linkData?.properties?.action_link ?? null;
     } catch {
