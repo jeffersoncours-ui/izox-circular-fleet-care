@@ -26,8 +26,16 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Password recovery mode (triggered when user clicks a reset/invite link)
-  const [isRecovery, setIsRecovery] = useState(false);
+  // Password recovery mode (triggered when user clicks a reset/invite link).
+  // Initialise straight from the URL so we don't depend on catching the
+  // PASSWORD_RECOVERY event, which can fire before this component mounts and
+  // be missed (leaving the user on the normal login form). The recovery link
+  // lands here as `/login#...type=recovery...`.
+  const [isRecovery, setIsRecovery] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const haystack = window.location.hash + window.location.search;
+    return haystack.includes("type=recovery");
+  });
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [saving, setSaving] = useState(false);
