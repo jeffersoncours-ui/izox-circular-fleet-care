@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, KeyRound } from "lucide-react";
+import { Loader2, KeyRound, ArrowLeft, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -31,6 +31,12 @@ function LoginPage() {
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Forgot password mode
+  const [isForgot, setIsForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // Detect PASSWORD_RECOVERY event from Supabase (magic link click)
   useEffect(() => {
@@ -58,6 +64,20 @@ function LoginPage() {
       toast.error("Identifiants incorrects");
     } else {
       toast.success("Connexion réussie");
+    }
+  };
+
+  const handleForgotPassword = async (e: FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    setForgotLoading(false);
+    if (error) {
+      toast.error("Erreur : " + error.message);
+    } else {
+      setForgotSent(true);
     }
   };
 
@@ -98,6 +118,69 @@ function LoginPage() {
       © {new Date().getFullYear()} IZOX — Nettoyage circulaire
     </footer>
   );
+
+  // --- Forgot password form ---
+  if (isForgot) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        {brandHeader}
+        <div className="flex-1 flex items-start sm:items-center justify-center px-4 py-8 sm:py-12">
+          <Card className="w-full max-w-md p-6 sm:p-8 shadow-strong border-border/60">
+            {forgotSent ? (
+              <div className="text-center py-4">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Mail className="h-6 w-6 text-primary" />
+                </div>
+                <h2 className="text-xl font-semibold text-foreground mb-2">Email envoyé !</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Si un compte existe pour <span className="font-medium text-foreground">{forgotEmail}</span>,
+                  vous recevrez un lien de réinitialisation dans quelques instants.
+                </p>
+                <Button variant="outline" className="w-full" onClick={() => { setIsForgot(false); setForgotSent(false); setForgotEmail(""); }}>
+                  <ArrowLeft className="h-4 w-4" />
+                  Retour à la connexion
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <button
+                    onClick={() => setIsForgot(false)}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Retour
+                  </button>
+                  <h1 className="text-2xl font-semibold text-foreground">Mot de passe oublié</h1>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Entrez votre email pour recevoir un lien de réinitialisation.
+                  </p>
+                </div>
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email">Email du compte</Label>
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="vous@entreprise.fr"
+                      disabled={forgotLoading}
+                    />
+                  </div>
+                  <Button type="submit" variant="izox" className="w-full" size="lg" disabled={forgotLoading}>
+                    {forgotLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Envoyer le lien"}
+                  </Button>
+                </form>
+              </>
+            )}
+          </Card>
+        </div>
+        {brandFooter}
+      </div>
+    );
+  }
 
   // --- Set password form (after clicking invite/recovery link) ---
   if (isRecovery) {
@@ -211,9 +294,24 @@ function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-xs text-muted-foreground text-center">
-            Pas de compte ? Contactez votre administrateur IZOX.
-          </p>
+          <div className="mt-6 space-y-3 text-center">
+            <button
+              type="button"
+              onClick={() => setIsForgot(true)}
+              className="text-sm text-primary hover:underline underline-offset-4 block w-full"
+            >
+              Mot de passe oublié ?
+            </button>
+            <p className="text-xs text-muted-foreground">
+              Pas encore client IZOX ?{" "}
+              <a
+                href="mailto:contact@izox.fr"
+                className="text-primary hover:underline underline-offset-4"
+              >
+                Contactez-nous
+              </a>
+            </p>
+          </div>
         </Card>
       </div>
 

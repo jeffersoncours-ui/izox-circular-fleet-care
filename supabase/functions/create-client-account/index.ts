@@ -205,16 +205,20 @@ Deno.serve(async (req) => {
       throw e;
     }
 
-    // 5. Generate a "set password" recovery link
+    // 5. Generate a "set password" recovery link (non-fatal if it fails)
     let inviteLink: string | null = null;
-    const { data: linkData } = await admin.auth.admin.generateLink({
-      type: "recovery",
-      email: payload.user.email,
-      options: { redirectTo: `${siteUrl}/login` },
-    });
-    inviteLink = linkData?.properties?.action_link ?? null;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "recovery",
+        email: payload.user.email,
+        options: { redirectTo: `${siteUrl}/login` },
+      });
+      inviteLink = linkData?.properties?.action_link ?? null;
+    } catch {
+      // Account was created — link generation failure is non-fatal
+    }
 
-    // 6. Send welcome email via Resend
+    // 6. Send welcome email via Resend (non-fatal if it fails)
     let emailSent = false;
     if (resendKey && inviteLink) {
       emailSent = await sendWelcomeEmail(resendKey, payload.user.email, payload.user.prenom, inviteLink);
