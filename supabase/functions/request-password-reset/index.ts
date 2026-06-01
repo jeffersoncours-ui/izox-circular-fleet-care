@@ -1,5 +1,11 @@
-// Admin-only: generate a magic recovery link for a user.
-// Also sends a branded password-reset email via Resend automatically.
+// Public endpoint: user-initiated "forgot password".
+// Generates a recovery link and sends a branded reset email via the Resend API
+// (NOT through SMTP — avoids the native Supabase template and SMTP fragility).
+//
+// Security: this function is intentionally public (verify_jwt = false) because
+// the caller is not authenticated. To avoid account enumeration it ALWAYS
+// responds with { ok: true } regardless of whether the email exists or the
+// email actually went out. Nothing about account existence is leaked.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -117,76 +123,39 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
+  // Generic response — never reveals whether the account exists.
+  const genericOk = () =>
+    new Response(JSON.stringify({ ok: true }), { headers: jsonHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Non authentifié" }), {
-        status: 401, headers: jsonHeaders,
-      });
-    }
-
     const url = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const resendKey = Deno.env.get("RESEND_API_KEY");
     const siteUrl = Deno.env.get("SITE_URL") ?? "https://izox.fr";
     const emailFrom = Deno.env.get("EMAIL_FROM") ?? "IZOX <noreply@izox.fr>";
 
-    const userClient = createClient(url, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData } = await userClient.auth.getUser();
-    if (!userData.user) {
-      return new Response(JSON.stringify({ error: "Session invalide" }), {
-        status: 401, headers: jsonHeaders,
-      });
-    }
+    const { email: rawEmail, redirect_to } = await req.json().catch(() => ({}));
+    const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
+
+    // Basic shape validation — bail quietly (still generic) on obvious garbage.
+    if (!email || !email.includes("@")) return genericOk();
 
     const admin = createClient(url, serviceKey);
-    const { data: roles } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userData.user.id);
-    const isAdmin = roles?.some((r) => r.role === "admin");
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Réservé aux administrateurs" }), {
-        status: 403, headers: jsonHeaders,
-      });
-    }
 
-    const { email: directEmail, user_id, redirect_to } = await req.json();
-
-    // Resolve email: accept either email directly or user_id (look up from auth)
-    let email: string | undefined = directEmail;
-    if (!email && user_id) {
-      const { data: { user } } = await admin.auth.admin.getUserById(user_id);
-      email = user?.email;
-    }
-
-    if (!email) {
-      return new Response(JSON.stringify({ error: "Email ou user_id requis" }), {
-        status: 400, headers: jsonHeaders,
-      });
-    }
-
+    // Generate the recovery link. If the user does not exist, generateLink
+    // returns an error — we swallow it and respond generically (no enumeration).
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
       options: { redirectTo: redirect_to || `${siteUrl}/login` },
     });
 
-    if (error) throw error;
+    const actionLink = data?.properties?.action_link ?? null;
+    if (error || !actionLink) return genericOk();
 
-    const actionLink = data.properties?.action_link ?? null;
-
-    // Auto-send reset email via Resend
-    let emailSent = false;
-    let emailError: string | null = null;
-    if (resendKey && actionLink) {
+    // Send the branded reset email via the Resend HTTP API.
+    if (resendKey) {
       const r = await sendResetEmail(resendKey, emailFrom, email, actionLink);
-      emailSent = r.ok;
-      emailError = r.ok ? null : r.detail;
       try {
         await admin.from("email_logs").insert({
           type: "password_reset",
@@ -196,20 +165,11 @@ Deno.serve(async (req) => {
           error_message: r.detail,
         });
       } catch { /* log failure is non-fatal */ }
-    } else if (!resendKey) {
-      emailError = "RESEND_API_KEY non configurée";
     }
 
-    return new Response(JSON.stringify({
-      ok: true,
-      link: actionLink,
-      email_sent: emailSent,
-      email_error: emailError,
-    }), { headers: jsonHeaders });
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ ok: false, error: err instanceof Error ? err.message : String(err) }),
-      { status: 500, headers: jsonHeaders }
-    );
+    return genericOk();
+  } catch {
+    // Even on internal error we stay generic to the caller.
+    return genericOk();
   }
 });

@@ -20,14 +20,14 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { signIn, profile, session, loading } = useAuth();
+  // isRecovery is managed at auth-context level so it is set before this
+  // component mounts regardless of whether PKCE or implicit flow is used.
+  const { signIn, profile, session, loading, isRecovery, clearRecovery } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Password recovery mode (triggered when user clicks a reset/invite link)
-  const [isRecovery, setIsRecovery] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [saving, setSaving] = useState(false);
@@ -37,16 +37,6 @@ function LoginPage() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
-
-  // Detect PASSWORD_RECOVERY event from Supabase (magic link click)
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setIsRecovery(true);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   // Redirect if already logged in (but not during password recovery)
   useEffect(() => {
@@ -70,8 +60,15 @@ function LoginPage() {
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
     setForgotLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
-      redirectTo: `${window.location.origin}/login`,
+    // Use our own edge function (branded email via the Resend API) instead of
+    // the native SMTP flow, which was failing with "535 Authentication
+    // credentials invalid". The function is anti-enumeration: it always
+    // succeeds, so we don't reveal whether the account exists.
+    const { error } = await supabase.functions.invoke("request-password-reset", {
+      body: {
+        email: forgotEmail.trim(),
+        redirect_to: `${window.location.origin}/login`,
+      },
     });
     setForgotLoading(false);
     if (error) {
@@ -98,7 +95,7 @@ function LoginPage() {
       toast.error("Erreur : " + error.message);
     } else {
       toast.success("Mot de passe défini avec succès — bienvenue !");
-      setIsRecovery(false);
+      clearRecovery();
       // The redirect effect will fire automatically once isRecovery is false
     }
   };

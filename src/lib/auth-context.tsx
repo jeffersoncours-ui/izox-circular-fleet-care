@@ -17,6 +17,8 @@ interface AuthContextValue {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  isRecovery: boolean;
+  clearRecovery: () => void;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -24,11 +26,28 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// Detect auth callbacks in the URL at module load time, before Supabase
+// processes the URL (which strips the hash / code param).
+// Covers both PKCE flow (?code=) and implicit flow (#type=recovery or #access_token).
+function detectAuthCallback(): boolean {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hash;
+  const s = window.location.search;
+  return (
+    h.includes("type=recovery") ||
+    h.includes("access_token") ||
+    s.includes("code=")
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  // True when a PASSWORD_RECOVERY flow is in progress.
+  // Seeded from the URL so it's correct before the async code exchange fires.
+  const [isRecovery, setIsRecovery] = useState(detectAuthCallback);
 
   const loadProfile = useCallback(async (uid: string) => {
     const { data } = await supabase
@@ -41,7 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // 1. Subscribe FIRST
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      }
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
@@ -82,8 +104,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) await loadProfile(user.id);
   }, [user, loadProfile]);
 
+  const clearRecovery = useCallback(() => setIsRecovery(false), []);
+
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, signIn, signOut, refresh }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, isRecovery, clearRecovery, signIn, signOut, refresh }}>
       {children}
     </AuthContext.Provider>
   );
