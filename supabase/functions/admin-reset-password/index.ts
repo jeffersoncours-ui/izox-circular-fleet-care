@@ -112,9 +112,7 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const resendKey = Deno.env.get("RESEND_API_KEY");
     const siteUrl = Deno.env.get("SITE_URL") ?? "https://izox.fr";
-    // Sender override: set EMAIL_FROM to a verified Resend sender.
-    // Falls back to Resend's shared sandbox sender if izox.fr isn't verified yet.
-    const emailFrom = Deno.env.get("EMAIL_FROM") ?? "IZOX <onboarding@resend.dev>";
+    const emailFrom = Deno.env.get("EMAIL_FROM") ?? "IZOX <noreply@izox.fr>";
 
     const userClient = createClient(url, anonKey, {
       global: { headers: { Authorization: authHeader } },

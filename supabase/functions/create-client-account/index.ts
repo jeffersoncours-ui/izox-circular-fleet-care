@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const resendKey = Deno.env.get("RESEND_API_KEY");
     const siteUrl = Deno.env.get("SITE_URL") ?? "https://izox.fr";
-    const emailFrom = Deno.env.get("EMAIL_FROM") ?? "IZOX <onboarding@resend.dev>";
+    const emailFrom = Deno.env.get("EMAIL_FROM") ?? "IZOX <noreply@izox.fr>";
 
     // Verify caller is admin or staff
     const userClient = createClient(url, anonKey, {
