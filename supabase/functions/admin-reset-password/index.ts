@@ -89,7 +89,7 @@ async function sendResetEmail(
   from: string,
   to: string,
   link: string,
-): Promise<{ ok: boolean; error: string | null }> {
+): Promise<{ ok: boolean; detail: string }> {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -106,11 +106,10 @@ async function sendResetEmail(
         text: buildResetText(link),
       }),
     });
-    if (res.ok) return { ok: true, error: null };
     const body = await res.json().catch(() => ({}));
-    return { ok: false, error: JSON.stringify(body) };
+    return { ok: res.ok, detail: `HTTP ${res.status} ${JSON.stringify(body)}` };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    return { ok: false, detail: e instanceof Error ? e.message : String(e) };
   }
 }
 
@@ -187,7 +186,16 @@ Deno.serve(async (req) => {
     if (resendKey && actionLink) {
       const r = await sendResetEmail(resendKey, emailFrom, email, actionLink);
       emailSent = r.ok;
-      emailError = r.error;
+      emailError = r.ok ? null : r.detail;
+      try {
+        await admin.from("email_logs").insert({
+          type: "password_reset",
+          target_id: data.user?.id ?? null,
+          email_to: email,
+          status: r.ok ? "sent" : "failed",
+          error_message: r.detail,
+        });
+      } catch { /* log failure is non-fatal */ }
     } else if (!resendKey) {
       emailError = "RESEND_API_KEY non configurée";
     }
