@@ -1,5 +1,6 @@
 -- ===========================================================================
 -- FEATURE 2 & 3 — Operators table + colonnes planning sur interventions
+-- Deploy: 2026-06-01
 -- ===========================================================================
 
 -- Table opérateurs planning (distincte de profiles/auth.users)
