@@ -89,10 +89,11 @@ function buildWelcomeHtml(prenom: string, link: string): string {
 
 async function sendWelcomeEmail(
   resendKey: string,
+  from: string,
   to: string,
   prenom: string,
   link: string,
-): Promise<boolean> {
+): Promise<{ ok: boolean; error: string | null }> {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -101,15 +102,17 @@ async function sendWelcomeEmail(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "IZOX <noreply@izox.fr>",
+        from,
         to: [to],
         subject: "Bienvenue chez IZOX — Définissez votre mot de passe",
         html: buildWelcomeHtml(prenom, link),
       }),
     });
-    return res.ok;
-  } catch {
-    return false;
+    if (res.ok) return { ok: true, error: null };
+    const body = await res.json().catch(() => ({}));
+    return { ok: false, error: JSON.stringify(body) };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
@@ -131,6 +134,7 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const resendKey = Deno.env.get("RESEND_API_KEY");
     const siteUrl = Deno.env.get("SITE_URL") ?? "https://izox.fr";
+    const emailFrom = Deno.env.get("EMAIL_FROM") ?? "IZOX <onboarding@resend.dev>";
 
     // Verify caller is admin or staff
     const userClient = createClient(url, anonKey, {
@@ -166,8 +170,8 @@ Deno.serve(async (req) => {
       .single();
     if (entErr) throw new Error(`Entreprise: ${entErr.message}`);
 
-    // 2. Create auth user (temp password never exposed)
-    const tempPassword = `${crypto.randomUUID()}-${crypto.randomUUID()}`;
+    // 2. Create auth user (temp password never exposed; <72 bytes for bcrypt)
+    const tempPassword = crypto.randomUUID();
     const { data: authUser, error: authErr } = await admin.auth.admin.createUser({
       email: payload.user.email,
       password: tempPassword,
@@ -220,8 +224,13 @@ Deno.serve(async (req) => {
 
     // 6. Send welcome email via Resend (non-fatal if it fails)
     let emailSent = false;
+    let emailError: string | null = null;
     if (resendKey && inviteLink) {
-      emailSent = await sendWelcomeEmail(resendKey, payload.user.email, payload.user.prenom, inviteLink);
+      const r = await sendWelcomeEmail(resendKey, emailFrom, payload.user.email, payload.user.prenom, inviteLink);
+      emailSent = r.ok;
+      emailError = r.error;
+    } else if (!resendKey) {
+      emailError = "RESEND_API_KEY non configurée";
     }
 
     return new Response(JSON.stringify({
@@ -230,6 +239,7 @@ Deno.serve(async (req) => {
       user_id: userId,
       email: payload.user.email,
       email_sent: emailSent,
+      email_error: emailError,
       // Expose link as fallback only if email sending failed
       invite_link: emailSent ? null : inviteLink,
     }), { headers: jsonHeaders });

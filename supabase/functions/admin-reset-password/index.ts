@@ -66,7 +66,12 @@ function buildResetHtml(link: string): string {
 </html>`;
 }
 
-async function sendResetEmail(resendKey: string, to: string, link: string): Promise<boolean> {
+async function sendResetEmail(
+  resendKey: string,
+  from: string,
+  to: string,
+  link: string,
+): Promise<{ ok: boolean; error: string | null }> {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -75,15 +80,17 @@ async function sendResetEmail(resendKey: string, to: string, link: string): Prom
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "IZOX <noreply@izox.fr>",
+        from,
         to: [to],
         subject: "Réinitialisation de votre mot de passe IZOX",
         html: buildResetHtml(link),
       }),
     });
-    return res.ok;
-  } catch {
-    return false;
+    if (res.ok) return { ok: true, error: null };
+    const body = await res.json().catch(() => ({}));
+    return { ok: false, error: JSON.stringify(body) };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
@@ -105,6 +112,9 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const resendKey = Deno.env.get("RESEND_API_KEY");
     const siteUrl = Deno.env.get("SITE_URL") ?? "https://izox.fr";
+    // Sender override: set EMAIL_FROM to a verified Resend sender.
+    // Falls back to Resend's shared sandbox sender if izox.fr isn't verified yet.
+    const emailFrom = Deno.env.get("EMAIL_FROM") ?? "IZOX <onboarding@resend.dev>";
 
     const userClient = createClient(url, anonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -155,14 +165,20 @@ Deno.serve(async (req) => {
 
     // Auto-send reset email via Resend
     let emailSent = false;
+    let emailError: string | null = null;
     if (resendKey && actionLink) {
-      emailSent = await sendResetEmail(resendKey, email, actionLink);
+      const r = await sendResetEmail(resendKey, emailFrom, email, actionLink);
+      emailSent = r.ok;
+      emailError = r.error;
+    } else if (!resendKey) {
+      emailError = "RESEND_API_KEY non configurée";
     }
 
     return new Response(JSON.stringify({
       ok: true,
       link: actionLink,
       email_sent: emailSent,
+      email_error: emailError,
     }), { headers: jsonHeaders });
   } catch (err) {
     return new Response(
