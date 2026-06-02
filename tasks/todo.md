@@ -1,6 +1,50 @@
 # Todo — IZOX
 
-## En cours — Session 2026-06-02 (3) : Refonte onglet Planning unifié
+## En cours — Session 2026-06-02 (4) : Lieu d'intervention + flow RDV consolidé
+
+### Étape 1 — Migration SQL
+- [x] Colonnes `adresse_intervention`, `ville_intervention`, `code_postal_intervention`, `latitude`, `longitude` sur `demandes_rdv`
+- [x] Colonnes `adresse_intervention`, `ville_intervention`, `code_postal_intervention` sur `interventions`
+- [x] `creer_demande_rdv` : nouvelle signature (+3 params lieu), validation serveur, INSERT adresse, lien notif → `/admin/planning`
+- [x] `assigner_rdv` : propagation adresse de la demande vers les interventions créées
+
+### Étape 2 — Types partagés
+- [x] `src/components/admin/demande-rdv-types.ts` : interface `AdminDemandeRdv` centralisée + champs adresse
+
+### Étape 3 — `AssignerRdvDialog` dialog unique admin
+- [x] Section détails (créneaux préférés, lieu, commentaires) en lecture seule en haut
+- [x] Bouton Refuser + sous-dialog motif → RPC `refuser_demande_rdv`
+- [x] `sendEmail("rdv_confirmee", ...)` à l'assignation
+- [x] Import `AdminDemandeRdv` depuis `demande-rdv-types.ts`
+
+### Étape 4 — `GererDemandeRdvDialog` supprimé
+- [x] Fichier supprimé — workflow direct confirmation retiré de l'UI
+
+### Étape 5 — `DemandesRdvList` rebranché
+- [x] Import depuis `demande-rdv-types.ts`
+- [x] Clic carte → `AssignerRdvDialog` (seul dialog)
+- [x] `useAutoOpenFromSearch` → `setAssigning`
+- [x] `clearDemandeParam` sur fermeture `AssignerRdvDialog`
+- [x] Ville + CP affichés sur les cartes
+
+### Étape 6 — `CreerDemandeRdvDialog` côté client
+- [x] 3 champs lieu obligatoires pré-remplis depuis l'adresse entreprise, modifiables
+- [x] `canSubmit` exige les 3 champs non vides
+- [x] 3 params passés au RPC `creer_demande_rdv`
+
+### Étape 7 — `DetailDemandeRdvDialog` affichage lieu
+- [x] Champ lieu affiché dans la vue détail client
+
+### Étape 8 — Types Supabase régénérés
+- [x] `generate_typescript_types` appliqué — corrige aussi les 3 erreurs TS gel véhicule pré-existantes
+
+### Review
+- Build `npm run build` : ✓ 0 erreur
+- Migration appliquée DB + fichier en repo
+- `GererDemandeRdvDialog` supprimé (confirmer_demande_rdv_multi reste en DB mais n'est plus appelée)
+- Toutes les interventions créées via `assigner_rdv` ont désormais `operator_id` + `time_slot` + adresse → visibles dans le board
+
+## Terminé — Session 2026-06-02 (3) : Refonte onglet Planning unifié
 
 ### Périmètre de cette session
 Fusionner les 3 onglets admin (`Rendez-vous`, `Planning`, `Interventions`) en **un seul onglet**
@@ -31,7 +75,7 @@ interactive avec auto-optimisation des tournées, refonte visuelle Claude Design
 
 ## Backlog
 
-- [ ] **GPS / géolocalisation (reporté — trop lourd maintenant)** : champ `adresse_intervention` sur `demandes_rdv` (distinct de l'adresse facturation `entreprises`), pré-rempli mais modifiable côté client ; géocodage Nominatim → `latitude`/`longitude` ; propagation vers `interventions`
+- [ ] **GPS / géolocalisation (reporté — schéma prêt)** : colonnes `latitude`/`longitude` existent sur `demandes_rdv` et `interventions` ; géocodage Nominatim à câbler ; propagation vers la carte des routes
 - [ ] **Carte interactive (reporté)** : points déplaçables manuellement entre opérateurs/créneaux + recalcul km en direct, puis bouton « Optimiser » (regroupement par zones proches, validable par l'admin)
 - [ ] **Refonte visuelle Claude Design (reporté)** : migration écran par écran, garder les contrats de données (mêmes RPCs, mêmes champs), vérifier les invariants `lessons.md` à chaque écran
 - [ ] Migration domaine `izox.fr` : mettre à jour `SITE_URL` env var Supabase + vérifier redirect URLs
