@@ -220,7 +220,7 @@ export function FicheContratClient() {
             contrat.contrat_lignes.map((l) => (
               <div key={l.id} className="flex justify-between">
                 <span>
-                  Pack <span className="font-medium capitalize">{l.type_pack}</span> ×{" "}
+                  <span className="font-medium">{getPackLabel(l.type_pack)}</span> ×{" "}
                   {l.nb_vehicules}
                 </span>
                 <span className="font-medium">
@@ -269,7 +269,7 @@ export function FicheContratClient() {
           ) : (
             passages.map((p) => (
               <div key={p.contrat_ligne_id} className="flex justify-between">
-                <span className="capitalize">Pack {p.type_pack}</span>
+                <span>{getPackLabel(p.type_pack)}</span>
                 <span className="font-medium">
                   {p.passages_restants_mois} / {p.passages_mois_pack} restants
                 </span>

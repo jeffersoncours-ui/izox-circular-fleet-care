@@ -15,6 +15,18 @@
 - **Vercel MCP** : `list_projects` peut retourner vide même si le projet est live (problème de scope OAuth). L'app est bien déployée sur `izox-circular-fleet-care.vercel.app`.
 - **Déploiement auto** : chaque merge sur `main` déclenche un déploiement Vercel automatiquement.
 
+## Sécurité / RoleGuard
+
+- **UI filtering ≠ route guard** : masquer un lien dans la sidebar (ex. `adminOnly: true`) ne protège pas la page. Un staff/commercial peut naviguer directement vers `/admin/planning` par URL. Toujours ajouter un `RoleGuard` au niveau du composant route en plus du filtre UI.
+- **Liens de retour dynamiques** : ne jamais hardcoder `/admin` dans un lien "Retour" accessible à tous les rôles. Utiliser `rolePath(profile?.role)` pour que chaque rôle soit renvoyé vers sa page d'accueil correcte.
+
+## Pricing / Facturation
+
+- **Deux catalogues de prix — toujours les garder en sync** : `src/lib/pricing.ts` (`PACKS_CATALOG`) est le catalogue frontend ; `prestations_catalogue` est le catalogue DB utilisé par les RPCs Supabase (`valider_vehicule`, `appliquer_remise_commerciale`). Si l'un diverge de l'autre, les montants affichés et stockés seront différents. Tout changement de tarif doit faire l'objet d'une migration SQL + mise à jour `PACKS_CATALOG`.
+- **Ne jamais afficher `contrat.montant_net_mensuel` (cache DB) directement** : calculer dynamiquement depuis `facture.totalBrutHt` et `facture.tauxPalier` pour éviter les dérives de cache. Le cache DB peut être stale si la ligne du contrat a changé sans que la RPC de recalcul ait tourné.
+- **`RemiseCommercialeDialog` doit recevoir les valeurs `facture.*`** (frontend), pas `contrat.montant_brut_mensuel` / `contrat.remise_pct` (DB). La RPC Supabase recalculera depuis la DB après application — l'important est que la prévisualisation dans le dialog soit correcte.
+- **Labels packs** : toujours utiliser `getPackLabel(type_pack)` depuis `@/lib/pricing`. Ne jamais afficher le code raw (`pack_interieur`) avec CSS `capitalize` — ça donne "Pack_interieur" au lieu de "Pack Intérieur".
+
 ## Workflow Git
 
 - **Branches de travail** : supprimer après merge pour garder le repo propre. Impossible via `git push --delete` depuis le container (403) — le faire depuis GitHub UI.

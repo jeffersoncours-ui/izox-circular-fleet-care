@@ -76,6 +76,20 @@ Toutes envoient les emails via l'API HTTP Resend (pas SMTP natif Supabase — SM
 
 Logs d'envoi dans la table `email_logs` (type, target_id, email_to, status, error_message).
 
+## Architecture pricing
+
+Deux catalogues à garder **toujours synchronisés** :
+
+| Source | Fichier | Utilisé par |
+|--------|---------|-------------|
+| Frontend | `src/lib/pricing.ts` → `PACKS_CATALOG` | Calculs UI, aperçu facture, `calculerFactureFlotte()` |
+| DB | `prestations_catalogue` | RPCs Supabase (`valider_vehicule`, `appliquer_remise_commerciale`) |
+
+Prix V2 (mai 2026) : **pack_interieur=130€, pack_standard=170€, pack_vtc=240€** (HT).
+
+- `montant_brut_mensuel` / `montant_net_mensuel` en DB = cache calculé par les RPCs. Ne pas les afficher directement : calculer dynamiquement depuis `facture.*` pour éviter les dérives.
+- Tout changement de tarif → migration SQL sur `prestations_catalogue` + mise à jour `PACKS_CATALOG`.
+
 ## Points de vigilance
 
 - **Ne pas utiliser le SMTP natif Supabase** — toujours passer par les edge functions + Resend
@@ -83,6 +97,8 @@ Logs d'envoi dans la table `email_logs` (type, target_id, email_to, status, erro
 - **Variables d'env Supabase** nécessaires : `RESEND_API_KEY`, `SITE_URL`, `EMAIL_FROM`
 - **Scanner email Microsoft Defender** : fait des requêtes HEAD sur les liens Supabase `/verify` (retourne 405, n'invalide pas le token)
 - Les tokens de récupération sont à **usage unique** et expirent après 24h
+- **Routes admin-only** (`/admin/planning`, `/admin/planning/map`, `/admin/equipe`, `/admin/facturation`) : protégées par `RoleGuard allowed={["admin"]}` en plus du filtre sidebar — ne jamais se fier au seul masquage UI
+- **Lien "Retour" dans `/settings`** : utiliser `rolePath(profile?.role)` — `/settings` est accessible à tous les rôles, hardcoder `/admin` casserait la nav operateur/client
 
 ## Commandes utiles
 
