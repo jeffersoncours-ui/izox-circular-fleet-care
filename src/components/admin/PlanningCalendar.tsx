@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   DndContext,
   DragOverlay,
@@ -56,10 +57,12 @@ function InterventionCard({
   intervention,
   color,
   isDragging = false,
+  onNavigate,
 }: {
   intervention: Intervention;
   color: string;
   isDragging?: boolean;
+  onNavigate: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: intervention.id,
@@ -76,6 +79,7 @@ function InterventionCard({
       style={{ ...style, opacity: isDragging ? 0.4 : 1 }}
       className="flex items-center gap-1 rounded-md border bg-card px-2 py-1 text-xs shadow-sm select-none"
     >
+      {/* Grip handle — seul déclencheur de drag */}
       <div
         {...listeners}
         {...attributes}
@@ -83,13 +87,20 @@ function InterventionCard({
       >
         <GripVertical className="h-3 w-3" />
       </div>
-      <div
-        className="h-2 w-2 rounded-full shrink-0"
-        style={{ backgroundColor: color }}
-      />
-      <span className="truncate font-medium">
-        {intervention.vehicule?.immatriculation ?? "—"}
-      </span>
+      {/* Zone cliquable → détail */}
+      <button
+        type="button"
+        onClick={() => onNavigate(intervention.id)}
+        className="flex items-center gap-1 min-w-0 hover:underline cursor-pointer"
+      >
+        <div
+          className="h-2 w-2 rounded-full shrink-0"
+          style={{ backgroundColor: color }}
+        />
+        <span className="truncate font-medium">
+          {intervention.vehicule?.immatriculation ?? "—"}
+        </span>
+      </button>
     </div>
   );
 }
@@ -103,6 +114,7 @@ function PlanningCell({
   interventions,
   operatorColor,
   activeId,
+  onNavigate,
 }: {
   operatorId: string;
   timeSlot: string;
@@ -110,6 +122,7 @@ function PlanningCell({
   interventions: Intervention[];
   operatorColor: string;
   activeId: string | null;
+  onNavigate: (id: string) => void;
 }) {
   const id = cellKey(operatorId, timeSlot, date);
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -145,6 +158,7 @@ function PlanningCell({
           intervention={i}
           color={operatorColor}
           isDragging={i.id === activeId}
+          onNavigate={onNavigate}
         />
       ))}
 
@@ -160,6 +174,7 @@ function PlanningCell({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function PlanningCalendar() {
+  const navigate = useNavigate();
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
     startOfISOWeek(new Date())
   );
@@ -387,6 +402,7 @@ export function PlanningCalendar() {
                             interventions={getCellInterventions(op.id, slot.key, day)}
                             operatorColor={op.color_hex}
                             activeId={activeId}
+                            onNavigate={(id) => navigate({ to: "/admin/interventions/$id", params: { id } })}
                           />
                         </td>
                       ))}
