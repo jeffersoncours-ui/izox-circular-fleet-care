@@ -362,22 +362,24 @@ function AdminVehiculeDetail() {
         </Card>
       )}
 
-      <div className="flex gap-2">
+      <div className="space-y-2">
         {!hasGelAdmin && vehicule.statut === "actif" && (
           <Button
             variant="outline"
-            className="flex-1"
+            className="w-full"
             onClick={() => setGelOpen(true)}
           >
-            <Snowflake className="h-4 w-4" /> Geler
+            <Snowflake className="h-4 w-4" /> Geler ce véhicule
           </Button>
         )}
-        <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
-          <Pencil className="h-4 w-4" /> Modifier
-        </Button>
-        <Button variant="destructive" className="flex-1" onClick={() => setConfirmOpen(true)}>
-          <Trash2 className="h-4 w-4" /> Supprimer
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4" /> Modifier
+          </Button>
+          <Button variant="destructive" className="flex-1" onClick={() => setConfirmOpen(true)}>
+            <Trash2 className="h-4 w-4" /> Supprimer
+          </Button>
+        </div>
       </div>
 
       <GelerVehiculeAdminDialog
