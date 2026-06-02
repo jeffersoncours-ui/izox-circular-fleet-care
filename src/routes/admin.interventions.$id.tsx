@@ -81,7 +81,7 @@ function AdminInterventionDetail() {
       .maybeSingle();
     if (!row) {
       toast.error("Fiche introuvable");
-      navigate({ to: "/admin/interventions" });
+      navigate({ to: "/admin/planning", search: { tab: "interventions" } });
       return;
     }
     setData(row as unknown as InterventionFull);
@@ -180,7 +180,7 @@ function AdminInterventionDetail() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => navigate({ to: "/admin/interventions" })}
+        onClick={() => navigate({ to: "/admin/planning", search: { tab: "interventions" } })}
         className="mb-4 -ml-2"
       >
         <ArrowLeft className="h-4 w-4 mr-1" /> Retour

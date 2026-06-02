@@ -36,6 +36,15 @@
 - **RPCs gel admin** : `geler_vehicule_admin(p_vehicule_id, p_date_debut, p_date_fin, p_motif)` et `annuler_gel_vehicule_admin(p_vehicule_id)`. Admin/staff uniquement. Loggent dans `admin_actions_log`.
 - **Layout bouton gel** : le bouton Geler doit être pleine largeur (`w-full`) **au-dessus** de la rangée Modifier/Supprimer — cohérence avec le layout client (`space-y-2` + div séparée pour les 2 boutons du bas).
 
+## Planning / RDV / Opérateurs
+
+- **Vérifier le schéma avant de planifier une feature géo** : on a supposé qu'un « lieu d'intervention » distinct de l'adresse de facturation existait sur `demandes_rdv`. **Faux** : seule `entreprises` porte une adresse (`adresse`, `ville`, `code_postal`), `demandes_rdv` n'a aucun champ lieu (juste un commentaire libre). Toujours auditer les migrations avant de bâtir un plan sur une hypothèse de données.
+- **Lieu d'intervention ≠ adresse de facturation** : le bon design est un champ `adresse_intervention` sur `demandes_rdv` (la flotte peut être garée ailleurs que le siège), pré-rempli avec l'adresse entreprise mais modifiable. À construire (backlog GPS).
+- **`operators` (planning) ≠ `profiles.role=operateur` (terrain)** : deux entités décorrélées. `interventions.operator_id` → `operators` (planning admin) ; `interventions.operateur_id` → `auth.users` (workflow terrain). Ne pas les confondre. Tant qu'il n'y a qu'un seul opérateur réel, garder un seul row dans `operators`, sans nom de personne (label neutre « Opérateur »).
+- **Rendu opérateurs dynamique** : `PlanningCalendar`, `AssignerRdvDialog` et `RouteMap` lisent `operators` depuis la DB — ne jamais coder en dur les 3 opérateurs seed (Karim/Sofia/Yann). Réduire le seed à 1 réduit automatiquement les colonnes/sélecteurs.
+- **Carte des routes morte sans GPS** : `RouteMap` filtre sur `latitude/longitude IS NOT NULL`, jamais alimentées → toujours vide. Ne dépend que de la propagation des coords (backlog GPS).
+- **Fusion onglets ≠ fusion permissions** : `/admin/rendez-vous` et `/admin/interventions` sont accessibles à staff/commercial ; `/admin/planning` (board) est admin-only. En fusionnant, garder l'onglet accessible à tous les rôles admin mais protéger le sous-onglet board + carte par `RoleGuard allowed={["admin"]}`. Ne jamais élargir/réduire un accès par effet de bord d'un refactor de navigation.
+
 ## Workflow Git
 
 - **Branches de travail** : supprimer après merge pour garder le repo propre. Impossible via `git push --delete` depuis le container (403) — le faire depuis GitHub UI.

@@ -115,6 +115,33 @@ Colonnes admin sur `vehicules` : `gel_admin_date_debut`, `gel_admin_date_fin`, `
 
 Le cron `cron_maintenance_quotidienne()` active/expire automatiquement les gels admin (et les gels clients via `demandes_gel`). Toujours étendre cette fonction pour toute nouvelle automatisation quotidienne.
 
+## Architecture planning & RDV (refonte en cours)
+
+Les 3 onglets admin `Rendez-vous`, `Planning` et `Interventions` sont en cours de fusion
+en **un seul onglet** hébergé sur `/admin/planning`, avec 3 sous-onglets :
+
+| Sous-onglet | Composant | Accès | Rôle |
+|---|---|---|---|
+| Demandes | `DemandesRdvList` | tous rôles admin | gérer les demandes RDV entrantes |
+| Planning (board) | `PlanningCalendar` | **admin only** | drag-drop interventions par opérateur/créneau |
+| Interventions | liste interventions | tous rôles admin | suivi des fiches d'intervention |
+
+- Carte des routes : `/admin/planning/map` (`RouteMap`, admin only).
+- Le param `?demande=<uuid>` ouvre automatiquement une demande (`useAutoOpenFromSearch`) — à préserver.
+- `/admin/rendez-vous` et `/admin/interventions` redirigent vers l'onglet unifié (compat liens).
+
+### Modèle opérateurs
+
+- **`operators`** (table planning admin : `name`, `initials`, `color_hex`) ≠ **`profiles.role=operateur`** (compte terrain Supabase Auth). Décorrélés.
+- `interventions.operator_id` → `operators` (planning). `interventions.operateur_id` → `auth.users` (terrain).
+- **Un seul opérateur réel pour l'instant** : `operators` ne contient qu'un row, label neutre « Opérateur » (pas de nom de personne). Le rendu UI est dynamique — ne jamais coder en dur les opérateurs.
+
+### GPS / géolocalisation (backlog — non implémenté)
+
+- Aucune adresse de lieu d'intervention n'existe encore : seule `entreprises` porte une adresse (`adresse`, `ville`, `code_postal`). `demandes_rdv` n'a qu'un commentaire libre.
+- Cible : champ `adresse_intervention` sur `demandes_rdv` (pré-rempli adresse entreprise, modifiable) → géocodage Nominatim → `interventions.latitude/longitude` → carte des routes + regroupement par proximité.
+- `interventions.latitude/longitude` existent déjà mais ne sont jamais alimentées → carte des routes vide tant que le GPS n'est pas câblé.
+
 ## Comptes de test (après purge 2026-06-02)
 
 | Email | Rôle |

@@ -19,7 +19,7 @@ import {
 } from "@/components/admin/GererDemandeRdvDialog";
 import { AssignerRdvDialog } from "@/components/admin/AssignerRdvDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
-import { Route as RendezVousRoute } from "@/routes/admin.rendez-vous";
+import { Route as PlanningRoute } from "@/routes/admin.planning";
 
 interface Row extends AdminDemandeRdv {
   entreprises?: { nom: string } | null;
@@ -49,7 +49,7 @@ export function DemandesRdvList() {
 
   const clearDemandeParam = useCallback(() => {
     navigate({
-      to: "/admin/rendez-vous",
+      to: "/admin/planning",
       search: (prev: Record<string, unknown>) => {
         const { demande: _omit, ...rest } = prev ?? {};
         return rest;
@@ -72,7 +72,7 @@ export function DemandesRdvList() {
     load();
   }, [load]);
 
-  const search = RendezVousRoute.useSearch();
+  const search = PlanningRoute.useSearch();
   useAutoOpenFromSearch<Row>(
     search.demande,
     rows,
