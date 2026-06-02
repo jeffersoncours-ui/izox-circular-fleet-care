@@ -238,7 +238,7 @@ Deno.serve(async (req) => {
       const { data: linkData } = await admin.auth.admin.generateLink({
         type: "recovery",
         email: payload.user.email,
-        options: { redirectTo: payload.redirect_to || `${siteUrl}/login` },
+        options: { redirectTo: payload.redirect_to || `${siteUrl}/reset-password` },
       });
       inviteLink = linkData?.properties?.action_link ?? null;
     } catch {

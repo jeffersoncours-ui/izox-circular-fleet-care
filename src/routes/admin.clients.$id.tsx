@@ -156,7 +156,7 @@ function ClientDetailPage() {
         return;
       }
       const { data, error } = await supabase.functions.invoke("admin-reset-password", {
-        body: { user_id: profile.id, redirect_to: `${window.location.origin}/login` },
+        body: { user_id: profile.id, redirect_to: `${window.location.origin}/reset-password` },
       });
       if (error || data?.error) throw new Error(data?.error ?? "Erreur");
       if (data?.email_sent) {

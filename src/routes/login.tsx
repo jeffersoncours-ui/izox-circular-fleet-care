@@ -67,7 +67,7 @@ function LoginPage() {
     const { error } = await supabase.functions.invoke("request-password-reset", {
       body: {
         email: forgotEmail.trim(),
-        redirect_to: `${window.location.origin}/login`,
+        redirect_to: `${window.location.origin}/reset-password`,
       },
     });
     setForgotLoading(false);
