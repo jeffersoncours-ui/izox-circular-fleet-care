@@ -100,6 +100,31 @@ Prix V2 (mai 2026) : **pack_interieur=130€, pack_standard=170€, pack_vtc=240
 - **Routes admin-only** (`/admin/planning`, `/admin/planning/map`, `/admin/equipe`, `/admin/facturation`) : protégées par `RoleGuard allowed={["admin"]}` en plus du filtre sidebar — ne jamais se fier au seul masquage UI
 - **Lien "Retour" dans `/settings`** : utiliser `rolePath(profile?.role)` — `/settings` est accessible à tous les rôles, hardcoder `/admin` casserait la nav operateur/client
 
+## Architecture gel véhicule
+
+Deux mécanismes coexistent — **ne pas les confondre** :
+
+| Acteur | Mécanisme | Table | RPC |
+|--------|-----------|-------|-----|
+| Client | Demande → validation admin | `demandes_gel` | `demander_gel` / `valider_gel` |
+| Admin | Action directe (immédiate ou programmée) | `vehicules.gel_admin_*` | `geler_vehicule_admin` / `annuler_gel_vehicule_admin` |
+
+Colonnes admin sur `vehicules` : `gel_admin_date_debut`, `gel_admin_date_fin`, `gel_admin_motif`.
+- `gel_admin_date_debut IS NOT NULL` + `statut='actif'` → gel programmé (pas encore actif)
+- `gel_admin_date_debut IS NOT NULL` + `statut='gele'` → gel actif
+
+Le cron `cron_maintenance_quotidienne()` active/expire automatiquement les gels admin (et les gels clients via `demandes_gel`). Toujours étendre cette fonction pour toute nouvelle automatisation quotidienne.
+
+## Comptes de test (après purge 2026-06-02)
+
+| Email | Rôle |
+|-------|------|
+| `admin.test@izox.fr` | admin |
+| `staff.test@izox.fr` | staff |
+| `commercial.test@izox.fr` | commercial |
+| `operateur.test@izox.fr` | operateur |
+| `jeffersonjouenne@outlook.com` | client (seul compte client conservé) |
+
 ## Commandes utiles
 
 ```bash

@@ -27,8 +27,24 @@
 - **`RemiseCommercialeDialog` doit recevoir les valeurs `facture.*`** (frontend), pas `contrat.montant_brut_mensuel` / `contrat.remise_pct` (DB). La RPC Supabase recalculera depuis la DB après application — l'important est que la prévisualisation dans le dialog soit correcte.
 - **Labels packs** : toujours utiliser `getPackLabel(type_pack)` depuis `@/lib/pricing`. Ne jamais afficher le code raw (`pack_interieur`) avec CSS `capitalize` — ça donne "Pack_interieur" au lieu de "Pack Intérieur".
 
+## Architecture gel véhicule
+
+- **Deux mécanismes de gel distincts** : le gel client passe par `demandes_gel` (workflow validé par l'admin) ; le gel admin direct utilise les colonnes `gel_admin_*` sur `vehicules` (action immédiate, sans workflow). Ne pas mélanger les deux.
+- **Le client peut geler véhicule(s) OU contrat complet** : `DemanderGelDialog` s'ouvre depuis la fiche contrat client et propose le choix `type_demande = 'vehicules' | 'contrat'`. Ce n'est PAS limité aux véhicules individuels.
+- **Gel admin : 3 colonnes sur `vehicules`** : `gel_admin_date_debut`, `gel_admin_date_fin`, `gel_admin_motif`. Présence de `gel_admin_date_debut IS NOT NULL` = gel admin en cours ou programmé. `statut='gele'` = actif, `statut='actif'` avec colonnes remplies = programmé.
+- **Cron quotidien étendu** : `cron_maintenance_quotidienne()` gère automatiquement l'activation des gels admin programmés (date_debut atteinte) et l'expiration des gels actifs (date_fin passée). Toujours étendre cette fonction plutôt qu'en créer une nouvelle.
+- **RPCs gel admin** : `geler_vehicule_admin(p_vehicule_id, p_date_debut, p_date_fin, p_motif)` et `annuler_gel_vehicule_admin(p_vehicule_id)`. Admin/staff uniquement. Loggent dans `admin_actions_log`.
+- **Layout bouton gel** : le bouton Geler doit être pleine largeur (`w-full`) **au-dessus** de la rangée Modifier/Supprimer — cohérence avec le layout client (`space-y-2` + div séparée pour les 2 boutons du bas).
+
 ## Workflow Git
 
 - **Branches de travail** : supprimer après merge pour garder le repo propre. Impossible via `git push --delete` depuis le container (403) — le faire depuis GitHub UI.
 - **Rebase avant merge** : si main a avancé, `git rebase origin/main` avant de créer la PR pour éviter les conflits.
 - **Commits déjà upstream** : lors d'un rebase, git "drop" automatiquement les commits dont le contenu est déjà dans main — c'est normal.
+
+## Données / Environnement de test
+
+- **Purge données app** : supprimer dans l'ordre (enfants avant parents) : `intervention_photos` → `interventions` → `demandes_rdv` → `demandes_gel` → `factures_lignes` → `factures` → `avoirs` → `contrat_avenants` → `contrat_lignes` → `contrats` → `vehicules` → `parrainages` → `notifications_internes` → `email_logs` → `admin_actions_log` → puis `entreprise_acces_commerciaux` → `user_roles` (clients à supprimer) → `profiles` → `entreprises` → `auth.users`.
+- **Ne pas purger** : `prestations_catalogue`, `app_config`, `seuils_planning`, `operators`, `disponibilites_operateurs` — ce sont des données de configuration, pas des données app.
+- **Réinitialiser `contrat_sequences`** : `UPDATE contrat_sequences SET derniere_sequence = 0` après purge pour que la numérotation reparte proprement.
+- **Compte client de test** : `jeffersonjouenne@outlook.com` — seul compte client conservé après purge.
