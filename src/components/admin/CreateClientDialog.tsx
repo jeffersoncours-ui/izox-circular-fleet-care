@@ -115,7 +115,7 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
             nom: form.nom_user,
             email: form.email_user,
           },
-          redirect_to: `${window.location.origin}/login`,
+          redirect_to: `${window.location.origin}/reset-password`,
         },
       });
       if (error) throw error;

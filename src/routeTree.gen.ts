@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TerrainRouteImport } from './routes/terrain'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ClientRouteImport } from './routes/client'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -80,6 +81,11 @@ const TerrainRoute = TerrainRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientRoute = ClientRouteImport.update({
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
@@ -269,6 +276,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
@@ -308,6 +316,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
@@ -348,6 +357,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/client'
     | '/login'
+    | '/reset-password'
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/reset-password'
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
@@ -422,6 +433,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/client'
     | '/login'
+    | '/reset-password'
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
@@ -462,6 +474,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ClientRoute: typeof ClientRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   TerrainRoute: typeof TerrainRouteWithChildren
 }
 
@@ -479,6 +492,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client': {
@@ -890,6 +910,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   ClientRoute: ClientRouteWithChildren,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   TerrainRoute: TerrainRouteWithChildren,
   SettingsRoute: SettingsRouteWithChildren,
 }
