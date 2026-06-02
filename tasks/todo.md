@@ -1,5 +1,38 @@
 # Todo — IZOX
 
+## Session 8 (en cours) — Fiches cliquables + replanification heure RDV
+
+Bugs signalés (screens mobile admin) :
+1. Sous-onglet Interventions : fiches non cliquables.
+2. Board planning visuel : blocs RDV non cliquables.
+3. Impossible de redécaler l'heure d'un RDV confirmé (clic = annulation seule).
+
+Cause racine #1+#2 : `admin.interventions.tsx` (redirect beforeLoad) est le
+parent de `admin.interventions.$id.tsx` → le redirect s'exécute pour le détail.
+
+- [x] Audit complet (routing + RPC + edge function + état DB)
+- [x] Fix routing : `admin.interventions.tsx` → layout `<Outlet/>` + redirect déplacé dans `admin.interventions.index.tsx`
+- [x] RPC `modifier_heure_rdv(p_demande_id, p_heure)` (admin/staff, créneau verrouillé, propage aux interventions)
+- [x] Email `rdv_modifie` (→ client) : edge function v9 + `email.ts`
+- [x] Dialog `GererRdvConfirmeDialog` (replanifier heure OU annuler) → remplace `AnnulerRdvAdminDialog`
+- [x] Bouton "Modifier l'horaire" sur fiche intervention (admin, statut planifiee/en_cours) → ouvre la demande
+- [x] Régénérer types Supabase + `tsc` (clean) + build (OK)
+- [x] Tests réels : véhicule + demande client + assigner + replanifier (08:30→09:30→11:00) + garde-fous (hors plage, non-admin)
+- [ ] Commit + push
+
+### Review session 8
+- **Cause racine fiches non cliquables** : `admin.interventions.tsx` portait un
+  `beforeLoad` redirect, et comme `admin.interventions.$id.tsx` en était l'enfant,
+  le redirect s'exécutait aussi pour le détail → retour planning instantané.
+  Corrigé en séparant layout (`<Outlet/>`) et index (redirect), comme `admin.planning.*`.
+- **Replanification** : nouveau RPC `modifier_heure_rdv` — verrouille date + créneau,
+  ne change que l'heure, propage à toutes les interventions liées non validées/annulées,
+  bloque si une intervention est déjà validée, notifie le client (`rdv_modifie`).
+- **Tests DB** (auth.uid() simulé via `request.jwt.claims`) : flow complet OK +
+  3 garde-fous validés. DB re-nettoyée après tests (0 demandes/interventions/véhicules).
+
+---
+
 ## Backlog actif
 
 - [ ] **Formulaire client — 2 créneaux minimum** : `CreerDemandeRdvDialog` imposer min. 2 créneaux sur jours différents + message explicatif. Actuellement 1 créneau suffit, ce qui prive l'admin de flexibilité. Modifier `canSubmit` : `creneauxRemplis.length >= 2` + validation dates différentes.

@@ -13,6 +13,7 @@ export interface AdminDemandeRdv {
   code_postal_intervention?: string | null;
   assigned_date?: string | null;
   assigned_heure?: string | null;
+  assigned_time_slot?: string | null;
   assigned_operator_id?: string | null;
   date_confirmee?: string | null;
 }

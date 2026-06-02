@@ -55,6 +55,19 @@
 - **Heure précise dans un créneau** : `<input type="time" min="08:00" max="12:00">` avec validation frontend (`heureValid()`) et colonne `heure_intervention TIME` en DB. Plage matin = 08h-12h, après-midi = 14h-18h.
 - **Clic vs drag sur un board dnd-kit** : séparer le grip (`{...listeners}` sur l'icône grip uniquement) du clic navigation (bouton imbriqué sur le texte). Ne pas mettre `onClick` sur le div `ref={setNodeRef}` — ça entre en conflit avec le drag.
 
+## Routing TanStack (file-based à plat)
+
+- **Un `beforeLoad`/redirect sur `X.tsx` s'applique AUSSI à `X.$id.tsx`** : en routing à plat, `admin.interventions.$id.tsx` est un enfant de `admin.interventions.tsx`. Si le parent throw un `redirect` dans `beforeLoad`, le détail enfant est redirigé lui aussi → fiche « non cliquable » (on revient instantanément en arrière). Symptôme trompeur : les `onClick`/`navigate` sont pourtant corrects.
+- **Pattern correct** : séparer layout et index, comme `admin.planning.tsx` (`component: () => <Outlet/>`) + `admin.planning.index.tsx`. Mettre le redirect dans `X.index.tsx` (path exact) et faire de `X.tsx` un layout pur `<Outlet/>`. Ainsi `X.$id` n'hérite plus du redirect.
+- **Régénérer `routeTree.gen.ts`** : `npm run build` (vite + `@tanstack/router-plugin`) le régénère. Vérifier le `getParentRoute` des routes `$id` après tout changement de structure.
+
+## Replanification RDV (session 8)
+
+- **`modifier_heure_rdv(p_demande_id, p_heure)`** : verrouille date + `assigned_time_slot` (créneau client), ne change que l'heure, valide la plage (matin 08–12 / après-midi 14–18), propage `heure_intervention` à toutes les interventions liées `IN ('planifiee','en_cours','en_revision')`, bloque si une intervention est `validee` (facturée). Admin/staff only.
+- **Email `rdv_modifie`** (→ client) : ajouté à l'edge function send-email (v9) + union `EmailType` de `email.ts`. Réutilise `email_status`/`email_sent_at` sur `demandes_rdv` comme `rdv_confirmee`.
+- **Dialog consolidé `GererRdvConfirmeDialog`** : remplace `AnnulerRdvAdminDialog`. Un seul dialog pour un RDV confirmé = replanifier l'heure (action par défaut) OU annuler (lien secondaire). Cohérent avec « 1 dialog par demande ».
+- **Tester un RPC SECURITY DEFINER sans session** : `execute_sql` tourne sans `auth.uid()`. Simuler via `PERFORM set_config('request.jwt.claims', json_build_object('sub', <uid>,'role','authenticated')::text, true)` dans un bloc `DO` (même transaction) — permet de jouer client puis admin et de tester les garde-fous.
+
 ## Workflow Git
 
 - **Branches de travail** : supprimer après merge pour garder le repo propre. Impossible via `git push --delete` depuis le container (403) — le faire depuis GitHub UI.

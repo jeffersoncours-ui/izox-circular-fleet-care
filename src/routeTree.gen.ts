@@ -38,6 +38,7 @@ import { Route as AdminDemandesGelRouteImport } from './routes/admin.demandes-ge
 import { Route as AdminContratsRouteImport } from './routes/admin.contrats'
 import { Route as AdminClientsRouteImport } from './routes/admin.clients'
 import { Route as AdminPlanningIndexRouteImport } from './routes/admin.planning.index'
+import { Route as AdminInterventionsIndexRouteImport } from './routes/admin.interventions.index'
 import { Route as TerrainInterventionIdRouteImport } from './routes/terrain.intervention.$id'
 import { Route as SettingsSecurity2faRouteImport } from './routes/settings.security.2fa'
 import { Route as ClientFlotteIdRouteImport } from './routes/client.flotte.$id'
@@ -193,6 +194,11 @@ const AdminPlanningIndexRoute = AdminPlanningIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminPlanningRoute,
 } as any)
+const AdminInterventionsIndexRoute = AdminInterventionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminInterventionsRoute,
+} as any)
 const TerrainInterventionIdRoute = TerrainInterventionIdRouteImport.update({
   id: '/intervention/$id',
   path: '/intervention/$id',
@@ -277,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/client/flotte/$id': typeof ClientFlotteIdRoute
   '/settings/security/2fa': typeof SettingsSecurity2faRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
+  '/admin/interventions/': typeof AdminInterventionsIndexRoute
   '/admin/planning/': typeof AdminPlanningIndexRoute
 }
 export interface FileRoutesByTo {
@@ -292,7 +299,6 @@ export interface FileRoutesByTo {
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/impact': typeof AdminImpactRoute
-  '/admin/interventions': typeof AdminInterventionsRouteWithChildren
   '/admin/rendez-vous': typeof AdminRendezVousRoute
   '/admin/vehicules': typeof AdminVehiculesRouteWithChildren
   '/client/documents': typeof ClientDocumentsRoute
@@ -314,6 +320,7 @@ export interface FileRoutesByTo {
   '/client/flotte/$id': typeof ClientFlotteIdRoute
   '/settings/security/2fa': typeof SettingsSecurity2faRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
+  '/admin/interventions': typeof AdminInterventionsIndexRoute
   '/admin/planning': typeof AdminPlanningIndexRoute
 }
 export interface FileRoutesById {
@@ -355,6 +362,7 @@ export interface FileRoutesById {
   '/client/flotte/$id': typeof ClientFlotteIdRoute
   '/settings/security/2fa': typeof SettingsSecurity2faRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
+  '/admin/interventions/': typeof AdminInterventionsIndexRoute
   '/admin/planning/': typeof AdminPlanningIndexRoute
 }
 export interface FileRouteTypes {
@@ -397,6 +405,7 @@ export interface FileRouteTypes {
     | '/client/flotte/$id'
     | '/settings/security/2fa'
     | '/terrain/intervention/$id'
+    | '/admin/interventions/'
     | '/admin/planning/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -412,7 +421,6 @@ export interface FileRouteTypes {
     | '/admin/equipe'
     | '/admin/facturation'
     | '/admin/impact'
-    | '/admin/interventions'
     | '/admin/rendez-vous'
     | '/admin/vehicules'
     | '/client/documents'
@@ -434,6 +442,7 @@ export interface FileRouteTypes {
     | '/client/flotte/$id'
     | '/settings/security/2fa'
     | '/terrain/intervention/$id'
+    | '/admin/interventions'
     | '/admin/planning'
   id:
     | '__root__'
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | '/client/flotte/$id'
     | '/settings/security/2fa'
     | '/terrain/intervention/$id'
+    | '/admin/interventions/'
     | '/admin/planning/'
   fileRoutesById: FileRoutesById
 }
@@ -692,6 +702,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPlanningIndexRouteImport
       parentRoute: typeof AdminPlanningRoute
     }
+    '/admin/interventions/': {
+      id: '/admin/interventions/'
+      path: '/'
+      fullPath: '/admin/interventions/'
+      preLoaderRoute: typeof AdminInterventionsIndexRouteImport
+      parentRoute: typeof AdminInterventionsRoute
+    }
     '/terrain/intervention/$id': {
       id: '/terrain/intervention/$id'
       path: '/intervention/$id'
@@ -784,10 +801,12 @@ const AdminContratsRouteWithChildren = AdminContratsRoute._addFileChildren(
 
 interface AdminInterventionsRouteChildren {
   AdminInterventionsIdRoute: typeof AdminInterventionsIdRoute
+  AdminInterventionsIndexRoute: typeof AdminInterventionsIndexRoute
 }
 
 const AdminInterventionsRouteChildren: AdminInterventionsRouteChildren = {
   AdminInterventionsIdRoute: AdminInterventionsIdRoute,
+  AdminInterventionsIndexRoute: AdminInterventionsIndexRoute,
 }
 
 const AdminInterventionsRouteWithChildren =

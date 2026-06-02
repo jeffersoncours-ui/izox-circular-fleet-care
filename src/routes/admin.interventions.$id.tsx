@@ -41,7 +41,7 @@ interface Operator {
 }
 
 const TIME_SLOT_LABEL: Record<string, string> = {
-  morning:   "Matin (08h – 12h)",
+  morning: "Matin (08h – 12h)",
   afternoon: "Après-midi (14h – 18h)",
 };
 
@@ -49,6 +49,7 @@ interface InterventionFull {
   id: string;
   statut: Statut;
   type_prestation: string;
+  demande_rdv_id: string | null;
   date_intervention: string | null;
   time_slot: string | null;
   heure_intervention: string | null;
@@ -80,7 +81,7 @@ interface PhotoEntry {
 function AdminInterventionDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [data, setData] = useState<InterventionFull | null>(null);
   const [operator, setOperator] = useState<Operator | null>(null);
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
@@ -200,7 +201,8 @@ function AdminInterventionDetail() {
   }
 
   const typeScope = (t: string) => {
-    if (t === "exterieur" || t === "interieur" || t === "complet") return t as "exterieur" | "interieur" | "complet";
+    if (t === "exterieur" || t === "interieur" || t === "complet")
+      return t as "exterieur" | "interieur" | "complet";
     // pack_* → complet par défaut pour l'affichage checklists/photos
     return "complet" as const;
   };
@@ -230,9 +232,7 @@ function AdminInterventionDetail() {
         <Badge className={statutColor(data.statut)} variant="outline">
           {statutLabel(data.statut)}
         </Badge>
-        <Badge variant="secondary">
-          {getPackLabel(data.type_prestation)}
-        </Badge>
+        <Badge variant="secondary">{getPackLabel(data.type_prestation)}</Badge>
       </div>
 
       <p className="text-sm text-muted-foreground mb-6">
@@ -289,6 +289,27 @@ function AdminInterventionDetail() {
               </div>
             )}
           </div>
+
+          {/* Replanifier l'heure (admin only, tant que non validée/annulée) */}
+          {profile?.role === "admin" &&
+            data.demande_rdv_id &&
+            (data.statut === "planifiee" || data.statut === "en_cours") && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onClick={() =>
+                    navigate({
+                      to: "/admin/planning",
+                      search: { tab: "demandes", demande: data.demande_rdv_id! },
+                    })
+                  }
+                >
+                  <CalendarClock className="h-4 w-4 mr-1" /> Modifier l'horaire du RDV
+                </Button>
+              </div>
+            )}
         </Card>
       )}
 
@@ -414,13 +435,14 @@ function AdminInterventionDetail() {
           >
             <X className="h-4 w-4 mr-1" /> Refuser
           </Button>
-          <Button
-            variant="izox"
-            className="flex-1 h-12"
-            onClick={validate}
-            disabled={working}
-          >
-            {working ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4 mr-1" /> Valider</>}
+          <Button variant="izox" className="flex-1 h-12" onClick={validate} disabled={working}>
+            {working ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Check className="h-4 w-4 mr-1" /> Valider
+              </>
+            )}
           </Button>
         </div>
       )}

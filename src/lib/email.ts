@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type EmailType =
   | "gel_validee"
   | "rdv_confirmee"
+  | "rdv_modifie"
   | "intervention_close"
   | "rappel_24h"
   | "staff_notification"

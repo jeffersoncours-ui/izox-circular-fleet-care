@@ -2579,6 +2579,10 @@ export type Database = {
         Returns: boolean
       }
       lever_gel_anticipe: { Args: { p_demande_id: string }; Returns: Json }
+      modifier_heure_rdv: {
+        Args: { p_demande_id: string; p_heure: string }
+        Returns: Json
+      }
       reassigner_commercial: {
         Args: { p_entreprise_id: string; p_nouveau_commercial_id: string }
         Returns: Json

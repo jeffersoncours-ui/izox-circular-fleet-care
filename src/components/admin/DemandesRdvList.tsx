@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { type AdminDemandeRdv } from "@/components/admin/demande-rdv-types";
 import { AssignerRdvDialog } from "@/components/admin/AssignerRdvDialog";
-import { AnnulerRdvAdminDialog } from "@/components/admin/AnnulerRdvAdminDialog";
+import { GererRdvConfirmeDialog } from "@/components/admin/GererRdvConfirmeDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
 import { Route as PlanningRoute } from "@/routes/admin.planning";
 
@@ -44,7 +44,7 @@ export function DemandesRdvList() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("en_attente");
   const [assigning, setAssigning] = useState<AdminDemandeRdv | null>(null);
-  const [cancelling, setCancelling] = useState<AdminDemandeRdv | null>(null);
+  const [managing, setManaging] = useState<AdminDemandeRdv | null>(null);
   const navigate = useNavigate();
 
   const clearDemandeParam = useCallback(() => {
@@ -73,12 +73,21 @@ export function DemandesRdvList() {
   }, [load]);
 
   const search = PlanningRoute.useSearch();
+  // Demande en attente → dialog d'assignation
   useAutoOpenFromSearch<Row>(
     search.demande,
     rows,
     "id",
     (r) => setAssigning({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
     (r) => r.statut === "en_attente",
+  );
+  // Demande confirmée (lien depuis la fiche intervention) → dialog de gestion
+  useAutoOpenFromSearch<Row>(
+    search.demande,
+    rows,
+    "id",
+    (r) => setManaging({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
+    (r) => r.statut === "confirmee",
   );
 
   const filtered = filter === "all" ? rows : rows.filter((r) => r.statut === filter);
@@ -129,7 +138,7 @@ export function DemandesRdvList() {
                   onClick={() => {
                     const withNom = { ...r, entreprise_nom: r.entreprises?.nom ?? null };
                     if (r.statut === "en_attente") setAssigning(withNom);
-                    else if (r.statut === "confirmee") setCancelling(withNom);
+                    else if (r.statut === "confirmee") setManaging(withNom);
                   }}
                   className="w-full text-left"
                 >
@@ -137,12 +146,8 @@ export function DemandesRdvList() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <p className="font-semibold text-sm">
-                            {r.entreprises?.nom ?? "—"}
-                          </p>
-                          <Badge variant="outline">
-                            {r.nb_vehicules_rdv} véh.
-                          </Badge>
+                          <p className="font-semibold text-sm">{r.entreprises?.nom ?? "—"}</p>
+                          <Badge variant="outline">{r.nb_vehicules_rdv} véh.</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {creneaux.length} créneau
@@ -151,8 +156,7 @@ export function DemandesRdvList() {
                           {creneaux[0]?.date && (
                             <>
                               {" "}
-                              · 1er :{" "}
-                              {format(parseISO(creneaux[0].date), "dd/MM/yyyy")}{" "}
+                              · 1er : {format(parseISO(creneaux[0].date), "dd/MM/yyyy")}{" "}
                               {creneaux[0].plage}
                             </>
                           )}
@@ -199,17 +203,17 @@ export function DemandesRdvList() {
         }}
       />
 
-      <AnnulerRdvAdminDialog
-        open={!!cancelling}
+      <GererRdvConfirmeDialog
+        open={!!managing}
         onOpenChange={(o) => {
           if (!o) {
-            setCancelling(null);
+            setManaging(null);
             clearDemandeParam();
           }
         }}
-        demande={cancelling}
-        onCancelled={() => {
-          setCancelling(null);
+        demande={managing}
+        onUpdated={() => {
+          setManaging(null);
           clearDemandeParam();
           load();
         }}
