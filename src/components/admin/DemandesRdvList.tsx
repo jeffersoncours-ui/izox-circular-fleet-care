@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, CalendarPlus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -13,13 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  GererDemandeRdvDialog,
-  type AdminDemandeRdv,
-} from "@/components/admin/GererDemandeRdvDialog";
+import { type AdminDemandeRdv } from "@/components/admin/demande-rdv-types";
 import { AssignerRdvDialog } from "@/components/admin/AssignerRdvDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
-import { Route as RendezVousRoute } from "@/routes/admin.rendez-vous";
+import { Route as PlanningRoute } from "@/routes/admin.planning";
 
 interface Row extends AdminDemandeRdv {
   entreprises?: { nom: string } | null;
@@ -43,13 +40,12 @@ export function DemandesRdvList() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("en_attente");
-  const [selected, setSelected] = useState<AdminDemandeRdv | null>(null);
   const [assigning, setAssigning] = useState<AdminDemandeRdv | null>(null);
   const navigate = useNavigate();
 
   const clearDemandeParam = useCallback(() => {
     navigate({
-      to: "/admin/rendez-vous",
+      to: "/admin/planning",
       search: (prev: Record<string, unknown>) => {
         const { demande: _omit, ...rest } = prev ?? {};
         return rest;
@@ -72,12 +68,12 @@ export function DemandesRdvList() {
     load();
   }, [load]);
 
-  const search = RendezVousRoute.useSearch();
+  const search = PlanningRoute.useSearch();
   useAutoOpenFromSearch<Row>(
     search.demande,
     rows,
     "id",
-    (r) => setSelected({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
+    (r) => setAssigning({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
     (r) => r.statut === "en_attente",
   );
 
@@ -123,30 +119,16 @@ export function DemandesRdvList() {
               : [];
             return (
               <li key={r.id}>
-                {r.statut === "en_attente" && (
-                  <div className="flex gap-2 mb-1">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAssigning({ ...r, entreprise_nom: r.entreprises?.nom ?? null })
-                      }
-                      className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-xs text-primary hover:bg-primary/10 transition-colors"
-                    >
-                      <CalendarPlus className="h-3.5 w-3.5" />
-                      Assigner & Planifier
-                    </button>
-                  </div>
-                )}
                 <button
                   type="button"
                   disabled={r.statut !== "en_attente"}
                   onClick={() =>
                     r.statut === "en_attente"
-                      ? setSelected({
+                      ? setAssigning({
                           ...r,
                           entreprise_nom: r.entreprises?.nom ?? null,
                         })
-                      : null
+                      : undefined
                   }
                   className="w-full text-left"
                 >
@@ -174,6 +156,14 @@ export function DemandesRdvList() {
                             </>
                           )}
                         </p>
+                        {(r.ville_intervention || r.code_postal_intervention) && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            📍{" "}
+                            {[r.code_postal_intervention, r.ville_intervention]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </p>
+                        )}
                         {r.commentaires && (
                           <p className="text-xs italic text-muted-foreground line-clamp-1 mt-1">
                             {r.commentaires}
@@ -192,30 +182,18 @@ export function DemandesRdvList() {
         </ul>
       )}
 
-      <GererDemandeRdvDialog
-        open={!!selected}
-        onOpenChange={(o) => {
-          if (!o) {
-            setSelected(null);
-            clearDemandeParam();
-          }
-        }}
-        demande={selected}
-        onProcessed={() => {
-          setSelected(null);
-          clearDemandeParam();
-          load();
-        }}
-      />
-
       <AssignerRdvDialog
         open={!!assigning}
         onOpenChange={(o) => {
-          if (!o) setAssigning(null);
+          if (!o) {
+            setAssigning(null);
+            clearDemandeParam();
+          }
         }}
         demande={assigning}
         onAssigned={() => {
           setAssigning(null);
+          clearDemandeParam();
           load();
         }}
       />

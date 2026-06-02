@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Car, MessageSquare, X, AlertCircle, Loader2 } from "lucide-react";
+import { Calendar, Clock, Car, MapPin, MessageSquare, X, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AnnulerDemandeDialog } from "./AnnulerDemandeDialog";
 
@@ -21,6 +21,9 @@ type DemandeDetail = {
   vehicule_ids: string[];
   commentaires?: string | null;
   refus_motif?: string | null;
+  adresse_intervention?: string | null;
+  ville_intervention?: string | null;
+  code_postal_intervention?: string | null;
   created_at: string;
   updated_at?: string | null;
 };
@@ -121,7 +124,7 @@ export function DetailDemandeRdvDialog({
         const { data: d } = await supabase
           .from("demandes_rdv")
           .select(
-            "id, statut, creneaux_preferes, date_confirmee, vehicule_ids, commentaires, created_at, updated_at",
+            "id, statut, creneaux_preferes, date_confirmee, vehicule_ids, commentaires, adresse_intervention, ville_intervention, code_postal_intervention, refus_motif, created_at, updated_at",
           )
           .eq("id", demandeId)
           .maybeSingle();
@@ -237,6 +240,24 @@ export function DetailDemandeRdvDialog({
                     Motif du refus
                   </div>
                   <div className="text-sm text-red-900">{demande.refus_motif}</div>
+                </div>
+              )}
+
+              {(demande.adresse_intervention || demande.ville_intervention) && (
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    Lieu d'intervention
+                  </div>
+                  <div className="text-sm">
+                    {[
+                      demande.adresse_intervention,
+                      demande.code_postal_intervention,
+                      demande.ville_intervention,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </div>
                 </div>
               )}
 
