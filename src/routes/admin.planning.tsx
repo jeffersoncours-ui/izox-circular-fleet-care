@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarDays, Map } from "lucide-react";
 import { PlanningCalendar } from "@/components/admin/PlanningCalendar";
 import { Button } from "@/components/ui/button";
+import { RoleGuard } from "@/components/RoleGuard";
 
 export const Route = createFileRoute("/admin/planning")({
   component: AdminPlanningPage,
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/admin/planning")({
 
 function AdminPlanningPage() {
   return (
+    <RoleGuard allowed={["admin"]}>
     <div className="p-6 lg:p-10 max-w-full mx-auto space-y-6">
       <header className="flex items-start justify-between gap-4 flex-wrap">
         <div>
@@ -30,5 +32,6 @@ function AdminPlanningPage() {
 
       <PlanningCalendar />
     </div>
+    </RoleGuard>
   );
 }
