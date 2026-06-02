@@ -4,9 +4,9 @@
 
 ### Session 2026-06-02 — Gel véhicule admin direct
 
-- [ ] Migration SQL : colonnes `gel_admin_*` sur `vehicules` + RPC `geler_vehicule_admin` + RPC `annuler_gel_vehicule_admin` + extension cron
-- [ ] Composant `GelerVehiculeAdminDialog.tsx` (date début/fin + motif)
-- [ ] Route `admin.vehicules.$id.tsx` : état gel + boutons Geler/Lever le gel
+- [x] Migration SQL : colonnes `gel_admin_*` sur `vehicules` + RPC `geler_vehicule_admin` + RPC `annuler_gel_vehicule_admin` + extension cron
+- [x] Composant `GelerVehiculeAdminDialog.tsx` (date début/fin + motif)
+- [x] Route `admin.vehicules.$id.tsx` : état gel + boutons Geler/Lever le gel
 
 ## Backlog
 
