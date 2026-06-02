@@ -115,20 +115,28 @@ Colonnes admin sur `vehicules` : `gel_admin_date_debut`, `gel_admin_date_fin`, `
 
 Le cron `cron_maintenance_quotidienne()` active/expire automatiquement les gels admin (et les gels clients via `demandes_gel`). Toujours étendre cette fonction pour toute nouvelle automatisation quotidienne.
 
-## Architecture planning & RDV (refonte en cours)
+## Architecture planning & RDV
 
-Les 3 onglets admin `Rendez-vous`, `Planning` et `Interventions` sont en cours de fusion
+Les 3 onglets admin `Rendez-vous`, `Planning` et `Interventions` ont été fusionnés
 en **un seul onglet** hébergé sur `/admin/planning`, avec 3 sous-onglets :
 
 | Sous-onglet | Composant | Accès | Rôle |
 |---|---|---|---|
 | Demandes | `DemandesRdvList` | tous rôles admin | gérer les demandes RDV entrantes |
 | Planning (board) | `PlanningCalendar` | **admin only** | drag-drop interventions par opérateur/créneau |
-| Interventions | liste interventions | tous rôles admin | suivi des fiches d'intervention |
+| Interventions | `InterventionsListPanel` | tous rôles admin | suivi des fiches d'intervention |
 
 - Carte des routes : `/admin/planning/map` (`RouteMap`, admin only).
 - Le param `?demande=<uuid>` ouvre automatiquement une demande (`useAutoOpenFromSearch`) — à préserver.
-- `/admin/rendez-vous` et `/admin/interventions` redirigent vers l'onglet unifié (compat liens).
+- `/admin/rendez-vous`, `/admin/interventions`, `/admin/demandes-rdv` redirigent vers l'onglet unifié (compat liens).
+
+### Flow RDV admin — dialog unique
+
+**`AssignerRdvDialog`** est le seul dialog admin pour traiter une demande :
+- Affiche : créneaux préférés du client, lieu d'intervention, commentaires
+- Permet : refus (avec motif min. 5 car.) → RPC `refuser_demande_rdv`
+- Permet : assignation opérateur + créneau → RPC `assigner_rdv` + `sendEmail("rdv_confirmee")`
+- `GererDemandeRdvDialog` a été supprimé — le chemin "confirmation directe sans opérateur" (`confirmer_demande_rdv_multi`) n'est plus accessible en UI.
 
 ### Modèle opérateurs
 
@@ -136,11 +144,12 @@ en **un seul onglet** hébergé sur `/admin/planning`, avec 3 sous-onglets :
 - `interventions.operator_id` → `operators` (planning). `interventions.operateur_id` → `auth.users` (terrain).
 - **Un seul opérateur réel pour l'instant** : `operators` ne contient qu'un row, label neutre « Opérateur » (pas de nom de personne). Le rendu UI est dynamique — ne jamais coder en dur les opérateurs.
 
-### GPS / géolocalisation (backlog — non implémenté)
+### Lieu d'intervention
 
-- Aucune adresse de lieu d'intervention n'existe encore : seule `entreprises` porte une adresse (`adresse`, `ville`, `code_postal`). `demandes_rdv` n'a qu'un commentaire libre.
-- Cible : champ `adresse_intervention` sur `demandes_rdv` (pré-rempli adresse entreprise, modifiable) → géocodage Nominatim → `interventions.latitude/longitude` → carte des routes + regroupement par proximité.
-- `interventions.latitude/longitude` existent déjà mais ne sont jamais alimentées → carte des routes vide tant que le GPS n'est pas câblé.
+- `demandes_rdv` porte `adresse_intervention`, `ville_intervention`, `code_postal_intervention`, `latitude`, `longitude`.
+- `interventions` porte aussi `adresse_intervention`, `ville_intervention`, `code_postal_intervention` (copiés depuis la demande par `assigner_rdv`).
+- `creer_demande_rdv` exige les 3 champs adresse (validation DB + UI, pré-remplis depuis `entreprises`).
+- **GPS / géocodage (backlog)** : colonnes `latitude`/`longitude` existent mais ne sont jamais alimentées → carte des routes vide. Câbler via Nominatim quand prêt.
 
 ## Comptes de test (après purge 2026-06-02)
 
