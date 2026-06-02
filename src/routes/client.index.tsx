@@ -29,36 +29,66 @@ const PALIER_CARD_CLASS: Record<string, string> = {
   premium: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-200",
 };
 
+function fmtShort(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+function fmtYear(iso: string): string {
+  return String(new Date(iso).getFullYear());
+}
+
 function ClientHome() {
   const { profile } = useAuth();
   const [vehiculeCount, setVehiculeCount] = useState(0);
   const [palier, setPalier] = useState<string>("");
   const [numeroContrat, setNumeroContrat] = useState<string>("");
   const [contratId, setContratId] = useState<string>("");
+  const [prochainRdvDate, setProchainRdvDate] = useState<string | null>(null);
+  const [dernierePrestDate, setDernierePrestDate] = useState<string | null>(null);
   const [pwOpen, setPwOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
 
   useEffect(() => {
     if (!profile?.entreprise_id) return;
     (async () => {
-      const v = await supabase
-        .from("vehicules")
-        .select("id", { count: "exact", head: true })
-        .eq("entreprise_id", profile.entreprise_id!)
-        .in("statut", ["actif", "en_attente_validation"]);
+      const today = new Date().toISOString().split("T")[0];
+      const [v, contratRes, rdvRes, prestRes] = await Promise.all([
+        supabase
+          .from("vehicules")
+          .select("id", { count: "exact", head: true })
+          .eq("entreprise_id", profile.entreprise_id!)
+          .in("statut", ["actif", "en_attente_validation"]),
+        supabase
+          .from("contrats")
+          .select("id, numero_contrat, statut")
+          .eq("entreprise_id", profile.entreprise_id!)
+          .in("statut", ["actif", "en_attente_validation"])
+          .order("date_debut", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("demandes_rdv")
+          .select("assigned_date")
+          .eq("entreprise_id", profile.entreprise_id!)
+          .eq("statut", "confirmee")
+          .gte("assigned_date", today)
+          .order("assigned_date", { ascending: true })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("interventions")
+          .select("date_intervention")
+          .eq("entreprise_id", profile.entreprise_id!)
+          .eq("statut", "validee")
+          .order("date_intervention", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
       const count = v.count ?? 0;
       setVehiculeCount(count);
+      if (rdvRes.data?.assigned_date) setProchainRdvDate(rdvRes.data.assigned_date as string);
+      if (prestRes.data?.date_intervention) setDernierePrestDate(prestRes.data.date_intervention as string);
 
-      // Récupère le contrat (le plus récent) — inclut en_attente_validation
-      const { data: contrat } = await supabase
-        .from("contrats")
-        .select("id, numero_contrat, statut")
-        .eq("entreprise_id", profile.entreprise_id!)
-        .in("statut", ["actif", "en_attente_validation"])
-        .order("date_debut", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
+      const contrat = contratRes.data;
       if (contrat) {
         const p =
           count >= 20 ? "premium" : count >= 10 ? "business" : count >= 5 ? "pro" : "starter";
@@ -90,18 +120,22 @@ function ClientHome() {
             sub="dans la flotte"
           />
         </Link>
-        <SummaryCard
-          icon={CalendarDays}
-          label="Prochain RDV"
-          value="—"
-          sub="aucun RDV"
-        />
-        <SummaryCard
-          icon={Sparkles}
-          label="Dernière prestation"
-          value="—"
-          sub="aucune prestation"
-        />
+        <Link to="/client/prestations">
+          <SummaryCard
+            icon={CalendarDays}
+            label="Prochain RDV"
+            value={prochainRdvDate ? fmtShort(prochainRdvDate) : "—"}
+            sub={prochainRdvDate ? fmtYear(prochainRdvDate) : "aucun RDV"}
+          />
+        </Link>
+        <Link to="/client/prestations">
+          <SummaryCard
+            icon={Sparkles}
+            label="Dernière prestation"
+            value={dernierePrestDate ? fmtShort(dernierePrestDate) : "—"}
+            sub={dernierePrestDate ? fmtYear(dernierePrestDate) : "aucune prestation"}
+          />
+        </Link>
         {palier ? (
           contratId ? (
             <Link to="/client/contrats/$id" params={{ id: contratId }}>

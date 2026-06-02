@@ -25,6 +25,7 @@ import {
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
 import { CreerDemandeRdvDialog } from "@/components/client/CreerDemandeRdvDialog";
+import { PACKS_CATALOG } from "@/lib/pricing";
 import { DemanderGelDialog } from "@/components/client/DemanderGelDialog";
 import { AnnulerDemandeDialog } from "@/components/client/AnnulerDemandeDialog";
 import { LeverGelAnticipeDialog } from "@/components/client/LeverGelAnticipeDialog";
@@ -64,7 +65,7 @@ function VehiculeDetail() {
   const [rdvOpen, setRdvOpen] = useState(false);
   const [gelOpen, setGelOpen] = useState(false);
   const [demandesGelActives, setDemandesGelActives] = useState<Array<{ id: string; statut: string; date_debut: string; date_fin_prevue: string; created_at: string }>>([]);
-  const [rdvLiesCount, setRdvLiesCount] = useState({ futur: 0, passe: 0 });
+  const [quotaMensuel, setQuotaMensuel] = useState({ quota: 0, pris: 0, realises: 0 });
   const [annulerOpen, setAnnulerOpen] = useState(false);
   const [leverOpen, setLeverOpen] = useState(false);
   const [demandeCibleId, setDemandeCibleId] = useState<string | null>(null);
@@ -81,23 +82,44 @@ function VehiculeDetail() {
     setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
 
     if (v) {
-      const today = new Date().toISOString().split("T")[0];
-      const [{ count: countFutur }, { count: countPasse }] = await Promise.all([
-        supabase
-          .from("demandes_rdv")
-          .select("id", { count: "exact", head: true })
-          .eq("statut", "confirmee")
-          .gte("date_confirmee", today)
-          .contains("vehicule_ids", [v.id]),
+      const packInfo = PACKS_CATALOG[v.type_pack_souhaite as keyof typeof PACKS_CATALOG];
+      const quota = packInfo?.nbPassages ?? 0;
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+      const monthStartISO = monthStart.toISOString().split("T")[0];
+      // Next month start for the upper bound
+      const nextMonth = new Date(monthStart);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      const nextMonthISO = nextMonth.toISOString().split("T")[0];
+
+      const [{ count: countInterventions }, { count: countDemandesEnAttente }, { count: countRealises }] = await Promise.all([
         supabase
           .from("interventions")
           .select("id", { count: "exact", head: true })
           .eq("vehicule_id", v.id)
-          .in("statut", ["validee", "en_revision"]),
+          .in("statut", ["planifiee", "en_cours", "en_revision", "validee"])
+          .gte("date_intervention", monthStartISO)
+          .lt("date_intervention", nextMonthISO),
+        supabase
+          .from("demandes_rdv")
+          .select("id", { count: "exact", head: true })
+          .eq("statut", "en_attente")
+          .contains("vehicule_ids", [v.id])
+          .gte("created_at", monthStart.toISOString())
+          .lt("created_at", nextMonth.toISOString()),
+        supabase
+          .from("interventions")
+          .select("id", { count: "exact", head: true })
+          .eq("vehicule_id", v.id)
+          .eq("statut", "validee")
+          .gte("date_intervention", monthStartISO)
+          .lt("date_intervention", nextMonthISO),
       ]);
-      setRdvLiesCount({ futur: countFutur ?? 0, passe: countPasse ?? 0 });
+      const pris = (countInterventions ?? 0) + (countDemandesEnAttente ?? 0);
+      setQuotaMensuel({ quota, pris, realises: countRealises ?? 0 });
     } else {
-      setRdvLiesCount({ futur: 0, passe: 0 });
+      setQuotaMensuel({ quota: 0, pris: 0, realises: 0 });
     }
 
     // Détecte les demandes de gel actives (en_attente / validee / active)
@@ -241,31 +263,41 @@ function VehiculeDetail() {
 
       <Card className="p-5 shadow-card border-border/60 mb-5">
         <h3 className="text-sm font-medium text-muted-foreground mb-3">
-          Rendez-vous liés
+          Passages ce mois
         </h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col">
-            <span className="text-2xl font-bold text-primary">
-              {rdvLiesCount.futur}
-            </span>
-            <span className="text-xs text-muted-foreground">À venir</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-2xl font-bold text-muted-foreground">
-              {rdvLiesCount.passe}
-            </span>
-            <span className="text-xs text-muted-foreground">Réalisés</span>
-          </div>
-        </div>
-        {(rdvLiesCount.futur > 0 || rdvLiesCount.passe > 0) && (
-          <Button
-            variant="link"
-            size="sm"
-            className="mt-2 p-0 h-auto"
-            onClick={() => navigate({ to: "/client/prestations" })}
-          >
-            Voir tous les rendez-vous →
-          </Button>
+        {quotaMensuel.quota === 0 ? (
+          <p className="text-sm text-muted-foreground">Pack non défini</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-3 mb-2">
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-primary">
+                  {quotaMensuel.pris}
+                </span>
+                <span className="text-xs text-muted-foreground">Pris</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-muted-foreground">
+                  {quotaMensuel.realises}
+                </span>
+                <span className="text-xs text-muted-foreground">Réalisés</span>
+              </div>
+              <div className="flex flex-col">
+                <span className={`text-2xl font-bold ${Math.max(0, quotaMensuel.quota - quotaMensuel.pris) === 0 ? "text-destructive" : "text-emerald-600"}`}>
+                  {Math.max(0, quotaMensuel.quota - quotaMensuel.pris)}
+                </span>
+                <span className="text-xs text-muted-foreground">Restants / {quotaMensuel.quota}</span>
+              </div>
+            </div>
+            <Button
+              variant="link"
+              size="sm"
+              className="p-0 h-auto"
+              onClick={() => navigate({ to: "/client/prestations" })}
+            >
+              Voir tous les rendez-vous →
+            </Button>
+          </>
         )}
       </Card>
 

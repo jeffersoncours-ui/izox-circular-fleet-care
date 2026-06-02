@@ -20,7 +20,6 @@ type DemandeDetail = {
   date_confirmee?: string | null;
   vehicule_ids: string[];
   commentaires?: string | null;
-  refus_motif?: string | null;
   adresse_intervention?: string | null;
   ville_intervention?: string | null;
   code_postal_intervention?: string | null;
@@ -121,13 +120,14 @@ export function DetailDemandeRdvDialog({
     (async () => {
       setLoading(true);
       try {
-        const { data: d } = await supabase
+        const { data: d, error: fetchError } = await supabase
           .from("demandes_rdv")
           .select(
-            "id, statut, creneaux_preferes, date_confirmee, vehicule_ids, commentaires, adresse_intervention, ville_intervention, code_postal_intervention, refus_motif, created_at, updated_at",
+            "id, statut, creneaux_preferes, date_confirmee, vehicule_ids, commentaires, adresse_intervention, ville_intervention, code_postal_intervention, created_at, updated_at",
           )
           .eq("id", demandeId)
           .maybeSingle();
+        if (fetchError) console.error("DetailDemandeRdvDialog fetch error:", fetchError);
 
         if (cancelled) return;
         if (d) {
@@ -233,13 +233,12 @@ export function DetailDemandeRdvDialog({
                 </div>
               </div>
 
-              {demande.statut === "refusee" && demande.refus_motif && (
+              {demande.statut === "refusee" && (
                 <div className="rounded-md border border-red-200 bg-red-50 p-3">
                   <div className="text-xs text-red-700 mb-1 flex items-center gap-1">
                     <AlertCircle className="h-3.5 w-3.5" />
-                    Motif du refus
+                    Demande refusée
                   </div>
-                  <div className="text-sm text-red-900">{demande.refus_motif}</div>
                 </div>
               )}
 

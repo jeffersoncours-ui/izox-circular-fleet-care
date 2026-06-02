@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, CheckCircle2, XCircle, MapPin, Clock } from "lucide-react";
@@ -25,16 +25,15 @@ interface Operator {
   color_hex: string;
 }
 
-interface SlotOccupancy {
-  date: string;
-  time_slot: string;
-  count: number;
-}
-
 const TIME_SLOTS = {
-  morning:   { label: "Matin",       sublabel: "08h – 12h", min: "08:00", max: "12:00" },
-  afternoon: { label: "Après-midi",  sublabel: "14h – 18h", min: "14:00", max: "18:00" },
+  morning:   { label: "Matin",       sublabel: "08h – 11h30" },
+  afternoon: { label: "Après-midi",  sublabel: "14h – 17h30" },
 } as const;
+
+const HEURE_OPTIONS: Record<"morning" | "afternoon", string[]> = {
+  morning:   ["08:00","08:30","09:00","09:30","10:00","10:30","11:00"],
+  afternoon: ["14:00","14:30","15:00","15:30","16:00","16:30","17:00"],
+};
 
 function isMatin(plage: string): boolean {
   const p = (plage || "").toLowerCase();
@@ -66,8 +65,6 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedSlot, setSelectedSlot] = useState<"morning" | "afternoon" | "">("");
   const [selectedHeure, setSelectedHeure] = useState<string>("");
-  const [occupancy, setOccupancy] = useState<SlotOccupancy[]>([]);
-  const [loadingOccupancy, setLoadingOccupancy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [refusOpen, setRefusOpen] = useState(false);
   const [motif, setMotif] = useState("");
@@ -85,7 +82,6 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     setSelectedHeure("");
     setRefusOpen(false);
     setMotif("");
-    setOccupancy([]);
   }, [open, demande]);
 
   // Load operators
@@ -97,39 +93,9 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     });
   }, [open]);
 
-  // Load occupancy for the client's preferred slots when operator is selected
-  const loadOccupancy = useCallback(async () => {
-    if (!selectedOperator || creneaux.length === 0) return;
-    setLoadingOccupancy(true);
-    const results: SlotOccupancy[] = [];
-    for (const c of creneaux) {
-      const slot = toTimeSlotKey(c.plage);
-      const { count } = await (supabase as any)
-        .from("interventions")
-        .select("id", { count: "exact", head: true })
-        .eq("operator_id", selectedOperator)
-        .eq("date_intervention", c.date)
-        .eq("time_slot", slot);
-      results.push({ date: c.date, time_slot: slot, count: count ?? 0 });
-    }
-    setOccupancy(results);
-    setLoadingOccupancy(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOperator, demande]);
-
-  useEffect(() => {
-    loadOccupancy();
-  }, [loadOccupancy]);
-
-  const getCount = (date: string, slot: string) =>
-    occupancy.find((o) => o.date === date && o.time_slot === slot)?.count ?? 0;
-
-  const isFull = (date: string, slot: string) => getCount(date, slot) >= 3;
-
   const heureValid = (): boolean => {
     if (!selectedSlot || !selectedHeure) return false;
-    const slotDef = TIME_SLOTS[selectedSlot];
-    return selectedHeure >= slotDef.min && selectedHeure <= slotDef.max;
+    return HEURE_OPTIONS[selectedSlot].includes(selectedHeure);
   };
 
   const nbVehicules = demande?.vehicule_ids?.length ?? 0;
@@ -197,6 +163,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
 
   const op = operators.find((o) => o.id === selectedOperator);
   const slotDef = selectedSlot ? TIME_SLOTS[selectedSlot] : null;
+  const heureLabel = selectedHeure ? selectedHeure.replace(":", "h") : "";
 
   return (
     <>
@@ -297,84 +264,62 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
                   <p className="text-xs text-muted-foreground">Aucun créneau proposé par le client.</p>
                 ) : (
                   <div className="space-y-2">
-                    {loadingOccupancy ? (
-                      <div className="flex justify-center py-3">
-                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                      </div>
-                    ) : (
-                      creneaux.map((c, i) => {
-                        const slot = toTimeSlotKey(c.plage);
-                        const slotInfo = TIME_SLOTS[slot];
-                        const count = getCount(c.date, slot);
-                        const full = isFull(c.date, slot);
-                        const isSelected = selectedDate === c.date && selectedSlot === slot;
-
-                        return (
-                          <button
-                            key={i}
-                            type="button"
-                            disabled={full}
-                            onClick={() => {
-                              setSelectedDate(c.date);
-                              setSelectedSlot(slot);
-                              setSelectedHeure("");
-                            }}
-                            className={`w-full flex items-center justify-between rounded-lg border-2 px-4 py-3 text-sm transition-colors ${
-                              isSelected
-                                ? "border-primary bg-primary/5"
-                                : full
-                                ? "border-border bg-muted/30 opacity-50 cursor-not-allowed"
-                                : "border-green-500/50 bg-green-50 hover:bg-green-100 cursor-pointer"
-                            }`}
-                          >
-                            <div className="text-left">
-                              <p className="font-medium">{formatDateFR(c.date)}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {slotInfo.label} · {slotInfo.sublabel}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <span
-                                className={`text-xs font-semibold ${
-                                  full ? "text-destructive" : "text-muted-foreground"
-                                }`}
-                              >
-                                {count}/3{full ? " — complet" : ""}
-                              </span>
-                              {isSelected && <CheckCircle2 className="h-4 w-4 text-primary mt-1 ml-auto" />}
-                            </div>
-                          </button>
-                        );
-                      })
-                    )}
+                    {creneaux.map((c, i) => {
+                      const slot = toTimeSlotKey(c.plage);
+                      const slotInfo = TIME_SLOTS[slot];
+                      const isSelected = selectedDate === c.date && selectedSlot === slot;
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setSelectedDate(c.date);
+                            setSelectedSlot(slot);
+                            setSelectedHeure("");
+                          }}
+                          className={`w-full flex items-center justify-between rounded-lg border-2 px-4 py-3 text-sm transition-colors ${
+                            isSelected
+                              ? "border-primary bg-primary/5"
+                              : "border-green-500/50 bg-green-50 hover:bg-green-100 cursor-pointer"
+                          }`}
+                        >
+                          <div className="text-left">
+                            <p className="font-medium">{formatDateFR(c.date)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {slotInfo.label} · {slotInfo.sublabel}
+                            </p>
+                          </div>
+                          {isSelected && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Saisie heure précise */}
+            {/* Sélection heure de début */}
             {selectedSlot && slotDef && (
               <div className="space-y-1.5">
                 <Label htmlFor="heure-rdv" className="text-sm font-semibold flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" /> 3. Heure de début
+                  <Clock className="h-3.5 w-3.5" /> 3. Heure d'arrivée
                   <span className="text-xs font-normal text-muted-foreground ml-1">
-                    ({slotDef.min} – {slotDef.max})
+                    ({slotDef.sublabel})
                   </span>
                 </Label>
-                <input
+                <select
                   id="heure-rdv"
-                  type="time"
-                  min={slotDef.min}
-                  max={slotDef.max}
                   value={selectedHeure}
                   onChange={(e) => setSelectedHeure(e.target.value)}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-                {selectedHeure && !heureValid() && (
-                  <p className="text-xs text-destructive">
-                    L'heure doit être entre {slotDef.min} et {slotDef.max}.
-                  </p>
-                )}
+                >
+                  <option value="">— Choisir une heure —</option>
+                  {HEURE_OPTIONS[selectedSlot].map((h) => (
+                    <option key={h} value={h}>
+                      {h.replace(":", "h")}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
@@ -395,7 +340,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
                 <p>
                   Créneau :{" "}
                   <span className="font-medium">
-                    {slotDef.label} à {selectedHeure}
+                    {slotDef.label} à {heureLabel}
                   </span>
                 </p>
               </div>

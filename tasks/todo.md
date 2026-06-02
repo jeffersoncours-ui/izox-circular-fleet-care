@@ -1,5 +1,16 @@
 # Todo — IZOX
 
+## Session 2026-06-02 (6) — En cours
+
+- [x] **Bloc A** — Fix "Demande introuvable" : `DetailDemandeRdvDialog.tsx` (supprimer `refus_motif`)
+- [x] **Bloc B** — Dashboard client : cartes "Prochain RDV" + "Dernière prestation" (requêtes + liens)
+- [x] **Bloc D** — Migrations : quota mensuel enforced (`creer_demande_rdv`) + capacité 3→2 + contrat_ligne_id (`assigner_rdv`)
+- [x] **Bloc C** — Fiche véhicule : quota mensuel affiché (X/Y passages ce mois)
+- [x] **Bloc E** — `AssignerRdvDialog` : supprimer badges 0/3 + dropdown heure 30 min
+- [x] **Bloc F** — `PlanningCalendar` : board horizontal, 4 sous-créneaux, fix immat "—"
+
+---
+
 ## Backlog actif
 
 - [ ] **Formulaire client — 2 créneaux minimum** : `CreerDemandeRdvDialog` imposer min. 2 créneaux sur jours différents + message explicatif. Actuellement 1 créneau suffit, ce qui prive l'admin de flexibilité. Modifier `canSubmit` : `creneauxRemplis.length >= 2` + validation dates différentes.
