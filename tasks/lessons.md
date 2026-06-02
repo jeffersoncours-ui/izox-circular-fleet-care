@@ -67,3 +67,30 @@
 - **Ne pas purger** : `prestations_catalogue`, `app_config`, `seuils_planning`, `operators`, `disponibilites_operateurs` — ce sont des données de configuration, pas des données app.
 - **Réinitialiser `contrat_sequences`** : `UPDATE contrat_sequences SET derniere_sequence = 0` après purge pour que la numérotation reparte proprement.
 - **Compte client de test** : `jeffersonjouenne@outlook.com` — seul compte client conservé après purge.
+
+## Bugs PostgREST / Supabase
+
+- **Erreurs PostgREST silencieuses** : si on fait `const { data }` sans capturer `error`, une erreur 400 (colonne inexistante) retourne `data = null`. Le composant affiche alors "introuvable" pour TOUS les éléments — symptôme trompeur. Toujours capturer ET logger l'erreur dans les selects critiques.
+- **Colonne inexistante dans SELECT** : PostgREST renvoie 400 si une colonne du SELECT n'existe pas. En session 6, `refus_motif` n'existait pas sur `demandes_rdv` → toutes les demandes retournaient "introuvable". Solution : enlever la colonne du SELECT, vérifier en DB avant de coder.
+- **`date_confirmee` est un TIMESTAMPTZ** : stocker "minuit UTC" donne "02h00" à Paris. Ne jamais extraire l'heure depuis un champ timestamp qui représente une date. Toujours utiliser une colonne TIME dédiée (`assigned_heure`) pour les heures métier.
+
+## Annulation RDV (sessions 6-7)
+
+- **Statut `annulee` vs quota** : les interventions annulées (`statut='annulee'`) ne doivent pas compter dans le quota mensuel. Le filtre "tous" dans `InterventionsListPanel` les exclut aussi (bruit opérationnel) — filtre dédié "Annulées" pour les consulter.
+- **Règle 48h côté client** : la vérification du délai est en DB (RPC `annuler_rdv_client` vérifie `assigned_date <= CURRENT_DATE + 1` → EXCEPTION). Le frontend calcule `annulable` pour désactiver le bouton avant même l'appel, mais la DB reste la source de vérité.
+- **Propagation statut annulee → interventions** : `annuler_rdv_client` et `annuler_rdv_admin` mettent à jour `interventions.statut='annulee'` pour toutes les interventions liées encore actives. L'admin ne peut pas annuler si une intervention est déjà `validee` (déjà facturée).
+- **Emails d'annulation bi-directionnels** : `rdv_annule_client` (déclenché par le client) → envoyé à l'admin IZOX ; `rdv_annule_admin` (déclenché par l'admin) → envoyé au client. Toujours fire-and-forget (`void sendEmail(...)`) pour ne pas bloquer l'UX si Resend échoue.
+
+## Composants réutilisables
+
+- **`PasswordInput`** (`src/components/ui/password-input.tsx`) : wrapper autour de `<Input>` avec bouton Eye/EyeOff. Patron utile : `forwardRef` + `Omit<React.ComponentProps<"input">, "type">` pour forwarder toutes les props sans exposer `type`. `tabIndex={-1}` sur le bouton toggle pour ne pas casser la navigation clavier.
+
+## Planning responsive
+
+- **Vue mobile ≠ vue desktop** : pour un board de planning, le scroll horizontal sur mobile est rédhibitoire. Solution retenue : `md:hidden` = sélecteur de jour (5 chips) + 4 créneaux empilés verticalement ; `hidden md:block` = grille semaine classique. Les deux vues partagent les mêmes données.
+- **Supprimer drag-drop simplifie massivement** : dnd-kit (DndContext, DragOverlay, useDraggable, useDroppable) ajoute beaucoup de complexité pour peu de valeur métier dans ce contexte (un seul opérateur, rien à réordonner). Si le drag ne porte pas de sémantique métier réelle, le remplacer par un simple clic vers la fiche.
+
+## Types Supabase générés
+
+- **Après chaque migration schéma** : régénérer via MCP `generate_typescript_types`. La RPC renvoie `{"types":"..."}` (JSON wrapper) — extraire avec `python3 -c "import json; open('src/integrations/supabase/types.ts','w').write(json.loads(open('...').read())['types'])"`. Sans regen, les nouveaux RPCs ne sont pas typés et les appels `supabase.rpc(...)` déclenchent des erreurs TS.
+- **Cast temporaire `as never`** : acceptable pendant le développement si les types ne sont pas encore régénérés, mais toujours régénérer et supprimer les casts avant le commit final.

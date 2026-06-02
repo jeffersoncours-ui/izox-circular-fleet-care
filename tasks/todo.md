@@ -1,29 +1,5 @@
 # Todo — IZOX
 
-## Session 2026-06-02 (7) — Annulations RDV + planning responsive
-
-- [x] Bloc 1 — `PasswordInput` (œil) sur login, recovery, reset-password, ChangePasswordDialog
-- [x] Bloc 2 — Fix heure "02:00" : afficher `assigned_heure` au lieu du composant horaire de `date_confirmee`
-- [x] Bloc 3 — Migration : `annuler_rdv_client` (règle 48h) + `annuler_rdv_admin` (sans délai) + statuts `annulee_admin`/`annulee`
-- [x] Bloc 4 — Emails `rdv_annule_client` (→ admin) + `rdv_annule_admin` (→ client), edge function déployée v7
-- [x] Bloc 5 — Client : annulation RDV confirmé avec motif obligatoire + désactivé < 48h
-- [x] Bloc 6 — Admin : cartes confirmées cliquables → `AnnulerRdvAdminDialog`
-- [x] Bloc 7 — `PlanningCalendar` : suppression drag, cellules cliquables, mobile = vue jour / desktop = grille
-- [x] Interventions : statut `annulee` (label/couleur + filtre dédié, exclu de "tous")
-
----
-
-## Session 2026-06-02 (6) — Terminée
-
-- [x] **Bloc A** — Fix "Demande introuvable" : `DetailDemandeRdvDialog.tsx` (supprimer `refus_motif`)
-- [x] **Bloc B** — Dashboard client : cartes "Prochain RDV" + "Dernière prestation" (requêtes + liens)
-- [x] **Bloc D** — Migrations : quota mensuel enforced (`creer_demande_rdv`) + capacité 3→2 + contrat_ligne_id (`assigner_rdv`)
-- [x] **Bloc C** — Fiche véhicule : quota mensuel affiché (X/Y passages ce mois)
-- [x] **Bloc E** — `AssignerRdvDialog` : supprimer badges 0/3 + dropdown heure 30 min
-- [x] **Bloc F** — `PlanningCalendar` : board horizontal, 4 sous-créneaux, fix immat "—"
-
----
-
 ## Backlog actif
 
 - [ ] **Formulaire client — 2 créneaux minimum** : `CreerDemandeRdvDialog` imposer min. 2 créneaux sur jours différents + message explicatif. Actuellement 1 créneau suffit, ce qui prive l'admin de flexibilité. Modifier `canSubmit` : `creneauxRemplis.length >= 2` + validation dates différentes.
@@ -36,6 +12,24 @@
 ---
 
 ## Historique sessions
+
+### Session 2026-06-02 (7) — Annulations RDV + planning responsive
+- `PasswordInput` (œil) sur login, recovery, reset-password, ChangePasswordDialog
+- Fix heure "02:00" : `assigned_heure` au lieu du composant horaire de `date_confirmee`
+- Migration : `annuler_rdv_client` (règle 48h) + `annuler_rdv_admin` (sans délai) + statuts `annulee_admin`/`annulee`
+- Emails `rdv_annule_client` (→ admin) + `rdv_annule_admin` (→ client), edge function déployée v7
+- Client : annulation RDV confirmé avec motif obligatoire + désactivé < 48h
+- Admin : cartes confirmées cliquables → `AnnulerRdvAdminDialog`
+- `PlanningCalendar` : suppression drag, cellules cliquables, mobile = vue jour / desktop = grille
+- Interventions : statut `annulee` (label/couleur + filtre dédié, exclu de "tous")
+
+### Session 2026-06-02 (6) — UX + quota + planning board
+- Fix "Demande introuvable" : `DetailDemandeRdvDialog.tsx` (supprimer `refus_motif`)
+- Dashboard client : cartes "Prochain RDV" + "Dernière prestation" (requêtes + liens)
+- Migrations : quota mensuel enforced (`creer_demande_rdv`) + capacité 3→2 + contrat_ligne_id (`assigner_rdv`)
+- Fiche véhicule : quota mensuel affiché (X/Y passages ce mois)
+- `AssignerRdvDialog` : supprimer badges 0/3 + dropdown heure 30 min
+- `PlanningCalendar` : board horizontal, 4 sous-créneaux, fix immat "—"
 
 ### Session 2026-06-02 (5) — Corrections post-tests manuels
 - `AssignerRdvDialog` : calendrier libre → sélection créneaux client + heure précise
