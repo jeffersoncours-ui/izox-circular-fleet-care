@@ -99,6 +99,8 @@ Prix V2 (mai 2026) : **pack_interieur=130€, pack_standard=170€, pack_vtc=240
 - Les tokens de récupération sont à **usage unique** et expirent après 24h
 - **Routes admin-only** (`/admin/planning`, `/admin/planning/map`, `/admin/equipe`, `/admin/facturation`) : protégées par `RoleGuard allowed={["admin"]}` en plus du filtre sidebar — ne jamais se fier au seul masquage UI
 - **Lien "Retour" dans `/settings`** : utiliser `rolePath(profile?.role)` — `/settings` est accessible à tous les rôles, hardcoder `/admin` casserait la nav operateur/client
+- **`getPackLabel(type)`** depuis `@/lib/pricing` : toujours l'utiliser pour afficher un type de pack. Ne jamais afficher le code brut (`pack_standard`) avec CSS `capitalize`.
+- **Types Supabase** (`src/integrations/supabase/types.ts`) : régénérer via MCP `generate_typescript_types` après toute migration qui touche au schéma. Le fichier généré arrive sous forme JSON `{"types":"..."}` — extraire le contenu TS avec `python3 -c "import json; ..."`.
 
 ## Architecture gel véhicule
 
@@ -130,26 +132,81 @@ en **un seul onglet** hébergé sur `/admin/planning`, avec 3 sous-onglets :
 - Le param `?demande=<uuid>` ouvre automatiquement une demande (`useAutoOpenFromSearch`) — à préserver.
 - `/admin/rendez-vous`, `/admin/interventions`, `/admin/demandes-rdv` redirigent vers l'onglet unifié (compat liens).
 
-### Flow RDV admin — dialog unique
+### Flow RDV admin — `AssignerRdvDialog`
 
-**`AssignerRdvDialog`** est le seul dialog admin pour traiter une demande :
-- Affiche : créneaux préférés du client, lieu d'intervention, commentaires
+**`AssignerRdvDialog`** (`src/components/admin/AssignerRdvDialog.tsx`) est le seul dialog admin pour traiter une demande :
+- Affiche : créneaux demandés par le client, lieu d'intervention, commentaires
+- **Créneau verrouillé** : l'admin ne peut PAS choisir une date libre — il sélectionne uniquement parmi les `creneaux_preferes` du client (boutons avec occupancy X/3 chargée pour ces slots uniquement)
+- **Heure précise** : après avoir sélectionné un créneau, l'admin saisit une heure de début (`heure_intervention`) validée dans la plage (08:00–12:00 matin, 14:00–18:00 après-midi)
 - Permet : refus (avec motif min. 5 car.) → RPC `refuser_demande_rdv`
-- Permet : assignation opérateur + créneau → RPC `assigner_rdv` + `sendEmail("rdv_confirmee")`
-- `GererDemandeRdvDialog` a été supprimé — le chemin "confirmation directe sans opérateur" (`confirmer_demande_rdv_multi`) n'est plus accessible en UI.
+- Permet : assignation opérateur + créneau + heure → RPC `assigner_rdv(demande_id, operator_id, date, time_slot, heure)` + `sendEmail("rdv_confirmee")`
+- `GererDemandeRdvDialog` a été supprimé — le chemin "confirmation directe sans opérateur" n'est plus accessible en UI.
+
+### Statuts interventions (tous valeurs valides en DB)
+
+`planifiee` | `en_cours` | `en_revision` | `validee` | `refusee`
+
+- `planifiee` : créée par `assigner_rdv`, en attente d'exécution par l'opérateur → badge bleu
+- `en_cours` : prise en charge par l'opérateur terrain
+- `en_revision` : soumise par l'opérateur, en attente de validation admin → badge ambre
+- `validee` : validée par l'admin → déclenche `sendEmail("intervention_close")` + `generateImpactRecords()`
+- `refusee` : refusée par l'admin (renvoyée à l'opérateur avec motif)
+
+### Type prestation sur interventions — ATTENTION
+
+**`interventions.type_prestation` a deux sémantiques selon l'origine de l'intervention :**
+
+| Origine | Valeurs possibles | Affichage |
+|---------|-------------------|-----------|
+| Créée manuellement (terrain) | `exterieur` / `interieur` / `complet` | scope direct |
+| Créée par `assigner_rdv` (RDV) | `pack_standard` / `pack_interieur` / `pack_vtc` | label via `getPackLabel()` |
+
+- Pour l'affichage : toujours `getPackLabel(type_prestation)` — gère les deux cas avec fallback
+- Pour les checklists/photos : utiliser `typeScope(t)` qui mappe les packs → `'complet'` (pack_standard et pack_vtc incluent intérieur + extérieur)
+- **Ne jamais appliquer `type_prestation` directement à `zonesFor()` ou aux conditions `showInt/showExt`** sans passer par `typeScope()` d'abord
+
+### Heure d'intervention
+
+- `interventions.heure_intervention TIME` : heure précise de début (nullable, optionnelle)
+- `demandes_rdv.assigned_heure TIME` : heure assignée par l'admin, copiée vers les interventions
+- Plages : matin = 08:00–12:00, après-midi = 14:00–18:00
 
 ### Modèle opérateurs
 
 - **`operators`** (table planning admin : `name`, `initials`, `color_hex`) ≠ **`profiles.role=operateur`** (compte terrain Supabase Auth). Décorrélés.
 - `interventions.operator_id` → `operators` (planning). `interventions.operateur_id` → `auth.users` (terrain).
 - **Un seul opérateur réel pour l'instant** : `operators` ne contient qu'un row, label neutre « Opérateur » (pas de nom de personne). Le rendu UI est dynamique — ne jamais coder en dur les opérateurs.
+- **Board cliquable** : clic sur un bloc du `PlanningCalendar` → `/admin/interventions/$id`. Drag via grip icon uniquement (listeners dnd-kit isolés sur l'icône grip).
 
 ### Lieu d'intervention
 
 - `demandes_rdv` porte `adresse_intervention`, `ville_intervention`, `code_postal_intervention`, `latitude`, `longitude`.
-- `interventions` porte aussi `adresse_intervention`, `ville_intervention`, `code_postal_intervention` (copiés depuis la demande par `assigner_rdv`).
+- `interventions` porte aussi `adresse_intervention`, `ville_intervention`, `code_postal_intervention`, `heure_intervention` (copiés depuis la demande par `assigner_rdv`).
 - `creer_demande_rdv` exige les 3 champs adresse (validation DB + UI, pré-remplis depuis `entreprises`).
 - **GPS / géocodage (backlog)** : colonnes `latitude`/`longitude` existent mais ne sont jamais alimentées → carte des routes vide. Câbler via Nominatim quand prêt.
+
+### Détail intervention admin (`/admin/interventions/$id`)
+
+Affiche en haut une section **Planification** :
+- Opérateur assigné (nom + badge couleur depuis table `operators`)
+- Date + créneau (matin/après-midi) + heure précise
+- Lieu d'intervention (adresse/ville/CP)
+
+Puis : contrôle pré-intervention, photos avant/après, checklists, notes, signature.
+Actions admin (sticky bas) : visible uniquement si `statut = 'en_revision'` → Valider / Refuser.
+
+### Créneaux préférés client (`creneaux_preferes`)
+
+Stocké en JSONB sur `demandes_rdv`. Format :
+```json
+[
+  { "date": "2026-06-18", "creneau": "matin", "plage": "matin", "debut": "08:00", "fin": "12:00" },
+  { "date": "2026-06-25", "creneau": "apres_midi", "plage": "apres-midi", "debut": "14:00", "fin": "18:00" }
+]
+```
+- `creneau` : `"matin"` | `"apres_midi"` (clé interne)
+- `plage` : `"matin"` | `"apres-midi"` (affichage — utiliser `isMatin(plage)` pour normaliser)
+- Le formulaire client (`CreerDemandeRdvDialog`) permet 1–3 créneaux. **Backlog** : imposer min. 2 créneaux sur jours différents.
 
 ## Comptes de test (après purge 2026-06-02)
 
@@ -166,4 +223,18 @@ en **un seul onglet** hébergé sur `/admin/planning`, avec 3 sous-onglets :
 ```bash
 # Déployer une edge function
 supabase functions deploy <nom> --project-ref kddoyjbfvaakfbegzjyt
+
+# Vérifier le build TypeScript (après npm install)
+npx tsc --noEmit --skipLibCheck
+
+# Build complet
+npm run build
+
+# Extraire les types Supabase générés (le MCP renvoie un JSON wrapper)
+python3 -c "
+import json
+with open('src/integrations/supabase/types.ts') as f: content = f.read()
+data = json.loads(content)
+open('src/integrations/supabase/types.ts','w').write(data['types'])
+"
 ```

@@ -1,23 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  startOfISOWeek,
-  addWeeks,
-  subWeeks,
-  eachDayOfInterval,
-  endOfISOWeek,
-  format,
-  addDays,
-  parseISO,
-} from "date-fns";
+import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  MapPin,
-} from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { sendEmail } from "@/lib/email";
@@ -41,22 +25,24 @@ interface Operator {
   color_hex: string;
 }
 
-interface OccupancyRow {
-  intervention_date: string;
+interface SlotOccupancy {
+  date: string;
   time_slot: string;
   count: number;
 }
 
-const MAX_PER_SLOT = 3;
-
-const TIME_SLOTS = [
-  { key: "morning", label: "Matin", sublabel: "08h – 12h" },
-  { key: "afternoon", label: "Après-midi", sublabel: "14h – 18h" },
-] as const;
+const TIME_SLOTS = {
+  morning:   { label: "Matin",       sublabel: "08h – 12h", min: "08:00", max: "12:00" },
+  afternoon: { label: "Après-midi",  sublabel: "14h – 18h", min: "14:00", max: "18:00" },
+} as const;
 
 function isMatin(plage: string): boolean {
   const p = (plage || "").toLowerCase();
   return p.includes("matin") || p === "am" || p.startsWith("mat");
+}
+
+function toTimeSlotKey(plage: string): "morning" | "afternoon" {
+  return isMatin(plage) ? "morning" : "afternoon";
 }
 
 function formatDateFR(iso: string): string {
@@ -77,23 +63,32 @@ interface Props {
 export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: Props) {
   const [operators, setOperators] = useState<Operator[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<string>("");
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfISOWeek(new Date()));
   const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedSlot, setSelectedSlot] = useState<string>("");
-  const [occupancy, setOccupancy] = useState<OccupancyRow[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<"morning" | "afternoon" | "">("");
+  const [selectedHeure, setSelectedHeure] = useState<string>("");
+  const [occupancy, setOccupancy] = useState<SlotOccupancy[]>([]);
   const [loadingOccupancy, setLoadingOccupancy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [refusOpen, setRefusOpen] = useState(false);
   const [motif, setMotif] = useState("");
 
-  const weekEnd = addDays(currentWeekStart, 4);
-  const weekDays = eachDayOfInterval({
-    start: currentWeekStart,
-    end: endOfISOWeek(currentWeekStart),
-  }).slice(0, 5);
+  const creneaux: Array<{ date: string; plage: string }> = Array.isArray(demande?.creneaux_preferes)
+    ? demande!.creneaux_preferes
+    : [];
 
-  const weekStartStr = format(currentWeekStart, "yyyy-MM-dd");
+  // Reset on open/demande change
+  useEffect(() => {
+    if (!open) return;
+    setSelectedOperator("");
+    setSelectedDate("");
+    setSelectedSlot("");
+    setSelectedHeure("");
+    setRefusOpen(false);
+    setMotif("");
+    setOccupancy([]);
+  }, [open, demande]);
 
+  // Load operators
   useEffect(() => {
     if (!open) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,51 +97,48 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     });
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    setSelectedOperator("");
-    setSelectedDate("");
-    setSelectedSlot("");
-    setRefusOpen(false);
-    setMotif("");
-    setCurrentWeekStart(startOfISOWeek(new Date()));
-  }, [open, demande]);
-
+  // Load occupancy for the client's preferred slots when operator is selected
   const loadOccupancy = useCallback(async () => {
-    if (!selectedOperator) return;
+    if (!selectedOperator || creneaux.length === 0) return;
     setLoadingOccupancy(true);
-    const weekEndStr = format(addDays(new Date(weekStartStr), 4), "yyyy-MM-dd");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.rpc as any)("get_slot_occupancy", {
-      p_operator_id: selectedOperator,
-      p_date_debut: weekStartStr,
-      p_date_fin: weekEndStr,
-    });
-    setOccupancy((data ?? []) as OccupancyRow[]);
+    const results: SlotOccupancy[] = [];
+    for (const c of creneaux) {
+      const slot = toTimeSlotKey(c.plage);
+      const { count } = await (supabase as any)
+        .from("interventions")
+        .select("id", { count: "exact", head: true })
+        .eq("operator_id", selectedOperator)
+        .eq("date_intervention", c.date)
+        .eq("time_slot", slot);
+      results.push({ date: c.date, time_slot: slot, count: count ?? 0 });
+    }
+    setOccupancy(results);
     setLoadingOccupancy(false);
-  }, [selectedOperator, weekStartStr]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOperator, demande]);
 
   useEffect(() => {
     loadOccupancy();
   }, [loadOccupancy]);
 
-  const getCount = (date: string, slot: string): number => {
-    const row = occupancy.find(
-      (o) => o.intervention_date === date && o.time_slot === slot
-    );
-    return row ? Number(row.count) : 0;
+  const getCount = (date: string, slot: string) =>
+    occupancy.find((o) => o.date === date && o.time_slot === slot)?.count ?? 0;
+
+  const isFull = (date: string, slot: string) => getCount(date, slot) >= 3;
+
+  const heureValid = (): boolean => {
+    if (!selectedSlot || !selectedHeure) return false;
+    const slotDef = TIME_SLOTS[selectedSlot];
+    return selectedHeure >= slotDef.min && selectedHeure <= slotDef.max;
   };
 
-  const isFull = (date: string, slot: string) => getCount(date, slot) >= MAX_PER_SLOT;
-
   const nbVehicules = demande?.vehicule_ids?.length ?? 0;
-  const hasVehicules = nbVehicules > 0;
-
   const canConfirm =
     !!selectedOperator &&
     !!selectedDate &&
     !!selectedSlot &&
-    hasVehicules &&
+    heureValid() &&
+    nbVehicules > 0 &&
     !submitting;
 
   const handleConfirm = async () => {
@@ -155,10 +147,11 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)("assigner_rdv", {
-        p_demande_id: demande.id,
+        p_demande_id:  demande.id,
         p_operator_id: selectedOperator,
-        p_date: selectedDate,
-        p_time_slot: selectedSlot,
+        p_date:        selectedDate,
+        p_time_slot:   selectedSlot,
+        p_heure:       selectedHeure || null,
       });
       if (error) throw error;
       sendEmail("rdv_confirmee", demande.id);
@@ -203,9 +196,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
   if (!demande) return null;
 
   const op = operators.find((o) => o.id === selectedOperator);
-  const creneaux: Array<{ date: string; plage: string }> = Array.isArray(demande.creneaux_preferes)
-    ? demande.creneaux_preferes
-    : [];
+  const slotDef = selectedSlot ? TIME_SLOTS[selectedSlot] : null;
 
   return (
     <>
@@ -224,7 +215,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
             <div className="rounded-md border bg-muted/30 p-3 space-y-2 text-sm">
               {creneaux.length > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Créneaux préférés du client</p>
+                  <p className="text-xs text-muted-foreground mb-1">Créneaux demandés par le client</p>
                   <ul className="text-xs space-y-0.5">
                     {creneaux.map((c, i) => (
                       <li key={i}>
@@ -260,146 +251,135 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
               )}
             </div>
 
-            {!hasVehicules && (
+            {nbVehicules === 0 && (
               <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-                Aucun véhicule n'est associé à cette demande. Impossible de planifier
-                une intervention.
+                Aucun véhicule n'est associé à cette demande. Impossible de planifier une intervention.
               </div>
             )}
 
-            {/* Operator selection */}
+            {/* Sélection opérateur */}
             <div className="space-y-2">
               <p className="text-sm font-semibold">1. Sélectionner un opérateur</p>
               <div className="grid grid-cols-3 gap-2">
-                {operators.map((op) => (
+                {operators.map((o) => (
                   <button
-                    key={op.id}
+                    key={o.id}
                     type="button"
                     onClick={() => {
-                      setSelectedOperator(op.id);
+                      setSelectedOperator(o.id);
                       setSelectedDate("");
                       setSelectedSlot("");
+                      setSelectedHeure("");
                     }}
                     className={`flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 transition-colors text-center ${
-                      selectedOperator === op.id
+                      selectedOperator === o.id
                         ? "border-primary bg-primary/5"
                         : "border-border hover:bg-muted/30"
                     }`}
                   >
                     <div
                       className="h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                      style={{ backgroundColor: op.color_hex }}
+                      style={{ backgroundColor: o.color_hex }}
                     >
-                      {op.initials}
+                      {o.initials}
                     </div>
-                    <span className="text-xs font-medium leading-tight">{op.name}</span>
+                    <span className="text-xs font-medium leading-tight">{o.name}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Mini weekly calendar */}
+            {/* Sélection créneau (verrouillé aux demandes client) */}
             {selectedOperator && (
               <div className="space-y-2">
-                <p className="text-sm font-semibold">2. Sélectionner un créneau</p>
-
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentWeekStart((w) => subWeeks(w, 1))}
-                    className="p-1 rounded hover:bg-muted/50"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <span className="text-xs text-muted-foreground">
-                    {format(currentWeekStart, "d MMM", { locale: fr })} –{" "}
-                    {format(weekEnd, "d MMM yyyy", { locale: fr })}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentWeekStart((w) => addWeeks(w, 1))}
-                    className="p-1 rounded hover:bg-muted/50"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {loadingOccupancy ? (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  </div>
+                <p className="text-sm font-semibold">2. Choisir le créneau</p>
+                {creneaux.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Aucun créneau proposé par le client.</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-xs">
-                      <thead>
-                        <tr>
-                          <th className="p-1 text-left text-muted-foreground w-20" />
-                          {weekDays.map((day) => (
-                            <th key={day.toISOString()} className="p-1 text-center">
-                              <div className="font-semibold capitalize">
-                                {format(day, "EEE", { locale: fr })}
-                              </div>
-                              <div className="text-muted-foreground">
-                                {format(day, "d/MM")}
-                              </div>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {TIME_SLOTS.map((slot) => (
-                          <tr key={slot.key}>
-                            <td className="p-1 border-t border-border">
-                              <div className="font-medium">{slot.label}</div>
-                              <div className="text-muted-foreground text-[10px]">
-                                {slot.sublabel}
-                              </div>
-                            </td>
-                            {weekDays.map((day) => {
-                              const dateStr = format(day, "yyyy-MM-dd");
-                              const full = isFull(dateStr, slot.key);
-                              const count = getCount(dateStr, slot.key);
-                              const isSelected =
-                                selectedDate === dateStr && selectedSlot === slot.key;
+                  <div className="space-y-2">
+                    {loadingOccupancy ? (
+                      <div className="flex justify-center py-3">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      </div>
+                    ) : (
+                      creneaux.map((c, i) => {
+                        const slot = toTimeSlotKey(c.plage);
+                        const slotInfo = TIME_SLOTS[slot];
+                        const count = getCount(c.date, slot);
+                        const full = isFull(c.date, slot);
+                        const isSelected = selectedDate === c.date && selectedSlot === slot;
 
-                              return (
-                                <td key={day.toISOString()} className="p-1 border-t border-border">
-                                  <button
-                                    type="button"
-                                    disabled={full}
-                                    onClick={() => {
-                                      setSelectedDate(dateStr);
-                                      setSelectedSlot(slot.key);
-                                    }}
-                                    className={`w-full h-10 rounded-md border-2 flex flex-col items-center justify-center transition-colors ${
-                                      isSelected
-                                        ? "border-primary bg-primary/10"
-                                        : full
-                                        ? "border-border bg-muted/30 cursor-not-allowed opacity-50"
-                                        : "border-green-500/50 bg-green-50 hover:bg-green-100 cursor-pointer"
-                                    }`}
-                                  >
-                                    <span className="text-[10px] font-semibold">
-                                      {count}/{MAX_PER_SLOT}
-                                    </span>
-                                    {isSelected && (
-                                      <CheckCircle2 className="h-3 w-3 text-primary" />
-                                    )}
-                                  </button>
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            disabled={full}
+                            onClick={() => {
+                              setSelectedDate(c.date);
+                              setSelectedSlot(slot);
+                              setSelectedHeure("");
+                            }}
+                            className={`w-full flex items-center justify-between rounded-lg border-2 px-4 py-3 text-sm transition-colors ${
+                              isSelected
+                                ? "border-primary bg-primary/5"
+                                : full
+                                ? "border-border bg-muted/30 opacity-50 cursor-not-allowed"
+                                : "border-green-500/50 bg-green-50 hover:bg-green-100 cursor-pointer"
+                            }`}
+                          >
+                            <div className="text-left">
+                              <p className="font-medium">{formatDateFR(c.date)}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {slotInfo.label} · {slotInfo.sublabel}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span
+                                className={`text-xs font-semibold ${
+                                  full ? "text-destructive" : "text-muted-foreground"
+                                }`}
+                              >
+                                {count}/3{full ? " — complet" : ""}
+                              </span>
+                              {isSelected && <CheckCircle2 className="h-4 w-4 text-primary mt-1 ml-auto" />}
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Recap */}
-            {canConfirm && op && (
+            {/* Saisie heure précise */}
+            {selectedSlot && slotDef && (
+              <div className="space-y-1.5">
+                <Label htmlFor="heure-rdv" className="text-sm font-semibold flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" /> 3. Heure de début
+                  <span className="text-xs font-normal text-muted-foreground ml-1">
+                    ({slotDef.min} – {slotDef.max})
+                  </span>
+                </Label>
+                <input
+                  id="heure-rdv"
+                  type="time"
+                  min={slotDef.min}
+                  max={slotDef.max}
+                  value={selectedHeure}
+                  onChange={(e) => setSelectedHeure(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+                {selectedHeure && !heureValid() && (
+                  <p className="text-xs text-destructive">
+                    L'heure doit être entre {slotDef.min} et {slotDef.max}.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Récapitulatif */}
+            {canConfirm && op && slotDef && (
               <div className="rounded-md border bg-muted/30 p-3 text-sm space-y-1">
                 <p className="font-semibold">Récapitulatif</p>
                 <p>
@@ -410,15 +390,12 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
                 </p>
                 <p>
                   Date :{" "}
-                  <span className="font-medium">
-                    {format(new Date(selectedDate), "EEEE d MMMM yyyy", { locale: fr })}
-                  </span>
+                  <span className="font-medium">{formatDateFR(selectedDate)}</span>
                 </p>
                 <p>
                   Créneau :{" "}
                   <span className="font-medium">
-                    {TIME_SLOTS.find((s) => s.key === selectedSlot)?.label} (
-                    {TIME_SLOTS.find((s) => s.key === selectedSlot)?.sublabel})
+                    {slotDef.label} à {selectedHeure}
                   </span>
                 </p>
               </div>
@@ -454,7 +431,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
         </DialogContent>
       </Dialog>
 
-      {/* Refusal sub-dialog */}
+      {/* Sous-dialog refus */}
       <Dialog open={refusOpen} onOpenChange={(o) => !submitting && setRefusOpen(o)}>
         <DialogContent>
           <DialogHeader>

@@ -1,1 +1,2815 @@
-{"types":"export type Json =\n  | string\n  | number\n  | boolean\n  | null\n  | { [key: string]: Json | undefined }\n  | Json[]\n\nexport type Database = {\n  // Allows to automatically instantiate createClient with right options\n  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)\n  __InternalSupabase: {\n    PostgrestVersion: \"14.5\"\n  }\n  public: {\n    Tables: {\n      admin_actions_log: {\n        Row: {\n          action: string\n          created_at: string\n          details: Json | null\n          id: string\n          nb_entites_impactees: number | null\n          user_id: string | null\n        }\n        Insert: {\n          action: string\n          created_at?: string\n          details?: Json | null\n          id?: string\n          nb_entites_impactees?: number | null\n          user_id?: string | null\n        }\n        Update: {\n          action?: string\n          created_at?: string\n          details?: Json | null\n          id?: string\n          nb_entites_impactees?: number | null\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      app_config: {\n        Row: {\n          created_at: string\n          description: string | null\n          key: string\n          updated_at: string\n          value: string\n        }\n        Insert: {\n          created_at?: string\n          description?: string | null\n          key: string\n          updated_at?: string\n          value: string\n        }\n        Update: {\n          created_at?: string\n          description?: string | null\n          key?: string\n          updated_at?: string\n          value?: string\n        }\n        Relationships: []\n      }\n      avoirs: {\n        Row: {\n          annee_fiscale: number\n          created_at: string\n          created_by: string | null\n          date_emission: string\n          devise: string\n          emitted_at: string\n          facture_id: string\n          id: string\n          montant_ht: number\n          montant_ttc: number\n          motif: string\n          numero_avoir: string\n          numero_sequentiel: number\n          serie: Database[\"public\"][\"Enums\"][\"serie_facture_enum\"]\n          snapshot_facture_origine: Json\n          tva_montant: number\n          tva_taux: number\n          type_avoir: string\n        }\n        Insert: {\n          annee_fiscale: number\n          created_at?: string\n          created_by?: string | null\n          date_emission: string\n          devise?: string\n          emitted_at?: string\n          facture_id: string\n          id?: string\n          montant_ht: number\n          montant_ttc: number\n          motif: string\n          numero_avoir: string\n          numero_sequentiel: number\n          serie: Database[\"public\"][\"Enums\"][\"serie_facture_enum\"]\n          snapshot_facture_origine: Json\n          tva_montant?: number\n          tva_taux?: number\n          type_avoir: string\n        }\n        Update: {\n          annee_fiscale?: number\n          created_at?: string\n          created_by?: string | null\n          date_emission?: string\n          devise?: string\n          emitted_at?: string\n          facture_id?: string\n          id?: string\n          montant_ht?: number\n          montant_ttc?: number\n          motif?: string\n          numero_avoir?: string\n          numero_sequentiel?: number\n          serie?: Database[\"public\"][\"Enums\"][\"serie_facture_enum\"]\n          snapshot_facture_origine?: Json\n          tva_montant?: number\n          tva_taux?: number\n          type_avoir?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"avoirs_facture_id_fkey\"\n            columns: [\"facture_id\"]\n            isOneToOne: false\n            referencedRelation: \"factures\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      contrat_avenants: {\n        Row: {\n          contrat_id: string\n          date_generation: string\n          genere_par: string | null\n          id: string\n          type: string\n          url: string\n        }\n        Insert: {\n          contrat_id: string\n          date_generation?: string\n          genere_par?: string | null\n          id?: string\n          type?: string\n          url: string\n        }\n        Update: {\n          contrat_id?: string\n          date_generation?: string\n          genere_par?: string | null\n          id?: string\n          type?: string\n          url?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"contrat_avenants_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"contrats\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrat_avenants_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_passages_restants\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"contrat_avenants_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"contrat_avenants_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrat_avenants_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"contrat_actif_id\"]\n          },\n        ]\n      }\n      contrat_lignes: {\n        Row: {\n          contrat_id: string\n          created_at: string\n          id: string\n          nb_vehicules: number\n          prix_unitaire_ht: number\n          statut_ligne: string\n          type_pack: string\n        }\n        Insert: {\n          contrat_id: string\n          created_at?: string\n          id?: string\n          nb_vehicules?: number\n          prix_unitaire_ht: number\n          statut_ligne?: string\n          type_pack: string\n        }\n        Update: {\n          contrat_id?: string\n          created_at?: string\n          id?: string\n          nb_vehicules?: number\n          prix_unitaire_ht?: number\n          statut_ligne?: string\n          type_pack?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"contrat_lignes_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"contrats\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrat_lignes_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_passages_restants\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"contrat_lignes_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"contrat_lignes_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrat_lignes_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"contrat_actif_id\"]\n          },\n        ]\n      }\n      contrat_sequences: {\n        Row: {\n          annee_mois: string\n          derniere_sequence: number\n          updated_at: string\n        }\n        Insert: {\n          annee_mois: string\n          derniere_sequence?: number\n          updated_at?: string\n        }\n        Update: {\n          annee_mois?: string\n          derniere_sequence?: number\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      contrats: {\n        Row: {\n          commercial_signataire_id: string | null\n          created_at: string\n          date_anniversaire: string | null\n          date_debut: string\n          date_dernier_passage: string | null\n          date_fin: string | null\n          date_fin_engagement: string | null\n          date_paiement_anticipe: string | null\n          date_resiliation: string | null\n          engagement_annuel: boolean\n          engagement_type:\n            | Database[\"public\"][\"Enums\"][\"engagement_type_enum\"]\n            | null\n          entreprise_id: string\n          gel_actif: boolean\n          gel_commentaire: string | null\n          gel_date_debut: string | null\n          gel_date_fin: string | null\n          gel_justificatif_url: string | null\n          gel_notifier_client: boolean\n          gel_type: Database[\"public\"][\"Enums\"][\"gel_type_enum\"] | null\n          id: string\n          mode_paiement: Database[\"public\"][\"Enums\"][\"mode_paiement_enum\"]\n          montant_brut_mensuel: number | null\n          montant_net_mensuel: number | null\n          multiplicateur_prix: number | null\n          nb_vehicules_actifs: number | null\n          numero_contrat: string | null\n          paiement_anticipe_total: boolean\n          palier: string | null\n          passages_mois: number\n          passages_reportes: number\n          passages_restants_mois: number\n          plage_horaire_preferee: string | null\n          planning_niveau:\n            | Database[\"public\"][\"Enums\"][\"planning_niveau_enum\"]\n            | null\n          preavis_deadline: string | null\n          preavis_envoye_le: string | null\n          remise_commerciale_auteur_id: string | null\n          remise_commerciale_date: string | null\n          remise_commerciale_justification: string | null\n          remise_commerciale_pct: number\n          remise_pct: number | null\n          status_cycle: Database[\"public\"][\"Enums\"][\"status_cycle_enum\"]\n          statut: Database[\"public\"][\"Enums\"][\"contrat_statut_enum\"]\n          updated_at: string\n        }\n        Insert: {\n          commercial_signataire_id?: string | null\n          created_at?: string\n          date_anniversaire?: string | null\n          date_debut?: string\n          date_dernier_passage?: string | null\n          date_fin?: string | null\n          date_fin_engagement?: string | null\n          date_paiement_anticipe?: string | null\n          date_resiliation?: string | null\n          engagement_annuel?: boolean\n          engagement_type?:\n            | Database[\"public\"][\"Enums\"][\"engagement_type_enum\"]\n            | null\n          entreprise_id: string\n          gel_actif?: boolean\n          gel_commentaire?: string | null\n          gel_date_debut?: string | null\n          gel_date_fin?: string | null\n          gel_justificatif_url?: string | null\n          gel_notifier_client?: boolean\n          gel_type?: Database[\"public\"][\"Enums\"][\"gel_type_enum\"] | null\n          id?: string\n          mode_paiement?: Database[\"public\"][\"Enums\"][\"mode_paiement_enum\"]\n          montant_brut_mensuel?: number | null\n          montant_net_mensuel?: number | null\n          multiplicateur_prix?: number | null\n          nb_vehicules_actifs?: number | null\n          numero_contrat?: string | null\n          paiement_anticipe_total?: boolean\n          palier?: string | null\n          passages_mois?: number\n          passages_reportes?: number\n          passages_restants_mois?: number\n          plage_horaire_preferee?: string | null\n          planning_niveau?:\n            | Database[\"public\"][\"Enums\"][\"planning_niveau_enum\"]\n            | null\n          preavis_deadline?: string | null\n          preavis_envoye_le?: string | null\n          remise_commerciale_auteur_id?: string | null\n          remise_commerciale_date?: string | null\n          remise_commerciale_justification?: string | null\n          remise_commerciale_pct?: number\n          remise_pct?: number | null\n          status_cycle?: Database[\"public\"][\"Enums\"][\"status_cycle_enum\"]\n          statut?: Database[\"public\"][\"Enums\"][\"contrat_statut_enum\"]\n          updated_at?: string\n        }\n        Update: {\n          commercial_signataire_id?: string | null\n          created_at?: string\n          date_anniversaire?: string | null\n          date_debut?: string\n          date_dernier_passage?: string | null\n          date_fin?: string | null\n          date_fin_engagement?: string | null\n          date_paiement_anticipe?: string | null\n          date_resiliation?: string | null\n          engagement_annuel?: boolean\n          engagement_type?:\n            | Database[\"public\"][\"Enums\"][\"engagement_type_enum\"]\n            | null\n          entreprise_id?: string\n          gel_actif?: boolean\n          gel_commentaire?: string | null\n          gel_date_debut?: string | null\n          gel_date_fin?: string | null\n          gel_justificatif_url?: string | null\n          gel_notifier_client?: boolean\n          gel_type?: Database[\"public\"][\"Enums\"][\"gel_type_enum\"] | null\n          id?: string\n          mode_paiement?: Database[\"public\"][\"Enums\"][\"mode_paiement_enum\"]\n          montant_brut_mensuel?: number | null\n          montant_net_mensuel?: number | null\n          multiplicateur_prix?: number | null\n          nb_vehicules_actifs?: number | null\n          numero_contrat?: string | null\n          paiement_anticipe_total?: boolean\n          palier?: string | null\n          passages_mois?: number\n          passages_reportes?: number\n          passages_restants_mois?: number\n          plage_horaire_preferee?: string | null\n          planning_niveau?:\n            | Database[\"public\"][\"Enums\"][\"planning_niveau_enum\"]\n            | null\n          preavis_deadline?: string | null\n          preavis_envoye_le?: string | null\n          remise_commerciale_auteur_id?: string | null\n          remise_commerciale_date?: string | null\n          remise_commerciale_justification?: string | null\n          remise_commerciale_pct?: number\n          remise_pct?: number | null\n          status_cycle?: Database[\"public\"][\"Enums\"][\"status_cycle_enum\"]\n          statut?: Database[\"public\"][\"Enums\"][\"contrat_statut_enum\"]\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"contrats_commercial_signataire_id_fkey\"\n            columns: [\"commercial_signataire_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrats_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrats_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrats_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n          {\n            foreignKeyName: \"contrats_remise_commerciale_auteur_id_fkey\"\n            columns: [\"remise_commerciale_auteur_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      creneaux_recurrents_garantis: {\n        Row: {\n          actif: boolean\n          contrat_id: string\n          created_at: string\n          created_by: string | null\n          date_debut: string\n          date_fin: string\n          frequence_semaines: number\n          heure_debut: string\n          heure_fin: string\n          id: string\n          jour_semaine: number\n          notes: string | null\n          operateur_id: string | null\n          updated_at: string\n        }\n        Insert: {\n          actif?: boolean\n          contrat_id: string\n          created_at?: string\n          created_by?: string | null\n          date_debut: string\n          date_fin: string\n          frequence_semaines?: number\n          heure_debut: string\n          heure_fin: string\n          id?: string\n          jour_semaine: number\n          notes?: string | null\n          operateur_id?: string | null\n          updated_at?: string\n        }\n        Update: {\n          actif?: boolean\n          contrat_id?: string\n          created_at?: string\n          created_by?: string | null\n          date_debut?: string\n          date_fin?: string\n          frequence_semaines?: number\n          heure_debut?: string\n          heure_fin?: string\n          id?: string\n          jour_semaine?: number\n          notes?: string | null\n          operateur_id?: string | null\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"creneaux_recurrents_garantis_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"contrats\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"creneaux_recurrents_garantis_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_passages_restants\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"creneaux_recurrents_garantis_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"creneaux_recurrents_garantis_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"creneaux_recurrents_garantis_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"contrat_actif_id\"]\n          },\n        ]\n      }\n      demandes_gel: {\n        Row: {\n          contrat_id: string\n          created_at: string\n          created_by: string\n          date_debut: string\n          date_fin_effective: string | null\n          date_fin_prevue: string\n          email_sent_at: string | null\n          email_status: string | null\n          entreprise_id: string\n          id: string\n          motif: string\n          refus_motif: string | null\n          statut: string\n          type_demande: string\n          updated_at: string\n          validated_at: string | null\n          validated_by: string | null\n          vehicule_ids: string[] | null\n        }\n        Insert: {\n          contrat_id: string\n          created_at?: string\n          created_by: string\n          date_debut: string\n          date_fin_effective?: string | null\n          date_fin_prevue: string\n          email_sent_at?: string | null\n          email_status?: string | null\n          entreprise_id: string\n          id?: string\n          motif: string\n          refus_motif?: string | null\n          statut?: string\n          type_demande: string\n          updated_at?: string\n          validated_at?: string | null\n          validated_by?: string | null\n          vehicule_ids?: string[] | null\n        }\n        Update: {\n          contrat_id?: string\n          created_at?: string\n          created_by?: string\n          date_debut?: string\n          date_fin_effective?: string | null\n          date_fin_prevue?: string\n          email_sent_at?: string | null\n          email_status?: string | null\n          entreprise_id?: string\n          id?: string\n          motif?: string\n          refus_motif?: string | null\n          statut?: string\n          type_demande?: string\n          updated_at?: string\n          validated_at?: string | null\n          validated_by?: string | null\n          vehicule_ids?: string[] | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"contrats\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_passages_restants\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"contrat_actif_id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_created_by_fkey\"\n            columns: [\"created_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_validated_by_fkey\"\n            columns: [\"validated_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      demandes_rdv: {\n        Row: {\n          adresse_intervention: string | null\n          assigned_date: string | null\n          assigned_operator_id: string | null\n          assigned_time_slot: string | null\n          code_postal_intervention: string | null\n          commentaires: string | null\n          created_at: string\n          creneaux_preferes: Json\n          date_confirmee: string | null\n          derogation_min_vehicules: boolean\n          derogation_motif: string | null\n          email_sent_at: string | null\n          email_status: string | null\n          entreprise_id: string\n          id: string\n          latitude: number | null\n          longitude: number | null\n          nb_vehicules_rdv: number | null\n          statut: string\n          updated_at: string\n          vehicule_confirme_id: string | null\n          vehicule_ids: string[]\n          ville_intervention: string | null\n        }\n        Insert: {\n          adresse_intervention?: string | null\n          assigned_date?: string | null\n          assigned_operator_id?: string | null\n          assigned_time_slot?: string | null\n          code_postal_intervention?: string | null\n          commentaires?: string | null\n          created_at?: string\n          creneaux_preferes?: Json\n          date_confirmee?: string | null\n          derogation_min_vehicules?: boolean\n          derogation_motif?: string | null\n          email_sent_at?: string | null\n          email_status?: string | null\n          entreprise_id: string\n          id?: string\n          latitude?: number | null\n          longitude?: number | null\n          nb_vehicules_rdv?: number | null\n          statut?: string\n          updated_at?: string\n          vehicule_confirme_id?: string | null\n          vehicule_ids?: string[]\n          ville_intervention?: string | null\n        }\n        Update: {\n          adresse_intervention?: string | null\n          assigned_date?: string | null\n          assigned_operator_id?: string | null\n          assigned_time_slot?: string | null\n          code_postal_intervention?: string | null\n          commentaires?: string | null\n          created_at?: string\n          creneaux_preferes?: Json\n          date_confirmee?: string | null\n          derogation_min_vehicules?: boolean\n          derogation_motif?: string | null\n          email_sent_at?: string | null\n          email_status?: string | null\n          entreprise_id?: string\n          id?: string\n          latitude?: number | null\n          longitude?: number | null\n          nb_vehicules_rdv?: number | null\n          statut?: string\n          updated_at?: string\n          vehicule_confirme_id?: string | null\n          vehicule_ids?: string[]\n          ville_intervention?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"demandes_rdv_assigned_operator_id_fkey\"\n            columns: [\"assigned_operator_id\"]\n            isOneToOne: false\n            referencedRelation: \"operators\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_rdv_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_rdv_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_rdv_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n        ]\n      }\n      disponibilites_operateurs: {\n        Row: {\n          actif: boolean\n          created_at: string\n          created_by: string | null\n          date_debut_validite: string | null\n          date_fin_validite: string | null\n          heure_debut: string\n          heure_fin: string\n          id: string\n          jour_semaine: number\n          operateur_id: string\n          updated_at: string\n        }\n        Insert: {\n          actif?: boolean\n          created_at?: string\n          created_by?: string | null\n          date_debut_validite?: string | null\n          date_fin_validite?: string | null\n          heure_debut: string\n          heure_fin: string\n          id?: string\n          jour_semaine: number\n          operateur_id: string\n          updated_at?: string\n        }\n        Update: {\n          actif?: boolean\n          created_at?: string\n          created_by?: string | null\n          date_debut_validite?: string | null\n          date_fin_validite?: string | null\n          heure_debut?: string\n          heure_fin?: string\n          id?: string\n          jour_semaine?: number\n          operateur_id?: string\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      email_logs: {\n        Row: {\n          created_at: string | null\n          email_to: string | null\n          error_message: string | null\n          id: string\n          sent_at: string | null\n          status: string\n          target_id: string | null\n          type: string\n        }\n        Insert: {\n          created_at?: string | null\n          email_to?: string | null\n          error_message?: string | null\n          id?: string\n          sent_at?: string | null\n          status?: string\n          target_id?: string | null\n          type: string\n        }\n        Update: {\n          created_at?: string | null\n          email_to?: string | null\n          error_message?: string | null\n          id?: string\n          sent_at?: string | null\n          status?: string\n          target_id?: string | null\n          type?: string\n        }\n        Relationships: []\n      }\n      entreprise_acces_commerciaux: {\n        Row: {\n          commercial_id: string\n          entreprise_id: string\n          granted_at: string\n          granted_reason: string | null\n          id: string\n        }\n        Insert: {\n          commercial_id: string\n          entreprise_id: string\n          granted_at?: string\n          granted_reason?: string | null\n          id?: string\n        }\n        Update: {\n          commercial_id?: string\n          entreprise_id?: string\n          granted_at?: string\n          granted_reason?: string | null\n          id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"entreprise_acces_commerciaux_commercial_id_fkey\"\n            columns: [\"commercial_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"entreprise_acces_commerciaux_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"entreprise_acces_commerciaux_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"entreprise_acces_commerciaux_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n        ]\n      }\n      entreprises: {\n        Row: {\n          adresse: string | null\n          archived_at: string | null\n          archived_by: string | null\n          archived_reason: string | null\n          code_postal: string | null\n          commercial_id: string | null\n          compte_active: boolean\n          created_at: string\n          email_contact: string | null\n          id: string\n          nom: string\n          palier_remise: Database[\"public\"][\"Enums\"][\"palier_remise\"]\n          siret: string | null\n          telephone: string | null\n          type_client: Database[\"public\"][\"Enums\"][\"type_client\"]\n          ville: string | null\n        }\n        Insert: {\n          adresse?: string | null\n          archived_at?: string | null\n          archived_by?: string | null\n          archived_reason?: string | null\n          code_postal?: string | null\n          commercial_id?: string | null\n          compte_active?: boolean\n          created_at?: string\n          email_contact?: string | null\n          id?: string\n          nom: string\n          palier_remise?: Database[\"public\"][\"Enums\"][\"palier_remise\"]\n          siret?: string | null\n          telephone?: string | null\n          type_client?: Database[\"public\"][\"Enums\"][\"type_client\"]\n          ville?: string | null\n        }\n        Update: {\n          adresse?: string | null\n          archived_at?: string | null\n          archived_by?: string | null\n          archived_reason?: string | null\n          code_postal?: string | null\n          commercial_id?: string | null\n          compte_active?: boolean\n          created_at?: string\n          email_contact?: string | null\n          id?: string\n          nom?: string\n          palier_remise?: Database[\"public\"][\"Enums\"][\"palier_remise\"]\n          siret?: string | null\n          telephone?: string | null\n          type_client?: Database[\"public\"][\"Enums\"][\"type_client\"]\n          ville?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"entreprises_archived_by_fkey\"\n            columns: [\"archived_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      factures: {\n        Row: {\n          annee_fiscale: number\n          avoir_id: string | null\n          contrat_id: string | null\n          created_at: string\n          created_by: string | null\n          date_echeance: string | null\n          date_emission: string | null\n          date_paiement: string | null\n          devise: string\n          emitted_at: string | null\n          entreprise_id: string | null\n          id: string\n          mention_tva_speciale: string | null\n          mode_paiement: string | null\n          montant_ht: number\n          montant_ttc: number\n          numero_facture: string | null\n          numero_sequentiel: number | null\n          periode_debut: string\n          periode_fin: string\n          regime_tva: Database[\"public\"][\"Enums\"][\"regime_tva_enum\"]\n          serie: Database[\"public\"][\"Enums\"][\"serie_facture_enum\"]\n          snapshot_client: Json | null\n          snapshot_contrat: Json | null\n          snapshot_izox: Json | null\n          snapshot_prestations: Json | null\n          statut: Database[\"public\"][\"Enums\"][\"statut_facture_enum\"]\n          tva_montant: number\n          tva_taux: number\n        }\n        Insert: {\n          annee_fiscale: number\n          avoir_id?: string | null\n          contrat_id?: string | null\n          created_at?: string\n          created_by?: string | null\n          date_echeance?: string | null\n          date_emission?: string | null\n          date_paiement?: string | null\n          devise?: string\n          emitted_at?: string | null\n          entreprise_id?: string | null\n          id?: string\n          mention_tva_speciale?: string | null\n          mode_paiement?: string | null\n          montant_ht?: number\n          montant_ttc?: number\n          numero_facture?: string | null\n          numero_sequentiel?: number | null\n          periode_debut: string\n          periode_fin: string\n          regime_tva?: Database[\"public\"][\"Enums\"][\"regime_tva_enum\"]\n          serie: Database[\"public\"][\"Enums\"][\"serie_facture_enum\"]\n          snapshot_client?: Json | null\n          snapshot_contrat?: Json | null\n          snapshot_izox?: Json | null\n          snapshot_prestations?: Json | null\n          statut?: Database[\"public\"][\"Enums\"][\"statut_facture_enum\"]\n          tva_montant?: number\n          tva_taux?: number\n        }\n        Update: {\n          annee_fiscale?: number\n          avoir_id?: string | null\n          contrat_id?: string | null\n          created_at?: string\n          created_by?: string | null\n          date_echeance?: string | null\n          date_emission?: string | null\n          date_paiement?: string | null\n          devise?: string\n          emitted_at?: string | null\n          entreprise_id?: string | null\n          id?: string\n          mention_tva_speciale?: string | null\n          mode_paiement?: string | null\n          montant_ht?: number\n          montant_ttc?: number\n          numero_facture?: string | null\n          numero_sequentiel?: number | null\n          periode_debut?: string\n          periode_fin?: string\n          regime_tva?: Database[\"public\"][\"Enums\"][\"regime_tva_enum\"]\n          serie?: Database[\"public\"][\"Enums\"][\"serie_facture_enum\"]\n          snapshot_client?: Json | null\n          snapshot_contrat?: Json | null\n          snapshot_izox?: Json | null\n          snapshot_prestations?: Json | null\n          statut?: Database[\"public\"][\"Enums\"][\"statut_facture_enum\"]\n          tva_montant?: number\n          tva_taux?: number\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"factures_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"contrats\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"factures_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_passages_restants\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"factures_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"factures_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"factures_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"contrat_actif_id\"]\n          },\n          {\n            foreignKeyName: \"factures_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"factures_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"factures_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n          {\n            foreignKeyName: \"fk_factures_avoir\"\n            columns: [\"avoir_id\"]\n            isOneToOne: false\n            referencedRelation: \"avoirs\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      factures_lignes: {\n        Row: {\n          created_at: string\n          facture_id: string\n          id: string\n          intervention_id: string | null\n          libelle: string\n          montant_ht: number\n          ordre_affichage: number\n          prix_unitaire_ht: number | null\n          quantite: number | null\n          tva_taux: number | null\n          type_ligne: string\n        }\n        Insert: {\n          created_at?: string\n          facture_id: string\n          id?: string\n          intervention_id?: string | null\n          libelle: string\n          montant_ht: number\n          ordre_affichage?: number\n          prix_unitaire_ht?: number | null\n          quantite?: number | null\n          tva_taux?: number | null\n          type_ligne: string\n        }\n        Update: {\n          created_at?: string\n          facture_id?: string\n          id?: string\n          intervention_id?: string | null\n          libelle?: string\n          montant_ht?: number\n          ordre_affichage?: number\n          prix_unitaire_ht?: number | null\n          quantite?: number | null\n          tva_taux?: number | null\n          type_ligne?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"factures_lignes_facture_id_fkey\"\n            columns: [\"facture_id\"]\n            isOneToOne: false\n            referencedRelation: \"factures\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"factures_lignes_intervention_id_fkey\"\n            columns: [\"intervention_id\"]\n            isOneToOne: false\n            referencedRelation: \"interventions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      impact_records: {\n        Row: {\n          category: string\n          coefficient_snapshot: Json\n          contrat_id: string | null\n          created_at: string\n          entreprise_id: string\n          id: string\n          intervention_id: string\n          quantity: number\n          status: string\n          unit: string\n          validated_at: string | null\n          validated_by: string | null\n        }\n        Insert: {\n          category: string\n          coefficient_snapshot: Json\n          contrat_id?: string | null\n          created_at?: string\n          entreprise_id: string\n          id?: string\n          intervention_id: string\n          quantity: number\n          status?: string\n          unit: string\n          validated_at?: string | null\n          validated_by?: string | null\n        }\n        Update: {\n          category?: string\n          coefficient_snapshot?: Json\n          contrat_id?: string | null\n          created_at?: string\n          entreprise_id?: string\n          id?: string\n          intervention_id?: string\n          quantity?: number\n          status?: string\n          unit?: string\n          validated_at?: string | null\n          validated_by?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"impact_records_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"contrats\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"impact_records_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_passages_restants\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"impact_records_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"impact_records_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"impact_records_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"contrat_actif_id\"]\n          },\n          {\n            foreignKeyName: \"impact_records_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"impact_records_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"impact_records_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n          {\n            foreignKeyName: \"impact_records_intervention_id_fkey\"\n            columns: [\"intervention_id\"]\n            isOneToOne: false\n            referencedRelation: \"interventions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      intervention_photos: {\n        Row: {\n          created_at: string\n          id: string\n          intervention_id: string\n          moment: string\n          ordre: number\n          url: string\n          zone: string\n        }\n        Insert: {\n          created_at?: string\n          id?: string\n          intervention_id: string\n          moment: string\n          ordre?: number\n          url: string\n          zone: string\n        }\n        Update: {\n          created_at?: string\n          id?: string\n          intervention_id?: string\n          moment?: string\n          ordre?: number\n          url?: string\n          zone?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"intervention_photos_intervention_id_fkey\"\n            columns: [\"intervention_id\"]\n            isOneToOne: false\n            referencedRelation: \"interventions\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      interventions: {\n        Row: {\n          adresse_intervention: string | null\n          checklist_exterieur: Json\n          checklist_interieur: Json\n          cles_documents_localisation: string | null\n          code_postal_intervention: string | null\n          contrat_ligne_id: string | null\n          controle_cles_documents: boolean\n          controle_degradations: boolean\n          controle_objets_valeur: boolean\n          created_at: string\n          date_intervention: string | null\n          degradations_description: string | null\n          demande_rdv_id: string | null\n          email_sent_at: string | null\n          email_status: string | null\n          entreprise_id: string | null\n          id: string\n          latitude: number | null\n          longitude: number | null\n          motif_refus: string | null\n          notes_operateur: string | null\n          operateur_id: string | null\n          operator_id: string | null\n          signature_url: string | null\n          statut: string\n          submitted_at: string | null\n          time_slot: string | null\n          type_prestation: string\n          updated_at: string\n          validated_at: string | null\n          validated_by: string | null\n          vehicule_id: string | null\n          ville_intervention: string | null\n        }\n        Insert: {\n          adresse_intervention?: string | null\n          checklist_exterieur?: Json\n          checklist_interieur?: Json\n          cles_documents_localisation?: string | null\n          code_postal_intervention?: string | null\n          contrat_ligne_id?: string | null\n          controle_cles_documents?: boolean\n          controle_degradations?: boolean\n          controle_objets_valeur?: boolean\n          created_at?: string\n          date_intervention?: string | null\n          degradations_description?: string | null\n          demande_rdv_id?: string | null\n          email_sent_at?: string | null\n          email_status?: string | null\n          entreprise_id?: string | null\n          id?: string\n          latitude?: number | null\n          longitude?: number | null\n          motif_refus?: string | null\n          notes_operateur?: string | null\n          operateur_id?: string | null\n          operator_id?: string | null\n          signature_url?: string | null\n          statut?: string\n          submitted_at?: string | null\n          time_slot?: string | null\n          type_prestation?: string\n          updated_at?: string\n          validated_at?: string | null\n          validated_by?: string | null\n          vehicule_id?: string | null\n          ville_intervention?: string | null\n        }\n        Update: {\n          adresse_intervention?: string | null\n          checklist_exterieur?: Json\n          checklist_interieur?: Json\n          cles_documents_localisation?: string | null\n          code_postal_intervention?: string | null\n          contrat_ligne_id?: string | null\n          controle_cles_documents?: boolean\n          controle_degradations?: boolean\n          controle_objets_valeur?: boolean\n          created_at?: string\n          date_intervention?: string | null\n          degradations_description?: string | null\n          demande_rdv_id?: string | null\n          email_sent_at?: string | null\n          email_status?: string | null\n          entreprise_id?: string | null\n          id?: string\n          latitude?: number | null\n          longitude?: number | null\n          motif_refus?: string | null\n          notes_operateur?: string | null\n          operateur_id?: string | null\n          operator_id?: string | null\n          signature_url?: string | null\n          statut?: string\n          submitted_at?: string | null\n          time_slot?: string | null\n          type_prestation?: string\n          updated_at?: string\n          validated_at?: string | null\n          validated_by?: string | null\n          vehicule_id?: string | null\n          ville_intervention?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"interventions_contrat_ligne_id_fkey\"\n            columns: [\"contrat_ligne_id\"]\n            isOneToOne: false\n            referencedRelation: \"contrat_lignes\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"interventions_contrat_ligne_id_fkey\"\n            columns: [\"contrat_ligne_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_passages_restants\"\n            referencedColumns: [\"contrat_ligne_id\"]\n          },\n          {\n            foreignKeyName: \"interventions_demande_rdv_id_fkey\"\n            columns: [\"demande_rdv_id\"]\n            isOneToOne: false\n            referencedRelation: \"demandes_rdv\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"interventions_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"interventions_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"interventions_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n          {\n            foreignKeyName: \"interventions_operator_id_fkey\"\n            columns: [\"operator_id\"]\n            isOneToOne: false\n            referencedRelation: \"operators\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"interventions_vehicule_id_fkey\"\n            columns: [\"vehicule_id\"]\n            isOneToOne: false\n            referencedRelation: \"vehicules\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      jours_indisponibles_izox: {\n        Row: {\n          created_at: string\n          created_by: string | null\n          date_debut: string\n          date_fin: string\n          id: string\n          motif: string\n          operateur_id: string | null\n          type_indisponibilite: string\n        }\n        Insert: {\n          created_at?: string\n          created_by?: string | null\n          date_debut: string\n          date_fin: string\n          id?: string\n          motif: string\n          operateur_id?: string | null\n          type_indisponibilite: string\n        }\n        Update: {\n          created_at?: string\n          created_by?: string | null\n          date_debut?: string\n          date_fin?: string\n          id?: string\n          motif?: string\n          operateur_id?: string | null\n          type_indisponibilite?: string\n        }\n        Relationships: []\n      }\n      notifications_internes: {\n        Row: {\n          action_requise: boolean\n          archived_at: string | null\n          created_at: string\n          details: Json | null\n          epingle_at: string | null\n          epingle_equipe: boolean\n          epingle_par: string | null\n          id: string\n          link_url: string | null\n          read_at: string | null\n          severite: string\n          source_action: string\n          source_log_id: string | null\n          statut: Database[\"public\"][\"Enums\"][\"notification_statut_enum\"]\n          titre: string\n          user_id: string\n        }\n        Insert: {\n          action_requise?: boolean\n          archived_at?: string | null\n          created_at?: string\n          details?: Json | null\n          epingle_at?: string | null\n          epingle_equipe?: boolean\n          epingle_par?: string | null\n          id?: string\n          link_url?: string | null\n          read_at?: string | null\n          severite?: string\n          source_action: string\n          source_log_id?: string | null\n          statut?: Database[\"public\"][\"Enums\"][\"notification_statut_enum\"]\n          titre: string\n          user_id: string\n        }\n        Update: {\n          action_requise?: boolean\n          archived_at?: string | null\n          created_at?: string\n          details?: Json | null\n          epingle_at?: string | null\n          epingle_equipe?: boolean\n          epingle_par?: string | null\n          id?: string\n          link_url?: string | null\n          read_at?: string | null\n          severite?: string\n          source_action?: string\n          source_log_id?: string | null\n          statut?: Database[\"public\"][\"Enums\"][\"notification_statut_enum\"]\n          titre?: string\n          user_id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"notifications_internes_source_log_id_fkey\"\n            columns: [\"source_log_id\"]\n            isOneToOne: false\n            referencedRelation: \"admin_actions_log\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      operators: {\n        Row: {\n          color_hex: string\n          created_at: string\n          id: string\n          initials: string\n          name: string\n        }\n        Insert: {\n          color_hex: string\n          created_at?: string\n          id?: string\n          initials: string\n          name: string\n        }\n        Update: {\n          color_hex?: string\n          created_at?: string\n          id?: string\n          initials?: string\n          name?: string\n        }\n        Relationships: []\n      }\n      parrainages: {\n        Row: {\n          code_parrainage: string\n          date_parrainage: string\n          date_premiere_mensualite: string | null\n          filleul_id: string | null\n          id: string\n          parrain_id: string\n          recompense_filleul_appliquee: boolean\n          recompense_parrain_appliquee: boolean\n          statut: string\n        }\n        Insert: {\n          code_parrainage: string\n          date_parrainage?: string\n          date_premiere_mensualite?: string | null\n          filleul_id?: string | null\n          id?: string\n          parrain_id: string\n          recompense_filleul_appliquee?: boolean\n          recompense_parrain_appliquee?: boolean\n          statut?: string\n        }\n        Update: {\n          code_parrainage?: string\n          date_parrainage?: string\n          date_premiere_mensualite?: string | null\n          filleul_id?: string | null\n          id?: string\n          parrain_id?: string\n          recompense_filleul_appliquee?: boolean\n          recompense_parrain_appliquee?: boolean\n          statut?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"parrainages_filleul_id_fkey\"\n            columns: [\"filleul_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"parrainages_filleul_id_fkey\"\n            columns: [\"filleul_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"parrainages_filleul_id_fkey\"\n            columns: [\"filleul_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n          {\n            foreignKeyName: \"parrainages_parrain_id_fkey\"\n            columns: [\"parrain_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"parrainages_parrain_id_fkey\"\n            columns: [\"parrain_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"parrainages_parrain_id_fkey\"\n            columns: [\"parrain_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n        ]\n      }\n      prestations_catalogue: {\n        Row: {\n          code: string\n          created_at: string\n          duree_minutes: number | null\n          est_abonnement: boolean\n          est_one_shot: boolean\n          id: string\n          nom: string\n          passages_mois: number | null\n          prix_ht: number\n          type_prestation: Database[\"public\"][\"Enums\"][\"type_prestation_enum\"]\n          updated_at: string\n        }\n        Insert: {\n          code: string\n          created_at?: string\n          duree_minutes?: number | null\n          est_abonnement?: boolean\n          est_one_shot?: boolean\n          id?: string\n          nom: string\n          passages_mois?: number | null\n          prix_ht: number\n          type_prestation: Database[\"public\"][\"Enums\"][\"type_prestation_enum\"]\n          updated_at?: string\n        }\n        Update: {\n          code?: string\n          created_at?: string\n          duree_minutes?: number | null\n          est_abonnement?: boolean\n          est_one_shot?: boolean\n          id?: string\n          nom?: string\n          passages_mois?: number | null\n          prix_ht?: number\n          type_prestation?: Database[\"public\"][\"Enums\"][\"type_prestation_enum\"]\n          updated_at?: string\n        }\n        Relationships: []\n      }\n      profiles: {\n        Row: {\n          created_at: string\n          entreprise_id: string | null\n          id: string\n          nom: string | null\n          prenom: string | null\n          role: Database[\"public\"][\"Enums\"][\"app_role\"]\n        }\n        Insert: {\n          created_at?: string\n          entreprise_id?: string | null\n          id: string\n          nom?: string | null\n          prenom?: string | null\n          role?: Database[\"public\"][\"Enums\"][\"app_role\"]\n        }\n        Update: {\n          created_at?: string\n          entreprise_id?: string | null\n          id?: string\n          nom?: string | null\n          prenom?: string | null\n          role?: Database[\"public\"][\"Enums\"][\"app_role\"]\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"profiles_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"profiles_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"profiles_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n        ]\n      }\n      seuils_planning: {\n        Row: {\n          delai_annulation_demi_journee_h: number\n          delai_annulation_journee_h: number\n          delai_annulation_libre_h: number\n          delai_annulation_recurrent_h: number\n          delai_min_demi_journee: number\n          delai_min_journee: number\n          delai_min_libre: number\n          id: number\n          penalite_annulation_demi_journee: number\n          penalite_annulation_journee: number\n          penalite_annulation_libre: number\n          penalite_annulation_recurrent: number\n          seuil_demi_journee_max: number\n          seuil_journee_max: number\n          seuil_libre_max: number\n          updated_at: string\n          updated_by: string | null\n        }\n        Insert: {\n          delai_annulation_demi_journee_h?: number\n          delai_annulation_journee_h?: number\n          delai_annulation_libre_h?: number\n          delai_annulation_recurrent_h?: number\n          delai_min_demi_journee?: number\n          delai_min_journee?: number\n          delai_min_libre?: number\n          id?: number\n          penalite_annulation_demi_journee?: number\n          penalite_annulation_journee?: number\n          penalite_annulation_libre?: number\n          penalite_annulation_recurrent?: number\n          seuil_demi_journee_max?: number\n          seuil_journee_max?: number\n          seuil_libre_max?: number\n          updated_at?: string\n          updated_by?: string | null\n        }\n        Update: {\n          delai_annulation_demi_journee_h?: number\n          delai_annulation_journee_h?: number\n          delai_annulation_libre_h?: number\n          delai_annulation_recurrent_h?: number\n          delai_min_demi_journee?: number\n          delai_min_journee?: number\n          delai_min_libre?: number\n          id?: number\n          penalite_annulation_demi_journee?: number\n          penalite_annulation_journee?: number\n          penalite_annulation_libre?: number\n          penalite_annulation_recurrent?: number\n          seuil_demi_journee_max?: number\n          seuil_journee_max?: number\n          seuil_libre_max?: number\n          updated_at?: string\n          updated_by?: string | null\n        }\n        Relationships: []\n      }\n      user_2fa_recovery_codes: {\n        Row: {\n          code_hash: string\n          created_at: string\n          id: string\n          used: boolean\n          used_at: string | null\n          user_id: string\n        }\n        Insert: {\n          code_hash: string\n          created_at?: string\n          id?: string\n          used?: boolean\n          used_at?: string | null\n          user_id: string\n        }\n        Update: {\n          code_hash?: string\n          created_at?: string\n          id?: string\n          used?: boolean\n          used_at?: string | null\n          user_id?: string\n        }\n        Relationships: []\n      }\n      user_2fa_settings: {\n        Row: {\n          activated_at: string | null\n          created_at: string\n          enabled: boolean | null\n          failed_attempts: number\n          id: string\n          locked_until: string | null\n          method: string | null\n          phone: string | null\n          totp_secret: string | null\n          updated_at: string\n          user_id: string\n        }\n        Insert: {\n          activated_at?: string | null\n          created_at?: string\n          enabled?: boolean | null\n          failed_attempts?: number\n          id?: string\n          locked_until?: string | null\n          method?: string | null\n          phone?: string | null\n          totp_secret?: string | null\n          updated_at?: string\n          user_id: string\n        }\n        Update: {\n          activated_at?: string | null\n          created_at?: string\n          enabled?: boolean | null\n          failed_attempts?: number\n          id?: string\n          locked_until?: string | null\n          method?: string | null\n          phone?: string | null\n          totp_secret?: string | null\n          updated_at?: string\n          user_id?: string\n        }\n        Relationships: []\n      }\n      user_roles: {\n        Row: {\n          created_at: string\n          id: string\n          role: Database[\"public\"][\"Enums\"][\"app_role\"]\n          user_id: string\n        }\n        Insert: {\n          created_at?: string\n          id?: string\n          role: Database[\"public\"][\"Enums\"][\"app_role\"]\n          user_id: string\n        }\n        Update: {\n          created_at?: string\n          id?: string\n          role?: Database[\"public\"][\"Enums\"][\"app_role\"]\n          user_id?: string\n        }\n        Relationships: []\n      }\n      vehicules: {\n        Row: {\n          annee: number | null\n          contrat_id: string | null\n          couleur: string | null\n          created_at: string\n          created_by: string | null\n          entreprise_id: string\n          gel_admin_date_debut: string | null\n          gel_admin_date_fin: string | null\n          gel_admin_motif: string | null\n          id: string\n          immatriculation: string\n          kilometrage: number | null\n          marque: string | null\n          modele: string | null\n          notes: string | null\n          photo_path: string | null\n          statut: Database[\"public\"][\"Enums\"][\"statut_vehicule\"]\n          type_pack_souhaite: string | null\n          type_vehicule: Database[\"public\"][\"Enums\"][\"type_vehicule\"] | null\n          updated_at: string\n        }\n        Insert: {\n          annee?: number | null\n          contrat_id?: string | null\n          couleur?: string | null\n          created_at?: string\n          created_by?: string | null\n          entreprise_id: string\n          gel_admin_date_debut?: string | null\n          gel_admin_date_fin?: string | null\n          gel_admin_motif?: string | null\n          id?: string\n          immatriculation: string\n          kilometrage?: number | null\n          marque?: string | null\n          modele?: string | null\n          notes?: string | null\n          photo_path?: string | null\n          statut?: Database[\"public\"][\"Enums\"][\"statut_vehicule\"]\n          type_pack_souhaite?: string | null\n          type_vehicule?: Database[\"public\"][\"Enums\"][\"type_vehicule\"] | null\n          updated_at?: string\n        }\n        Update: {\n          annee?: number | null\n          contrat_id?: string | null\n          couleur?: string | null\n          created_at?: string\n          created_by?: string | null\n          entreprise_id?: string\n          gel_admin_date_debut?: string | null\n          gel_admin_date_fin?: string | null\n          gel_admin_motif?: string | null\n          id?: string\n          immatriculation?: string\n          kilometrage?: number | null\n          marque?: string | null\n          modele?: string | null\n          notes?: string | null\n          photo_path?: string | null\n          statut?: Database[\"public\"][\"Enums\"][\"statut_vehicule\"]\n          type_pack_souhaite?: string | null\n          type_vehicule?: Database[\"public\"][\"Enums\"][\"type_vehicule\"] | null\n          updated_at?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"vehicules_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"contrats\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"vehicules_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_passages_restants\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"vehicules_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"vehicules_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"vehicules_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"contrat_actif_id\"]\n          },\n          {\n            foreignKeyName: \"vehicules_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"vehicules_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"vehicules_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n        ]\n      }\n    }\n    Views: {\n      v_contrats_passages_restants: {\n        Row: {\n          contrat_id: string | null\n          contrat_ligne_id: string | null\n          entreprise_id: string | null\n          nb_vehicules: number | null\n          numero_contrat: string | null\n          passages_effectues_mois: number | null\n          passages_mois_pack: number | null\n          passages_mois_total: number | null\n          passages_restants_mois: number | null\n          type_pack: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"contrats_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrats_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrats_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n        ]\n      }\n      v_contrats_resume: {\n        Row: {\n          commercial_signataire_id: string | null\n          contrat_id: string | null\n          created_at: string | null\n          date_debut: string | null\n          date_fin: string | null\n          date_resiliation: string | null\n          entreprise_id: string | null\n          id: string | null\n          montant_brut_mensuel: number | null\n          montant_net_mensuel: number | null\n          nb_vehicules_actifs: number | null\n          numero_contrat: string | null\n          palier: string | null\n          passages_effectues_total: number | null\n          passages_mois_total: number | null\n          passages_restants_total: number | null\n          remise_commerciale_pct: number | null\n          remise_palier: number | null\n          statut: Database[\"public\"][\"Enums\"][\"contrat_statut_enum\"] | null\n          updated_at: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"contrats_commercial_signataire_id_fkey\"\n            columns: [\"commercial_signataire_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrats_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrats_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"contrats_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n        ]\n      }\n      v_demandes_gel_with_quota: {\n        Row: {\n          commercial_signataire_id: string | null\n          contrat_id: string | null\n          created_at: string | null\n          created_by: string | null\n          date_debut: string | null\n          date_fin_effective: string | null\n          date_fin_prevue: string | null\n          duree_jours_demandee: number | null\n          entreprise_id: string | null\n          entreprise_nom: string | null\n          id: string | null\n          motif: string | null\n          numero_contrat: string | null\n          quota_consomme_actuel: number | null\n          refus_motif: string | null\n          statut: string | null\n          type_demande: string | null\n          updated_at: string | null\n          validated_at: string | null\n          validated_by: string | null\n          vehicule_ids: string[] | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"contrats_commercial_signataire_id_fkey\"\n            columns: [\"commercial_signataire_id\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"contrats\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_passages_restants\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"contrat_id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_contrats_resume\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_contrat_id_fkey\"\n            columns: [\"contrat_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"contrat_actif_id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_created_by_fkey\"\n            columns: [\"created_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"entreprises\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_actives\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_entreprise_id_fkey\"\n            columns: [\"entreprise_id\"]\n            isOneToOne: false\n            referencedRelation: \"v_entreprises_vehicules_resume\"\n            referencedColumns: [\"entreprise_id\"]\n          },\n          {\n            foreignKeyName: \"demandes_gel_validated_by_fkey\"\n            columns: [\"validated_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      v_entreprises_actives: {\n        Row: {\n          adresse: string | null\n          archived_at: string | null\n          archived_by: string | null\n          archived_reason: string | null\n          code_postal: string | null\n          commercial_id: string | null\n          compte_active: boolean | null\n          created_at: string | null\n          email_contact: string | null\n          id: string | null\n          nom: string | null\n          palier_remise: Database[\"public\"][\"Enums\"][\"palier_remise\"] | null\n          siret: string | null\n          telephone: string | null\n          type_client: Database[\"public\"][\"Enums\"][\"type_client\"] | null\n          ville: string | null\n        }\n        Insert: {\n          adresse?: string | null\n          archived_at?: string | null\n          archived_by?: string | null\n          archived_reason?: string | null\n          code_postal?: string | null\n          commercial_id?: string | null\n          compte_active?: boolean | null\n          created_at?: string | null\n          email_contact?: string | null\n          id?: string | null\n          nom?: string | null\n          palier_remise?: Database[\"public\"][\"Enums\"][\"palier_remise\"] | null\n          siret?: string | null\n          telephone?: string | null\n          type_client?: Database[\"public\"][\"Enums\"][\"type_client\"] | null\n          ville?: string | null\n        }\n        Update: {\n          adresse?: string | null\n          archived_at?: string | null\n          archived_by?: string | null\n          archived_reason?: string | null\n          code_postal?: string | null\n          commercial_id?: string | null\n          compte_active?: boolean | null\n          created_at?: string | null\n          email_contact?: string | null\n          id?: string | null\n          nom?: string | null\n          palier_remise?: Database[\"public\"][\"Enums\"][\"palier_remise\"] | null\n          siret?: string | null\n          telephone?: string | null\n          type_client?: Database[\"public\"][\"Enums\"][\"type_client\"] | null\n          ville?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"entreprises_archived_by_fkey\"\n            columns: [\"archived_by\"]\n            isOneToOne: false\n            referencedRelation: \"profiles\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      v_entreprises_vehicules_resume: {\n        Row: {\n          commercial_id: string | null\n          commercial_nom: string | null\n          contrat_actif_id: string | null\n          contrat_statut: string | null\n          entreprise_id: string | null\n          montant_brut_mensuel: number | null\n          montant_net_mensuel: number | null\n          nb_vehicules_actifs: number | null\n          nb_vehicules_en_attente: number | null\n          nb_vehicules_gele: number | null\n          nb_vehicules_total: number | null\n          nom: string | null\n          numero_contrat: string | null\n          palier: string | null\n          remise_commerciale_pct: number | null\n          type_client: Database[\"public\"][\"Enums\"][\"type_client\"] | null\n          ville: string | null\n        }\n        Relationships: []\n      }\n    }\n    Functions: {\n      _recalculer_caches_contrat: {\n        Args: { p_contrat_id: string }\n        Returns: undefined\n      }\n      ajouter_vehicule: {\n        Args: {\n          p_annee?: number\n          p_couleur?: string\n          p_entreprise_id: string\n          p_immatriculation: string\n          p_kilometrage?: number\n          p_marque?: string\n          p_modele?: string\n          p_notes?: string\n          p_pack: string\n          p_photo_path?: string\n          p_type_vehicule: string\n        }\n        Returns: Json\n      }\n      annuler_demande_gel: { Args: { p_demande_id: string }; Returns: Json }\n      annuler_demande_rdv: { Args: { p_demande_id: string }; Returns: Json }\n      annuler_facture_via_avoir: {\n        Args: {\n          p_facture_id: string\n          p_montant_partiel_ht?: number\n          p_motif: string\n          p_type_avoir?: string\n        }\n        Returns: string\n      }\n      annuler_gel_vehicule_admin: {\n        Args: { p_vehicule_id: string }\n        Returns: Json\n      }\n      appliquer_remise_commerciale: {\n        Args: {\n          p_contrat_id: string\n          p_justification: string\n          p_remise_pct: number\n        }\n        Returns: Json\n      }\n      archiver_entreprise: {\n        Args: { p_entreprise_id: string; p_reason?: string }\n        Returns: Json\n      }\n      assigner_rdv: {\n        Args: {\n          p_date: string\n          p_demande_id: string\n          p_operator_id: string\n          p_time_slot: string\n        }\n        Returns: Json\n      }\n      calculer_palier_remise: {\n        Args: { p_nb_vehicules: number }\n        Returns: {\n          palier: string\n          remise_pct: number\n        }[]\n      }\n      calculer_quota_gel_consomme: {\n        Args: { p_entreprise_id: string }\n        Returns: number\n      }\n      confirmer_demande_rdv: {\n        Args: {\n          p_date_intervention: string\n          p_demande_id: string\n          p_vehicule_id: string\n        }\n        Returns: Json\n      }\n      confirmer_demande_rdv_multi: {\n        Args: { p_date_intervention: string; p_demande_id: string }\n        Returns: Json\n      }\n      creer_demande_rdv: {\n        Args: {\n          p_adresse_intervention: string\n          p_code_postal_intervention: string\n          p_commentaires: string\n          p_creneaux_preferes: Json\n          p_vehicule_ids: string[]\n          p_ville_intervention: string\n        }\n        Returns: Json\n      }\n      cron_cloture_mensuelle: { Args: never; Returns: undefined }\n      cron_maintenance_quotidienne: { Args: never; Returns: undefined }\n      cron_rappels_gel_24h: { Args: never; Returns: undefined }\n      degeler_contrat: {\n        Args: { p_contrat_id: string; p_source?: string }\n        Returns: Json\n      }\n      degeler_vehicule: {\n        Args: { p_source?: string; p_vehicule_id: string }\n        Returns: Json\n      }\n      demander_gel: {\n        Args: {\n          p_contrat_id: string\n          p_date_debut: string\n          p_date_fin: string\n          p_motif: string\n          p_type_demande: string\n          p_vehicule_ids: string[]\n        }\n        Returns: Json\n      }\n      desarchiver_entreprise: {\n        Args: { p_entreprise_id: string }\n        Returns: Json\n      }\n      emettre_facture: { Args: { p_facture_id: string }; Returns: string }\n      geler_contrat: {\n        Args: {\n          p_contrat_id: string\n          p_date_debut: string\n          p_date_fin: string\n          p_motif: string\n        }\n        Returns: Json\n      }\n      geler_vehicule: {\n        Args: {\n          p_date_debut: string\n          p_date_fin: string\n          p_motif: string\n          p_vehicule_id: string\n        }\n        Returns: Json\n      }\n      geler_vehicule_admin: {\n        Args: {\n          p_date_debut: string\n          p_date_fin: string\n          p_motif: string\n          p_vehicule_id: string\n        }\n        Returns: Json\n      }\n      generer_facture: {\n        Args: { p_annee: number; p_contrat_id: string; p_mois: number }\n        Returns: string\n      }\n      generer_numero_contrat: { Args: never; Returns: string }\n      get_max_vehicules_par_demande: { Args: never; Returns: number }\n      get_slot_occupancy: {\n        Args: {\n          p_date_debut: string\n          p_date_fin: string\n          p_operator_id: string\n        }\n        Returns: {\n          count: number\n          intervention_date: string\n          time_slot: string\n        }[]\n      }\n      get_user_entreprise: { Args: { _user_id: string }; Returns: string }\n      get_user_role: {\n        Args: { _user_id: string }\n        Returns: Database[\"public\"][\"Enums\"][\"app_role\"]\n      }\n      has_role: {\n        Args: {\n          _role: Database[\"public\"][\"Enums\"][\"app_role\"]\n          _user_id: string\n        }\n        Returns: boolean\n      }\n      lever_gel_anticipe: { Args: { p_demande_id: string }; Returns: Json }\n      reassigner_commercial: {\n        Args: { p_entreprise_id: string; p_nouveau_commercial_id: string }\n        Returns: Json\n      }\n      record_2fa_attempt: { Args: { p_success: boolean }; Returns: Json }\n      refuser_demande_rdv: {\n        Args: { p_demande_id: string; p_motif: string }\n        Returns: Json\n      }\n      refuser_gel: {\n        Args: { p_demande_id: string; p_motif_refus: string }\n        Returns: Json\n      }\n      rejeter_vehicule: {\n        Args: { p_raison: string; p_vehicule_id: string }\n        Returns: Json\n      }\n      setup_2fa: {\n        Args: { p_method: string; p_phone?: string; p_totp_secret?: string }\n        Returns: Json\n      }\n      store_2fa_recovery_codes: { Args: { p_codes: string[] }; Returns: Json }\n      supprimer_vehicule: {\n        Args: { p_force_facturation?: boolean; p_vehicule_id: string }\n        Returns: Json\n      }\n      toggle_epingle_equipe: {\n        Args: { p_notification_id: string }\n        Returns: Json\n      }\n      valider_gel: { Args: { p_demande_id: string }; Returns: Json }\n      valider_vehicule: { Args: { p_vehicule_id: string }; Returns: Json }\n    }\n    Enums: {\n      app_role: \"admin\" | \"staff\" | \"commercial\" | \"operateur\" | \"client\"\n      contrat_statut_enum:\n        | \"actif\"\n        | \"suspendu\"\n        | \"resilie\"\n        | \"en_cours_gel\"\n        | \"en_attente_validation\"\n      engagement_type_enum: \"mensuel\" | \"trimestriel\" | \"annuel\"\n      gel_type_enum: \"programme\" | \"sinistre\"\n      mode_paiement_enum: \"sepa\" | \"virement\" | \"stripe\"\n      notification_statut_enum: \"non_lu\" | \"vu\" | \"priorite\" | \"archive\"\n      palier_remise: \"starter\" | \"pro\" | \"business\" | \"premium\"\n      planning_niveau_enum:\n        | \"libre\"\n        | \"demi_journee\"\n        | \"journee\"\n        | \"recurrent_annuel\"\n      regime_tva_enum: \"franchise_base\" | \"reel_normal\"\n      serie_facture_enum: \"B2B\" | \"B2C\"\n      status_cycle_enum: \"onboarding\" | \"actif\" | \"dormant\"\n      statut_facture_enum: \"brouillon\" | \"emise\" | \"payee\" | \"annulee\"\n      statut_vehicule:\n        | \"actif\"\n        | \"en_attente_validation\"\n        | \"remplace\"\n        | \"archive\"\n        | \"refuse\"\n        | \"gele\"\n      type_client: \"flotte\" | \"concession\" | \"vtc\" | \"autre\"\n      type_prestation_enum:\n        | \"pack_interieur\"\n        | \"pack_standard\"\n        | \"pack_vtc\"\n        | \"concession_one_shot\"\n        | \"fin_de_bail_one_shot\"\n        | \"supplement_poils\"\n        | \"supplement_coffre\"\n        | \"supplement_ozone\"\n        | \"supplement_puzzi\"\n      type_vehicule: \"citadine\" | \"berline\" | \"suv_break\" | \"utilitaire\"\n    }\n    CompositeTypes: {\n      [_ in never]: never\n    }\n  }\n}\n\ntype DatabaseWithoutInternals = Omit<Database, \"__InternalSupabase\">\n\ntype DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, \"public\">]\n\nexport type Tables<\n  DefaultSchemaTableNameOrOptions extends\n    | keyof (DefaultSchema[\"Tables\"] & DefaultSchema[\"Views\"])\n    | { schema: keyof DatabaseWithoutInternals },\n  TableName extends DefaultSchemaTableNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"] &\n        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Views\"])\n    : never = never,\n> = DefaultSchemaTableNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"] &\n      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Views\"])[TableName] extends {\n      Row: infer R\n    }\n    ? R\n    : never\n  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema[\"Tables\"] &\n        DefaultSchema[\"Views\"])\n    ? (DefaultSchema[\"Tables\"] &\n        DefaultSchema[\"Views\"])[DefaultSchemaTableNameOrOptions] extends {\n        Row: infer R\n      }\n      ? R\n      : never\n    : never\n\nexport type TablesInsert<\n  DefaultSchemaTableNameOrOptions extends\n    | keyof DefaultSchema[\"Tables\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  TableName extends DefaultSchemaTableNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"]\n    : never = never,\n> = DefaultSchemaTableNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"][TableName] extends {\n      Insert: infer I\n    }\n    ? I\n    : never\n  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema[\"Tables\"]\n    ? DefaultSchema[\"Tables\"][DefaultSchemaTableNameOrOptions] extends {\n        Insert: infer I\n      }\n      ? I\n      : never\n    : never\n\nexport type TablesUpdate<\n  DefaultSchemaTableNameOrOptions extends\n    | keyof DefaultSchema[\"Tables\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  TableName extends DefaultSchemaTableNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"]\n    : never = never,\n> = DefaultSchemaTableNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"][TableName] extends {\n      Update: infer U\n    }\n    ? U\n    : never\n  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema[\"Tables\"]\n    ? DefaultSchema[\"Tables\"][DefaultSchemaTableNameOrOptions] extends {\n        Update: infer U\n      }\n      ? U\n      : never\n    : never\n\nexport type Enums<\n  DefaultSchemaEnumNameOrOptions extends\n    | keyof DefaultSchema[\"Enums\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  EnumName extends DefaultSchemaEnumNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions[\"schema\"]][\"Enums\"]\n    : never = never,\n> = DefaultSchemaEnumNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions[\"schema\"]][\"Enums\"][EnumName]\n  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema[\"Enums\"]\n    ? DefaultSchema[\"Enums\"][DefaultSchemaEnumNameOrOptions]\n    : never\n\nexport type CompositeTypes<\n  PublicCompositeTypeNameOrOptions extends\n    | keyof DefaultSchema[\"CompositeTypes\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions[\"schema\"]][\"CompositeTypes\"]\n    : never = never,\n> = PublicCompositeTypeNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions[\"schema\"]][\"CompositeTypes\"][CompositeTypeName]\n  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema[\"CompositeTypes\"]\n    ? DefaultSchema[\"CompositeTypes\"][PublicCompositeTypeNameOrOptions]\n    : never\n\nexport const Constants = {\n  public: {\n    Enums: {\n      app_role: [\"admin\", \"staff\", \"commercial\", \"operateur\", \"client\"],\n      contrat_statut_enum: [\n        \"actif\",\n        \"suspendu\",\n        \"resilie\",\n        \"en_cours_gel\",\n        \"en_attente_validation\",\n      ],\n      engagement_type_enum: [\"mensuel\", \"trimestriel\", \"annuel\"],\n      gel_type_enum: [\"programme\", \"sinistre\"],\n      mode_paiement_enum: [\"sepa\", \"virement\", \"stripe\"],\n      notification_statut_enum: [\"non_lu\", \"vu\", \"priorite\", \"archive\"],\n      palier_remise: [\"starter\", \"pro\", \"business\", \"premium\"],\n      planning_niveau_enum: [\n        \"libre\",\n        \"demi_journee\",\n        \"journee\",\n        \"recurrent_annuel\",\n      ],\n      regime_tva_enum: [\"franchise_base\", \"reel_normal\"],\n      serie_facture_enum: [\"B2B\", \"B2C\"],\n      status_cycle_enum: [\"onboarding\", \"actif\", \"dormant\"],\n      statut_facture_enum: [\"brouillon\", \"emise\", \"payee\", \"annulee\"],\n      statut_vehicule: [\n        \"actif\",\n        \"en_attente_validation\",\n        \"remplace\",\n        \"archive\",\n        \"refuse\",\n        \"gele\",\n      ],\n      type_client: [\"flotte\", \"concession\", \"vtc\", \"autre\"],\n      type_prestation_enum: [\n        \"pack_interieur\",\n        \"pack_standard\",\n        \"pack_vtc\",\n        \"concession_one_shot\",\n        \"fin_de_bail_one_shot\",\n        \"supplement_poils\",\n        \"supplement_coffre\",\n        \"supplement_ozone\",\n        \"supplement_puzzi\",\n      ],\n      type_vehicule: [\"citadine\", \"berline\", \"suv_break\", \"utilitaire\"],\n    },\n  },\n} as const\n"}
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      admin_actions_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          nb_entites_impactees: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          nb_entites_impactees?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          nb_entites_impactees?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      app_config: {
+        Row: {
+          created_at: string
+          description: string | null
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      avoirs: {
+        Row: {
+          annee_fiscale: number
+          created_at: string
+          created_by: string | null
+          date_emission: string
+          devise: string
+          emitted_at: string
+          facture_id: string
+          id: string
+          montant_ht: number
+          montant_ttc: number
+          motif: string
+          numero_avoir: string
+          numero_sequentiel: number
+          serie: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_facture_origine: Json
+          tva_montant: number
+          tva_taux: number
+          type_avoir: string
+        }
+        Insert: {
+          annee_fiscale: number
+          created_at?: string
+          created_by?: string | null
+          date_emission: string
+          devise?: string
+          emitted_at?: string
+          facture_id: string
+          id?: string
+          montant_ht: number
+          montant_ttc: number
+          motif: string
+          numero_avoir: string
+          numero_sequentiel: number
+          serie: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_facture_origine: Json
+          tva_montant?: number
+          tva_taux?: number
+          type_avoir: string
+        }
+        Update: {
+          annee_fiscale?: number
+          created_at?: string
+          created_by?: string | null
+          date_emission?: string
+          devise?: string
+          emitted_at?: string
+          facture_id?: string
+          id?: string
+          montant_ht?: number
+          montant_ttc?: number
+          motif?: string
+          numero_avoir?: string
+          numero_sequentiel?: number
+          serie?: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_facture_origine?: Json
+          tva_montant?: number
+          tva_taux?: number
+          type_avoir?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avoirs_facture_id_fkey"
+            columns: ["facture_id"]
+            isOneToOne: false
+            referencedRelation: "factures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contrat_avenants: {
+        Row: {
+          contrat_id: string
+          date_generation: string
+          genere_par: string | null
+          id: string
+          type: string
+          url: string
+        }
+        Insert: {
+          contrat_id: string
+          date_generation?: string
+          genere_par?: string | null
+          id?: string
+          type?: string
+          url: string
+        }
+        Update: {
+          contrat_id?: string
+          date_generation?: string
+          genere_par?: string | null
+          id?: string
+          type?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrat_avenants_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+        ]
+      }
+      contrat_lignes: {
+        Row: {
+          contrat_id: string
+          created_at: string
+          id: string
+          nb_vehicules: number
+          prix_unitaire_ht: number
+          statut_ligne: string
+          type_pack: string
+        }
+        Insert: {
+          contrat_id: string
+          created_at?: string
+          id?: string
+          nb_vehicules?: number
+          prix_unitaire_ht: number
+          statut_ligne?: string
+          type_pack: string
+        }
+        Update: {
+          contrat_id?: string
+          created_at?: string
+          id?: string
+          nb_vehicules?: number
+          prix_unitaire_ht?: number
+          statut_ligne?: string
+          type_pack?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrat_lignes_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+        ]
+      }
+      contrat_sequences: {
+        Row: {
+          annee_mois: string
+          derniere_sequence: number
+          updated_at: string
+        }
+        Insert: {
+          annee_mois: string
+          derniere_sequence?: number
+          updated_at?: string
+        }
+        Update: {
+          annee_mois?: string
+          derniere_sequence?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      contrats: {
+        Row: {
+          commercial_signataire_id: string | null
+          created_at: string
+          date_anniversaire: string | null
+          date_debut: string
+          date_dernier_passage: string | null
+          date_fin: string | null
+          date_fin_engagement: string | null
+          date_paiement_anticipe: string | null
+          date_resiliation: string | null
+          engagement_annuel: boolean
+          engagement_type:
+            | Database["public"]["Enums"]["engagement_type_enum"]
+            | null
+          entreprise_id: string
+          gel_actif: boolean
+          gel_commentaire: string | null
+          gel_date_debut: string | null
+          gel_date_fin: string | null
+          gel_justificatif_url: string | null
+          gel_notifier_client: boolean
+          gel_type: Database["public"]["Enums"]["gel_type_enum"] | null
+          id: string
+          mode_paiement: Database["public"]["Enums"]["mode_paiement_enum"]
+          montant_brut_mensuel: number | null
+          montant_net_mensuel: number | null
+          multiplicateur_prix: number | null
+          nb_vehicules_actifs: number | null
+          numero_contrat: string | null
+          paiement_anticipe_total: boolean
+          palier: string | null
+          passages_mois: number
+          passages_reportes: number
+          passages_restants_mois: number
+          plage_horaire_preferee: string | null
+          planning_niveau:
+            | Database["public"]["Enums"]["planning_niveau_enum"]
+            | null
+          preavis_deadline: string | null
+          preavis_envoye_le: string | null
+          remise_commerciale_auteur_id: string | null
+          remise_commerciale_date: string | null
+          remise_commerciale_justification: string | null
+          remise_commerciale_pct: number
+          remise_pct: number | null
+          status_cycle: Database["public"]["Enums"]["status_cycle_enum"]
+          statut: Database["public"]["Enums"]["contrat_statut_enum"]
+          updated_at: string
+        }
+        Insert: {
+          commercial_signataire_id?: string | null
+          created_at?: string
+          date_anniversaire?: string | null
+          date_debut?: string
+          date_dernier_passage?: string | null
+          date_fin?: string | null
+          date_fin_engagement?: string | null
+          date_paiement_anticipe?: string | null
+          date_resiliation?: string | null
+          engagement_annuel?: boolean
+          engagement_type?:
+            | Database["public"]["Enums"]["engagement_type_enum"]
+            | null
+          entreprise_id: string
+          gel_actif?: boolean
+          gel_commentaire?: string | null
+          gel_date_debut?: string | null
+          gel_date_fin?: string | null
+          gel_justificatif_url?: string | null
+          gel_notifier_client?: boolean
+          gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
+          id?: string
+          mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          montant_brut_mensuel?: number | null
+          montant_net_mensuel?: number | null
+          multiplicateur_prix?: number | null
+          nb_vehicules_actifs?: number | null
+          numero_contrat?: string | null
+          paiement_anticipe_total?: boolean
+          palier?: string | null
+          passages_mois?: number
+          passages_reportes?: number
+          passages_restants_mois?: number
+          plage_horaire_preferee?: string | null
+          planning_niveau?:
+            | Database["public"]["Enums"]["planning_niveau_enum"]
+            | null
+          preavis_deadline?: string | null
+          preavis_envoye_le?: string | null
+          remise_commerciale_auteur_id?: string | null
+          remise_commerciale_date?: string | null
+          remise_commerciale_justification?: string | null
+          remise_commerciale_pct?: number
+          remise_pct?: number | null
+          status_cycle?: Database["public"]["Enums"]["status_cycle_enum"]
+          statut?: Database["public"]["Enums"]["contrat_statut_enum"]
+          updated_at?: string
+        }
+        Update: {
+          commercial_signataire_id?: string | null
+          created_at?: string
+          date_anniversaire?: string | null
+          date_debut?: string
+          date_dernier_passage?: string | null
+          date_fin?: string | null
+          date_fin_engagement?: string | null
+          date_paiement_anticipe?: string | null
+          date_resiliation?: string | null
+          engagement_annuel?: boolean
+          engagement_type?:
+            | Database["public"]["Enums"]["engagement_type_enum"]
+            | null
+          entreprise_id?: string
+          gel_actif?: boolean
+          gel_commentaire?: string | null
+          gel_date_debut?: string | null
+          gel_date_fin?: string | null
+          gel_justificatif_url?: string | null
+          gel_notifier_client?: boolean
+          gel_type?: Database["public"]["Enums"]["gel_type_enum"] | null
+          id?: string
+          mode_paiement?: Database["public"]["Enums"]["mode_paiement_enum"]
+          montant_brut_mensuel?: number | null
+          montant_net_mensuel?: number | null
+          multiplicateur_prix?: number | null
+          nb_vehicules_actifs?: number | null
+          numero_contrat?: string | null
+          paiement_anticipe_total?: boolean
+          palier?: string | null
+          passages_mois?: number
+          passages_reportes?: number
+          passages_restants_mois?: number
+          plage_horaire_preferee?: string | null
+          planning_niveau?:
+            | Database["public"]["Enums"]["planning_niveau_enum"]
+            | null
+          preavis_deadline?: string | null
+          preavis_envoye_le?: string | null
+          remise_commerciale_auteur_id?: string | null
+          remise_commerciale_date?: string | null
+          remise_commerciale_justification?: string | null
+          remise_commerciale_pct?: number
+          remise_pct?: number | null
+          status_cycle?: Database["public"]["Enums"]["status_cycle_enum"]
+          statut?: Database["public"]["Enums"]["contrat_statut_enum"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_commercial_signataire_id_fkey"
+            columns: ["commercial_signataire_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "contrats_remise_commerciale_auteur_id_fkey"
+            columns: ["remise_commerciale_auteur_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creneaux_recurrents_garantis: {
+        Row: {
+          actif: boolean
+          contrat_id: string
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string
+          frequence_semaines: number
+          heure_debut: string
+          heure_fin: string
+          id: string
+          jour_semaine: number
+          notes: string | null
+          operateur_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          contrat_id: string
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin: string
+          frequence_semaines?: number
+          heure_debut: string
+          heure_fin: string
+          id?: string
+          jour_semaine: number
+          notes?: string | null
+          operateur_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          contrat_id?: string
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string
+          frequence_semaines?: number
+          heure_debut?: string
+          heure_fin?: string
+          id?: string
+          jour_semaine?: number
+          notes?: string | null
+          operateur_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creneaux_recurrents_garantis_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+        ]
+      }
+      demandes_gel: {
+        Row: {
+          contrat_id: string
+          created_at: string
+          created_by: string
+          date_debut: string
+          date_fin_effective: string | null
+          date_fin_prevue: string
+          email_sent_at: string | null
+          email_status: string | null
+          entreprise_id: string
+          id: string
+          motif: string
+          refus_motif: string | null
+          statut: string
+          type_demande: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          vehicule_ids: string[] | null
+        }
+        Insert: {
+          contrat_id: string
+          created_at?: string
+          created_by: string
+          date_debut: string
+          date_fin_effective?: string | null
+          date_fin_prevue: string
+          email_sent_at?: string | null
+          email_status?: string | null
+          entreprise_id: string
+          id?: string
+          motif: string
+          refus_motif?: string | null
+          statut?: string
+          type_demande: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          vehicule_ids?: string[] | null
+        }
+        Update: {
+          contrat_id?: string
+          created_at?: string
+          created_by?: string
+          date_debut?: string
+          date_fin_effective?: string | null
+          date_fin_prevue?: string
+          email_sent_at?: string | null
+          email_status?: string | null
+          entreprise_id?: string
+          id?: string
+          motif?: string
+          refus_motif?: string | null
+          statut?: string
+          type_demande?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          vehicule_ids?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demandes_rdv: {
+        Row: {
+          adresse_intervention: string | null
+          assigned_date: string | null
+          assigned_heure: string | null
+          assigned_operator_id: string | null
+          assigned_time_slot: string | null
+          code_postal_intervention: string | null
+          commentaires: string | null
+          created_at: string
+          creneaux_preferes: Json
+          date_confirmee: string | null
+          derogation_min_vehicules: boolean
+          derogation_motif: string | null
+          email_sent_at: string | null
+          email_status: string | null
+          entreprise_id: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          nb_vehicules_rdv: number | null
+          statut: string
+          updated_at: string
+          vehicule_confirme_id: string | null
+          vehicule_ids: string[]
+          ville_intervention: string | null
+        }
+        Insert: {
+          adresse_intervention?: string | null
+          assigned_date?: string | null
+          assigned_heure?: string | null
+          assigned_operator_id?: string | null
+          assigned_time_slot?: string | null
+          code_postal_intervention?: string | null
+          commentaires?: string | null
+          created_at?: string
+          creneaux_preferes?: Json
+          date_confirmee?: string | null
+          derogation_min_vehicules?: boolean
+          derogation_motif?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
+          entreprise_id: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nb_vehicules_rdv?: number | null
+          statut?: string
+          updated_at?: string
+          vehicule_confirme_id?: string | null
+          vehicule_ids?: string[]
+          ville_intervention?: string | null
+        }
+        Update: {
+          adresse_intervention?: string | null
+          assigned_date?: string | null
+          assigned_heure?: string | null
+          assigned_operator_id?: string | null
+          assigned_time_slot?: string | null
+          code_postal_intervention?: string | null
+          commentaires?: string | null
+          created_at?: string
+          creneaux_preferes?: Json
+          date_confirmee?: string | null
+          derogation_min_vehicules?: boolean
+          derogation_motif?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
+          entreprise_id?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nb_vehicules_rdv?: number | null
+          statut?: string
+          updated_at?: string
+          vehicule_confirme_id?: string | null
+          vehicule_ids?: string[]
+          ville_intervention?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandes_rdv_assigned_operator_id_fkey"
+            columns: ["assigned_operator_id"]
+            isOneToOne: false
+            referencedRelation: "operators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_rdv_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_rdv_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_rdv_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+        ]
+      }
+      disponibilites_operateurs: {
+        Row: {
+          actif: boolean
+          created_at: string
+          created_by: string | null
+          date_debut_validite: string | null
+          date_fin_validite: string | null
+          heure_debut: string
+          heure_fin: string
+          id: string
+          jour_semaine: number
+          operateur_id: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          date_debut_validite?: string | null
+          date_fin_validite?: string | null
+          heure_debut: string
+          heure_fin: string
+          id?: string
+          jour_semaine: number
+          operateur_id: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          created_by?: string | null
+          date_debut_validite?: string | null
+          date_fin_validite?: string | null
+          heure_debut?: string
+          heure_fin?: string
+          id?: string
+          jour_semaine?: number
+          operateur_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          created_at: string | null
+          email_to: string | null
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          target_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_to?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          target_id?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          email_to?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          target_id?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      entreprise_acces_commerciaux: {
+        Row: {
+          commercial_id: string
+          entreprise_id: string
+          granted_at: string
+          granted_reason: string | null
+          id: string
+        }
+        Insert: {
+          commercial_id: string
+          entreprise_id: string
+          granted_at?: string
+          granted_reason?: string | null
+          id?: string
+        }
+        Update: {
+          commercial_id?: string
+          entreprise_id?: string
+          granted_at?: string
+          granted_reason?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entreprise_acces_commerciaux_commercial_id_fkey"
+            columns: ["commercial_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entreprise_acces_commerciaux_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entreprise_acces_commerciaux_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entreprise_acces_commerciaux_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+        ]
+      }
+      entreprises: {
+        Row: {
+          adresse: string | null
+          archived_at: string | null
+          archived_by: string | null
+          archived_reason: string | null
+          code_postal: string | null
+          commercial_id: string | null
+          compte_active: boolean
+          created_at: string
+          email_contact: string | null
+          id: string
+          nom: string
+          palier_remise: Database["public"]["Enums"]["palier_remise"]
+          siret: string | null
+          telephone: string | null
+          type_client: Database["public"]["Enums"]["type_client"]
+          ville: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
+          code_postal?: string | null
+          commercial_id?: string | null
+          compte_active?: boolean
+          created_at?: string
+          email_contact?: string | null
+          id?: string
+          nom: string
+          palier_remise?: Database["public"]["Enums"]["palier_remise"]
+          siret?: string | null
+          telephone?: string | null
+          type_client?: Database["public"]["Enums"]["type_client"]
+          ville?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
+          code_postal?: string | null
+          commercial_id?: string | null
+          compte_active?: boolean
+          created_at?: string
+          email_contact?: string | null
+          id?: string
+          nom?: string
+          palier_remise?: Database["public"]["Enums"]["palier_remise"]
+          siret?: string | null
+          telephone?: string | null
+          type_client?: Database["public"]["Enums"]["type_client"]
+          ville?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entreprises_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      factures: {
+        Row: {
+          annee_fiscale: number
+          avoir_id: string | null
+          contrat_id: string | null
+          created_at: string
+          created_by: string | null
+          date_echeance: string | null
+          date_emission: string | null
+          date_paiement: string | null
+          devise: string
+          emitted_at: string | null
+          entreprise_id: string | null
+          id: string
+          mention_tva_speciale: string | null
+          mode_paiement: string | null
+          montant_ht: number
+          montant_ttc: number
+          numero_facture: string | null
+          numero_sequentiel: number | null
+          periode_debut: string
+          periode_fin: string
+          regime_tva: Database["public"]["Enums"]["regime_tva_enum"]
+          serie: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_client: Json | null
+          snapshot_contrat: Json | null
+          snapshot_izox: Json | null
+          snapshot_prestations: Json | null
+          statut: Database["public"]["Enums"]["statut_facture_enum"]
+          tva_montant: number
+          tva_taux: number
+        }
+        Insert: {
+          annee_fiscale: number
+          avoir_id?: string | null
+          contrat_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_echeance?: string | null
+          date_emission?: string | null
+          date_paiement?: string | null
+          devise?: string
+          emitted_at?: string | null
+          entreprise_id?: string | null
+          id?: string
+          mention_tva_speciale?: string | null
+          mode_paiement?: string | null
+          montant_ht?: number
+          montant_ttc?: number
+          numero_facture?: string | null
+          numero_sequentiel?: number | null
+          periode_debut: string
+          periode_fin: string
+          regime_tva?: Database["public"]["Enums"]["regime_tva_enum"]
+          serie: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_client?: Json | null
+          snapshot_contrat?: Json | null
+          snapshot_izox?: Json | null
+          snapshot_prestations?: Json | null
+          statut?: Database["public"]["Enums"]["statut_facture_enum"]
+          tva_montant?: number
+          tva_taux?: number
+        }
+        Update: {
+          annee_fiscale?: number
+          avoir_id?: string | null
+          contrat_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_echeance?: string | null
+          date_emission?: string | null
+          date_paiement?: string | null
+          devise?: string
+          emitted_at?: string | null
+          entreprise_id?: string | null
+          id?: string
+          mention_tva_speciale?: string | null
+          mode_paiement?: string | null
+          montant_ht?: number
+          montant_ttc?: number
+          numero_facture?: string | null
+          numero_sequentiel?: number | null
+          periode_debut?: string
+          periode_fin?: string
+          regime_tva?: Database["public"]["Enums"]["regime_tva_enum"]
+          serie?: Database["public"]["Enums"]["serie_facture_enum"]
+          snapshot_client?: Json | null
+          snapshot_contrat?: Json | null
+          snapshot_izox?: Json | null
+          snapshot_prestations?: Json | null
+          statut?: Database["public"]["Enums"]["statut_facture_enum"]
+          tva_montant?: number
+          tva_taux?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
+            foreignKeyName: "factures_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "fk_factures_avoir"
+            columns: ["avoir_id"]
+            isOneToOne: false
+            referencedRelation: "avoirs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      factures_lignes: {
+        Row: {
+          created_at: string
+          facture_id: string
+          id: string
+          intervention_id: string | null
+          libelle: string
+          montant_ht: number
+          ordre_affichage: number
+          prix_unitaire_ht: number | null
+          quantite: number | null
+          tva_taux: number | null
+          type_ligne: string
+        }
+        Insert: {
+          created_at?: string
+          facture_id: string
+          id?: string
+          intervention_id?: string | null
+          libelle: string
+          montant_ht: number
+          ordre_affichage?: number
+          prix_unitaire_ht?: number | null
+          quantite?: number | null
+          tva_taux?: number | null
+          type_ligne: string
+        }
+        Update: {
+          created_at?: string
+          facture_id?: string
+          id?: string
+          intervention_id?: string | null
+          libelle?: string
+          montant_ht?: number
+          ordre_affichage?: number
+          prix_unitaire_ht?: number | null
+          quantite?: number | null
+          tva_taux?: number | null
+          type_ligne?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factures_lignes_facture_id_fkey"
+            columns: ["facture_id"]
+            isOneToOne: false
+            referencedRelation: "factures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factures_lignes_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "interventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      impact_records: {
+        Row: {
+          category: string
+          coefficient_snapshot: Json
+          contrat_id: string | null
+          created_at: string
+          entreprise_id: string
+          id: string
+          intervention_id: string
+          quantity: number
+          status: string
+          unit: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          category: string
+          coefficient_snapshot: Json
+          contrat_id?: string | null
+          created_at?: string
+          entreprise_id: string
+          id?: string
+          intervention_id: string
+          quantity: number
+          status?: string
+          unit: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          category?: string
+          coefficient_snapshot?: Json
+          contrat_id?: string | null
+          created_at?: string
+          entreprise_id?: string
+          id?: string
+          intervention_id?: string
+          quantity?: number
+          status?: string
+          unit?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
+            foreignKeyName: "impact_records_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_records_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_records_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "impact_records_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "interventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intervention_photos: {
+        Row: {
+          created_at: string
+          id: string
+          intervention_id: string
+          moment: string
+          ordre: number
+          url: string
+          zone: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intervention_id: string
+          moment: string
+          ordre?: number
+          url: string
+          zone: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intervention_id?: string
+          moment?: string
+          ordre?: number
+          url?: string
+          zone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intervention_photos_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "interventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interventions: {
+        Row: {
+          adresse_intervention: string | null
+          checklist_exterieur: Json
+          checklist_interieur: Json
+          cles_documents_localisation: string | null
+          code_postal_intervention: string | null
+          contrat_ligne_id: string | null
+          controle_cles_documents: boolean
+          controle_degradations: boolean
+          controle_objets_valeur: boolean
+          created_at: string
+          date_intervention: string | null
+          degradations_description: string | null
+          demande_rdv_id: string | null
+          email_sent_at: string | null
+          email_status: string | null
+          entreprise_id: string | null
+          heure_intervention: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          motif_refus: string | null
+          notes_operateur: string | null
+          operateur_id: string | null
+          operator_id: string | null
+          signature_url: string | null
+          statut: string
+          submitted_at: string | null
+          time_slot: string | null
+          type_prestation: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          vehicule_id: string | null
+          ville_intervention: string | null
+        }
+        Insert: {
+          adresse_intervention?: string | null
+          checklist_exterieur?: Json
+          checklist_interieur?: Json
+          cles_documents_localisation?: string | null
+          code_postal_intervention?: string | null
+          contrat_ligne_id?: string | null
+          controle_cles_documents?: boolean
+          controle_degradations?: boolean
+          controle_objets_valeur?: boolean
+          created_at?: string
+          date_intervention?: string | null
+          degradations_description?: string | null
+          demande_rdv_id?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
+          entreprise_id?: string | null
+          heure_intervention?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          motif_refus?: string | null
+          notes_operateur?: string | null
+          operateur_id?: string | null
+          operator_id?: string | null
+          signature_url?: string | null
+          statut?: string
+          submitted_at?: string | null
+          time_slot?: string | null
+          type_prestation?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          vehicule_id?: string | null
+          ville_intervention?: string | null
+        }
+        Update: {
+          adresse_intervention?: string | null
+          checklist_exterieur?: Json
+          checklist_interieur?: Json
+          cles_documents_localisation?: string | null
+          code_postal_intervention?: string | null
+          contrat_ligne_id?: string | null
+          controle_cles_documents?: boolean
+          controle_degradations?: boolean
+          controle_objets_valeur?: boolean
+          created_at?: string
+          date_intervention?: string | null
+          degradations_description?: string | null
+          demande_rdv_id?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
+          entreprise_id?: string | null
+          heure_intervention?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          motif_refus?: string | null
+          notes_operateur?: string | null
+          operateur_id?: string | null
+          operator_id?: string | null
+          signature_url?: string | null
+          statut?: string
+          submitted_at?: string | null
+          time_slot?: string | null
+          type_prestation?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          vehicule_id?: string | null
+          ville_intervention?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interventions_contrat_ligne_id_fkey"
+            columns: ["contrat_ligne_id"]
+            isOneToOne: false
+            referencedRelation: "contrat_lignes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_contrat_ligne_id_fkey"
+            columns: ["contrat_ligne_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_ligne_id"]
+          },
+          {
+            foreignKeyName: "interventions_demande_rdv_id_fkey"
+            columns: ["demande_rdv_id"]
+            isOneToOne: false
+            referencedRelation: "demandes_rdv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "interventions_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "operators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
+            referencedRelation: "vehicules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jours_indisponibles_izox: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_debut: string
+          date_fin: string
+          id: string
+          motif: string
+          operateur_id: string | null
+          type_indisponibilite: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_debut: string
+          date_fin: string
+          id?: string
+          motif: string
+          operateur_id?: string | null
+          type_indisponibilite: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_debut?: string
+          date_fin?: string
+          id?: string
+          motif?: string
+          operateur_id?: string | null
+          type_indisponibilite?: string
+        }
+        Relationships: []
+      }
+      notifications_internes: {
+        Row: {
+          action_requise: boolean
+          archived_at: string | null
+          created_at: string
+          details: Json | null
+          epingle_at: string | null
+          epingle_equipe: boolean
+          epingle_par: string | null
+          id: string
+          link_url: string | null
+          read_at: string | null
+          severite: string
+          source_action: string
+          source_log_id: string | null
+          statut: Database["public"]["Enums"]["notification_statut_enum"]
+          titre: string
+          user_id: string
+        }
+        Insert: {
+          action_requise?: boolean
+          archived_at?: string | null
+          created_at?: string
+          details?: Json | null
+          epingle_at?: string | null
+          epingle_equipe?: boolean
+          epingle_par?: string | null
+          id?: string
+          link_url?: string | null
+          read_at?: string | null
+          severite?: string
+          source_action: string
+          source_log_id?: string | null
+          statut?: Database["public"]["Enums"]["notification_statut_enum"]
+          titre: string
+          user_id: string
+        }
+        Update: {
+          action_requise?: boolean
+          archived_at?: string | null
+          created_at?: string
+          details?: Json | null
+          epingle_at?: string | null
+          epingle_equipe?: boolean
+          epingle_par?: string | null
+          id?: string
+          link_url?: string | null
+          read_at?: string | null
+          severite?: string
+          source_action?: string
+          source_log_id?: string | null
+          statut?: Database["public"]["Enums"]["notification_statut_enum"]
+          titre?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_internes_source_log_id_fkey"
+            columns: ["source_log_id"]
+            isOneToOne: false
+            referencedRelation: "admin_actions_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operators: {
+        Row: {
+          color_hex: string
+          created_at: string
+          id: string
+          initials: string
+          name: string
+        }
+        Insert: {
+          color_hex: string
+          created_at?: string
+          id?: string
+          initials: string
+          name: string
+        }
+        Update: {
+          color_hex?: string
+          created_at?: string
+          id?: string
+          initials?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      parrainages: {
+        Row: {
+          code_parrainage: string
+          date_parrainage: string
+          date_premiere_mensualite: string | null
+          filleul_id: string | null
+          id: string
+          parrain_id: string
+          recompense_filleul_appliquee: boolean
+          recompense_parrain_appliquee: boolean
+          statut: string
+        }
+        Insert: {
+          code_parrainage: string
+          date_parrainage?: string
+          date_premiere_mensualite?: string | null
+          filleul_id?: string | null
+          id?: string
+          parrain_id: string
+          recompense_filleul_appliquee?: boolean
+          recompense_parrain_appliquee?: boolean
+          statut?: string
+        }
+        Update: {
+          code_parrainage?: string
+          date_parrainage?: string
+          date_premiere_mensualite?: string | null
+          filleul_id?: string | null
+          id?: string
+          parrain_id?: string
+          recompense_filleul_appliquee?: boolean
+          recompense_parrain_appliquee?: boolean
+          statut?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parrainages_filleul_id_fkey"
+            columns: ["filleul_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parrainages_filleul_id_fkey"
+            columns: ["filleul_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parrainages_filleul_id_fkey"
+            columns: ["filleul_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "parrainages_parrain_id_fkey"
+            columns: ["parrain_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parrainages_parrain_id_fkey"
+            columns: ["parrain_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parrainages_parrain_id_fkey"
+            columns: ["parrain_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+        ]
+      }
+      prestations_catalogue: {
+        Row: {
+          code: string
+          created_at: string
+          duree_minutes: number | null
+          est_abonnement: boolean
+          est_one_shot: boolean
+          id: string
+          nom: string
+          passages_mois: number | null
+          prix_ht: number
+          type_prestation: Database["public"]["Enums"]["type_prestation_enum"]
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          duree_minutes?: number | null
+          est_abonnement?: boolean
+          est_one_shot?: boolean
+          id?: string
+          nom: string
+          passages_mois?: number | null
+          prix_ht: number
+          type_prestation: Database["public"]["Enums"]["type_prestation_enum"]
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          duree_minutes?: number | null
+          est_abonnement?: boolean
+          est_one_shot?: boolean
+          id?: string
+          nom?: string
+          passages_mois?: number | null
+          prix_ht?: number
+          type_prestation?: Database["public"]["Enums"]["type_prestation_enum"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          entreprise_id: string | null
+          id: string
+          nom: string | null
+          prenom: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          entreprise_id?: string | null
+          id: string
+          nom?: string | null
+          prenom?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          entreprise_id?: string | null
+          id?: string
+          nom?: string | null
+          prenom?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+        ]
+      }
+      seuils_planning: {
+        Row: {
+          delai_annulation_demi_journee_h: number
+          delai_annulation_journee_h: number
+          delai_annulation_libre_h: number
+          delai_annulation_recurrent_h: number
+          delai_min_demi_journee: number
+          delai_min_journee: number
+          delai_min_libre: number
+          id: number
+          penalite_annulation_demi_journee: number
+          penalite_annulation_journee: number
+          penalite_annulation_libre: number
+          penalite_annulation_recurrent: number
+          seuil_demi_journee_max: number
+          seuil_journee_max: number
+          seuil_libre_max: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          delai_annulation_demi_journee_h?: number
+          delai_annulation_journee_h?: number
+          delai_annulation_libre_h?: number
+          delai_annulation_recurrent_h?: number
+          delai_min_demi_journee?: number
+          delai_min_journee?: number
+          delai_min_libre?: number
+          id?: number
+          penalite_annulation_demi_journee?: number
+          penalite_annulation_journee?: number
+          penalite_annulation_libre?: number
+          penalite_annulation_recurrent?: number
+          seuil_demi_journee_max?: number
+          seuil_journee_max?: number
+          seuil_libre_max?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          delai_annulation_demi_journee_h?: number
+          delai_annulation_journee_h?: number
+          delai_annulation_libre_h?: number
+          delai_annulation_recurrent_h?: number
+          delai_min_demi_journee?: number
+          delai_min_journee?: number
+          delai_min_libre?: number
+          id?: number
+          penalite_annulation_demi_journee?: number
+          penalite_annulation_journee?: number
+          penalite_annulation_libre?: number
+          penalite_annulation_recurrent?: number
+          seuil_demi_journee_max?: number
+          seuil_journee_max?: number
+          seuil_libre_max?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      user_2fa_recovery_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          id: string
+          used: boolean
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_2fa_settings: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          enabled: boolean | null
+          failed_attempts: number
+          id: string
+          locked_until: string | null
+          method: string | null
+          phone: string | null
+          totp_secret: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          enabled?: boolean | null
+          failed_attempts?: number
+          id?: string
+          locked_until?: string | null
+          method?: string | null
+          phone?: string | null
+          totp_secret?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          enabled?: boolean | null
+          failed_attempts?: number
+          id?: string
+          locked_until?: string | null
+          method?: string | null
+          phone?: string | null
+          totp_secret?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicules: {
+        Row: {
+          annee: number | null
+          contrat_id: string | null
+          couleur: string | null
+          created_at: string
+          created_by: string | null
+          entreprise_id: string
+          gel_admin_date_debut: string | null
+          gel_admin_date_fin: string | null
+          gel_admin_motif: string | null
+          id: string
+          immatriculation: string
+          kilometrage: number | null
+          marque: string | null
+          modele: string | null
+          notes: string | null
+          photo_path: string | null
+          statut: Database["public"]["Enums"]["statut_vehicule"]
+          type_pack_souhaite: string | null
+          type_vehicule: Database["public"]["Enums"]["type_vehicule"] | null
+          updated_at: string
+        }
+        Insert: {
+          annee?: number | null
+          contrat_id?: string | null
+          couleur?: string | null
+          created_at?: string
+          created_by?: string | null
+          entreprise_id: string
+          gel_admin_date_debut?: string | null
+          gel_admin_date_fin?: string | null
+          gel_admin_motif?: string | null
+          id?: string
+          immatriculation: string
+          kilometrage?: number | null
+          marque?: string | null
+          modele?: string | null
+          notes?: string | null
+          photo_path?: string | null
+          statut?: Database["public"]["Enums"]["statut_vehicule"]
+          type_pack_souhaite?: string | null
+          type_vehicule?: Database["public"]["Enums"]["type_vehicule"] | null
+          updated_at?: string
+        }
+        Update: {
+          annee?: number | null
+          contrat_id?: string | null
+          couleur?: string | null
+          created_at?: string
+          created_by?: string | null
+          entreprise_id?: string
+          gel_admin_date_debut?: string | null
+          gel_admin_date_fin?: string | null
+          gel_admin_motif?: string | null
+          id?: string
+          immatriculation?: string
+          kilometrage?: number | null
+          marque?: string | null
+          modele?: string | null
+          notes?: string | null
+          photo_path?: string | null
+          statut?: Database["public"]["Enums"]["statut_vehicule"]
+          type_pack_souhaite?: string | null
+          type_vehicule?: Database["public"]["Enums"]["type_vehicule"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicules_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
+            foreignKeyName: "vehicules_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicules_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicules_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      v_contrats_passages_restants: {
+        Row: {
+          contrat_id: string | null
+          contrat_ligne_id: string | null
+          entreprise_id: string | null
+          nb_vehicules: number | null
+          numero_contrat: string | null
+          passages_effectues_mois: number | null
+          passages_mois_pack: number | null
+          passages_mois_total: number | null
+          passages_restants_mois: number | null
+          type_pack: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+        ]
+      }
+      v_contrats_resume: {
+        Row: {
+          commercial_signataire_id: string | null
+          contrat_id: string | null
+          created_at: string | null
+          date_debut: string | null
+          date_fin: string | null
+          date_resiliation: string | null
+          entreprise_id: string | null
+          id: string | null
+          montant_brut_mensuel: number | null
+          montant_net_mensuel: number | null
+          nb_vehicules_actifs: number | null
+          numero_contrat: string | null
+          palier: string | null
+          passages_effectues_total: number | null
+          passages_mois_total: number | null
+          passages_restants_total: number | null
+          remise_commerciale_pct: number | null
+          remise_palier: number | null
+          statut: Database["public"]["Enums"]["contrat_statut_enum"] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_commercial_signataire_id_fkey"
+            columns: ["commercial_signataire_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrats_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+        ]
+      }
+      v_demandes_gel_with_quota: {
+        Row: {
+          commercial_signataire_id: string | null
+          contrat_id: string | null
+          created_at: string | null
+          created_by: string | null
+          date_debut: string | null
+          date_fin_effective: string | null
+          date_fin_prevue: string | null
+          duree_jours_demandee: number | null
+          entreprise_id: string | null
+          entreprise_nom: string | null
+          id: string | null
+          motif: string | null
+          numero_contrat: string | null
+          quota_consomme_actuel: number | null
+          refus_motif: string | null
+          statut: string | null
+          type_demande: string | null
+          updated_at: string | null
+          validated_at: string | null
+          validated_by: string | null
+          vehicule_ids: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrats_commercial_signataire_id_fkey"
+            columns: ["commercial_signataire_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "demandes_gel_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_entreprises_actives: {
+        Row: {
+          adresse: string | null
+          archived_at: string | null
+          archived_by: string | null
+          archived_reason: string | null
+          code_postal: string | null
+          commercial_id: string | null
+          compte_active: boolean | null
+          created_at: string | null
+          email_contact: string | null
+          id: string | null
+          nom: string | null
+          palier_remise: Database["public"]["Enums"]["palier_remise"] | null
+          siret: string | null
+          telephone: string | null
+          type_client: Database["public"]["Enums"]["type_client"] | null
+          ville: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
+          code_postal?: string | null
+          commercial_id?: string | null
+          compte_active?: boolean | null
+          created_at?: string | null
+          email_contact?: string | null
+          id?: string | null
+          nom?: string | null
+          palier_remise?: Database["public"]["Enums"]["palier_remise"] | null
+          siret?: string | null
+          telephone?: string | null
+          type_client?: Database["public"]["Enums"]["type_client"] | null
+          ville?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
+          code_postal?: string | null
+          commercial_id?: string | null
+          compte_active?: boolean | null
+          created_at?: string | null
+          email_contact?: string | null
+          id?: string | null
+          nom?: string | null
+          palier_remise?: Database["public"]["Enums"]["palier_remise"] | null
+          siret?: string | null
+          telephone?: string | null
+          type_client?: Database["public"]["Enums"]["type_client"] | null
+          ville?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entreprises_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_entreprises_vehicules_resume: {
+        Row: {
+          commercial_id: string | null
+          commercial_nom: string | null
+          contrat_actif_id: string | null
+          contrat_statut: string | null
+          entreprise_id: string | null
+          montant_brut_mensuel: number | null
+          montant_net_mensuel: number | null
+          nb_vehicules_actifs: number | null
+          nb_vehicules_en_attente: number | null
+          nb_vehicules_gele: number | null
+          nb_vehicules_total: number | null
+          nom: string | null
+          numero_contrat: string | null
+          palier: string | null
+          remise_commerciale_pct: number | null
+          type_client: Database["public"]["Enums"]["type_client"] | null
+          ville: string | null
+        }
+        Relationships: []
+      }
+    }
+    Functions: {
+      _recalculer_caches_contrat: {
+        Args: { p_contrat_id: string }
+        Returns: undefined
+      }
+      ajouter_vehicule: {
+        Args: {
+          p_annee?: number
+          p_couleur?: string
+          p_entreprise_id: string
+          p_immatriculation: string
+          p_kilometrage?: number
+          p_marque?: string
+          p_modele?: string
+          p_notes?: string
+          p_pack: string
+          p_photo_path?: string
+          p_type_vehicule: string
+        }
+        Returns: Json
+      }
+      annuler_demande_gel: { Args: { p_demande_id: string }; Returns: Json }
+      annuler_demande_rdv: { Args: { p_demande_id: string }; Returns: Json }
+      annuler_facture_via_avoir: {
+        Args: {
+          p_facture_id: string
+          p_montant_partiel_ht?: number
+          p_motif: string
+          p_type_avoir?: string
+        }
+        Returns: string
+      }
+      annuler_gel_vehicule_admin: {
+        Args: { p_vehicule_id: string }
+        Returns: Json
+      }
+      appliquer_remise_commerciale: {
+        Args: {
+          p_contrat_id: string
+          p_justification: string
+          p_remise_pct: number
+        }
+        Returns: Json
+      }
+      archiver_entreprise: {
+        Args: { p_entreprise_id: string; p_reason?: string }
+        Returns: Json
+      }
+      assigner_rdv:
+        | {
+            Args: {
+              p_date: string
+              p_demande_id: string
+              p_operator_id: string
+              p_time_slot: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_date: string
+              p_demande_id: string
+              p_heure?: string
+              p_operator_id: string
+              p_time_slot: string
+            }
+            Returns: Json
+          }
+      calculer_palier_remise: {
+        Args: { p_nb_vehicules: number }
+        Returns: {
+          palier: string
+          remise_pct: number
+        }[]
+      }
+      calculer_quota_gel_consomme: {
+        Args: { p_entreprise_id: string }
+        Returns: number
+      }
+      confirmer_demande_rdv: {
+        Args: {
+          p_date_intervention: string
+          p_demande_id: string
+          p_vehicule_id: string
+        }
+        Returns: Json
+      }
+      confirmer_demande_rdv_multi: {
+        Args: { p_date_intervention: string; p_demande_id: string }
+        Returns: Json
+      }
+      creer_demande_rdv: {
+        Args: {
+          p_adresse_intervention: string
+          p_code_postal_intervention: string
+          p_commentaires: string
+          p_creneaux_preferes: Json
+          p_vehicule_ids: string[]
+          p_ville_intervention: string
+        }
+        Returns: Json
+      }
+      cron_cloture_mensuelle: { Args: never; Returns: undefined }
+      cron_maintenance_quotidienne: { Args: never; Returns: undefined }
+      cron_rappels_gel_24h: { Args: never; Returns: undefined }
+      degeler_contrat: {
+        Args: { p_contrat_id: string; p_source?: string }
+        Returns: Json
+      }
+      degeler_vehicule: {
+        Args: { p_source?: string; p_vehicule_id: string }
+        Returns: Json
+      }
+      demander_gel: {
+        Args: {
+          p_contrat_id: string
+          p_date_debut: string
+          p_date_fin: string
+          p_motif: string
+          p_type_demande: string
+          p_vehicule_ids: string[]
+        }
+        Returns: Json
+      }
+      desarchiver_entreprise: {
+        Args: { p_entreprise_id: string }
+        Returns: Json
+      }
+      emettre_facture: { Args: { p_facture_id: string }; Returns: string }
+      geler_contrat: {
+        Args: {
+          p_contrat_id: string
+          p_date_debut: string
+          p_date_fin: string
+          p_motif: string
+        }
+        Returns: Json
+      }
+      geler_vehicule: {
+        Args: {
+          p_date_debut: string
+          p_date_fin: string
+          p_motif: string
+          p_vehicule_id: string
+        }
+        Returns: Json
+      }
+      geler_vehicule_admin: {
+        Args: {
+          p_date_debut: string
+          p_date_fin: string
+          p_motif: string
+          p_vehicule_id: string
+        }
+        Returns: Json
+      }
+      generer_facture: {
+        Args: { p_annee: number; p_contrat_id: string; p_mois: number }
+        Returns: string
+      }
+      generer_numero_contrat: { Args: never; Returns: string }
+      get_max_vehicules_par_demande: { Args: never; Returns: number }
+      get_slot_occupancy: {
+        Args: {
+          p_date_debut: string
+          p_date_fin: string
+          p_operator_id: string
+        }
+        Returns: {
+          count: number
+          intervention_date: string
+          time_slot: string
+        }[]
+      }
+      get_user_entreprise: { Args: { _user_id: string }; Returns: string }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      lever_gel_anticipe: { Args: { p_demande_id: string }; Returns: Json }
+      reassigner_commercial: {
+        Args: { p_entreprise_id: string; p_nouveau_commercial_id: string }
+        Returns: Json
+      }
+      record_2fa_attempt: { Args: { p_success: boolean }; Returns: Json }
+      refuser_demande_rdv: {
+        Args: { p_demande_id: string; p_motif: string }
+        Returns: Json
+      }
+      refuser_gel: {
+        Args: { p_demande_id: string; p_motif_refus: string }
+        Returns: Json
+      }
+      rejeter_vehicule: {
+        Args: { p_raison: string; p_vehicule_id: string }
+        Returns: Json
+      }
+      setup_2fa: {
+        Args: { p_method: string; p_phone?: string; p_totp_secret?: string }
+        Returns: Json
+      }
+      store_2fa_recovery_codes: { Args: { p_codes: string[] }; Returns: Json }
+      supprimer_vehicule: {
+        Args: { p_force_facturation?: boolean; p_vehicule_id: string }
+        Returns: Json
+      }
+      toggle_epingle_equipe: {
+        Args: { p_notification_id: string }
+        Returns: Json
+      }
+      valider_gel: { Args: { p_demande_id: string }; Returns: Json }
+      valider_vehicule: { Args: { p_vehicule_id: string }; Returns: Json }
+    }
+    Enums: {
+      app_role: "admin" | "staff" | "commercial" | "operateur" | "client"
+      contrat_statut_enum:
+        | "actif"
+        | "suspendu"
+        | "resilie"
+        | "en_cours_gel"
+        | "en_attente_validation"
+      engagement_type_enum: "mensuel" | "trimestriel" | "annuel"
+      gel_type_enum: "programme" | "sinistre"
+      mode_paiement_enum: "sepa" | "virement" | "stripe"
+      notification_statut_enum: "non_lu" | "vu" | "priorite" | "archive"
+      palier_remise: "starter" | "pro" | "business" | "premium"
+      planning_niveau_enum:
+        | "libre"
+        | "demi_journee"
+        | "journee"
+        | "recurrent_annuel"
+      regime_tva_enum: "franchise_base" | "reel_normal"
+      serie_facture_enum: "B2B" | "B2C"
+      status_cycle_enum: "onboarding" | "actif" | "dormant"
+      statut_facture_enum: "brouillon" | "emise" | "payee" | "annulee"
+      statut_vehicule:
+        | "actif"
+        | "en_attente_validation"
+        | "remplace"
+        | "archive"
+        | "refuse"
+        | "gele"
+      type_client: "flotte" | "concession" | "vtc" | "autre"
+      type_prestation_enum:
+        | "pack_interieur"
+        | "pack_standard"
+        | "pack_vtc"
+        | "concession_one_shot"
+        | "fin_de_bail_one_shot"
+        | "supplement_poils"
+        | "supplement_coffre"
+        | "supplement_ozone"
+        | "supplement_puzzi"
+      type_vehicule: "citadine" | "berline" | "suv_break" | "utilitaire"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_role: ["admin", "staff", "commercial", "operateur", "client"],
+      contrat_statut_enum: [
+        "actif",
+        "suspendu",
+        "resilie",
+        "en_cours_gel",
+        "en_attente_validation",
+      ],
+      engagement_type_enum: ["mensuel", "trimestriel", "annuel"],
+      gel_type_enum: ["programme", "sinistre"],
+      mode_paiement_enum: ["sepa", "virement", "stripe"],
+      notification_statut_enum: ["non_lu", "vu", "priorite", "archive"],
+      palier_remise: ["starter", "pro", "business", "premium"],
+      planning_niveau_enum: [
+        "libre",
+        "demi_journee",
+        "journee",
+        "recurrent_annuel",
+      ],
+      regime_tva_enum: ["franchise_base", "reel_normal"],
+      serie_facture_enum: ["B2B", "B2C"],
+      status_cycle_enum: ["onboarding", "actif", "dormant"],
+      statut_facture_enum: ["brouillon", "emise", "payee", "annulee"],
+      statut_vehicule: [
+        "actif",
+        "en_attente_validation",
+        "remplace",
+        "archive",
+        "refuse",
+        "gele",
+      ],
+      type_client: ["flotte", "concession", "vtc", "autre"],
+      type_prestation_enum: [
+        "pack_interieur",
+        "pack_standard",
+        "pack_vtc",
+        "concession_one_shot",
+        "fin_de_bail_one_shot",
+        "supplement_poils",
+        "supplement_coffre",
+        "supplement_ozone",
+        "supplement_puzzi",
+      ],
+      type_vehicule: ["citadine", "berline", "suv_break", "utilitaire"],
+    },
+  },
+} as const

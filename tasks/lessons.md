@@ -47,6 +47,14 @@
 - **Consolider les dialogs admin : 1 dialog par demande** : avoir `GererDemandeRdvDialog` (confirmation directe) + `AssignerRdvDialog` (assignation) créait une confusion UI et un split du refus dans deux endroits. Solution : `AssignerRdvDialog` seul, avec section détails + refus + calendrier + email en un seul composant. La dette UI de deux dialogs parallèles faisait trou noir côté admin.
 - **Fusion onglets ≠ fusion permissions** : `/admin/rendez-vous` et `/admin/interventions` sont accessibles à staff/commercial ; `/admin/planning` (board) est admin-only. En fusionnant, garder l'onglet accessible à tous les rôles admin mais protéger le sous-onglet board + carte par `RoleGuard allowed={["admin"]}`. Ne jamais élargir/réduire un accès par effet de bord d'un refactor de navigation.
 
+## Interventions créées depuis un RDV (assigner_rdv)
+
+- **`statut='planifiee'` est une valeur DB valide** (CHECK étendu en migration `20260523115532`) mais absente du frontend jusqu'à cette session. Toujours garder `Statut` en sync avec les valeurs DB.
+- **`type_prestation` = pack commercial** sur les interventions RDV (ex: `'pack_standard'`), pas le scope (`exterieur/interieur/complet`). Utiliser `getPackLabel()` pour l'affichage, et une fonction `typeScope()` pour mapper vers le scope quand les checklists/photos en ont besoin.
+- **Verrouiller l'admin sur les créneaux client** : supprimer le calendrier libre dans `AssignerRdvDialog`, afficher uniquement les créneaux `creneaux_preferes` du client comme boutons. L'admin ne choisit que l'opérateur + l'heure précise dans la plage.
+- **Heure précise dans un créneau** : `<input type="time" min="08:00" max="12:00">` avec validation frontend (`heureValid()`) et colonne `heure_intervention TIME` en DB. Plage matin = 08h-12h, après-midi = 14h-18h.
+- **Clic vs drag sur un board dnd-kit** : séparer le grip (`{...listeners}` sur l'icône grip uniquement) du clic navigation (bouton imbriqué sur le texte). Ne pas mettre `onClick` sur le div `ref={setNodeRef}` — ça entre en conflit avec le drag.
+
 ## Workflow Git
 
 - **Branches de travail** : supprimer après merge pour garder le repo propre. Impossible via `git push --delete` depuis le container (403) — le faire depuis GitHub UI.

@@ -12,13 +12,20 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Search, ChevronRight, ClipboardCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { statutColor, statutLabel, type Statut, type TypePrestation } from "@/lib/interventions";
+import { statutColor, statutLabel, type Statut } from "@/lib/interventions";
+import { getPackLabel } from "@/lib/pricing";
+
+const TIME_SLOT_LABEL: Record<string, string> = {
+  morning:   "Matin",
+  afternoon: "Après-midi",
+};
 
 interface Item {
   id: string;
   statut: Statut;
-  type_prestation: TypePrestation;
+  type_prestation: string;
   date_intervention: string | null;
+  time_slot: string | null;
   created_at: string;
   vehicules: { immatriculation: string; marque: string | null; modele: string | null } | null;
   entreprises: { nom: string } | null;
@@ -36,7 +43,7 @@ export function InterventionsListPanel() {
     const { data } = await supabase
       .from("interventions")
       .select(
-        "id, statut, type_prestation, date_intervention, created_at, vehicules(immatriculation, marque, modele), entreprises(nom)"
+        "id, statut, type_prestation, date_intervention, time_slot, created_at, vehicules(immatriculation, marque, modele), entreprises(nom)"
       )
       .order("created_at", { ascending: false });
     setItems((data as unknown as Item[]) || []);
@@ -88,6 +95,7 @@ export function InterventionsListPanel() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="tous">Tous les statuts</SelectItem>
+            <SelectItem value="planifiee">Planifiées</SelectItem>
             <SelectItem value="en_revision">À valider</SelectItem>
             <SelectItem value="en_cours">En cours</SelectItem>
             <SelectItem value="validee">Validées</SelectItem>
@@ -107,34 +115,39 @@ export function InterventionsListPanel() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {filtered.map((i) => (
-            <button
-              key={i.id}
-              type="button"
-              onClick={() => navigate({ to: "/admin/interventions/$id", params: { id: i.id } })}
-              className="w-full text-left p-4 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors flex items-center gap-3"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <p className="font-semibold text-foreground">
-                    {i.vehicules?.immatriculation || "—"}
+          {filtered.map((i) => {
+            const slotLabel = i.time_slot ? TIME_SLOT_LABEL[i.time_slot] ?? i.time_slot : null;
+            return (
+              <button
+                key={i.id}
+                type="button"
+                onClick={() => navigate({ to: "/admin/interventions/$id", params: { id: i.id } })}
+                className="w-full text-left p-4 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors flex items-center gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <p className="font-semibold text-foreground">
+                      {i.vehicules?.immatriculation || "—"}
+                    </p>
+                    <Badge className={statutColor(i.statut)} variant="outline">
+                      {statutLabel(i.statut)}
+                    </Badge>
+                    <Badge variant="secondary">
+                      {getPackLabel(i.type_prestation)}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {i.entreprises?.nom || "—"} ·{" "}
+                    {[i.vehicules?.marque, i.vehicules?.modele].filter(Boolean).join(" ") || "—"} ·{" "}
+                    {i.date_intervention
+                      ? `${i.date_intervention}${slotLabel ? ` · ${slotLabel}` : ""}`
+                      : new Date(i.created_at).toLocaleDateString("fr-FR")}
                   </p>
-                  <Badge className={statutColor(i.statut)} variant="outline">
-                    {statutLabel(i.statut)}
-                  </Badge>
-                  <Badge variant="secondary" className="capitalize">
-                    {i.type_prestation}
-                  </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {i.entreprises?.nom || "—"} ·{" "}
-                  {[i.vehicules?.marque, i.vehicules?.modele].filter(Boolean).join(" ") || "—"} ·{" "}
-                  {i.date_intervention || new Date(i.created_at).toLocaleDateString("fr-FR")}
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </button>
-          ))}
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
