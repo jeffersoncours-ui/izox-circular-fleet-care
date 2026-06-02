@@ -1,5 +1,30 @@
 # Todo — IZOX
 
+## Terminé — Session 2026-06-02 (5) : Corrections post-tests manuels
+
+### Périmètre
+Corrections issues des tests manuels : assignation RDV verrouillée sur créneaux client,
+heure précise, badges interventions, board cliquable, détail enrichi.
+
+- [x] Migration SQL : `heure_intervention TIME` sur `interventions`, `assigned_heure TIME` sur `demandes_rdv`
+- [x] `assigner_rdv` mis à jour : nouveau param `p_heure TIME DEFAULT NULL`
+- [x] `interventions.ts` : `'planifiee'` ajouté à l'union `Statut` + label/couleur
+- [x] `AssignerRdvDialog` : calendrier libre supprimé → sélection des créneaux demandés par le client (avec occupancy) + saisie heure précise validée dans la plage du créneau
+- [x] `InterventionsListPanel` : badge type via `getPackLabel`, filtre "Planifiées", créneau affiché
+- [x] `admin.interventions.$id` : section "Planification" (opérateur + date/créneau/heure + lieu), badge type corrigé, `typeScope()` pour checklists/photos
+- [x] `PlanningCalendar` : blocs du board cliquables → `/admin/interventions/$id`
+- [x] Types Supabase régénérés
+- [x] Build OK — 0 erreur TypeScript
+
+### Review
+- Cause racine identifiée et corrigée : `assigner_rdv` insérait `statut='planifiee'` et `type_prestation='pack_standard'` inconnus du frontend
+- `typeScope()` dans la page détail : les interventions créées depuis un RDV utilisent `pack_*` → mappé sur `complet` pour les checklists (comportement correct, un pack_standard = intérieur + extérieur)
+- Opération de clic sur le board : séparé du grip drag via un `<button>` imbriqué sur le texte uniquement
+
+## Hors périmètre (confirmer avant)
+- [ ] Formulaire client `CreerDemandeRdvDialog` : imposer min. 2 créneaux sur jours différents (avis donné, attente validation)
+- [ ] Prévenir les créneaux saturés côté client lors de la sélection
+
 ## En cours — Session 2026-06-02 (4) : Lieu d'intervention + flow RDV consolidé
 
 ### Étape 1 — Migration SQL
