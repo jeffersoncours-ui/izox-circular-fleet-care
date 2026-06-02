@@ -1,6 +1,19 @@
 # Todo — IZOX
 
-## Session 2026-06-02 (6) — En cours
+## Session 2026-06-02 (7) — Annulations RDV + planning responsive
+
+- [x] Bloc 1 — `PasswordInput` (œil) sur login, recovery, reset-password, ChangePasswordDialog
+- [x] Bloc 2 — Fix heure "02:00" : afficher `assigned_heure` au lieu du composant horaire de `date_confirmee`
+- [x] Bloc 3 — Migration : `annuler_rdv_client` (règle 48h) + `annuler_rdv_admin` (sans délai) + statuts `annulee_admin`/`annulee`
+- [x] Bloc 4 — Emails `rdv_annule_client` (→ admin) + `rdv_annule_admin` (→ client), edge function déployée v7
+- [x] Bloc 5 — Client : annulation RDV confirmé avec motif obligatoire + désactivé < 48h
+- [x] Bloc 6 — Admin : cartes confirmées cliquables → `AnnulerRdvAdminDialog`
+- [x] Bloc 7 — `PlanningCalendar` : suppression drag, cellules cliquables, mobile = vue jour / desktop = grille
+- [x] Interventions : statut `annulee` (label/couleur + filtre dédié, exclu de "tous")
+
+---
+
+## Session 2026-06-02 (6) — Terminée
 
 - [x] **Bloc A** — Fix "Demande introuvable" : `DetailDemandeRdvDialog.tsx` (supprimer `refus_motif`)
 - [x] **Bloc B** — Dashboard client : cartes "Prochain RDV" + "Dernière prestation" (requêtes + liens)

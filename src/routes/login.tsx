@@ -4,6 +4,7 @@ import { useAuth, rolePath } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -199,9 +200,8 @@ function LoginPage() {
             <form onSubmit={handleSetPassword} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password">Nouveau mot de passe</Label>
-                <Input
+                <PasswordInput
                   id="new-password"
-                  type="password"
                   autoComplete="new-password"
                   required
                   minLength={8}
@@ -213,9 +213,8 @@ function LoginPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
-                <Input
+                <PasswordInput
                   id="confirm-password"
-                  type="password"
                   autoComplete="new-password"
                   required
                   value={newPasswordConfirm}
@@ -270,9 +269,8 @@ function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Mot de passe</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="current-password"
                 required
                 value={password}

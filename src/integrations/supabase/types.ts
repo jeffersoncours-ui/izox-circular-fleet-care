@@ -693,6 +693,8 @@ export type Database = {
       demandes_rdv: {
         Row: {
           adresse_intervention: string | null
+          annulation_motif: string | null
+          annule_par: string | null
           assigned_date: string | null
           assigned_heure: string | null
           assigned_operator_id: string | null
@@ -719,6 +721,8 @@ export type Database = {
         }
         Insert: {
           adresse_intervention?: string | null
+          annulation_motif?: string | null
+          annule_par?: string | null
           assigned_date?: string | null
           assigned_heure?: string | null
           assigned_operator_id?: string | null
@@ -745,6 +749,8 @@ export type Database = {
         }
         Update: {
           adresse_intervention?: string | null
+          annulation_motif?: string | null
+          annule_par?: string | null
           assigned_date?: string | null
           assigned_heure?: string | null
           assigned_operator_id?: string | null
@@ -2412,6 +2418,14 @@ export type Database = {
       }
       annuler_gel_vehicule_admin: {
         Args: { p_vehicule_id: string }
+        Returns: Json
+      }
+      annuler_rdv_admin: {
+        Args: { p_demande_id: string; p_motif: string }
+        Returns: Json
+      }
+      annuler_rdv_client: {
+        Args: { p_demande_id: string; p_motif: string }
         Returns: Json
       }
       appliquer_remise_commerciale: {

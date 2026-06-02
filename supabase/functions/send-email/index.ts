@@ -11,7 +11,9 @@ type EmailType =
   | "rdv_confirmee"
   | "intervention_close"
   | "rappel_24h"
-  | "staff_notification";
+  | "staff_notification"
+  | "rdv_annule_client"
+  | "rdv_annule_admin";
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00");
@@ -234,6 +236,71 @@ function buildStaffNotificationHtml(d: Record<string, unknown>): string {
   `);
 }
 
+function rdvDateLabel(d: Record<string, unknown>): string {
+  const dateStr = (d.assigned_date as string) ?? (d.date_confirmee as string) ?? null;
+  const dateLabel = dateStr ? formatDate(dateStr) : "Date à préciser";
+  const heure = d.assigned_heure
+    ? " à " + String(d.assigned_heure).slice(0, 5).replace(":", "h")
+    : "";
+  return dateLabel + heure;
+}
+
+// Annulation par le CLIENT → notifie l'équipe IZOX
+function buildRdvAnnuleClientHtml(d: Record<string, unknown>): string {
+  const ent = d.entreprises as Record<string, string> | null;
+  const nom = ent?.nom ?? "—";
+  const motif = (d.annulation_motif as string) ?? "—";
+  return wrapHtml("RDV annulé par le client", `
+    <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">⚠ Un client a annulé un rendez-vous</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Notification équipe IZOX</p>
+    <table cellpadding="12" cellspacing="0" border="0" width="100%"
+      style="background:#fefce8;border-radius:8px;border-left:4px solid #ca8a04;margin-bottom:24px">
+      <tr>
+        <td>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Client</p>
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827">${nom}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Rendez-vous prévu</p>
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827">${rdvDateLabel(d)}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Motif d'annulation</p>
+          <p style="margin:0;font-size:14px;color:#374151;font-style:italic">${motif}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;color:#6b7280;font-size:13px">
+      Le créneau est de nouveau libre. Connectez-vous à l'interface admin IZOX si besoin.
+    </p>
+  `);
+}
+
+// Annulation par l'ADMIN → notifie le client
+function buildRdvAnnuleAdminHtml(d: Record<string, unknown>): string {
+  const ent = d.entreprises as Record<string, string> | null;
+  const nom = ent?.nom ?? "Votre entreprise";
+  const motif = (d.annulation_motif as string) ?? "—";
+  return wrapHtml("Rendez-vous annulé", `
+    <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Votre rendez-vous a été annulé</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
+    <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6">
+      Nous vous informons que votre rendez-vous IZOX a dû être <strong style="color:#1B4332">annulé</strong>.
+    </p>
+    <table cellpadding="12" cellspacing="0" border="0" width="100%"
+      style="background:#fef2f2;border-radius:8px;border-left:4px solid #dc2626;margin-bottom:24px">
+      <tr>
+        <td>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Rendez-vous initialement prévu</p>
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827">${rdvDateLabel(d)}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Motif</p>
+          <p style="margin:0;font-size:14px;color:#374151;font-style:italic">${motif}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.6">
+      Vous pouvez soumettre une nouvelle demande de rendez-vous depuis votre espace client IZOX.
+      Pour toute question, contactez votre équipe IZOX.
+    </p>
+  `);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -300,6 +367,44 @@ Deno.serve(async (req) => {
         emailTo = email ? [email] : [];
         subject = "✓ Votre rendez-vous IZOX est confirmé";
         html = buildRdvConfirmeeHtml(rdv as Record<string, unknown>);
+        break;
+      }
+
+      case "rdv_annule_client": {
+        const { data: rdv, error } = await admin
+          .from("demandes_rdv")
+          .select("*, entreprises(nom)")
+          .eq("id", target_id)
+          .single();
+        if (error || !rdv) throw new Error("Demande RDV introuvable");
+
+        const { data: staffProfiles } = await admin
+          .from("profiles")
+          .select("id")
+          .in("role", ["admin", "staff", "commercial"]);
+        const staffIds = (staffProfiles ?? []).map((p: Record<string, string>) => p.id);
+        const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+        emailTo = users
+          .filter((u: Record<string, unknown>) => staffIds.includes(u.id as string) && u.email)
+          .map((u: Record<string, unknown>) => u.email as string);
+
+        const entNom = (rdv.entreprises as Record<string, string> | null)?.nom ?? "Client";
+        subject = `⚠ RDV annulé par un client — ${entNom}`;
+        html = buildRdvAnnuleClientHtml(rdv as Record<string, unknown>);
+        break;
+      }
+
+      case "rdv_annule_admin": {
+        const { data: rdv, error } = await admin
+          .from("demandes_rdv")
+          .select("*, entreprises(nom, email_contact)")
+          .eq("id", target_id)
+          .single();
+        if (error || !rdv) throw new Error("Demande RDV introuvable");
+        const email = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        emailTo = email ? [email] : [];
+        subject = "Votre rendez-vous IZOX a été annulé";
+        html = buildRdvAnnuleAdminHtml(rdv as Record<string, unknown>);
         break;
       }
 

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { type AdminDemandeRdv } from "@/components/admin/demande-rdv-types";
 import { AssignerRdvDialog } from "@/components/admin/AssignerRdvDialog";
+import { AnnulerRdvAdminDialog } from "@/components/admin/AnnulerRdvAdminDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
 import { Route as PlanningRoute } from "@/routes/admin.planning";
 
@@ -22,18 +23,20 @@ interface Row extends AdminDemandeRdv {
   entreprises?: { nom: string } | null;
 }
 
-const STATUTS = ["en_attente", "confirmee", "refusee", "annulee_client"];
+const STATUTS = ["en_attente", "confirmee", "refusee", "annulee_client", "annulee_admin"];
 const STATUT_LABEL: Record<string, string> = {
   en_attente: "En attente",
   confirmee: "Confirmée",
   refusee: "Refusée",
-  annulee_client: "Annulée",
+  annulee_client: "Annulée (client)",
+  annulee_admin: "Annulée (IZOX)",
 };
 const STATUT_COLOR: Record<string, string> = {
   en_attente: "bg-orange-50 text-orange-700 border-orange-300",
   confirmee: "bg-green-50 text-green-700 border-green-300",
   refusee: "bg-red-50 text-red-700 border-red-300",
   annulee_client: "bg-gray-50 text-gray-700 border-gray-300",
+  annulee_admin: "bg-gray-50 text-gray-700 border-gray-300",
 };
 
 export function DemandesRdvList() {
@@ -41,6 +44,7 @@ export function DemandesRdvList() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("en_attente");
   const [assigning, setAssigning] = useState<AdminDemandeRdv | null>(null);
+  const [cancelling, setCancelling] = useState<AdminDemandeRdv | null>(null);
   const navigate = useNavigate();
 
   const clearDemandeParam = useCallback(() => {
@@ -121,15 +125,12 @@ export function DemandesRdvList() {
               <li key={r.id}>
                 <button
                   type="button"
-                  disabled={r.statut !== "en_attente"}
-                  onClick={() =>
-                    r.statut === "en_attente"
-                      ? setAssigning({
-                          ...r,
-                          entreprise_nom: r.entreprises?.nom ?? null,
-                        })
-                      : undefined
-                  }
+                  disabled={r.statut !== "en_attente" && r.statut !== "confirmee"}
+                  onClick={() => {
+                    const withNom = { ...r, entreprise_nom: r.entreprises?.nom ?? null };
+                    if (r.statut === "en_attente") setAssigning(withNom);
+                    else if (r.statut === "confirmee") setCancelling(withNom);
+                  }}
                   className="w-full text-left"
                 >
                   <Card className="p-4 shadow-card hover:bg-muted/30 transition-colors disabled:hover:bg-card">
@@ -193,6 +194,22 @@ export function DemandesRdvList() {
         demande={assigning}
         onAssigned={() => {
           setAssigning(null);
+          clearDemandeParam();
+          load();
+        }}
+      />
+
+      <AnnulerRdvAdminDialog
+        open={!!cancelling}
+        onOpenChange={(o) => {
+          if (!o) {
+            setCancelling(null);
+            clearDemandeParam();
+          }
+        }}
+        demande={cancelling}
+        onCancelled={() => {
+          setCancelling(null);
           clearDemandeParam();
           load();
         }}

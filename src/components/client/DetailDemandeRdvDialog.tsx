@@ -18,6 +18,8 @@ type DemandeDetail = {
   statut: string;
   creneaux_preferes: Array<{ date: string; plage: string }> | unknown;
   date_confirmee?: string | null;
+  assigned_date?: string | null;
+  assigned_heure?: string | null;
   vehicule_ids: string[];
   commentaires?: string | null;
   adresse_intervention?: string | null;
@@ -123,7 +125,7 @@ export function DetailDemandeRdvDialog({
         const { data: d, error: fetchError } = await supabase
           .from("demandes_rdv")
           .select(
-            "id, statut, creneaux_preferes, date_confirmee, vehicule_ids, commentaires, adresse_intervention, ville_intervention, code_postal_intervention, created_at, updated_at",
+            "id, statut, creneaux_preferes, date_confirmee, assigned_date, assigned_heure, vehicule_ids, commentaires, adresse_intervention, ville_intervention, code_postal_intervention, created_at, updated_at",
           )
           .eq("id", demandeId)
           .maybeSingle();
@@ -151,11 +153,28 @@ export function DetailDemandeRdvDialog({
     };
   }, [demandeId, open]);
 
-  const dateConfirmee = demande?.date_confirmee ? new Date(demande.date_confirmee) : null;
-  const heureConfirmee = dateConfirmee ? dateConfirmee.toTimeString().slice(0, 5) : null;
+  // Date confirmée : préférer assigned_date (date pure, sans décalage TZ) au
+  // composant horaire de date_confirmee (= minuit UTC → 02:00 Paris, faux).
+  const dateConfirmeeStr =
+    demande?.assigned_date ??
+    (demande?.date_confirmee ? demande.date_confirmee.slice(0, 10) : null);
+  const heureConfirmee = demande?.assigned_heure
+    ? demande.assigned_heure.slice(0, 5).replace(":", "h")
+    : null;
   const creneaux = Array.isArray(demande?.creneaux_preferes)
     ? (demande!.creneaux_preferes as Array<{ date: string; plage: string }>)
     : [];
+
+  // Annulable si le RDV est à plus de 48h (date assignée > demain).
+  const annulable = (() => {
+    if (!demande?.assigned_date) return true; // pas de date → on laisse annuler
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const limite = new Date(today);
+    limite.setDate(limite.getDate() + 1); // demain inclus = non annulable
+    const dRdv = new Date(demande.assigned_date + "T00:00:00");
+    return dRdv > limite;
+  })();
 
   return (
     <>
@@ -176,12 +195,12 @@ export function DetailDemandeRdvDialog({
             <p className="text-sm text-muted-foreground py-4">Demande introuvable.</p>
           ) : (
             <div className="space-y-4">
-              {demande.statut === "confirmee" && dateConfirmee ? (
+              {demande.statut === "confirmee" && dateConfirmeeStr ? (
                 <div className="rounded-md border bg-green-50 p-3">
                   <div className="text-xs text-muted-foreground mb-1">Date confirmée</div>
                   <div className="font-semibold flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    {formatDateFR(dateConfirmee.toISOString())}
+                    {formatDateFR(dateConfirmeeStr)}
                   </div>
                   {heureConfirmee && (
                     <div className="mt-1 flex items-center gap-2 text-sm">
@@ -286,6 +305,27 @@ export function DetailDemandeRdvDialog({
                   <X className="h-4 w-4 mr-2" />
                   Annuler ma demande
                 </Button>
+              )}
+
+              {demande.statut === "confirmee" && (
+                annulable ? (
+                  <Button
+                    variant="outline"
+                    className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    onClick={() => setAnnulerOpen(true)}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Annuler ce rendez-vous
+                  </Button>
+                ) : (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 flex items-start gap-2">
+                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>
+                      Annulation impossible à moins de 48h du rendez-vous.
+                      Contactez IZOX pour toute modification.
+                    </span>
+                  </div>
+                )
               )}
             </div>
           )}

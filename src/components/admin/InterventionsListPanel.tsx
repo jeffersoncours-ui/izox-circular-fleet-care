@@ -55,7 +55,11 @@ export function InterventionsListPanel() {
   }, []);
 
   const filtered = items
-    .filter((i) => filter === "tous" || i.statut === filter)
+    // "tous" exclut les interventions annulées (bruit opérationnel) ; on les
+    // voit via le filtre dédié "Annulées".
+    .filter((i) =>
+      filter === "tous" ? i.statut !== "annulee" : i.statut === filter,
+    )
     .filter((i) => {
       if (!search.trim()) return true;
       const t = search.toLowerCase();
@@ -100,6 +104,7 @@ export function InterventionsListPanel() {
             <SelectItem value="en_cours">En cours</SelectItem>
             <SelectItem value="validee">Validées</SelectItem>
             <SelectItem value="refusee">Refusées</SelectItem>
+            <SelectItem value="annulee">Annulées</SelectItem>
           </SelectContent>
         </Select>
       </Card>

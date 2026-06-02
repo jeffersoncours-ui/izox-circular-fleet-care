@@ -5,7 +5,9 @@ export type EmailType =
   | "rdv_confirmee"
   | "intervention_close"
   | "rappel_24h"
-  | "staff_notification";
+  | "staff_notification"
+  | "rdv_annule_client"
+  | "rdv_annule_admin";
 
 /** Fire-and-forget : ne bloque pas le flux principal en cas d'échec. */
 export async function sendEmail(type: EmailType, targetId: string): Promise<void> {
