@@ -1,5 +1,13 @@
 # Lessons Learned — IZOX
 
+## Bugs terrain post-déploiement (session 10 — correctifs)
+
+- **RLS vehicules manquante pour opérateur** : `vehicules` n'avait aucune policy SELECT pour le rôle `operateur`. Le join PostgREST dans la requête `interventions` (`.select("..., vehicules(immatriculation, marque...)")`) retournait `null` silencieusement → immatriculation "—" dans tout le dashboard. Toujours vérifier les RLS de **toutes les tables jointes**, pas seulement la table principale.
+- **`todayCount` qui ignore les `en_cours` d'autres dates** : une intervention peut être `en_cours` avec `date_intervention` = demain (planifiée pour demain, prise en charge aujourd'hui). Compter `en_cours` indépendamment de la date (ils sont actifs *maintenant*), et `planifiée` uniquement si `date_intervention === today`. Formule correcte : `enCours.length + avenir.filter(i => i.date_intervention === today).length`.
+- **AvenirCard non cliquable** : `<div>` wrapper ne propage pas les clics. L'opérateur ne pouvait pas voir les détails (adresse, prestation) d'une fiche planifiée avant de la prendre en charge. Solution : wrapper `<button>` avec `onClick → navigate`, et `e.stopPropagation()` sur le bouton "Prendre en charge" imbriqué pour éviter la navigation au clic du CTA.
+- **Contrainte "1 à la fois" absente** : le RPC `prendre_en_charge_intervention` ne vérifiait pas si une `en_cours` existait déjà. Ajouter `IF EXISTS (SELECT 1 FROM interventions WHERE operateur_id = auth.uid() AND statut='en_cours') THEN RAISE EXCEPTION`. Côté UI : prop `hasEnCours` → bouton désactivé + libellé "Intervention en cours...".
+- **Tester les RLS de toutes les tables impliquées dans un join** : avant de déclarer un composant terminé, vérifier systématiquement que l'utilisateur cible (ici `operateur`) a bien un accès SELECT sur chaque table référencée dans le `.select()` — y compris les tables de lookup (vehicules, entreprises, operators...).
+
 ## Compte opérateur terrain (session 10)
 
 - **`operator_id` ≠ `operateur_id` — deux FK distinctes** : `operator_id` (FK → `operators`, planning admin) est rempli par `assigner_rdv`. `operateur_id` (FK → `auth.users`) est rempli par l'opérateur terrain lui-même. La RLS originale ne couvrait que `operateur_id = auth.uid()` → interventions planifiées **entièrement invisibles** pour l'opérateur terrain. Fix : `user_id` sur `operators` + RLS étendue avec `OR operator_id IN (SELECT id FROM operators WHERE user_id = auth.uid())`.

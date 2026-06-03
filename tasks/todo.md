@@ -14,6 +14,12 @@
 
 ## Historique sessions
 
+### Session 2026-06-03 (11) — Correctifs bugs terrain post-déploiement
+- Migration `20260603040000` : RLS `vehicules_operateur_select` + contrainte "1 en_cours à la fois" dans RPC
+- `terrain.tsx` : `AvenirCard` cliquable (fiche planifiée), `todayCount` corrigé, `hasEnCours` désactive le CTA
+- Reset DB test : 2 interventions repassées en `planifiee`
+- CLAUDE.md : règle "Validation empirique obligatoire" + lessons.md mis à jour
+
 ### Session 2026-06-03 (10) — Compte opérateur fonctionnel + redesign terrain
 - **Fix critique** : liaison `operators.user_id → auth.users` — interventions planifiées désormais visibles par l'opérateur terrain
 - Migration `20260603030000_operateur_liaison.sql` : `user_id` sur `operators`, RLS interventions + photos + storage mis à jour
