@@ -13,12 +13,21 @@
 - [x] Deploy edge function `send-email` v11
 - [x] Commit + push
 
-### Review session 13
-- Bug critique `rdv_modifie` corrigé : l'email de replanification était absent du switch → silencieusement ignoré depuis la session 8
-- Vérification de rôle ajoutée dans `send-email` : client ne peut plus déclencher types réservés admin
-- MIME validation ajoutée avant upload photo terrain
-- Casts `as any` supprimés sur `operators` + 3 RPCs (types déjà régénérés, dette non nettoyée)
-- `routeTree.gen.ts` régénéré : route `terrain.index` était absente (erreur TS silencieuse en local)
+### Review session 13 — Merge sur main
+
+**Commits :**
+- `1f9e967` fix: audit sécurité — rdv_modifie email, rôle send-email, MIME photos, casts as any
+- `3bb6ff1` docs: inventaire complet pages + brief Claude Design + lessons session 13
+
+**Résumé corrections :**
+- Bug critique `rdv_modifie` : email replanification absent du switch send-email depuis session 8 → silence fallback default error
+- Sécurité : vérification `profiles.role` dans send-email, client limité à 2 types autorisés
+- Important : validation MIME `file.type.startsWith("image/")` avant upload photo terrain
+- Casts `as any` éliminés : operators + 3 RPCs (AssignerRdvDialog, PlanningCalendar, RouteMap, admin.interventions.$id)
+- `routeTree.gen.ts` régénéré : route `terrain.index` était manquante localement
+- Brief complet pour Claude Design : `tasks/inventory-design-brief.md` (3 portails, matrices miroirs, statuts visuels)
+
+**État merge :** build TS 0 erreur, tests edge function déployée, codebase prête refonte
 
 ---
 
