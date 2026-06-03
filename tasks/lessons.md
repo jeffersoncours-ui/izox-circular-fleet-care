@@ -1,5 +1,10 @@
 # Lessons Learned — IZOX
 
+## Bug routing TanStack Router — terrain fiches non cliquables (session 12c)
+
+- **`terrain.tsx` pleine page sans `<Outlet/>` = fiches enfants invisibles** : même bug qu'`admin.interventions` (session 8, documenté dans CLAUDE.md). `terrain.intervention.$id.tsx` est un enfant de `terrain.tsx` dans TanStack Router (file-based routing par notation `.`). Quand le parent n'a pas `<Outlet/>`, le composant enfant n'a nulle part où se rendre — le clic navigue (URL change) mais l'écran reste identique. Résolution identique à admin.interventions : `terrain.tsx` → `component: () => <Outlet/>`, dashboard → `terrain.index.tsx` avec `createFileRoute("/terrain/")`.
+- **Règle systématique à l'ajout d'une route enfant** : dès qu'on crée `parent.child.tsx`, vérifier que `parent.tsx` exporte `<Outlet/>`. Si `parent.tsx` est un composant pleine page, splitter en `parent.tsx` (layout) + `parent.index.tsx` (contenu) avant de créer l'enfant. Ne pas attendre un test post-déploiement pour découvrir le bug.
+
 ## Correctifs post-tests + audit liaisons (session 12b)
 
 - **Toujours prouver un "bug" par les timestamps avant de coder** : le client signalait un quota dépassé (3 RDV pour un pack à 2). En base, la demande #2 a été annulée **59 secondes** avant la création de la #3 → le garde-fou avait bien fonctionné (1 actif + 1 nouveau = 2). La perception utilisateur ≠ réalité base. Reconstruire la chronologie (`created_at`/`updated_at`) avant de toucher au code évite de "corriger" du code sain.

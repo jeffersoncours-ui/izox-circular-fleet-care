@@ -24,8 +24,19 @@
 - [x] **Verrou serveur (P5)** : `prendre_en_charge_intervention` refuse le démarrage avant l'heure de déverrouillage (date+heure, fuseau Europe/Paris)
 - [x] Tests DB empiriques (impersonation admin/operateur/client) : 6 scénarios validés, données restaurées
 - [~] **P3 (email annulation)** : déjà envoyé — retravail global des mails reporté (décision user)
-- [~] **P7 (clic onglet Interventions)** : code correct (`navigate`) — à reproduire en live après deploy
+- [x] **P7 (clic onglet Interventions)** : cause racine trouvée — même bug que admin.interventions (session 8). `terrain.tsx` = page pleine sans `<Outlet/>`. Fix : `terrain.tsx` → layout pur, contenu → `terrain.index.tsx`
 - [x] P6 (photos/observations opérateur) : déjà présent dans le stepper terrain — rien à faire
+
+---
+
+## Session 2026-06-03 (12c) — Fix routing terrain + purge DB
+
+- [x] Cause root bug clic interventions : `terrain.tsx` sans `<Outlet/>` → fiches `terrain.intervention.$id` ne s'affichaient pas
+- [x] Fix : `terrain.tsx` → layout `<Outlet/>` pur, `terrain.index.tsx` → contenu du dashboard opérateur (même pattern admin.interventions)
+- [x] Purge DB : 0 demandes_rdv, 0 interventions, 0 logs (5 comptes + 1 entreprise + 1 véhicule + 1 contrat conservés)
+- [x] Commit + push
+- [x] todos.md + lessons.md mis à jour
+- [ ] **Merge branch** `claude/izox-fleet-care-dev-h1D0G` → `main`
 
 ---
 
@@ -40,6 +51,11 @@
 ---
 
 ## Historique sessions
+
+### Session 2026-06-03 (12c) — Fix routing terrain + purge DB
+- Bug racine clic interventions : `terrain.tsx` pleine page sans `<Outlet/>` → pattern identique au bug admin.interventions (session 8)
+- Fix : split `terrain.tsx` (layout pur) + `terrain.index.tsx` (dashboard)
+- Purge DB complète : demandes_rdv, interventions, logs vidés — 5 comptes + données entreprise conservés
 
 ### Session 2026-06-03 (11) — Correctifs bugs terrain post-déploiement
 - Migration `20260603040000` : RLS `vehicules_operateur_select` + contrainte "1 en_cours à la fois" dans RPC
