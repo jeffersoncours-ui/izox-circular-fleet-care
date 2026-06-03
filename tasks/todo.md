@@ -6,12 +6,21 @@
 
 - [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.
 - [ ] **Carte interactive** : optimisation tournée (nearest-neighbor + bouton « Optimiser ») à faire quand plusieurs opérateurs.
-- [ ] **Refonte visuelle Claude Design** : migration écran par écran, garder les contrats de données (mêmes RPCs, mêmes champs), vérifier les invariants `lessons.md` à chaque écran.
+- [ ] **Refonte visuelle Claude Design** : ✅ compte opérateur terminé (session 10). Reste : côté admin + client.
 - [ ] **Migration domaine `izox.fr`** : mettre à jour `SITE_URL` env var Supabase + vérifier que `/reset-password` reste dans les redirect URLs.
+- [ ] **Lier nouveaux opérateurs** : quand un 2e opérateur est créé, ajouter `user_id` dans `operators` via migration ou UI admin.
 
 ---
 
 ## Historique sessions
+
+### Session 2026-06-03 (10) — Compte opérateur fonctionnel + redesign terrain
+- **Fix critique** : liaison `operators.user_id → auth.users` — interventions planifiées désormais visibles par l'opérateur terrain
+- Migration `20260603030000_operateur_liaison.sql` : `user_id` sur `operators`, RLS interventions + photos + storage mis à jour
+- RPC `prendre_en_charge_intervention()` : `planifiee → en_cours` + `operateur_id = auth.uid()`
+- `terrain.tsx` refonte complète : hero sombre + stats live, section "À venir" (planifiées), section "En cours" (auto-refresh 30s), bottom nav 4 onglets (Recherche / En cours / Histoire / Profil), tab Profil
+- `terrain.intervention.$id.tsx` refonte : vue planifiée (date/lieu + CTA), header enrichi (#ID · client · pack), stepper avec labels, zones avec badge ok/à faire, compteurs checklists
+- `interventions.ts` : 6 zones extérieures, checklists simplifiées client-facing, `typeScope()` ajouté
 
 ### Session 2026-06-03 (9) — Créneaux RDV + GPS/Carte
 - Formulaire client : 2 créneaux min sur jours différents (`hasSameDayCreneaux`, init 2 créneaux vides)

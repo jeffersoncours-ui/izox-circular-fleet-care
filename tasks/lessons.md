@@ -1,5 +1,14 @@
 # Lessons Learned — IZOX
 
+## Compte opérateur terrain (session 10)
+
+- **`operator_id` ≠ `operateur_id` — deux FK distinctes** : `operator_id` (FK → `operators`, planning admin) est rempli par `assigner_rdv`. `operateur_id` (FK → `auth.users`) est rempli par l'opérateur terrain lui-même. La RLS originale ne couvrait que `operateur_id = auth.uid()` → interventions planifiées **entièrement invisibles** pour l'opérateur terrain. Fix : `user_id` sur `operators` + RLS étendue avec `OR operator_id IN (SELECT id FROM operators WHERE user_id = auth.uid())`.
+- **RPC `prendre_en_charge_intervention`** : séparer la lecture (vue planifiée : date, lieu, véhicule) du démarrage (prise en charge). Le RPC valide opérateur lié + statut=planifiee + operator_id correct → `operateur_id = auth.uid()` + `statut = en_cours`. Simple, atomique.
+- **Storage policies à mettre à jour en même temps que les RLS table** : les policies storage font `EXISTS (SELECT 1 FROM interventions WHERE ...)`. Sans la mise à jour, l'upload photos échoue silencieusement après prise en charge.
+- **`typeScope()` obligatoire pour les packs commerciaux** : `type_prestation` des interventions RDV vaut `pack_standard`/`pack_vtc`/`pack_interieur`. `zonesFor()` attend `exterieur|interieur|complet`. Sans `typeScope()`, checklists et photos disparaissent. Toujours `zonesFor(typeScope(intervention.type_prestation))`.
+- **Step dashboard depuis localStorage** : le stepper stocke l'étape dans `localStorage`. Le dashboard lit `izox_intervention_${id}` pour afficher "step X/3" sans requête DB supplémentaire.
+- **Zones photos : changement de clés = photos historiques orphelines** : passer de 2 → 6 zones change les clés DB. Les photos existantes avec les anciennes clés ne s'affichent plus. Acceptable en dev/test, nécessite une migration de clés en production.
+
 ## Créneaux RDV & Saturation (session 9)
 
 - **Validation 2 jours différents vs 2 créneaux distincts** : la règle "jours différents" est plus stricte que "pas de doublon exact". Un seul check `hasSameDayCreneaux` (clé = date ISO) remplace les deux anciens checks et couvre tous les cas. Initialiser le state avec 2 créneaux vides force la saisie sans message d'erreur intrusif au premier rendu.
