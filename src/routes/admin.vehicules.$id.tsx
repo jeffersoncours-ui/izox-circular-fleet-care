@@ -1,5 +1,8 @@
 import { createFileRoute, Link, useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
+import { format, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getVehiculePhotoUrl } from "@/lib/vehicule-photo";
 import { getPackLabel } from "@/lib/pricing";
@@ -25,6 +28,7 @@ import {
   BookOpen,
   Droplets,
   Building2,
+  Snowflake,
 } from "lucide-react";
 
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
@@ -35,6 +39,7 @@ import {
   type FacturationPrealableState,
 } from "@/components/admin/FacturationPrealableDialog";
 import { ValidationVehiculeBadge } from "@/components/admin/ValidationVehiculeBadge";
+import { GelerVehiculeAdminDialog } from "@/components/admin/GelerVehiculeAdminDialog";
 
 export const Route = createFileRoute("/admin/vehicules/$id")({
   component: AdminVehiculeDetail,
@@ -56,12 +61,16 @@ interface Vehicule {
   contrat_id: string | null;
   entreprise_id: string;
   created_by: string | null;
+  gel_admin_date_debut: string | null;
+  gel_admin_date_fin: string | null;
+  gel_admin_motif: string | null;
   entreprises: { id: string; nom: string } | null;
   contrats: { commercial_signataire_id: string | null } | null;
 }
 
 const STATUT_LABELS: Record<string, string> = {
   actif: "Actif",
+  gele: "Gelé",
   en_attente_validation: "En attente de validation",
   remplace: "Remplacé",
 };
@@ -77,13 +86,16 @@ function AdminVehiculeDetail() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
+  const [gelOpen, setGelOpen] = useState(false);
+  const [leverGelConfirmOpen, setLeverGelConfirmOpen] = useState(false);
+  const [leverGelLoading, setLeverGelLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
       .from("vehicules")
       .select(
-        "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id, entreprise_id, created_by, entreprises ( id, nom ), contrats ( commercial_signataire_id )"
+        "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id, entreprise_id, created_by, gel_admin_date_debut, gel_admin_date_fin, gel_admin_motif, entreprises ( id, nom ), contrats ( commercial_signataire_id )"
       )
       .eq("id", id)
       .maybeSingle();
@@ -109,6 +121,28 @@ function AdminVehiculeDetail() {
       navigate({ to: "/admin/vehicules" });
     } else {
       setConfirmOpen(false);
+    }
+  };
+
+  const handleLeverGel = async () => {
+    if (!vehicule) return;
+    setLeverGelLoading(true);
+    try {
+      const { error } = await supabase.rpc("annuler_gel_vehicule_admin", {
+        p_vehicule_id: vehicule.id,
+      });
+      if (error) throw error;
+      toast.success(
+        vehicule.statut === "gele"
+          ? "Gel levé — véhicule réactivé"
+          : "Gel programmé annulé",
+      );
+      setLeverGelConfirmOpen(false);
+      load();
+    } catch (err: any) {
+      toast.error(`Erreur : ${err?.message ?? "inconnue"}`);
+    } finally {
+      setLeverGelLoading(false);
     }
   };
 
@@ -145,6 +179,13 @@ function AdminVehiculeDetail() {
     vehicule.marque || vehicule.modele
       ? `${vehicule.marque ?? ""} ${vehicule.modele ?? ""}`.trim()
       : "Véhicule";
+
+  const hasGelAdmin = vehicule.gel_admin_date_debut !== null;
+  const isGelActif = hasGelAdmin && vehicule.statut === "gele";
+  const isGelProgramme = hasGelAdmin && vehicule.statut === "actif";
+
+  const fmtDate = (d: string | null) =>
+    d ? format(parseISO(d), "dd/MM/yyyy", { locale: fr }) : "—";
 
   return (
     <div className="p-6 lg:p-10 max-w-3xl mx-auto">
@@ -264,14 +305,123 @@ function AdminVehiculeDetail() {
         </Card>
       )}
 
-      <div className="flex gap-2">
-        <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
-          <Pencil className="h-4 w-4" /> Modifier
-        </Button>
-        <Button variant="destructive" className="flex-1" onClick={() => setConfirmOpen(true)}>
-          <Trash2 className="h-4 w-4" /> Supprimer
-        </Button>
+      {/* Gel admin — état actif ou programmé */}
+      {isGelActif && (
+        <Card className="p-5 shadow-card border-sky-200 bg-sky-50 mb-5">
+          <div className="flex items-start gap-3">
+            <Snowflake className="h-5 w-5 text-sky-500 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sky-800">Gel actif</p>
+              <p className="text-sm text-sky-700 mt-0.5">
+                Du {fmtDate(vehicule.gel_admin_date_debut)} au{" "}
+                {fmtDate(vehicule.gel_admin_date_fin)}
+              </p>
+              {vehicule.gel_admin_motif && (
+                <p className="text-sm text-sky-600 mt-1 italic">
+                  {vehicule.gel_admin_motif}
+                </p>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setLeverGelConfirmOpen(true)}
+            >
+              Lever le gel
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {isGelProgramme && (
+        <Card className="p-5 shadow-card border-amber-200 bg-amber-50 mb-5">
+          <div className="flex items-start gap-3">
+            <Snowflake className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-amber-800">Gel programmé</p>
+              <p className="text-sm text-amber-700 mt-0.5">
+                Du {fmtDate(vehicule.gel_admin_date_debut)} au{" "}
+                {fmtDate(vehicule.gel_admin_date_fin)}
+              </p>
+              {vehicule.gel_admin_motif && (
+                <p className="text-sm text-amber-600 mt-1 italic">
+                  {vehicule.gel_admin_motif}
+                </p>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setLeverGelConfirmOpen(true)}
+            >
+              Annuler
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      <div className="space-y-2">
+        {!hasGelAdmin && vehicule.statut === "actif" && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setGelOpen(true)}
+          >
+            <Snowflake className="h-4 w-4" /> Geler ce véhicule
+          </Button>
+        )}
+        <div className="flex gap-2">
+          <Button variant="izox" className="flex-1" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4" /> Modifier
+          </Button>
+          <Button variant="destructive" className="flex-1" onClick={() => setConfirmOpen(true)}>
+            <Trash2 className="h-4 w-4" /> Supprimer
+          </Button>
+        </div>
       </div>
+
+      <GelerVehiculeAdminDialog
+        open={gelOpen}
+        onOpenChange={setGelOpen}
+        vehiculeId={vehicule.id}
+        immatriculation={vehicule.immatriculation}
+        onDone={load}
+      />
+
+      <AlertDialog open={leverGelConfirmOpen} onOpenChange={setLeverGelConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {isGelActif ? "Lever le gel ?" : "Annuler le gel programmé ?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isGelActif
+                ? `Le véhicule ${vehicule.immatriculation} sera réactivé immédiatement et réintégré à la facturation.`
+                : `Le gel programmé du ${fmtDate(vehicule.gel_admin_date_debut)} au ${fmtDate(vehicule.gel_admin_date_fin)} sera annulé.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={leverGelLoading}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleLeverGel();
+              }}
+              disabled={leverGelLoading}
+            >
+              {leverGelLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isGelActif ? (
+                "Lever le gel"
+              ) : (
+                "Confirmer l'annulation"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AddVehiculeDialog
         open={editOpen}

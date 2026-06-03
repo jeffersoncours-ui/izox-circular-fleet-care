@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Copy, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Mail, Link2, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -28,7 +28,7 @@ interface Props {
 
 export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState<{ email: string; password: string } | null>(null);
+  const [done, setDone] = useState<{ email: string; emailSent: boolean; inviteLink: string | null } | null>(null);
   const [commerciaux, setCommerciaux] = useState<
     Array<{ id: string; prenom: string | null; nom: string | null }>
   >([]);
@@ -115,11 +115,12 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
             nom: form.nom_user,
             email: form.email_user,
           },
+          redirect_to: `${window.location.origin}/reset-password`,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setDone({ email: data.email, password: data.temp_password });
+      setDone({ email: data.email, emailSent: !!data.email_sent, inviteLink: data.invite_link ?? null });
       toast.success("Compte client créé");
       onCreated?.();
     } catch (err) {
@@ -130,10 +131,9 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
   };
 
   const copyLink = () => {
-    if (!done) return;
-    const text = `Connexion IZOX :\nEmail : ${done.email}\nMot de passe provisoire : ${done.password}\n${window.location.origin}/login`;
-    navigator.clipboard.writeText(text);
-    toast.success("Identifiants copiés");
+    if (!done?.inviteLink) return;
+    navigator.clipboard.writeText(done.inviteLink);
+    toast.success("Lien copié");
   };
 
   const close = () => {
@@ -152,27 +152,44 @@ export function CreateClientDialog({ open, onOpenChange, onCreated }: Props) {
                 Compte créé avec succès
               </DialogTitle>
               <DialogDescription>
-                Transmettez ces identifiants au client par WhatsApp, SMS ou email.
+                {done.emailSent
+                  ? "Un email de bienvenue a été envoyé au client avec son lien de connexion."
+                  : "Le lien d'accès est prêt. Transmettez-le au client."}
               </DialogDescription>
             </DialogHeader>
-            <div className="mt-4 space-y-3 bg-primary-soft border border-primary/20 rounded-lg p-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Email</p>
-                <p className="font-mono text-sm font-medium">{done.email}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Mot de passe provisoire</p>
-                <p className="font-mono text-sm font-medium">{done.password}</p>
+
+            <div className="mt-4 rounded-lg border border-primary/20 bg-primary-soft p-4 flex items-center gap-3">
+              {done.emailSent ? (
+                <Mail className="h-5 w-5 text-primary shrink-0" />
+              ) : (
+                <Link2 className="h-5 w-5 text-primary shrink-0" />
+              )}
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">
+                  {done.emailSent ? "Email envoyé à" : "Email du compte"}
+                </p>
+                <p className="font-mono text-sm font-medium truncate">{done.email}</p>
               </div>
             </div>
-            <div className="mt-4 flex gap-2">
-              <Button variant="izox" onClick={copyLink} className="flex-1">
-                <Copy className="h-4 w-4" />
-                Copier les identifiants
-              </Button>
-              <Button variant="outline" onClick={close}>
-                Fermer
-              </Button>
+
+            {done.emailSent ? (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Le client recevra un lien pour définir son mot de passe. Ce lien est valable 24 heures.
+              </p>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground">
+                L'email de bienvenue n'a pas pu être envoyé automatiquement. Copiez le lien ci-dessous et transmettez-le au client.
+              </p>
+            )}
+
+            <div className="mt-4 flex gap-2 justify-end">
+              {!done.emailSent && done.inviteLink && (
+                <Button variant="outline" onClick={copyLink}>
+                  <Copy className="h-4 w-4" />
+                  Copier le lien
+                </Button>
+              )}
+              <Button variant="izox" onClick={close}>Fermer</Button>
             </div>
           </div>
         ) : (

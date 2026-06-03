@@ -10,12 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TerrainRouteImport } from './routes/terrain'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ClientRouteImport } from './routes/client'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientIndexRouteImport } from './routes/client.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as SettingsSecurityRouteImport } from './routes/settings.security'
 import { Route as ClientRendezVousRouteImport } from './routes/client.rendez-vous'
 import { Route as ClientPrestationsRouteImport } from './routes/client.prestations'
 import { Route as ClientInterventionsRouteImport } from './routes/client.interventions'
@@ -25,6 +28,7 @@ import { Route as ClientFacturesRouteImport } from './routes/client.factures'
 import { Route as ClientDocumentsRouteImport } from './routes/client.documents'
 import { Route as AdminVehiculesRouteImport } from './routes/admin.vehicules'
 import { Route as AdminRendezVousRouteImport } from './routes/admin.rendez-vous'
+import { Route as AdminPlanningRouteImport } from './routes/admin.planning'
 import { Route as AdminInterventionsRouteImport } from './routes/admin.interventions'
 import { Route as AdminImpactRouteImport } from './routes/admin.impact'
 import { Route as AdminFacturationRouteImport } from './routes/admin.facturation'
@@ -33,10 +37,14 @@ import { Route as AdminDemandesRdvRouteImport } from './routes/admin.demandes-rd
 import { Route as AdminDemandesGelRouteImport } from './routes/admin.demandes-gel'
 import { Route as AdminContratsRouteImport } from './routes/admin.contrats'
 import { Route as AdminClientsRouteImport } from './routes/admin.clients'
+import { Route as AdminPlanningIndexRouteImport } from './routes/admin.planning.index'
+import { Route as AdminInterventionsIndexRouteImport } from './routes/admin.interventions.index'
 import { Route as TerrainInterventionIdRouteImport } from './routes/terrain.intervention.$id'
+import { Route as SettingsSecurity2faRouteImport } from './routes/settings.security.2fa'
 import { Route as ClientFlotteIdRouteImport } from './routes/client.flotte.$id'
 import { Route as ClientContratsIdRouteImport } from './routes/client.contrats.$id'
 import { Route as AdminVehiculesIdRouteImport } from './routes/admin.vehicules.$id'
+import { Route as AdminPlanningMapRouteImport } from './routes/admin.planning.map'
 import { Route as AdminInterventionsIdRouteImport } from './routes/admin.interventions.$id'
 import { Route as AdminContratsIdRouteImport } from './routes/admin.contrats.$id'
 import { Route as AdminClientsIdRouteImport } from './routes/admin.clients.$id'
@@ -44,6 +52,16 @@ import { Route as AdminClientsIdRouteImport } from './routes/admin.clients.$id'
 const TerrainRoute = TerrainRouteImport.update({
   id: '/terrain',
   path: '/terrain',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -75,6 +93,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const SettingsSecurityRoute = SettingsSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const ClientRendezVousRoute = ClientRendezVousRouteImport.update({
   id: '/rendez-vous',
@@ -121,6 +144,11 @@ const AdminRendezVousRoute = AdminRendezVousRouteImport.update({
   path: '/rendez-vous',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPlanningRoute = AdminPlanningRouteImport.update({
+  id: '/planning',
+  path: '/planning',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminInterventionsRoute = AdminInterventionsRouteImport.update({
   id: '/interventions',
   path: '/interventions',
@@ -161,10 +189,25 @@ const AdminClientsRoute = AdminClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPlanningIndexRoute = AdminPlanningIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminPlanningRoute,
+} as any)
+const AdminInterventionsIndexRoute = AdminInterventionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminInterventionsRoute,
+} as any)
 const TerrainInterventionIdRoute = TerrainInterventionIdRouteImport.update({
   id: '/intervention/$id',
   path: '/intervention/$id',
   getParentRoute: () => TerrainRoute,
+} as any)
+const SettingsSecurity2faRoute = SettingsSecurity2faRouteImport.update({
+  id: '/2fa',
+  path: '/2fa',
+  getParentRoute: () => SettingsSecurityRoute,
 } as any)
 const ClientFlotteIdRoute = ClientFlotteIdRouteImport.update({
   id: '/$id',
@@ -180,6 +223,11 @@ const AdminVehiculesIdRoute = AdminVehiculesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AdminVehiculesRoute,
+} as any)
+const AdminPlanningMapRoute = AdminPlanningMapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => AdminPlanningRoute,
 } as any)
 const AdminInterventionsIdRoute = AdminInterventionsIdRouteImport.update({
   id: '/$id',
@@ -202,6 +250,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
@@ -211,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/impact': typeof AdminImpactRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
+  '/admin/planning': typeof AdminPlanningRouteWithChildren
   '/admin/rendez-vous': typeof AdminRendezVousRoute
   '/admin/vehicules': typeof AdminVehiculesRouteWithChildren
   '/client/documents': typeof ClientDocumentsRoute
@@ -220,19 +271,26 @@ export interface FileRoutesByFullPath {
   '/client/interventions': typeof ClientInterventionsRoute
   '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
+  '/settings/security': typeof SettingsSecurityRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
+  '/admin/planning/map': typeof AdminPlanningMapRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
   '/client/contrats/$id': typeof ClientContratsIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
+  '/settings/security/2fa': typeof SettingsSecurity2faRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
+  '/admin/interventions/': typeof AdminInterventionsIndexRoute
+  '/admin/planning/': typeof AdminPlanningIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
@@ -241,7 +299,6 @@ export interface FileRoutesByTo {
   '/admin/equipe': typeof AdminEquipeRoute
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/impact': typeof AdminImpactRoute
-  '/admin/interventions': typeof AdminInterventionsRouteWithChildren
   '/admin/rendez-vous': typeof AdminRendezVousRoute
   '/admin/vehicules': typeof AdminVehiculesRouteWithChildren
   '/client/documents': typeof ClientDocumentsRoute
@@ -251,15 +308,20 @@ export interface FileRoutesByTo {
   '/client/interventions': typeof ClientInterventionsRoute
   '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
+  '/settings/security': typeof SettingsSecurityRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
+  '/admin/planning/map': typeof AdminPlanningMapRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
   '/client/contrats/$id': typeof ClientContratsIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
+  '/settings/security/2fa': typeof SettingsSecurity2faRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
+  '/admin/interventions': typeof AdminInterventionsIndexRoute
+  '/admin/planning': typeof AdminPlanningIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -267,6 +329,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
@@ -276,6 +340,7 @@ export interface FileRoutesById {
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/impact': typeof AdminImpactRoute
   '/admin/interventions': typeof AdminInterventionsRouteWithChildren
+  '/admin/planning': typeof AdminPlanningRouteWithChildren
   '/admin/rendez-vous': typeof AdminRendezVousRoute
   '/admin/vehicules': typeof AdminVehiculesRouteWithChildren
   '/client/documents': typeof ClientDocumentsRoute
@@ -285,15 +350,20 @@ export interface FileRoutesById {
   '/client/interventions': typeof ClientInterventionsRoute
   '/client/prestations': typeof ClientPrestationsRoute
   '/client/rendez-vous': typeof ClientRendezVousRoute
+  '/settings/security': typeof SettingsSecurityRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
+  '/admin/planning/map': typeof AdminPlanningMapRoute
   '/admin/vehicules/$id': typeof AdminVehiculesIdRoute
   '/client/contrats/$id': typeof ClientContratsIdRoute
   '/client/flotte/$id': typeof ClientFlotteIdRoute
+  '/settings/security/2fa': typeof SettingsSecurity2faRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
+  '/admin/interventions/': typeof AdminInterventionsIndexRoute
+  '/admin/planning/': typeof AdminPlanningIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -302,6 +372,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/client'
     | '/login'
+    | '/reset-password'
+    | '/settings'
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
@@ -311,6 +383,7 @@ export interface FileRouteTypes {
     | '/admin/facturation'
     | '/admin/impact'
     | '/admin/interventions'
+    | '/admin/planning'
     | '/admin/rendez-vous'
     | '/admin/vehicules'
     | '/client/documents'
@@ -320,19 +393,26 @@ export interface FileRouteTypes {
     | '/client/interventions'
     | '/client/prestations'
     | '/client/rendez-vous'
+    | '/settings/security'
     | '/admin/'
     | '/client/'
     | '/admin/clients/$id'
     | '/admin/contrats/$id'
     | '/admin/interventions/$id'
+    | '/admin/planning/map'
     | '/admin/vehicules/$id'
     | '/client/contrats/$id'
     | '/client/flotte/$id'
+    | '/settings/security/2fa'
     | '/terrain/intervention/$id'
+    | '/admin/interventions/'
+    | '/admin/planning/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/reset-password'
+    | '/settings'
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
@@ -341,7 +421,6 @@ export interface FileRouteTypes {
     | '/admin/equipe'
     | '/admin/facturation'
     | '/admin/impact'
-    | '/admin/interventions'
     | '/admin/rendez-vous'
     | '/admin/vehicules'
     | '/client/documents'
@@ -351,21 +430,28 @@ export interface FileRouteTypes {
     | '/client/interventions'
     | '/client/prestations'
     | '/client/rendez-vous'
+    | '/settings/security'
     | '/admin'
     | '/client'
     | '/admin/clients/$id'
     | '/admin/contrats/$id'
     | '/admin/interventions/$id'
+    | '/admin/planning/map'
     | '/admin/vehicules/$id'
     | '/client/contrats/$id'
     | '/client/flotte/$id'
+    | '/settings/security/2fa'
     | '/terrain/intervention/$id'
+    | '/admin/interventions'
+    | '/admin/planning'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/client'
     | '/login'
+    | '/reset-password'
+    | '/settings'
     | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
@@ -375,6 +461,7 @@ export interface FileRouteTypes {
     | '/admin/facturation'
     | '/admin/impact'
     | '/admin/interventions'
+    | '/admin/planning'
     | '/admin/rendez-vous'
     | '/admin/vehicules'
     | '/client/documents'
@@ -384,15 +471,20 @@ export interface FileRouteTypes {
     | '/client/interventions'
     | '/client/prestations'
     | '/client/rendez-vous'
+    | '/settings/security'
     | '/admin/'
     | '/client/'
     | '/admin/clients/$id'
     | '/admin/contrats/$id'
     | '/admin/interventions/$id'
+    | '/admin/planning/map'
     | '/admin/vehicules/$id'
     | '/client/contrats/$id'
     | '/client/flotte/$id'
+    | '/settings/security/2fa'
     | '/terrain/intervention/$id'
+    | '/admin/interventions/'
+    | '/admin/planning/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -400,6 +492,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ClientRoute: typeof ClientRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   TerrainRoute: typeof TerrainRouteWithChildren
 }
 
@@ -410,6 +504,20 @@ declare module '@tanstack/react-router' {
       path: '/terrain'
       fullPath: '/terrain'
       preLoaderRoute: typeof TerrainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -453,6 +561,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/settings/security': {
+      id: '/settings/security'
+      path: '/security'
+      fullPath: '/settings/security'
+      preLoaderRoute: typeof SettingsSecurityRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/client/rendez-vous': {
       id: '/client/rendez-vous'
@@ -517,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRendezVousRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/planning': {
+      id: '/admin/planning'
+      path: '/planning'
+      fullPath: '/admin/planning'
+      preLoaderRoute: typeof AdminPlanningRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/interventions': {
       id: '/admin/interventions'
       path: '/interventions'
@@ -573,12 +695,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminClientsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/planning/': {
+      id: '/admin/planning/'
+      path: '/'
+      fullPath: '/admin/planning/'
+      preLoaderRoute: typeof AdminPlanningIndexRouteImport
+      parentRoute: typeof AdminPlanningRoute
+    }
+    '/admin/interventions/': {
+      id: '/admin/interventions/'
+      path: '/'
+      fullPath: '/admin/interventions/'
+      preLoaderRoute: typeof AdminInterventionsIndexRouteImport
+      parentRoute: typeof AdminInterventionsRoute
+    }
     '/terrain/intervention/$id': {
       id: '/terrain/intervention/$id'
       path: '/intervention/$id'
       fullPath: '/terrain/intervention/$id'
       preLoaderRoute: typeof TerrainInterventionIdRouteImport
       parentRoute: typeof TerrainRoute
+    }
+    '/settings/security/2fa': {
+      id: '/settings/security/2fa'
+      path: '/2fa'
+      fullPath: '/settings/security/2fa'
+      preLoaderRoute: typeof SettingsSecurity2faRouteImport
+      parentRoute: typeof SettingsSecurityRoute
     }
     '/client/flotte/$id': {
       id: '/client/flotte/$id'
@@ -600,6 +743,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/vehicules/$id'
       preLoaderRoute: typeof AdminVehiculesIdRouteImport
       parentRoute: typeof AdminVehiculesRoute
+    }
+    '/admin/planning/map': {
+      id: '/admin/planning/map'
+      path: '/map'
+      fullPath: '/admin/planning/map'
+      preLoaderRoute: typeof AdminPlanningMapRouteImport
+      parentRoute: typeof AdminPlanningRoute
     }
     '/admin/interventions/$id': {
       id: '/admin/interventions/$id'
@@ -651,14 +801,30 @@ const AdminContratsRouteWithChildren = AdminContratsRoute._addFileChildren(
 
 interface AdminInterventionsRouteChildren {
   AdminInterventionsIdRoute: typeof AdminInterventionsIdRoute
+  AdminInterventionsIndexRoute: typeof AdminInterventionsIndexRoute
 }
 
 const AdminInterventionsRouteChildren: AdminInterventionsRouteChildren = {
   AdminInterventionsIdRoute: AdminInterventionsIdRoute,
+  AdminInterventionsIndexRoute: AdminInterventionsIndexRoute,
 }
 
 const AdminInterventionsRouteWithChildren =
   AdminInterventionsRoute._addFileChildren(AdminInterventionsRouteChildren)
+
+interface AdminPlanningRouteChildren {
+  AdminPlanningMapRoute: typeof AdminPlanningMapRoute
+  AdminPlanningIndexRoute: typeof AdminPlanningIndexRoute
+}
+
+const AdminPlanningRouteChildren: AdminPlanningRouteChildren = {
+  AdminPlanningMapRoute: AdminPlanningMapRoute,
+  AdminPlanningIndexRoute: AdminPlanningIndexRoute,
+}
+
+const AdminPlanningRouteWithChildren = AdminPlanningRoute._addFileChildren(
+  AdminPlanningRouteChildren,
+)
 
 interface AdminVehiculesRouteChildren {
   AdminVehiculesIdRoute: typeof AdminVehiculesIdRoute
@@ -681,6 +847,7 @@ interface AdminRouteChildren {
   AdminFacturationRoute: typeof AdminFacturationRoute
   AdminImpactRoute: typeof AdminImpactRoute
   AdminInterventionsRoute: typeof AdminInterventionsRouteWithChildren
+  AdminPlanningRoute: typeof AdminPlanningRouteWithChildren
   AdminRendezVousRoute: typeof AdminRendezVousRoute
   AdminVehiculesRoute: typeof AdminVehiculesRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
@@ -695,6 +862,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFacturationRoute: AdminFacturationRoute,
   AdminImpactRoute: AdminImpactRoute,
   AdminInterventionsRoute: AdminInterventionsRouteWithChildren,
+  AdminPlanningRoute: AdminPlanningRouteWithChildren,
   AdminRendezVousRoute: AdminRendezVousRoute,
   AdminVehiculesRoute: AdminVehiculesRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
@@ -741,6 +909,29 @@ const ClientRouteChildren: ClientRouteChildren = {
 const ClientRouteWithChildren =
   ClientRoute._addFileChildren(ClientRouteChildren)
 
+interface SettingsSecurityRouteChildren {
+  SettingsSecurity2faRoute: typeof SettingsSecurity2faRoute
+}
+
+const SettingsSecurityRouteChildren: SettingsSecurityRouteChildren = {
+  SettingsSecurity2faRoute: SettingsSecurity2faRoute,
+}
+
+const SettingsSecurityRouteWithChildren =
+  SettingsSecurityRoute._addFileChildren(SettingsSecurityRouteChildren)
+
+interface SettingsRouteChildren {
+  SettingsSecurityRoute: typeof SettingsSecurityRouteWithChildren
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsSecurityRoute: SettingsSecurityRouteWithChildren,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 interface TerrainRouteChildren {
   TerrainInterventionIdRoute: typeof TerrainInterventionIdRoute
 }
@@ -757,6 +948,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   ClientRoute: ClientRouteWithChildren,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   TerrainRoute: TerrainRouteWithChildren,
 }
 export const routeTree = rootRouteImport

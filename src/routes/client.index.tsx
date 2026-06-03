@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Car, CalendarDays, Sparkles, Award, Leaf } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Car, CalendarDays, Sparkles, Award, Leaf, KeyRound, UserCog } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
+import { ChangePasswordDialog } from "@/components/client/ChangePasswordDialog";
+import { EditMyInfoDialog } from "@/components/client/EditMyInfoDialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/client/")({
@@ -26,34 +29,66 @@ const PALIER_CARD_CLASS: Record<string, string> = {
   premium: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-200",
 };
 
+function fmtShort(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+function fmtYear(iso: string): string {
+  return String(new Date(iso).getFullYear());
+}
+
 function ClientHome() {
   const { profile } = useAuth();
   const [vehiculeCount, setVehiculeCount] = useState(0);
   const [palier, setPalier] = useState<string>("");
   const [numeroContrat, setNumeroContrat] = useState<string>("");
   const [contratId, setContratId] = useState<string>("");
+  const [prochainRdvDate, setProchainRdvDate] = useState<string | null>(null);
+  const [dernierePrestDate, setDernierePrestDate] = useState<string | null>(null);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   useEffect(() => {
     if (!profile?.entreprise_id) return;
     (async () => {
-      const v = await supabase
-        .from("vehicules")
-        .select("id", { count: "exact", head: true })
-        .eq("entreprise_id", profile.entreprise_id!)
-        .in("statut", ["actif", "en_attente_validation"]);
+      const today = new Date().toISOString().split("T")[0];
+      const [v, contratRes, rdvRes, prestRes] = await Promise.all([
+        supabase
+          .from("vehicules")
+          .select("id", { count: "exact", head: true })
+          .eq("entreprise_id", profile.entreprise_id!)
+          .in("statut", ["actif", "en_attente_validation"]),
+        supabase
+          .from("contrats")
+          .select("id, numero_contrat, statut")
+          .eq("entreprise_id", profile.entreprise_id!)
+          .in("statut", ["actif", "en_attente_validation"])
+          .order("date_debut", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("demandes_rdv")
+          .select("assigned_date")
+          .eq("entreprise_id", profile.entreprise_id!)
+          .eq("statut", "confirmee")
+          .gte("assigned_date", today)
+          .order("assigned_date", { ascending: true })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("interventions")
+          .select("date_intervention")
+          .eq("entreprise_id", profile.entreprise_id!)
+          .eq("statut", "validee")
+          .order("date_intervention", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
       const count = v.count ?? 0;
       setVehiculeCount(count);
+      if (rdvRes.data?.assigned_date) setProchainRdvDate(rdvRes.data.assigned_date as string);
+      if (prestRes.data?.date_intervention) setDernierePrestDate(prestRes.data.date_intervention as string);
 
-      // Récupère le contrat (le plus récent) — inclut en_attente_validation
-      const { data: contrat } = await supabase
-        .from("contrats")
-        .select("id, numero_contrat, statut")
-        .eq("entreprise_id", profile.entreprise_id!)
-        .in("statut", ["actif", "en_attente_validation"])
-        .order("date_debut", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
+      const contrat = contratRes.data;
       if (contrat) {
         const p =
           count >= 20 ? "premium" : count >= 10 ? "business" : count >= 5 ? "pro" : "starter";
@@ -85,18 +120,22 @@ function ClientHome() {
             sub="dans la flotte"
           />
         </Link>
-        <SummaryCard
-          icon={CalendarDays}
-          label="Prochain RDV"
-          value="—"
-          sub="aucun RDV"
-        />
-        <SummaryCard
-          icon={Sparkles}
-          label="Dernière prestation"
-          value="—"
-          sub="aucune prestation"
-        />
+        <Link to="/client/prestations">
+          <SummaryCard
+            icon={CalendarDays}
+            label="Prochain RDV"
+            value={prochainRdvDate ? fmtShort(prochainRdvDate) : "—"}
+            sub={prochainRdvDate ? fmtYear(prochainRdvDate) : "aucun RDV"}
+          />
+        </Link>
+        <Link to="/client/prestations">
+          <SummaryCard
+            icon={Sparkles}
+            label="Dernière prestation"
+            value={dernierePrestDate ? fmtShort(dernierePrestDate) : "—"}
+            sub={dernierePrestDate ? fmtYear(dernierePrestDate) : "aucune prestation"}
+          />
+        </Link>
         {palier ? (
           contratId ? (
             <Link to="/client/contrats/$id" params={{ id: contratId }}>
@@ -149,6 +188,27 @@ function ClientHome() {
           Gérez votre flotte et suivez les prestations de nettoyage circulaire en un coup d'œil.
         </p>
       </Card>
+
+      {/* Mon compte — self-service for the client */}
+      <Card className="mt-4 p-5 shadow-card border-border/60">
+        <h2 className="font-semibold text-base text-foreground">Mon compte</h2>
+        <p className="text-xs text-muted-foreground mt-1 mb-4">
+          Gérez vos informations et votre mot de passe.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button variant="outline" className="justify-start" onClick={() => setInfoOpen(true)}>
+            <UserCog className="h-4 w-4" />
+            Modifier mes informations
+          </Button>
+          <Button variant="outline" className="justify-start" onClick={() => setPwOpen(true)}>
+            <KeyRound className="h-4 w-4" />
+            Changer mon mot de passe
+          </Button>
+        </div>
+      </Card>
+
+      <ChangePasswordDialog open={pwOpen} onOpenChange={setPwOpen} />
+      <EditMyInfoDialog open={infoOpen} onOpenChange={setInfoOpen} />
     </div>
   );
 }

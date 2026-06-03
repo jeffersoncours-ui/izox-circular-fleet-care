@@ -195,13 +195,6 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
     }
   }, [dateDebut, customAnniv]);
 
-  // Auto-update anniversaire if not custom
-  useEffect(() => {
-    if (!customAnniv) {
-      setDateAnniv(defaultAnniversaire(dateDebut));
-    }
-  }, [dateDebut, customAnniv]);
-
   // Load entreprises
   useEffect(() => {
     if (!open) return;

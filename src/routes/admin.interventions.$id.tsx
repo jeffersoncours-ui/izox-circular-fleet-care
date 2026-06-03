@@ -13,7 +13,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Check, X, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, X, Loader2, ShieldCheck, CalendarClock, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { sendEmail } from "@/lib/email";
@@ -26,19 +26,37 @@ import {
   CHECKLIST_INTERIEUR,
   CHECKLIST_EXTERIEUR,
   type Statut,
-  type TypePrestation,
   type Moment,
 } from "@/lib/interventions";
+import { getPackLabel } from "@/lib/pricing";
 
 export const Route = createFileRoute("/admin/interventions/$id")({
   component: AdminInterventionDetail,
 });
 
+interface Operator {
+  id: string;
+  name: string;
+  color_hex: string;
+}
+
+const TIME_SLOT_LABEL: Record<string, string> = {
+  morning: "Matin (08h – 12h)",
+  afternoon: "Après-midi (14h – 18h)",
+};
+
 interface InterventionFull {
   id: string;
   statut: Statut;
-  type_prestation: TypePrestation;
+  type_prestation: string;
+  demande_rdv_id: string | null;
   date_intervention: string | null;
+  time_slot: string | null;
+  heure_intervention: string | null;
+  operator_id: string | null;
+  adresse_intervention: string | null;
+  ville_intervention: string | null;
+  code_postal_intervention: string | null;
   notes_operateur: string | null;
   signature_url: string | null;
   motif_refus: string | null;
@@ -63,8 +81,9 @@ interface PhotoEntry {
 function AdminInterventionDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [data, setData] = useState<InterventionFull | null>(null);
+  const [operator, setOperator] = useState<Operator | null>(null);
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,10 +100,23 @@ function AdminInterventionDetail() {
       .maybeSingle();
     if (!row) {
       toast.error("Fiche introuvable");
-      navigate({ to: "/admin/interventions" });
+      navigate({ to: "/admin/planning", search: { tab: "interventions" } });
       return;
     }
     setData(row as unknown as InterventionFull);
+
+    // Charger l'opérateur si assigné
+    const operatorId = (row as any).operator_id;
+    if (operatorId) {
+      const { data: opRow } = await (supabase as any)
+        .from("operators")
+        .select("id, name, color_hex")
+        .eq("id", operatorId)
+        .maybeSingle();
+      setOperator(opRow ?? null);
+    } else {
+      setOperator(null);
+    }
 
     const { data: ph } = await supabase
       .from("intervention_photos")
@@ -168,19 +200,26 @@ function AdminInterventionDetail() {
     );
   }
 
-  const zones = zonesFor(data.type_prestation);
+  const typeScope = (t: string) => {
+    if (t === "exterieur" || t === "interieur" || t === "complet")
+      return t as "exterieur" | "interieur" | "complet";
+    // pack_* → complet par défaut pour l'affichage checklists/photos
+    return "complet" as const;
+  };
+
+  const zones = zonesFor(typeScope(data.type_prestation));
   const photoOf = (zone: string, moment: Moment) =>
     photos.find((p) => p.zone === zone && p.moment === moment);
 
-  const showInt = data.type_prestation !== "exterieur";
-  const showExt = data.type_prestation !== "interieur";
+  const showInt = typeScope(data.type_prestation) !== "exterieur";
+  const showExt = typeScope(data.type_prestation) !== "interieur";
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => navigate({ to: "/admin/interventions" })}
+        onClick={() => navigate({ to: "/admin/planning", search: { tab: "interventions" } })}
         className="mb-4 -ml-2"
       >
         <ArrowLeft className="h-4 w-4 mr-1" /> Retour
@@ -193,9 +232,7 @@ function AdminInterventionDetail() {
         <Badge className={statutColor(data.statut)} variant="outline">
           {statutLabel(data.statut)}
         </Badge>
-        <Badge variant="secondary" className="capitalize">
-          {data.type_prestation}
-        </Badge>
+        <Badge variant="secondary">{getPackLabel(data.type_prestation)}</Badge>
       </div>
 
       <p className="text-sm text-muted-foreground mb-6">
@@ -203,6 +240,78 @@ function AdminInterventionDetail() {
         {[data.vehicules?.marque, data.vehicules?.modele].filter(Boolean).join(" ") || "—"} ·{" "}
         {data.date_intervention}
       </p>
+
+      {/* Section planification */}
+      {(data.date_intervention || data.adresse_intervention || operator) && (
+        <Card className="p-5 shadow-card mb-5">
+          <h2 className="font-bold text-foreground mb-3 flex items-center gap-2">
+            <CalendarClock className="h-5 w-5 text-primary" /> Planification
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            {operator && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Opérateur</p>
+                <p className="font-medium flex items-center gap-1.5">
+                  <span
+                    className="inline-block h-3 w-3 rounded-full"
+                    style={{ backgroundColor: operator.color_hex }}
+                  />
+                  {operator.name}
+                </p>
+              </div>
+            )}
+            {data.date_intervention && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Date & créneau</p>
+                <p className="font-medium">{data.date_intervention}</p>
+                {data.time_slot && (
+                  <p className="text-xs text-muted-foreground">
+                    {TIME_SLOT_LABEL[data.time_slot] ?? data.time_slot}
+                    {data.heure_intervention && ` · ${data.heure_intervention.slice(0, 5)}`}
+                  </p>
+                )}
+              </div>
+            )}
+            {(data.adresse_intervention || data.ville_intervention) && (
+              <div className="sm:col-span-2">
+                <p className="text-xs text-muted-foreground mb-0.5 flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> Lieu d'intervention
+                </p>
+                <p className="font-medium">
+                  {[
+                    data.adresse_intervention,
+                    data.code_postal_intervention,
+                    data.ville_intervention,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Replanifier l'heure (admin only, tant que non validée/annulée) */}
+          {profile?.role === "admin" &&
+            data.demande_rdv_id &&
+            (data.statut === "planifiee" || data.statut === "en_cours") && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onClick={() =>
+                    navigate({
+                      to: "/admin/planning",
+                      search: { tab: "demandes", demande: data.demande_rdv_id! },
+                    })
+                  }
+                >
+                  <CalendarClock className="h-4 w-4 mr-1" /> Modifier l'horaire du RDV
+                </Button>
+              </div>
+            )}
+        </Card>
+      )}
 
       {/* Pré-intervention */}
       <Card className="p-5 shadow-card mb-5">
@@ -326,13 +435,14 @@ function AdminInterventionDetail() {
           >
             <X className="h-4 w-4 mr-1" /> Refuser
           </Button>
-          <Button
-            variant="izox"
-            className="flex-1 h-12"
-            onClick={validate}
-            disabled={working}
-          >
-            {working ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4 mr-1" /> Valider</>}
+          <Button variant="izox" className="flex-1 h-12" onClick={validate} disabled={working}>
+            {working ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Check className="h-4 w-4 mr-1" /> Valider
+              </>
+            )}
           </Button>
         </div>
       )}

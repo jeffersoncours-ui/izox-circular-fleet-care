@@ -1,7 +1,7 @@
 // Module 3 — Interventions: shared constants & types
 
 export type TypePrestation = "exterieur" | "interieur" | "complet";
-export type Statut = "en_cours" | "en_revision" | "validee" | "refusee";
+export type Statut = "planifiee" | "en_cours" | "en_revision" | "validee" | "refusee" | "annulee";
 export type Moment = "avant" | "apres";
 
 export interface ZoneDef {
@@ -48,6 +48,8 @@ export const CHECKLIST_EXTERIEUR: { key: string; label: string }[] = [
 
 export function statutLabel(s: Statut): string {
   switch (s) {
+    case "planifiee":
+      return "Planifiée";
     case "en_cours":
       return "En cours";
     case "en_revision":
@@ -56,11 +58,15 @@ export function statutLabel(s: Statut): string {
       return "Validée";
     case "refusee":
       return "Refusée";
+    case "annulee":
+      return "Annulée";
   }
 }
 
 export function statutColor(s: Statut): string {
   switch (s) {
+    case "planifiee":
+      return "bg-blue-100 text-blue-900 border border-blue-300";
     case "en_cours":
       return "bg-muted text-muted-foreground";
     case "en_revision":
@@ -69,5 +75,7 @@ export function statutColor(s: Statut): string {
       return "bg-primary-soft text-primary border border-primary/30";
     case "refusee":
       return "bg-red-100 text-red-900 border border-red-300";
+    case "annulee":
+      return "bg-gray-100 text-gray-600 border border-gray-300";
   }
 }

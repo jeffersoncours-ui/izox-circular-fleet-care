@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Building2, Car, CalendarDays, Wrench } from "lucide-react";
 
-type AdminCardLink = "/admin/clients" | "/admin/vehicules" | "/admin/rendez-vous" | "/admin/interventions";
+type AdminCardLink = "/admin/clients" | "/admin/vehicules" | "/admin/planning";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -35,11 +35,17 @@ function AdminDashboard() {
     })();
   }, []);
 
-  const cards: { label: string; value: number; icon: typeof Building2; to: AdminCardLink }[] = [
+  const cards: {
+    label: string;
+    value: number;
+    icon: typeof Building2;
+    to: AdminCardLink;
+    search?: { tab: "demandes" | "interventions" };
+  }[] = [
     { label: "Clients", value: stats.clients, icon: Building2, to: "/admin/clients" },
     { label: "Véhicules suivis", value: stats.vehicules, icon: Car, to: "/admin/vehicules" },
-    { label: "RDV à venir", value: stats.rdv, icon: CalendarDays, to: "/admin/rendez-vous" },
-    { label: "Interventions du mois", value: stats.interventions, icon: Wrench, to: "/admin/interventions" },
+    { label: "RDV à venir", value: stats.rdv, icon: CalendarDays, to: "/admin/planning", search: { tab: "demandes" } },
+    { label: "Interventions du mois", value: stats.interventions, icon: Wrench, to: "/admin/planning", search: { tab: "interventions" } },
   ];
 
   return (
@@ -52,8 +58,8 @@ function AdminDashboard() {
       </header>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map(({ label, value, icon: Icon, to }) => (
-          <Link key={label} to={to} className="block">
+        {cards.map(({ label, value, icon: Icon, to, search }) => (
+          <Link key={label} to={to} search={search} className="block">
             <Card className="p-5 shadow-card border-border/60 cursor-pointer transition-all duration-150 ease-out hover:bg-muted/40 hover:shadow-strong hover:border-primary/30">
               <div className="flex items-start justify-between">
                 <div>

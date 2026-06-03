@@ -476,9 +476,19 @@ function ContratDetailPage() {
                 </p>
                 <p className="font-semibold text-foreground tabular-nums">
                   {Math.round(Number(contrat.remise_commerciale_pct ?? 0) * 100)}%
-                  {contrat.montant_net_mensuel != null && (
+                  {facture && (
                     <span className="ml-2 text-muted-foreground font-normal">
-                      → net mensuel : {Number(contrat.montant_net_mensuel).toFixed(2)} €
+                      → net mensuel :{" "}
+                      {(Math.round(
+                        facture.totalBrutHt *
+                          Math.max(
+                            0.70,
+                            (1 - (facture.tauxPalier ?? 0)) *
+                              (1 - Number(contrat.remise_commerciale_pct ?? 0))
+                          ) *
+                          100
+                      ) / 100).toFixed(2)}{" "}
+                      €
                     </span>
                   )}
                 </p>
@@ -770,9 +780,9 @@ function ContratDetailPage() {
         open={remiseOpen}
         onOpenChange={setRemiseOpen}
         contratId={contrat.id}
-        montantBrut={Number(contrat.montant_brut_mensuel ?? 0)}
+        montantBrut={facture?.totalBrutHt ?? 0}
         remiseActuelle={Number(contrat.remise_commerciale_pct ?? 0)}
-        remisePalier={Number(contrat.remise_pct ?? 0)}
+        remisePalier={facture?.tauxPalier ?? 0}
         onApplied={load}
       />
     </div>

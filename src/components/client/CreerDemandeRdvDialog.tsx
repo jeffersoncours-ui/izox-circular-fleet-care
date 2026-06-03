@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertCircle, Calendar as CalendarIcon, Info, Loader2, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, Calendar as CalendarIcon, Info, Loader2, MapPin, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -70,16 +71,19 @@ export function CreerDemandeRdvDialog({
   const [creneaux, setCreneaux] = useState<CreneauForm[]>([
     { date: undefined, creneau: "matin" },
   ]);
+  const [adresseIntervention, setAdresseIntervention] = useState("");
+  const [villeIntervention, setVilleIntervention] = useState("");
+  const [codePostalIntervention, setCodePostalIntervention] = useState("");
   const [commentaires, setCommentaires] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [openPicker, setOpenPicker] = useState<number | null>(null);
 
-  // Load vehicules + max
+  // Load vehicules + max + entreprise address
   useEffect(() => {
     const entrepriseId = profile?.entreprise_id;
     if (!open || !entrepriseId) return;
     (async () => {
-      const [{ data: vehData }, { data: maxData }] = await Promise.all([
+      const [{ data: vehData }, { data: maxData }, { data: entData }] = await Promise.all([
         supabase
           .from("vehicules")
           .select("id, immatriculation, marque, modele")
@@ -87,9 +91,19 @@ export function CreerDemandeRdvDialog({
           .eq("statut", "actif")
           .order("immatriculation"),
         supabase.rpc("get_max_vehicules_par_demande"),
+        supabase
+          .from("entreprises")
+          .select("adresse, ville, code_postal")
+          .eq("id", entrepriseId)
+          .maybeSingle(),
       ]);
       setVehicules((vehData ?? []) as VehiculeOption[]);
       if (typeof maxData === "number" && maxData > 0) setMaxVehicules(maxData);
+      if (entData) {
+        setAdresseIntervention((entData as any).adresse ?? "");
+        setVilleIntervention((entData as any).ville ?? "");
+        setCodePostalIntervention((entData as any).code_postal ?? "");
+      }
     })();
   }, [open, profile?.entreprise_id]);
 
@@ -103,6 +117,9 @@ export function CreerDemandeRdvDialog({
   const reset = () => {
     setSelectedVehiculeIds(defaultVehiculeId ? [defaultVehiculeId] : []);
     setCreneaux([{ date: undefined, creneau: "matin" }]);
+    setAdresseIntervention("");
+    setVilleIntervention("");
+    setCodePostalIntervention("");
     setCommentaires("");
   };
 
@@ -152,6 +169,9 @@ export function CreerDemandeRdvDialog({
     creneauxRemplis.length >= 1 &&
     !hasDoublonCreneaux &&
     !hasCreneauxIncomplets &&
+    adresseIntervention.trim().length > 0 &&
+    villeIntervention.trim().length > 0 &&
+    codePostalIntervention.trim().length > 0 &&
     !submitting;
 
   const handleSubmit = async () => {
@@ -166,7 +186,10 @@ export function CreerDemandeRdvDialog({
         p_vehicule_ids: selectedVehiculeIds,
         p_creneaux_preferes: formatCreneauxPourRPC(payload) as any,
         p_commentaires: commentaires.trim(),
-      });
+        p_adresse_intervention: adresseIntervention.trim(),
+        p_ville_intervention: villeIntervention.trim(),
+        p_code_postal_intervention: codePostalIntervention.trim(),
+      } as any);
       if (error) throw error;
       toast.success("Demande de rendez-vous envoyée");
       reset();
@@ -253,6 +276,34 @@ export function CreerDemandeRdvDialog({
                 </AlertDescription>
               </Alert>
             )}
+          </div>
+
+          {/* Lieu de l'intervention */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" />
+              Lieu de l'intervention *
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Pré-rempli avec l'adresse de votre entreprise — modifiable si la flotte est ailleurs.
+            </p>
+            <Input
+              placeholder="Adresse *"
+              value={adresseIntervention}
+              onChange={(e) => setAdresseIntervention(e.target.value)}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                placeholder="Code postal *"
+                value={codePostalIntervention}
+                onChange={(e) => setCodePostalIntervention(e.target.value)}
+              />
+              <Input
+                placeholder="Ville *"
+                value={villeIntervention}
+                onChange={(e) => setVilleIntervention(e.target.value)}
+              />
+            </div>
           </div>
 
           {/* Créneaux */}
@@ -385,7 +436,7 @@ export function CreerDemandeRdvDialog({
               onChange={(e) => setCommentaires(e.target.value.slice(0, 500))}
               rows={3}
               maxLength={500}
-              placeholder="Précisions sur le lieu, contact, etc."
+              placeholder="Précisions sur le contexte, contact sur place, etc."
             />
           </div>
         </div>

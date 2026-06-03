@@ -13,41 +13,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  GererDemandeRdvDialog,
-  type AdminDemandeRdv,
-} from "@/components/admin/GererDemandeRdvDialog";
+import { type AdminDemandeRdv } from "@/components/admin/demande-rdv-types";
+import { AssignerRdvDialog } from "@/components/admin/AssignerRdvDialog";
+import { GererRdvConfirmeDialog } from "@/components/admin/GererRdvConfirmeDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
-import { Route as RendezVousRoute } from "@/routes/admin.rendez-vous";
+import { Route as PlanningRoute } from "@/routes/admin.planning";
 
 interface Row extends AdminDemandeRdv {
   entreprises?: { nom: string } | null;
 }
 
-const STATUTS = ["en_attente", "confirmee", "refusee", "annulee_client"];
+const STATUTS = ["en_attente", "confirmee", "refusee", "annulee_client", "annulee_admin"];
 const STATUT_LABEL: Record<string, string> = {
   en_attente: "En attente",
   confirmee: "Confirmée",
   refusee: "Refusée",
-  annulee_client: "Annulée",
+  annulee_client: "Annulée (client)",
+  annulee_admin: "Annulée (IZOX)",
 };
 const STATUT_COLOR: Record<string, string> = {
   en_attente: "bg-orange-50 text-orange-700 border-orange-300",
   confirmee: "bg-green-50 text-green-700 border-green-300",
   refusee: "bg-red-50 text-red-700 border-red-300",
   annulee_client: "bg-gray-50 text-gray-700 border-gray-300",
+  annulee_admin: "bg-gray-50 text-gray-700 border-gray-300",
 };
 
 export function DemandesRdvList() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("en_attente");
-  const [selected, setSelected] = useState<AdminDemandeRdv | null>(null);
+  const [assigning, setAssigning] = useState<AdminDemandeRdv | null>(null);
+  const [managing, setManaging] = useState<AdminDemandeRdv | null>(null);
   const navigate = useNavigate();
 
   const clearDemandeParam = useCallback(() => {
     navigate({
-      to: "/admin/rendez-vous",
+      to: "/admin/planning",
       search: (prev: Record<string, unknown>) => {
         const { demande: _omit, ...rest } = prev ?? {};
         return rest;
@@ -70,13 +72,22 @@ export function DemandesRdvList() {
     load();
   }, [load]);
 
-  const search = RendezVousRoute.useSearch();
+  const search = PlanningRoute.useSearch();
+  // Demande en attente → dialog d'assignation
   useAutoOpenFromSearch<Row>(
     search.demande,
     rows,
     "id",
-    (r) => setSelected({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
+    (r) => setAssigning({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
     (r) => r.statut === "en_attente",
+  );
+  // Demande confirmée (lien depuis la fiche intervention) → dialog de gestion
+  useAutoOpenFromSearch<Row>(
+    search.demande,
+    rows,
+    "id",
+    (r) => setManaging({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
+    (r) => r.statut === "confirmee",
   );
 
   const filtered = filter === "all" ? rows : rows.filter((r) => r.statut === filter);
@@ -123,27 +134,20 @@ export function DemandesRdvList() {
               <li key={r.id}>
                 <button
                   type="button"
-                  disabled={r.statut !== "en_attente"}
-                  onClick={() =>
-                    r.statut === "en_attente"
-                      ? setSelected({
-                          ...r,
-                          entreprise_nom: r.entreprises?.nom ?? null,
-                        })
-                      : null
-                  }
+                  disabled={r.statut !== "en_attente" && r.statut !== "confirmee"}
+                  onClick={() => {
+                    const withNom = { ...r, entreprise_nom: r.entreprises?.nom ?? null };
+                    if (r.statut === "en_attente") setAssigning(withNom);
+                    else if (r.statut === "confirmee") setManaging(withNom);
+                  }}
                   className="w-full text-left"
                 >
                   <Card className="p-4 shadow-card hover:bg-muted/30 transition-colors disabled:hover:bg-card">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <p className="font-semibold text-sm">
-                            {r.entreprises?.nom ?? "—"}
-                          </p>
-                          <Badge variant="outline">
-                            {r.nb_vehicules_rdv} véh.
-                          </Badge>
+                          <p className="font-semibold text-sm">{r.entreprises?.nom ?? "—"}</p>
+                          <Badge variant="outline">{r.nb_vehicules_rdv} véh.</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {creneaux.length} créneau
@@ -152,12 +156,19 @@ export function DemandesRdvList() {
                           {creneaux[0]?.date && (
                             <>
                               {" "}
-                              · 1er :{" "}
-                              {format(parseISO(creneaux[0].date), "dd/MM/yyyy")}{" "}
+                              · 1er : {format(parseISO(creneaux[0].date), "dd/MM/yyyy")}{" "}
                               {creneaux[0].plage}
                             </>
                           )}
                         </p>
+                        {(r.ville_intervention || r.code_postal_intervention) && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            📍{" "}
+                            {[r.code_postal_intervention, r.ville_intervention]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </p>
+                        )}
                         {r.commentaires && (
                           <p className="text-xs italic text-muted-foreground line-clamp-1 mt-1">
                             {r.commentaires}
@@ -176,17 +187,33 @@ export function DemandesRdvList() {
         </ul>
       )}
 
-      <GererDemandeRdvDialog
-        open={!!selected}
+      <AssignerRdvDialog
+        open={!!assigning}
         onOpenChange={(o) => {
           if (!o) {
-            setSelected(null);
+            setAssigning(null);
             clearDemandeParam();
           }
         }}
-        demande={selected}
-        onProcessed={() => {
-          setSelected(null);
+        demande={assigning}
+        onAssigned={() => {
+          setAssigning(null);
+          clearDemandeParam();
+          load();
+        }}
+      />
+
+      <GererRdvConfirmeDialog
+        open={!!managing}
+        onOpenChange={(o) => {
+          if (!o) {
+            setManaging(null);
+            clearDemandeParam();
+          }
+        }}
+        demande={managing}
+        onUpdated={() => {
+          setManaging(null);
           clearDemandeParam();
           load();
         }}

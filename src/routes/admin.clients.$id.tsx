@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2, FileText, Info, Archive, Snowflake, Clock } from "lucide-react";
+import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2, FileText, Info, Archive, Snowflake, Clock, KeyRound } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -88,6 +88,7 @@ function ClientDetailPage() {
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
   const [reassignOpen, setReassignOpen] = useState(false);
   const [commercialNom, setCommercialNom] = useState<string | null>(null);
+  const [resettingMdp, setResettingMdp] = useState(false);
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
@@ -140,6 +141,35 @@ function ClientDetailPage() {
       );
     })();
   }, [entreprise?.commercial_id]);
+
+  const handleResetMdp = async () => {
+    setResettingMdp(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("entreprise_id", id)
+        .eq("role", "client")
+        .maybeSingle();
+      if (!profile) {
+        toast.error("Aucun compte client trouvé pour cette entreprise");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+        body: { user_id: profile.id, redirect_to: `${window.location.origin}/reset-password` },
+      });
+      if (error || data?.error) throw new Error(data?.error ?? "Erreur");
+      if (data?.email_sent) {
+        toast.success("Email de réinitialisation envoyé au client");
+      } else {
+        toast.error(`Email non envoyé : ${data?.email_error ?? "raison inconnue"}`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de la réinitialisation");
+    } finally {
+      setResettingMdp(false);
+    }
+  };
 
   const handleEdit = (v: Vehicule) => {
     setEditVehicule(v);
@@ -233,6 +263,16 @@ function ClientDetailPage() {
             </Button>
             <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
               <Pencil className="h-4 w-4" /> Modifier
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetMdp}
+              disabled={resettingMdp}
+              title="Envoyer un email de réinitialisation de mot de passe au client"
+            >
+              {resettingMdp ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+              Réinitialiser MDP
             </Button>
             <Button
               variant="outline"

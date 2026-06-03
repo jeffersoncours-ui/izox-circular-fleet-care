@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_config: {
+        Row: {
+          created_at: string
+          description: string | null
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       avoirs: {
         Row: {
           annee_fiscale: number
@@ -540,6 +564,8 @@ export type Database = {
           date_debut: string
           date_fin_effective: string | null
           date_fin_prevue: string
+          email_sent_at: string | null
+          email_status: string | null
           entreprise_id: string
           id: string
           motif: string
@@ -558,6 +584,8 @@ export type Database = {
           date_debut: string
           date_fin_effective?: string | null
           date_fin_prevue: string
+          email_sent_at?: string | null
+          email_status?: string | null
           entreprise_id: string
           id?: string
           motif: string
@@ -576,6 +604,8 @@ export type Database = {
           date_debut?: string
           date_fin_effective?: string | null
           date_fin_prevue?: string
+          email_sent_at?: string | null
+          email_status?: string | null
           entreprise_id?: string
           id?: string
           motif?: string
@@ -662,51 +692,97 @@ export type Database = {
       }
       demandes_rdv: {
         Row: {
+          adresse_intervention: string | null
+          annulation_motif: string | null
+          annule_par: string | null
+          assigned_date: string | null
+          assigned_heure: string | null
+          assigned_operator_id: string | null
+          assigned_time_slot: string | null
+          code_postal_intervention: string | null
           commentaires: string | null
           created_at: string
           creneaux_preferes: Json
           date_confirmee: string | null
           derogation_min_vehicules: boolean
           derogation_motif: string | null
+          email_sent_at: string | null
+          email_status: string | null
           entreprise_id: string
           id: string
+          latitude: number | null
+          longitude: number | null
           nb_vehicules_rdv: number | null
           statut: string
           updated_at: string
           vehicule_confirme_id: string | null
           vehicule_ids: string[]
+          ville_intervention: string | null
         }
         Insert: {
+          adresse_intervention?: string | null
+          annulation_motif?: string | null
+          annule_par?: string | null
+          assigned_date?: string | null
+          assigned_heure?: string | null
+          assigned_operator_id?: string | null
+          assigned_time_slot?: string | null
+          code_postal_intervention?: string | null
           commentaires?: string | null
           created_at?: string
           creneaux_preferes?: Json
           date_confirmee?: string | null
           derogation_min_vehicules?: boolean
           derogation_motif?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
           entreprise_id: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           nb_vehicules_rdv?: number | null
           statut?: string
           updated_at?: string
           vehicule_confirme_id?: string | null
           vehicule_ids?: string[]
+          ville_intervention?: string | null
         }
         Update: {
+          adresse_intervention?: string | null
+          annulation_motif?: string | null
+          annule_par?: string | null
+          assigned_date?: string | null
+          assigned_heure?: string | null
+          assigned_operator_id?: string | null
+          assigned_time_slot?: string | null
+          code_postal_intervention?: string | null
           commentaires?: string | null
           created_at?: string
           creneaux_preferes?: Json
           date_confirmee?: string | null
           derogation_min_vehicules?: boolean
           derogation_motif?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
           entreprise_id?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           nb_vehicules_rdv?: number | null
           statut?: string
           updated_at?: string
           vehicule_confirme_id?: string | null
           vehicule_ids?: string[]
+          ville_intervention?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "demandes_rdv_assigned_operator_id_fkey"
+            columns: ["assigned_operator_id"]
+            isOneToOne: false
+            referencedRelation: "operators"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "demandes_rdv_entreprise_id_fkey"
             columns: ["entreprise_id"]
@@ -769,6 +845,39 @@ export type Database = {
           jour_semaine?: number
           operateur_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          created_at: string | null
+          email_to: string | null
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          target_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_to?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          target_id?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          email_to?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          target_id?: string | null
+          type?: string
         }
         Relationships: []
       }
@@ -1107,6 +1216,115 @@ export type Database = {
           },
         ]
       }
+      impact_records: {
+        Row: {
+          category: string
+          coefficient_snapshot: Json
+          contrat_id: string | null
+          created_at: string
+          entreprise_id: string
+          id: string
+          intervention_id: string
+          quantity: number
+          status: string
+          unit: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          category: string
+          coefficient_snapshot: Json
+          contrat_id?: string | null
+          created_at?: string
+          entreprise_id: string
+          id?: string
+          intervention_id: string
+          quantity: number
+          status?: string
+          unit: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          category?: string
+          coefficient_snapshot?: Json
+          contrat_id?: string | null
+          created_at?: string
+          entreprise_id?: string
+          id?: string
+          intervention_id?: string
+          quantity?: number
+          status?: string
+          unit?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "contrats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_passages_restants"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["contrat_id"]
+          },
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_contrats_resume"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_records_contrat_id_fkey"
+            columns: ["contrat_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["contrat_actif_id"]
+          },
+          {
+            foreignKeyName: "impact_records_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_records_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_records_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "impact_records_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "interventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intervention_photos: {
         Row: {
           created_at: string
@@ -1147,9 +1365,11 @@ export type Database = {
       }
       interventions: {
         Row: {
+          adresse_intervention: string | null
           checklist_exterieur: Json
           checklist_interieur: Json
           cles_documents_localisation: string | null
+          code_postal_intervention: string | null
           contrat_ligne_id: string | null
           controle_cles_documents: boolean
           controle_degradations: boolean
@@ -1158,24 +1378,34 @@ export type Database = {
           date_intervention: string | null
           degradations_description: string | null
           demande_rdv_id: string | null
+          email_sent_at: string | null
+          email_status: string | null
           entreprise_id: string | null
+          heure_intervention: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           motif_refus: string | null
           notes_operateur: string | null
           operateur_id: string | null
+          operator_id: string | null
           signature_url: string | null
           statut: string
           submitted_at: string | null
+          time_slot: string | null
           type_prestation: string
           updated_at: string
           validated_at: string | null
           validated_by: string | null
           vehicule_id: string | null
+          ville_intervention: string | null
         }
         Insert: {
+          adresse_intervention?: string | null
           checklist_exterieur?: Json
           checklist_interieur?: Json
           cles_documents_localisation?: string | null
+          code_postal_intervention?: string | null
           contrat_ligne_id?: string | null
           controle_cles_documents?: boolean
           controle_degradations?: boolean
@@ -1184,24 +1414,34 @@ export type Database = {
           date_intervention?: string | null
           degradations_description?: string | null
           demande_rdv_id?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
           entreprise_id?: string | null
+          heure_intervention?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           motif_refus?: string | null
           notes_operateur?: string | null
           operateur_id?: string | null
+          operator_id?: string | null
           signature_url?: string | null
           statut?: string
           submitted_at?: string | null
+          time_slot?: string | null
           type_prestation?: string
           updated_at?: string
           validated_at?: string | null
           validated_by?: string | null
           vehicule_id?: string | null
+          ville_intervention?: string | null
         }
         Update: {
+          adresse_intervention?: string | null
           checklist_exterieur?: Json
           checklist_interieur?: Json
           cles_documents_localisation?: string | null
+          code_postal_intervention?: string | null
           contrat_ligne_id?: string | null
           controle_cles_documents?: boolean
           controle_degradations?: boolean
@@ -1210,19 +1450,27 @@ export type Database = {
           date_intervention?: string | null
           degradations_description?: string | null
           demande_rdv_id?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
           entreprise_id?: string | null
+          heure_intervention?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           motif_refus?: string | null
           notes_operateur?: string | null
           operateur_id?: string | null
+          operator_id?: string | null
           signature_url?: string | null
           statut?: string
           submitted_at?: string | null
+          time_slot?: string | null
           type_prestation?: string
           updated_at?: string
           validated_at?: string | null
           validated_by?: string | null
           vehicule_id?: string | null
+          ville_intervention?: string | null
         }
         Relationships: [
           {
@@ -1266,6 +1514,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_vehicules_resume"
             referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "interventions_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "operators"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "interventions_vehicule_id_fkey"
@@ -1373,6 +1628,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      operators: {
+        Row: {
+          color_hex: string
+          created_at: string
+          id: string
+          initials: string
+          name: string
+        }
+        Insert: {
+          color_hex: string
+          created_at?: string
+          id?: string
+          initials: string
+          name: string
+        }
+        Update: {
+          color_hex?: string
+          created_at?: string
+          id?: string
+          initials?: string
+          name?: string
+        }
+        Relationships: []
       }
       parrainages: {
         Row: {
@@ -1604,6 +1883,75 @@ export type Database = {
         }
         Relationships: []
       }
+      user_2fa_recovery_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          id: string
+          used: boolean
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_2fa_settings: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          enabled: boolean | null
+          failed_attempts: number
+          id: string
+          locked_until: string | null
+          method: string | null
+          phone: string | null
+          totp_secret: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          enabled?: boolean | null
+          failed_attempts?: number
+          id?: string
+          locked_until?: string | null
+          method?: string | null
+          phone?: string | null
+          totp_secret?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          enabled?: boolean | null
+          failed_attempts?: number
+          id?: string
+          locked_until?: string | null
+          method?: string | null
+          phone?: string | null
+          totp_secret?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1633,6 +1981,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           entreprise_id: string
+          gel_admin_date_debut: string | null
+          gel_admin_date_fin: string | null
+          gel_admin_motif: string | null
           id: string
           immatriculation: string
           kilometrage: number | null
@@ -1652,6 +2003,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           entreprise_id: string
+          gel_admin_date_debut?: string | null
+          gel_admin_date_fin?: string | null
+          gel_admin_motif?: string | null
           id?: string
           immatriculation: string
           kilometrage?: number | null
@@ -1671,6 +2025,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           entreprise_id?: string
+          gel_admin_date_debut?: string | null
+          gel_admin_date_fin?: string | null
+          gel_admin_motif?: string | null
           id?: string
           immatriculation?: string
           kilometrage?: number | null
@@ -2059,6 +2416,18 @@ export type Database = {
         }
         Returns: string
       }
+      annuler_gel_vehicule_admin: {
+        Args: { p_vehicule_id: string }
+        Returns: Json
+      }
+      annuler_rdv_admin: {
+        Args: { p_demande_id: string; p_motif: string }
+        Returns: Json
+      }
+      annuler_rdv_client: {
+        Args: { p_demande_id: string; p_motif: string }
+        Returns: Json
+      }
       appliquer_remise_commerciale: {
         Args: {
           p_contrat_id: string
@@ -2071,6 +2440,26 @@ export type Database = {
         Args: { p_entreprise_id: string; p_reason?: string }
         Returns: Json
       }
+      assigner_rdv:
+        | {
+            Args: {
+              p_date: string
+              p_demande_id: string
+              p_operator_id: string
+              p_time_slot: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_date: string
+              p_demande_id: string
+              p_heure?: string
+              p_operator_id: string
+              p_time_slot: string
+            }
+            Returns: Json
+          }
       calculer_palier_remise: {
         Args: { p_nb_vehicules: number }
         Returns: {
@@ -2096,14 +2485,18 @@ export type Database = {
       }
       creer_demande_rdv: {
         Args: {
+          p_adresse_intervention: string
+          p_code_postal_intervention: string
           p_commentaires: string
           p_creneaux_preferes: Json
           p_vehicule_ids: string[]
+          p_ville_intervention: string
         }
         Returns: Json
       }
       cron_cloture_mensuelle: { Args: never; Returns: undefined }
       cron_maintenance_quotidienne: { Args: never; Returns: undefined }
+      cron_rappels_gel_24h: { Args: never; Returns: undefined }
       degeler_contrat: {
         Args: { p_contrat_id: string; p_source?: string }
         Returns: Json
@@ -2146,12 +2539,33 @@ export type Database = {
         }
         Returns: Json
       }
+      geler_vehicule_admin: {
+        Args: {
+          p_date_debut: string
+          p_date_fin: string
+          p_motif: string
+          p_vehicule_id: string
+        }
+        Returns: Json
+      }
       generer_facture: {
         Args: { p_annee: number; p_contrat_id: string; p_mois: number }
         Returns: string
       }
       generer_numero_contrat: { Args: never; Returns: string }
       get_max_vehicules_par_demande: { Args: never; Returns: number }
+      get_slot_occupancy: {
+        Args: {
+          p_date_debut: string
+          p_date_fin: string
+          p_operator_id: string
+        }
+        Returns: {
+          count: number
+          intervention_date: string
+          time_slot: string
+        }[]
+      }
       get_user_entreprise: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
@@ -2165,10 +2579,15 @@ export type Database = {
         Returns: boolean
       }
       lever_gel_anticipe: { Args: { p_demande_id: string }; Returns: Json }
+      modifier_heure_rdv: {
+        Args: { p_demande_id: string; p_heure: string }
+        Returns: Json
+      }
       reassigner_commercial: {
         Args: { p_entreprise_id: string; p_nouveau_commercial_id: string }
         Returns: Json
       }
+      record_2fa_attempt: { Args: { p_success: boolean }; Returns: Json }
       refuser_demande_rdv: {
         Args: { p_demande_id: string; p_motif: string }
         Returns: Json
@@ -2181,6 +2600,11 @@ export type Database = {
         Args: { p_raison: string; p_vehicule_id: string }
         Returns: Json
       }
+      setup_2fa: {
+        Args: { p_method: string; p_phone?: string; p_totp_secret?: string }
+        Returns: Json
+      }
+      store_2fa_recovery_codes: { Args: { p_codes: string[] }; Returns: Json }
       supprimer_vehicule: {
         Args: { p_force_facturation?: boolean; p_vehicule_id: string }
         Returns: Json
