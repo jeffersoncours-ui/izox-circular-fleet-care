@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, Loader2, CheckCircle2, XCircle, MapPin, Clock } from "lucide-react";
+import { AlertTriangle, Loader2, CheckCircle2, XCircle, MapPin, Clock, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { sendEmail } from "@/lib/email";
@@ -254,6 +254,17 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
                         {geocoding ? "Géocodage…" : "Géocoder"}
                       </button>
                     </div>
+                  )}
+                  {demande.telephone_intervention && (
+                    <p className="mt-1.5 flex items-center gap-1 text-xs">
+                      <Phone className="h-3 w-3 text-muted-foreground" />
+                      <a
+                        href={`tel:${demande.telephone_intervention}`}
+                        className="font-medium hover:underline"
+                      >
+                        {demande.telephone_intervention}
+                      </a>
+                    </p>
                   )}
                 </div>
               )}

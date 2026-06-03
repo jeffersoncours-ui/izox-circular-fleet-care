@@ -18,4 +18,5 @@ export interface AdminDemandeRdv {
   date_confirmee?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  telephone_intervention?: string | null;
 }
