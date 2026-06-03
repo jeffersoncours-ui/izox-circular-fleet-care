@@ -2,6 +2,35 @@
 
 ---
 
+## Session 2026-06-03 (13) — Audit complet + correctifs sécurité + inventaire design
+
+- [x] Audit code complet (79 points : 5 critiques, 28 importants, 46 mineurs)
+- [x] Inventaire pages/fonctions/boutons 3 portails (brief Claude Design)
+- [x] Fix CRITIQUE : `rdv_modifie` absent de `send-email` edge function (email replanification silencieusement cassé)
+- [x] Fix SÉCURITÉ : `send-email` sans vérification de rôle → client peut spammer staff
+- [x] Fix IMPORTANT : upload photo terrain sans validation MIME
+- [x] Régénérer types Supabase (éliminer `as any` casts sur `operators`, RPCs typés)
+- [x] Deploy edge function `send-email` v11
+- [x] Commit + push
+
+### Review session 13 — Merge sur main
+
+**Commits :**
+- `1f9e967` fix: audit sécurité — rdv_modifie email, rôle send-email, MIME photos, casts as any
+- `3bb6ff1` docs: inventaire complet pages + brief Claude Design + lessons session 13
+
+**Résumé corrections :**
+- Bug critique `rdv_modifie` : email replanification absent du switch send-email depuis session 8 → silence fallback default error
+- Sécurité : vérification `profiles.role` dans send-email, client limité à 2 types autorisés
+- Important : validation MIME `file.type.startsWith("image/")` avant upload photo terrain
+- Casts `as any` éliminés : operators + 3 RPCs (AssignerRdvDialog, PlanningCalendar, RouteMap, admin.interventions.$id)
+- `routeTree.gen.ts` régénéré : route `terrain.index` était manquante localement
+- Brief complet pour Claude Design : `tasks/inventory-design-brief.md` (3 portails, matrices miroirs, statuts visuels)
+
+**État merge :** build TS 0 erreur, tests edge function déployée, codebase prête refonte
+
+---
+
 ## Session 2026-06-03 (12) — Refonte onglets opérateur terrain
 
 - [x] 1. Migration DB `20260603050000` : colonne `telephone_intervention` + table `operateur_observations` + RPCs mis à jour

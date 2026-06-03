@@ -94,9 +94,8 @@ export function RouteMap() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [opsRes, intsRes] = await Promise.all([
-      (supabase.from as any)("operators").select("*"),
+      supabase.from("operators").select("*"),
       supabase
         .from("interventions")
         .select("id, operator_id, time_slot, date_intervention, latitude, longitude, vehicules(immatriculation)")
@@ -106,7 +105,7 @@ export function RouteMap() {
         .not("longitude", "is", null),
     ]);
 
-    const operators: Operator[] = ((opsRes as { data: unknown }).data ?? []) as Operator[];
+    const operators: Operator[] = (opsRes.data ?? []) as Operator[];
     const allInts: Intervention[] = ((intsRes as { data: unknown }).data ?? []) as unknown as Intervention[];
 
     const computed: OperatorRoute[] = operators
