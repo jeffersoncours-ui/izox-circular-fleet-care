@@ -14,6 +14,21 @@
 
 ---
 
+## Session 2026-06-03 (12b) — Correctifs post-tests manuels (audit liaisons)
+
+- [x] Audit complet des 8 points signalés + preuve par timestamps en base
+- [x] **Quota (P1)** : faux bug confirmé (annulation #2 → 59 s avant #3). Durci quand même : `creer_demande_rdv` vérifie le quota sur le **mois des créneaux demandés** (au lieu de `NOW()`)
+- [x] **Verrou heure (P2)** : `modifier_heure_rdv` bloque si RDV daté jour J/passé OU intervention `en_cours`. Bouton admin masqué sauf `planifiee` future
+- [x] **Fiche admin (P4)** : compte-rendu (contrôle/photos/checklists/notes/signature) masqué tant que la prestation n'est pas faite (`en_revision`/`validee`/`refusee`)
+- [x] **Suivi vide (P8)** : cause racine = pas de policy RLS `operateur` sur `entreprises`. Policy ajoutée (entreprises liées à ses interventions)
+- [x] **Verrou serveur (P5)** : `prendre_en_charge_intervention` refuse le démarrage avant l'heure de déverrouillage (date+heure, fuseau Europe/Paris)
+- [x] Tests DB empiriques (impersonation admin/operateur/client) : 6 scénarios validés, données restaurées
+- [~] **P3 (email annulation)** : déjà envoyé — retravail global des mails reporté (décision user)
+- [~] **P7 (clic onglet Interventions)** : code correct (`navigate`) — à reproduire en live après deploy
+- [x] P6 (photos/observations opérateur) : déjà présent dans le stepper terrain — rien à faire
+
+---
+
 ## Backlog actif
 
 - [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.

@@ -214,6 +214,12 @@ function AdminInterventionDetail() {
   const showInt = typeScope(data.type_prestation) !== "exterieur";
   const showExt = typeScope(data.type_prestation) !== "interieur";
 
+  // Le compte-rendu (contrôle, photos, checklists, notes, signature) n'a de sens
+  // qu'une fois la prestation effectuée par l'opérateur. Avant (planifiee/en_cours),
+  // ces sections n'afficheraient que des cadres vides — on les masque côté admin.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const prestationFaite = ["en_revision", "validee", "refusee"].includes(data.statut);
+
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
       <Button
@@ -290,10 +296,12 @@ function AdminInterventionDetail() {
             )}
           </div>
 
-          {/* Replanifier l'heure (admin only, tant que non validée/annulée) */}
+          {/* Replanifier l'heure : admin only, RDV planifié et daté dans le futur.
+              Interdit le jour J / en cours (verrou aussi appliqué côté RPC). */}
           {profile?.role === "admin" &&
             data.demande_rdv_id &&
-            (data.statut === "planifiee" || data.statut === "en_cours") && (
+            data.statut === "planifiee" &&
+            (!data.date_intervention || data.date_intervention > todayIso) && (
               <div className="mt-4 pt-4 border-t border-border">
                 <Button
                   variant="outline"
@@ -313,7 +321,19 @@ function AdminInterventionDetail() {
         </Card>
       )}
 
+      {/* Compte-rendu d'intervention : visible uniquement une fois la prestation
+          effectuée (en_revision / validee / refusee). */}
+      {!prestationFaite && data.statut !== "refusee" && (
+        <Card className="p-5 shadow-card mb-5 border-dashed">
+          <p className="text-sm text-muted-foreground">
+            Le compte-rendu (contrôle, photos, checklists, signature) sera disponible
+            une fois la prestation effectuée par l'opérateur.
+          </p>
+        </Card>
+      )}
+
       {/* Pré-intervention */}
+      {prestationFaite && (
       <Card className="p-5 shadow-card mb-5">
         <h2 className="font-bold text-foreground mb-3 flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" /> Contrôle pré-intervention
@@ -332,8 +352,10 @@ function AdminInterventionDetail() {
           />
         </div>
       </Card>
+      )}
 
       {/* Photos */}
+      {prestationFaite && (
       <Card className="p-5 shadow-card mb-5">
         <h2 className="font-bold text-foreground mb-4">Photos avant / après</h2>
         <div className="space-y-6">
@@ -352,9 +374,10 @@ function AdminInterventionDetail() {
           })}
         </div>
       </Card>
+      )}
 
       {/* Checklists */}
-      {(showInt || showExt) && (
+      {prestationFaite && (showInt || showExt) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
           {showInt && (
             <Card className="p-5 shadow-card">
@@ -396,6 +419,7 @@ function AdminInterventionDetail() {
       )}
 
       {/* Notes & signature */}
+      {prestationFaite && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         <Card className="p-5 shadow-card">
           <h3 className="font-bold text-foreground mb-2">Notes opérateur</h3>
@@ -416,6 +440,7 @@ function AdminInterventionDetail() {
           )}
         </Card>
       </div>
+      )}
 
       {data.statut === "refusee" || data.motif_refus ? (
         <Card className="p-4 shadow-card mb-5 border-red-300 bg-red-50">
