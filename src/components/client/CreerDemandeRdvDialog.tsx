@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertCircle, Calendar as CalendarIcon, Info, Loader2, MapPin, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, Calendar as CalendarIcon, Info, Loader2, MapPin, Phone, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -83,6 +83,7 @@ export function CreerDemandeRdvDialog({
   const [adresseIntervention, setAdresseIntervention] = useState("");
   const [villeIntervention, setVilleIntervention] = useState("");
   const [codePostalIntervention, setCodePostalIntervention] = useState("");
+  const [telephoneIntervention, setTelephoneIntervention] = useState("");
   const [commentaires, setCommentaires] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [openPicker, setOpenPicker] = useState<number | null>(null);
@@ -106,7 +107,7 @@ export function CreerDemandeRdvDialog({
           supabase.rpc("get_max_vehicules_par_demande"),
           supabase
             .from("entreprises")
-            .select("adresse, ville, code_postal")
+            .select("adresse, ville, code_postal, telephone")
             .eq("id", entrepriseId)
             .maybeSingle(),
           supabase.rpc("get_creneaux_disponibles", {
@@ -120,6 +121,7 @@ export function CreerDemandeRdvDialog({
         setAdresseIntervention((entData as any).adresse ?? "");
         setVilleIntervention((entData as any).ville ?? "");
         setCodePostalIntervention((entData as any).code_postal ?? "");
+        setTelephoneIntervention((entData as any).telephone ?? "");
       }
       setOccupancy((occData ?? []) as OccupancyRow[]);
     })();
@@ -142,6 +144,7 @@ export function CreerDemandeRdvDialog({
     setAdresseIntervention("");
     setVilleIntervention("");
     setCodePostalIntervention("");
+    setTelephoneIntervention("");
     setCommentaires("");
   };
 
@@ -204,6 +207,7 @@ export function CreerDemandeRdvDialog({
     adresseIntervention.trim().length > 0 &&
     villeIntervention.trim().length > 0 &&
     codePostalIntervention.trim().length > 0 &&
+    telephoneIntervention.trim().length > 0 &&
     !submitting;
 
   const handleSubmit = async () => {
@@ -240,6 +244,7 @@ export function CreerDemandeRdvDialog({
         p_code_postal_intervention: codePostalIntervention.trim(),
         p_latitude: lat,
         p_longitude: lon,
+        p_telephone: telephoneIntervention.trim(),
       } as any);
       if (error) throw error;
       toast.success("Demande de rendez-vous envoyée");
@@ -355,6 +360,19 @@ export function CreerDemandeRdvDialog({
                 onChange={(e) => setVilleIntervention(e.target.value)}
               />
             </div>
+            <Label className="flex items-center gap-1 pt-1">
+              <Phone className="h-3.5 w-3.5" />
+              Téléphone de contact *
+            </Label>
+            <p className="text-xs text-muted-foreground -mt-1">
+              Pré-rempli depuis votre profil — modifiable si besoin.
+            </p>
+            <Input
+              type="tel"
+              placeholder="Téléphone *"
+              value={telephoneIntervention}
+              onChange={(e) => setTelephoneIntervention(e.target.value)}
+            />
           </div>
 
           {/* Créneaux */}

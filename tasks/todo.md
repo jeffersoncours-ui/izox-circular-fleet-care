@@ -2,6 +2,18 @@
 
 ---
 
+## Session 2026-06-03 (12) — Refonte onglets opérateur terrain
+
+- [x] 1. Migration DB `20260603050000` : colonne `telephone_intervention` + table `operateur_observations` + RPCs mis à jour
+- [x] 2. Régénérer types TypeScript Supabase
+- [x] 3. `CreerDemandeRdvDialog` : champ téléphone obligatoire pré-rempli
+- [x] 4. `terrain.tsx` : refonte complète 4 onglets (Planning / Interventions / Suivi / Profil)
+- [x] 5. `AssignerRdvDialog` : afficher téléphone dans la section lieu
+- [x] 6. Validation empirique DB + build TS
+- [x] 7. Commit + push + deploy
+
+---
+
 ## Backlog actif
 
 - [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.

@@ -714,6 +714,7 @@ export type Database = {
           longitude: number | null
           nb_vehicules_rdv: number | null
           statut: string
+          telephone_intervention: string | null
           updated_at: string
           vehicule_confirme_id: string | null
           vehicule_ids: string[]
@@ -742,6 +743,7 @@ export type Database = {
           longitude?: number | null
           nb_vehicules_rdv?: number | null
           statut?: string
+          telephone_intervention?: string | null
           updated_at?: string
           vehicule_confirme_id?: string | null
           vehicule_ids?: string[]
@@ -770,6 +772,7 @@ export type Database = {
           longitude?: number | null
           nb_vehicules_rdv?: number | null
           statut?: string
+          telephone_intervention?: string | null
           updated_at?: string
           vehicule_confirme_id?: string | null
           vehicule_ids?: string[]
@@ -1392,6 +1395,7 @@ export type Database = {
           signature_url: string | null
           statut: string
           submitted_at: string | null
+          telephone_intervention: string | null
           time_slot: string | null
           type_prestation: string
           updated_at: string
@@ -1428,6 +1432,7 @@ export type Database = {
           signature_url?: string | null
           statut?: string
           submitted_at?: string | null
+          telephone_intervention?: string | null
           time_slot?: string | null
           type_prestation?: string
           updated_at?: string
@@ -1464,6 +1469,7 @@ export type Database = {
           signature_url?: string | null
           statut?: string
           submitted_at?: string | null
+          telephone_intervention?: string | null
           time_slot?: string | null
           type_prestation?: string
           updated_at?: string
@@ -1629,6 +1635,41 @@ export type Database = {
           },
         ]
       }
+      operateur_observations: {
+        Row: {
+          created_at: string
+          id: string
+          intervention_id: string
+          note: string
+          operateur_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intervention_id: string
+          note?: string
+          operateur_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intervention_id?: string
+          note?: string
+          operateur_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operateur_observations_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "interventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operators: {
         Row: {
           color_hex: string
@@ -1636,6 +1677,7 @@ export type Database = {
           id: string
           initials: string
           name: string
+          user_id: string | null
         }
         Insert: {
           color_hex: string
@@ -1643,6 +1685,7 @@ export type Database = {
           id?: string
           initials: string
           name: string
+          user_id?: string | null
         }
         Update: {
           color_hex?: string
@@ -1650,6 +1693,7 @@ export type Database = {
           id?: string
           initials?: string
           name?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2491,6 +2535,7 @@ export type Database = {
           p_creneaux_preferes: Json
           p_latitude?: number
           p_longitude?: number
+          p_telephone?: string
           p_vehicule_ids: string[]
           p_ville_intervention: string
         }
@@ -2593,6 +2638,10 @@ export type Database = {
       modifier_heure_rdv: {
         Args: { p_demande_id: string; p_heure: string }
         Returns: Json
+      }
+      prendre_en_charge_intervention: {
+        Args: { p_intervention_id: string }
+        Returns: undefined
       }
       reassigner_commercial: {
         Args: { p_entreprise_id: string; p_nouveau_commercial_id: string }

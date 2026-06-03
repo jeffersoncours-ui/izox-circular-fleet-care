@@ -1,5 +1,14 @@
 # Lessons Learned — IZOX
 
+## Refonte terrain + téléphone + observations (session 12)
+
+- **Nom du trigger `updated_at` à vérifier avant chaque migration** : le trigger fonction s'appelle `public.tg_set_updated_at()` dans ce projet, **pas** `public.update_updated_at_column()`. Cette dernière n'existe qu'en schéma `storage`. Toujours vérifier avec `SELECT proname FROM pg_proc WHERE pronamespace='public'::regnamespace AND proname LIKE '%updated_at%'` avant d'écrire un `CREATE TRIGGER ... EXECUTE FUNCTION`.
+- **`DROP FUNCTION` avant `CREATE OR REPLACE` quand la signature change** : PostgreSQL distingue les fonctions par leur signature complète. Ajouter un paramètre DEFAULT en fin de liste nécessite un `DROP` préalable pour éviter la surcharge ambiguë. La rétrocompat est garantie par `DEFAULT NULL` en fin de liste — les anciens appels sans ce paramètre continuent de fonctionner.
+- **`apply_migration` est atomique** : si la migration échoue à mi-chemin, aucune des instructions n'est persistée. Relancer la migration corrigée est sûr sans risquer d'état partiel.
+- **RLS deny-by-default pour nouveaux rôles** : ne pas créer de policy pour le rôle `client` sur `operateur_observations` suffit à bloquer l'accès. RLS + `ENABLE ROW LEVEL SECURITY` = deny by default pour tout rôle sans policy. Pas besoin d'une policy `DENY` explicite.
+- **Countdown `useEffect` — nettoyage strict** : tout `setInterval` dans un composant React doit retourner `() => clearInterval(timer)` dans le cleanup. Oublier le cleanup provoque des fuites mémoire et des mises à jour de state sur des composants démontés. Conditionner le `setInterval` à `isOpen && isLocked` pour ne pas le démarrer inutilement.
+- **Bottom sheet vs route dédiée** : pour les détails d'une card dans un onglet mobile, préférer un composant inline (bottom sheet, drawer) plutôt qu'une nouvelle route. Évite la gestion du `back` et les états de chargement redondants sur mobile.
+
 ## Bugs terrain post-déploiement (session 10 — correctifs)
 
 - **RLS vehicules manquante pour opérateur** : `vehicules` n'avait aucune policy SELECT pour le rôle `operateur`. Le join PostgREST dans la requête `interventions` (`.select("..., vehicules(immatriculation, marque...)")`) retournait `null` silencieusement → immatriculation "—" dans tout le dashboard. Toujours vérifier les RLS de **toutes les tables jointes**, pas seulement la table principale.
