@@ -47,6 +47,55 @@ Stack : TanStack Start (SSR) + Supabase + Vercel + Resend.
 3. Ajouter une section "Review" à `tasks/todo.md` à la fin
 4. Mettre à jour `tasks/lessons.md` avec les enseignements clés
 
+### 7. Purge obligatoire avant chaque merge sur main
+
+**Règle absolue : l'application doit toujours être mergée dans un état vierge de données de test.**
+
+Avant tout merge sur `main`, exécuter via MCP `execute_sql` la purge complète dans cet ordre :
+
+```sql
+-- Tables de données métier (ordre FK)
+DELETE FROM notifications_internes;
+DELETE FROM operateur_observations;
+DELETE FROM admin_actions_log;
+DELETE FROM email_logs;
+DELETE FROM intervention_photos;
+DELETE FROM interventions;
+DELETE FROM demandes_rdv;
+DELETE FROM demandes_gel;
+DELETE FROM factures_lignes;
+DELETE FROM factures;
+DELETE FROM avoirs;
+DELETE FROM contrat_sequences;
+DELETE FROM contrat_avenants;
+DELETE FROM contrat_lignes;
+DELETE FROM contrats;
+DELETE FROM vehicules;
+UPDATE profiles SET entreprise_id = NULL WHERE entreprise_id IS NOT NULL;
+DELETE FROM entreprises;
+-- Supprimer aussi les comptes client (role='client') de auth.users
+DELETE FROM profiles WHERE role = 'client';
+DELETE FROM auth.users WHERE id IN (
+  SELECT id FROM auth.users
+  WHERE email NOT IN (
+    'admin.test@izox.fr',
+    'staff.test@izox.fr',
+    'commercial.test@izox.fr',
+    'operateur.test@izox.fr'
+  )
+);
+```
+
+**Comptes à conserver impérativement (4 comptes techniques) :**
+- `admin.test@izox.fr` → admin
+- `staff.test@izox.fr` → staff
+- `commercial.test@izox.fr` → commercial
+- `operateur.test@izox.fr` → operateur
+
+**Le compte client est toujours recréé depuis l'interface admin** (`/admin` → "Créer un compte client") en début de chaque cycle de test — il ne doit jamais être hardcodé ici.
+
+Vérifier après purge que toutes les tables sont à 0 et que `SELECT COUNT(*) FROM auth.users` retourne exactement 4.
+
 ---
 
 ## Infos projet critiques
