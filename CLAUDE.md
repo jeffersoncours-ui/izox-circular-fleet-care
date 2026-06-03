@@ -30,6 +30,12 @@ Stack : TanStack Start (SSR) + Supabase + Vercel + Resend.
 ### 4. Qualité
 - **Vérification avant "terminé"** : jamais marquer une tâche comme faite sans preuve empirique (logs, tests, démo).
 - **Auto-correction** : relire son travail avant de le présenter. Question : "Un staff engineer approuverait-il ça ?"
+- **Validation empirique obligatoire** : après toute implémentation (migration SQL, RPC, RLS, composant) et **avant** de présenter les résultats, effectuer des tests réels :
+  1. Tester en base via MCP `execute_sql` : appeler les RPCs, vérifier les RLS, contrôler les données retournées.
+  2. Créer les données de test nécessaires (valeurs temporaires) pour le cas nominal, les cas limites, et les cas d'erreur attendus (ex. : contrainte violée, accès refusé).
+  3. **Mettre la conception en défaut** : tester ce qui ne devrait *pas* fonctionner (ex. : double prise en charge → EXCEPTION ? Opérateur sans liaison → bloqué ?).
+  4. Nettoyer les données de test après, sauf si elles sont utiles aux tests manuels de l'utilisateur.
+  5. Inclure les résultats (requêtes SQL, valeurs retournées) dans la réponse comme preuve.
 
 ### 5. Amélioration continue
 - Après toute correction de l'utilisateur : mettre à jour `tasks/lessons.md` immédiatement.

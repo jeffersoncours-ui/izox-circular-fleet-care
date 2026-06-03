@@ -1,5 +1,22 @@
 # Lessons Learned — IZOX
 
+## Bugs terrain post-déploiement (session 10 — correctifs)
+
+- **RLS vehicules manquante pour opérateur** : `vehicules` n'avait aucune policy SELECT pour le rôle `operateur`. Le join PostgREST dans la requête `interventions` (`.select("..., vehicules(immatriculation, marque...)")`) retournait `null` silencieusement → immatriculation "—" dans tout le dashboard. Toujours vérifier les RLS de **toutes les tables jointes**, pas seulement la table principale.
+- **`todayCount` qui ignore les `en_cours` d'autres dates** : une intervention peut être `en_cours` avec `date_intervention` = demain (planifiée pour demain, prise en charge aujourd'hui). Compter `en_cours` indépendamment de la date (ils sont actifs *maintenant*), et `planifiée` uniquement si `date_intervention === today`. Formule correcte : `enCours.length + avenir.filter(i => i.date_intervention === today).length`.
+- **AvenirCard non cliquable** : `<div>` wrapper ne propage pas les clics. L'opérateur ne pouvait pas voir les détails (adresse, prestation) d'une fiche planifiée avant de la prendre en charge. Solution : wrapper `<button>` avec `onClick → navigate`, et `e.stopPropagation()` sur le bouton "Prendre en charge" imbriqué pour éviter la navigation au clic du CTA.
+- **Contrainte "1 à la fois" absente** : le RPC `prendre_en_charge_intervention` ne vérifiait pas si une `en_cours` existait déjà. Ajouter `IF EXISTS (SELECT 1 FROM interventions WHERE operateur_id = auth.uid() AND statut='en_cours') THEN RAISE EXCEPTION`. Côté UI : prop `hasEnCours` → bouton désactivé + libellé "Intervention en cours...".
+- **Tester les RLS de toutes les tables impliquées dans un join** : avant de déclarer un composant terminé, vérifier systématiquement que l'utilisateur cible (ici `operateur`) a bien un accès SELECT sur chaque table référencée dans le `.select()` — y compris les tables de lookup (vehicules, entreprises, operators...).
+
+## Compte opérateur terrain (session 10)
+
+- **`operator_id` ≠ `operateur_id` — deux FK distinctes** : `operator_id` (FK → `operators`, planning admin) est rempli par `assigner_rdv`. `operateur_id` (FK → `auth.users`) est rempli par l'opérateur terrain lui-même. La RLS originale ne couvrait que `operateur_id = auth.uid()` → interventions planifiées **entièrement invisibles** pour l'opérateur terrain. Fix : `user_id` sur `operators` + RLS étendue avec `OR operator_id IN (SELECT id FROM operators WHERE user_id = auth.uid())`.
+- **RPC `prendre_en_charge_intervention`** : séparer la lecture (vue planifiée : date, lieu, véhicule) du démarrage (prise en charge). Le RPC valide opérateur lié + statut=planifiee + operator_id correct → `operateur_id = auth.uid()` + `statut = en_cours`. Simple, atomique.
+- **Storage policies à mettre à jour en même temps que les RLS table** : les policies storage font `EXISTS (SELECT 1 FROM interventions WHERE ...)`. Sans la mise à jour, l'upload photos échoue silencieusement après prise en charge.
+- **`typeScope()` obligatoire pour les packs commerciaux** : `type_prestation` des interventions RDV vaut `pack_standard`/`pack_vtc`/`pack_interieur`. `zonesFor()` attend `exterieur|interieur|complet`. Sans `typeScope()`, checklists et photos disparaissent. Toujours `zonesFor(typeScope(intervention.type_prestation))`.
+- **Step dashboard depuis localStorage** : le stepper stocke l'étape dans `localStorage`. Le dashboard lit `izox_intervention_${id}` pour afficher "step X/3" sans requête DB supplémentaire.
+- **Zones photos : changement de clés = photos historiques orphelines** : passer de 2 → 6 zones change les clés DB. Les photos existantes avec les anciennes clés ne s'affichent plus. Acceptable en dev/test, nécessite une migration de clés en production.
+
 ## Créneaux RDV & Saturation (session 9)
 
 - **Validation 2 jours différents vs 2 créneaux distincts** : la règle "jours différents" est plus stricte que "pas de doublon exact". Un seul check `hasSameDayCreneaux` (clé = date ISO) remplace les deux anciens checks et couvre tous les cas. Initialiser le state avec 2 créneaux vides force la saisie sans message d'erreur intrusif au premier rendu.
