@@ -2,18 +2,6 @@
 
 ---
 
-## Session 9 terminée — Créneaux RDV + GPS/Carte
-
-- [x] **A — Formulaire client : 2 créneaux minimum** sur 2 jours différents
-- [x] **B1 — Migration SQL** : RPC `get_creneaux_disponibles` + guard race condition dans `creer_demande_rdv`
-- [x] **B2 — Frontend occupancy** : griser Calendar + RadioGroup
-- [x] **B3 — Regen types Supabase**
-- [x] **C1 — Edge function `geocode-address`** (Nominatim, JWT requis, déployée)
-- [x] **C2 — Migration SQL** : lat/lon dans `creer_demande_rdv` + propagation `assigner_rdv`
-- [x] **C3 — Frontend** : géocoder avant soumission (fire-and-forget)
-- [x] **C4 — Admin** : badge ⚠️ + bouton "Géocoder" dans `AssignerRdvDialog`
-- [x] **C5 — RouteMap** : centre adaptatif (dernier point DB → Paris fallback)
-
 ## Backlog actif
 
 - [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.
@@ -24,6 +12,16 @@
 ---
 
 ## Historique sessions
+
+### Session 2026-06-03 (9) — Créneaux RDV + GPS/Carte
+- Formulaire client : 2 créneaux min sur jours différents (`hasSameDayCreneaux`, init 2 créneaux vides)
+- RPC `get_creneaux_disponibles` : capacite_totale = COUNT(operators)*2, multi-opérateurs ready
+- Guard race condition dans `creer_demande_rdv` : exception SQL si tous créneaux saturés au submit
+- Calendar grise dates full-saturées ; RadioGroup grise demi-journée saturée
+- Edge function `geocode-address` déployée (Nominatim, JWT, fire-and-forget)
+- `creer_demande_rdv` + `assigner_rdv` : stockent et propagent latitude/longitude
+- `AssignerRdvDialog` : badge ⚠️ + bouton "Géocoder" si latitude IS NULL
+- `RouteMap` : centre adaptatif (dernier GPS DB → Paris fallback, plus de hardcoding)
 
 ### Session 2026-06-03 (8) — Fiches cliquables + replanification heure RDV
 - Fix routing TanStack : `admin.interventions.tsx` → layout `<Outlet/>` + `admin.interventions.index.tsx` → redirect. Fiches et blocs board maintenant cliquables.
