@@ -2489,6 +2489,8 @@ export type Database = {
           p_code_postal_intervention: string
           p_commentaires: string
           p_creneaux_preferes: Json
+          p_latitude?: number
+          p_longitude?: number
           p_vehicule_ids: string[]
           p_ville_intervention: string
         }
@@ -2553,6 +2555,15 @@ export type Database = {
         Returns: string
       }
       generer_numero_contrat: { Args: never; Returns: string }
+      get_creneaux_disponibles: {
+        Args: { p_date_debut: string; p_date_fin: string }
+        Returns: {
+          capacite_totale: number
+          nb_interventions: number
+          slot_date: string
+          time_slot: string
+        }[]
+      }
       get_max_vehicules_par_demande: { Args: never; Returns: number }
       get_slot_occupancy: {
         Args: {

@@ -1,5 +1,19 @@
 # Lessons Learned — IZOX
 
+## Créneaux RDV & Saturation (session 9)
+
+- **Validation 2 jours différents vs 2 créneaux distincts** : la règle "jours différents" est plus stricte que "pas de doublon exact". Un seul check `hasSameDayCreneaux` (clé = date ISO) remplace les deux anciens checks et couvre tous les cas. Initialiser le state avec 2 créneaux vides force la saisie sans message d'erreur intrusif au premier rendu.
+- **`get_creneaux_disponibles` : capacité scalable** : retourner `capacite_totale = COUNT(operators) * 2` au lieu d'une constante en dur rend la RPC multi-opérateurs ready sans changer l'interface client. Slots non retournés = 0 interventions = disponibles (join implicite).
+- **Guard race condition dans `creer_demande_rdv`** : le vrai verrou transactionnel reste `assigner_rdv` (FOR UPDATE sur la demande + COUNT interventions). Ajouter un check "au moins 1 créneau disponible" dans `creer_demande_rdv` donne un feedback propre au client au moment du submit, sans remplacer le guard admin. `GREATEST(COUNT(*)*2, 2)` évite un fallback = 0 si la table `operators` est vide.
+- **Mapping vocabulaire slots** : DB utilise `'morning'`/`'afternoon'` (anglais, migration 20260531010000). Form client utilise `'matin'`/`'apres_midi'` (français). Toujours passer par le mapping explicite dans les deux sens — ne pas supposer une normalisation globale.
+
+## Géocodage & Carte (session 9)
+
+- **Nominatim server-side** : appel depuis une edge function (pas depuis le navigateur) — User-Agent identifiant l'app obligatoire, pas de quota IP navigateur, CORS géré. Fire-and-forget côté client : si Nominatim échoue, la demande est créée sans coords (la carte sera vide pour ce point, pas bloquant).
+- **`creer_demande_rdv` : extension rétrocompatible** : ajouter `p_latitude DEFAULT NULL` / `p_longitude DEFAULT NULL` en fin de signature évite de casser les appels existants. Toujours `DROP FUNCTION` avant `CREATE OR REPLACE` quand on change le nombre de paramètres (PostgreSQL les distingue par signature).
+- **Centre carte adaptatif** : ne pas hardcoder `[48.8566, 2.3522]` comme unique centre. Logique en cascade : AutoFitBounds quand routes GPS existent → dernier point connu en DB → Paris fallback. Le fallback statique est légitime mais doit être le dernier recours, pas le seul.
+- **Badge géocodage admin** : indicateur ⚠️ "Adresse non géocodée" + bouton "Géocoder" dans `AssignerRdvDialog` quand `latitude IS NULL`. Pattern : mutation optimiste sur `demande` locale (`demande.latitude = data.latitude`) pour feedback immédiat sans refetch.
+
 ## Auth / Supabase
 
 - **SMTP Supabase cassé** → ne jamais utiliser le SMTP natif. Toujours passer par les edge functions + API HTTP Resend.

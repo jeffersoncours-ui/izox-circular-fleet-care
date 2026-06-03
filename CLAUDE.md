@@ -71,8 +71,10 @@ Supabase Auth avec flow **implicit** (pas PKCE — confirmé dans les logs).
 | `request-password-reset` | non (public) | "Mot de passe oublié" côté login |
 | `admin-reset-password` | oui (admin only) | Reset depuis la fiche client admin |
 | `create-client-account` | oui (admin/staff) | Création entreprise + compte client |
+| `geocode-address` | oui (authenticated) | Géocodage Nominatim — retourne `{latitude, longitude}` depuis `{adresse, ville, code_postal}` |
 
 Toutes envoient les emails via l'API HTTP Resend (pas SMTP natif Supabase — SMTP était cassé "535 Authentication credentials invalid").
+`geocode-address` : appel Nominatim server-side (User-Agent `IZOX-CircularFleetCare/1.0`), fire-and-forget côté client — ne bloque jamais la création de demande.
 
 Logs d'envoi dans la table `email_logs` (type, target_id, email_to, status, error_message).
 
@@ -138,7 +140,7 @@ en **un seul onglet** hébergé sur `/admin/planning`, avec 3 sous-onglets :
 
 **`AssignerRdvDialog`** (`src/components/admin/AssignerRdvDialog.tsx`) est le seul dialog admin pour traiter une demande **en_attente** :
 - Affiche : créneaux demandés par le client, lieu d'intervention, commentaires
-- **Créneau verrouillé** : l'admin ne peut PAS choisir une date libre — il sélectionne uniquement parmi les `creneaux_preferes` du client (boutons avec occupancy X/3 chargée pour ces slots uniquement)
+- **Créneau verrouillé** : l'admin ne peut PAS choisir une date libre — il sélectionne uniquement parmi les `creneaux_preferes` du client
 - **Heure précise** : après avoir sélectionné un créneau, l'admin saisit une heure de début (`heure_intervention`) validée dans la plage (08:00–12:00 matin, 14:00–18:00 après-midi)
 - Permet : refus (avec motif min. 5 car.) → RPC `refuser_demande_rdv`
 - Permet : assignation opérateur + créneau + heure → RPC `assigner_rdv(demande_id, operator_id, date, time_slot, heure)` + `sendEmail("rdv_confirmee")`
@@ -196,12 +198,13 @@ en **un seul onglet** hébergé sur `/admin/planning`, avec 3 sous-onglets :
 - **Un seul opérateur réel pour l'instant** : `operators` ne contient qu'un row, label neutre « Opérateur » (pas de nom de personne). Le rendu UI est dynamique — ne jamais coder en dur les opérateurs.
 - **Board cliquable** : clic sur un bloc du `PlanningCalendar` → `/admin/interventions/$id`. Drag via grip icon uniquement (listeners dnd-kit isolés sur l'icône grip).
 
-### Lieu d'intervention
+### Lieu d'intervention & GPS
 
 - `demandes_rdv` porte `adresse_intervention`, `ville_intervention`, `code_postal_intervention`, `latitude`, `longitude`.
-- `interventions` porte aussi `adresse_intervention`, `ville_intervention`, `code_postal_intervention`, `heure_intervention` (copiés depuis la demande par `assigner_rdv`).
-- `creer_demande_rdv` exige les 3 champs adresse (validation DB + UI, pré-remplis depuis `entreprises`).
-- **GPS / géocodage (backlog)** : colonnes `latitude`/`longitude` existent mais ne sont jamais alimentées → carte des routes vide. Câbler via Nominatim quand prêt.
+- `interventions` porte aussi `adresse_intervention`, `ville_intervention`, `code_postal_intervention`, `latitude`, `longitude`, `heure_intervention` (tous copiés depuis la demande par `assigner_rdv`).
+- `creer_demande_rdv` exige les 3 champs adresse + accepte `p_latitude`/`p_longitude` (DEFAULT NULL, rétrocompat). Géocodage effectué côté client avant le submit via edge function `geocode-address`.
+- **`AssignerRdvDialog`** : badge ⚠️ "Adresse non géocodée" + bouton "Géocoder" si `demande.latitude IS NULL`. Appelle `geocode-address` + UPDATE en DB.
+- **`RouteMap`** : centre adaptatif — si interventions GPS existent → `fitBounds`. Sinon → dernier point GPS en DB → Paris `[48.8566, 2.3522]` zoom 10 en fallback.
 
 ### Détail intervention admin (`/admin/interventions/$id`)
 
@@ -225,7 +228,9 @@ Stocké en JSONB sur `demandes_rdv`. Format :
 ```
 - `creneau` : `"matin"` | `"apres_midi"` (clé interne)
 - `plage` : `"matin"` | `"apres-midi"` (affichage — utiliser `isMatin(plage)` pour normaliser)
-- Le formulaire client (`CreerDemandeRdvDialog`) permet 1–3 créneaux. **Backlog** : imposer min. 2 créneaux sur jours différents.
+- Le formulaire client (`CreerDemandeRdvDialog`) impose **min. 2 créneaux sur des jours différents** (jusqu'à 3 max). `hasSameDayCreneaux` bloque si 2 créneaux ont la même date.
+- Créneaux saturés grisés : `get_creneaux_disponibles(date_debut, date_fin)` → `(slot_date, time_slot, nb_interventions, capacite_totale)`. Capacite = `COUNT(operators)*2`. Calendar grise dates full-saturées ; RadioGroup grise la demi-journée saturée.
+- Guard race condition dans `creer_demande_rdv` : exception SQL si tous les créneaux proposés sont saturés au moment du submit.
 
 ## Comptes de test (après purge 2026-06-02)
 

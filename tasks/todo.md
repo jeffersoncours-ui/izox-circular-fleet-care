@@ -4,16 +4,24 @@
 
 ## Backlog actif
 
-- [ ] **Formulaire client — 2 créneaux minimum** : `CreerDemandeRdvDialog` imposer min. 2 créneaux sur jours différents + message explicatif. Actuellement 1 créneau suffit, ce qui prive l'admin de flexibilité. Modifier `canSubmit` : `creneauxRemplis.length >= 2` + validation dates différentes.
-- [ ] **Créneaux saturés côté client** : lors de la sélection des créneaux, masquer ou griser les dates/créneaux déjà à 3/3 interventions planifiées pour l'opérateur disponible.
-- [ ] **GPS / géolocalisation** : colonnes `latitude`/`longitude` existent sur `demandes_rdv` et `interventions` — géocodage via Nominatim à câbler dans `creer_demande_rdv` ou via un trigger, propagation vers les interventions via `assigner_rdv`.
-- [ ] **Carte interactive** : `RouteMap` (`/admin/planning/map`) toujours vide (lat/lon jamais alimentées). Une fois GPS câblé : afficher les points, optimisation de tournée (regroupement par zones proches), bouton « Optimiser », drag-drop sur carte.
+- [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.
+- [ ] **Carte interactive** : optimisation tournée (nearest-neighbor + bouton « Optimiser ») à faire quand plusieurs opérateurs.
 - [ ] **Refonte visuelle Claude Design** : migration écran par écran, garder les contrats de données (mêmes RPCs, mêmes champs), vérifier les invariants `lessons.md` à chaque écran.
 - [ ] **Migration domaine `izox.fr`** : mettre à jour `SITE_URL` env var Supabase + vérifier que `/reset-password` reste dans les redirect URLs.
 
 ---
 
 ## Historique sessions
+
+### Session 2026-06-03 (9) — Créneaux RDV + GPS/Carte
+- Formulaire client : 2 créneaux min sur jours différents (`hasSameDayCreneaux`, init 2 créneaux vides)
+- RPC `get_creneaux_disponibles` : capacite_totale = COUNT(operators)*2, multi-opérateurs ready
+- Guard race condition dans `creer_demande_rdv` : exception SQL si tous créneaux saturés au submit
+- Calendar grise dates full-saturées ; RadioGroup grise demi-journée saturée
+- Edge function `geocode-address` déployée (Nominatim, JWT, fire-and-forget)
+- `creer_demande_rdv` + `assigner_rdv` : stockent et propagent latitude/longitude
+- `AssignerRdvDialog` : badge ⚠️ + bouton "Géocoder" si latitude IS NULL
+- `RouteMap` : centre adaptatif (dernier GPS DB → Paris fallback, plus de hardcoding)
 
 ### Session 2026-06-03 (8) — Fiches cliquables + replanification heure RDV
 - Fix routing TanStack : `admin.interventions.tsx` → layout `<Outlet/>` + `admin.interventions.index.tsx` → redirect. Fiches et blocs board maintenant cliquables.

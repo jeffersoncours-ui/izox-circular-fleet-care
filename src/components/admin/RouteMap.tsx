@@ -82,9 +82,14 @@ function AutoFitBounds({ routes }: { routes: OperatorRoute[] }) {
   return null;
 }
 
+// Paris / Île-de-France as static fallback
+const PARIS_CENTER: [number, number] = [48.8566, 2.3522];
+
 export function RouteMap() {
   const [routes, setRoutes] = useState<OperatorRoute[]>([]);
   const [loading, setLoading] = useState(true);
+  // Adaptive center: last known GPS point → Paris fallback
+  const [mapCenter, setMapCenter] = useState<[number, number]>(PARIS_CENTER);
   const today = format(new Date(), "yyyy-MM-dd");
 
   const loadData = useCallback(async () => {
@@ -128,6 +133,23 @@ export function RouteMap() {
       })
       .filter((r) => r.interventions.length >= 2);
 
+    // Adaptive center: if no GPS routes today, use last known GPS point in DB
+    if (computed.length === 0) {
+      const { data: lastPt } = await supabase
+        .from("interventions")
+        .select("latitude, longitude")
+        .not("latitude", "is", null)
+        .not("longitude", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (lastPt?.latitude && lastPt?.longitude) {
+        setMapCenter([lastPt.latitude as number, lastPt.longitude as number]);
+      }
+      // else keeps PARIS_CENTER fallback
+    }
+    // When routes exist, AutoFitBounds overrides the center via fitBounds
+
     setRoutes(computed);
     setLoading(false);
   }, [today]);
@@ -143,8 +165,6 @@ export function RouteMap() {
       </div>
     );
   }
-
-  const defaultCenter: [number, number] = [48.8566, 2.3522]; // Paris
 
   return (
     <div className="space-y-4">
@@ -164,8 +184,8 @@ export function RouteMap() {
           {/* Map */}
           <div className="lg:col-span-3 rounded-lg overflow-hidden border border-border">
             <MapContainer
-              center={defaultCenter}
-              zoom={12}
+              center={mapCenter}
+              zoom={10}
               style={{ height: "500px", width: "100%" }}
             >
               <TileLayer
