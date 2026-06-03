@@ -16,4 +16,6 @@ export interface AdminDemandeRdv {
   assigned_time_slot?: string | null;
   assigned_operator_id?: string | null;
   date_confirmee?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }

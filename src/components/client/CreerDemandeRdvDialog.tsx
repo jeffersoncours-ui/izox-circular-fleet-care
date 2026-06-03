@@ -56,6 +56,13 @@ interface CreneauForm {
   creneau: CreneauId;
 }
 
+interface OccupancyRow {
+  slot_date: string;
+  time_slot: string;
+  nb_interventions: number;
+  capacite_totale: number;
+}
+
 export function CreerDemandeRdvDialog({
   open,
   onOpenChange,
@@ -70,7 +77,9 @@ export function CreerDemandeRdvDialog({
   const [maxVehicules, setMaxVehicules] = useState<number>(2);
   const [creneaux, setCreneaux] = useState<CreneauForm[]>([
     { date: undefined, creneau: "matin" },
+    { date: undefined, creneau: "matin" },
   ]);
+  const [occupancy, setOccupancy] = useState<OccupancyRow[]>([]);
   const [adresseIntervention, setAdresseIntervention] = useState("");
   const [villeIntervention, setVilleIntervention] = useState("");
   const [codePostalIntervention, setCodePostalIntervention] = useState("");
@@ -78,25 +87,33 @@ export function CreerDemandeRdvDialog({
   const [submitting, setSubmitting] = useState(false);
   const [openPicker, setOpenPicker] = useState<number | null>(null);
 
-  // Load vehicules + max + entreprise address
+  const minDate = useMemo(() => getMinDateSelectable(), [open]);
+  const maxDate = useMemo(() => getMaxDateSelectable(), [open]);
+
+  // Load vehicules + max + entreprise address + occupancy
   useEffect(() => {
     const entrepriseId = profile?.entreprise_id;
     if (!open || !entrepriseId) return;
     (async () => {
-      const [{ data: vehData }, { data: maxData }, { data: entData }] = await Promise.all([
-        supabase
-          .from("vehicules")
-          .select("id, immatriculation, marque, modele")
-          .eq("entreprise_id", entrepriseId)
-          .eq("statut", "actif")
-          .order("immatriculation"),
-        supabase.rpc("get_max_vehicules_par_demande"),
-        supabase
-          .from("entreprises")
-          .select("adresse, ville, code_postal")
-          .eq("id", entrepriseId)
-          .maybeSingle(),
-      ]);
+      const [{ data: vehData }, { data: maxData }, { data: entData }, { data: occData }] =
+        await Promise.all([
+          supabase
+            .from("vehicules")
+            .select("id, immatriculation, marque, modele")
+            .eq("entreprise_id", entrepriseId)
+            .eq("statut", "actif")
+            .order("immatriculation"),
+          supabase.rpc("get_max_vehicules_par_demande"),
+          supabase
+            .from("entreprises")
+            .select("adresse, ville, code_postal")
+            .eq("id", entrepriseId)
+            .maybeSingle(),
+          supabase.rpc("get_creneaux_disponibles", {
+            p_date_debut: format(minDate, "yyyy-MM-dd"),
+            p_date_fin: format(maxDate, "yyyy-MM-dd"),
+          } as any),
+        ]);
       setVehicules((vehData ?? []) as VehiculeOption[]);
       if (typeof maxData === "number" && maxData > 0) setMaxVehicules(maxData);
       if (entData) {
@@ -104,6 +121,7 @@ export function CreerDemandeRdvDialog({
         setVilleIntervention((entData as any).ville ?? "");
         setCodePostalIntervention((entData as any).code_postal ?? "");
       }
+      setOccupancy((occData ?? []) as OccupancyRow[]);
     })();
   }, [open, profile?.entreprise_id]);
 
@@ -116,11 +134,27 @@ export function CreerDemandeRdvDialog({
 
   const reset = () => {
     setSelectedVehiculeIds(defaultVehiculeId ? [defaultVehiculeId] : []);
-    setCreneaux([{ date: undefined, creneau: "matin" }]);
+    setCreneaux([
+      { date: undefined, creneau: "matin" },
+      { date: undefined, creneau: "matin" },
+    ]);
+    setOccupancy([]);
     setAdresseIntervention("");
     setVilleIntervention("");
     setCodePostalIntervention("");
     setCommentaires("");
+  };
+
+  // Occupancy helpers — mapping DB slots (morning/afternoon) ↔ form (matin/apres_midi)
+  const isSlotSature = (dateStr: string, creneauId: CreneauId): boolean => {
+    const slot = creneauId === "matin" ? "morning" : "afternoon";
+    const found = occupancy.find((o) => o.slot_date === dateStr && o.time_slot === slot);
+    return (found?.nb_interventions ?? 0) >= (found?.capacite_totale ?? 2);
+  };
+
+  const isDateFullySature = (date: Date): boolean => {
+    const d = format(date, "yyyy-MM-dd");
+    return isSlotSature(d, "matin") && isSlotSature(d, "apres_midi");
   };
 
   const toggleVehicule = (id: string, checked: boolean) => {
@@ -149,25 +183,23 @@ export function CreerDemandeRdvDialog({
     setCreneaux((prev) => [...prev, { date: undefined, creneau: "matin" }]);
   };
   const removeCreneau = (i: number) => {
+    if (creneaux.length <= 2) return;
     setCreneaux((prev) => prev.filter((_, idx) => idx !== i));
   };
 
-  const minDate = useMemo(() => getMinDateSelectable(), [open]);
-  const maxDate = useMemo(() => getMaxDateSelectable(), [open]);
-
   const creneauxRemplis = creneaux.filter((c) => c.date);
   const hasCreneauxIncomplets = creneaux.some((c) => !c.date);
-  const hasDoublonCreneaux = (() => {
-    const cles = creneauxRemplis.map(
-      (c) => `${format(c.date!, "yyyy-MM-dd")}-${c.creneau}`,
-    );
-    return new Set(cles).size !== cles.length;
+  // Same-day check: two créneaux on the same date are forbidden (regardless of half-day)
+  const hasSameDayCreneaux = (() => {
+    const dates = creneauxRemplis.map((c) => format(c.date!, "yyyy-MM-dd"));
+    return new Set(dates).size !== dates.length;
   })();
+
   const canSubmit =
     selectedVehiculeIds.length >= 1 &&
     selectedVehiculeIds.length <= maxVehicules &&
-    creneauxRemplis.length >= 1 &&
-    !hasDoublonCreneaux &&
+    creneauxRemplis.length >= 2 &&
+    !hasSameDayCreneaux &&
     !hasCreneauxIncomplets &&
     adresseIntervention.trim().length > 0 &&
     villeIntervention.trim().length > 0 &&
@@ -178,6 +210,23 @@ export function CreerDemandeRdvDialog({
     if (!canSubmit) return;
     setSubmitting(true);
     try {
+      // Geocoding fire-and-forget — does not block the demande if Nominatim is unavailable
+      let lat: number | null = null;
+      let lon: number | null = null;
+      try {
+        const { data: geoData } = await supabase.functions.invoke("geocode-address", {
+          body: {
+            adresse: adresseIntervention.trim(),
+            ville: villeIntervention.trim(),
+            code_postal: codePostalIntervention.trim(),
+          },
+        });
+        lat = geoData?.latitude ?? null;
+        lon = geoData?.longitude ?? null;
+      } catch {
+        // Géocodage optionnel — la demande est créée même sans coords
+      }
+
       const payload: CreneauPrefere[] = creneauxRemplis.map((c) => ({
         date: format(c.date!, "yyyy-MM-dd"),
         creneau: c.creneau,
@@ -189,6 +238,8 @@ export function CreerDemandeRdvDialog({
         p_adresse_intervention: adresseIntervention.trim(),
         p_ville_intervention: villeIntervention.trim(),
         p_code_postal_intervention: codePostalIntervention.trim(),
+        p_latitude: lat,
+        p_longitude: lon,
       } as any);
       if (error) throw error;
       toast.success("Demande de rendez-vous envoyée");
@@ -215,7 +266,7 @@ export function CreerDemandeRdvDialog({
           <DialogTitle>Demander un rendez-vous</DialogTitle>
           <DialogDescription>
             Sélectionnez jusqu'à {maxVehicules} véhicule{maxVehicules > 1 ? "s" : ""}{" "}
-            et proposez jusqu'à 3 créneaux préférés.
+            et proposez au moins 2 créneaux sur des <strong>jours différents</strong> (jusqu'à 3 maximum).
           </DialogDescription>
         </DialogHeader>
 
@@ -309,90 +360,112 @@ export function CreerDemandeRdvDialog({
           {/* Créneaux */}
           <div className="space-y-2">
             <Label>Créneaux préférés *</Label>
-            {creneaux.map((c, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "space-y-2 rounded-md border p-2",
-                  !c.date && "border-orange-300 bg-orange-50",
-                )}
-              >
-                {!c.date && (
-                  <p className="text-xs text-orange-700 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Veuillez sélectionner une date pour ce créneau
-                  </p>
-                )}
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <Popover
-                    open={openPicker === i}
-                    onOpenChange={(o) => setOpenPicker(o ? i : null)}
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "justify-start text-left font-normal",
-                          !c.date && "text-muted-foreground",
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {c.date
-                          ? format(c.date, "EEEE d MMMM yyyy", { locale: fr })
-                          : `Choisir une date${i === 0 ? " *" : ""}`}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={c.date}
-                        onSelect={(d) => {
-                          updateCreneau(i, { date: d });
-                          setOpenPicker(null);
-                        }}
-                        disabled={(d) => !isDateSelectable(d) || d > maxDate}
-                        fromDate={minDate}
-                        toDate={maxDate}
-                        fromMonth={minDate}
-                        toMonth={maxDate}
-                        defaultMonth={minDate}
-                        initialFocus
-                        locale={fr}
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  {i > 0 ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeCreneau(i)}
+            {creneaux.map((c, i) => {
+              const dateStr = c.date ? format(c.date, "yyyy-MM-dd") : null;
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    "space-y-2 rounded-md border p-2",
+                    !c.date && "border-orange-300 bg-orange-50",
+                  )}
+                >
+                  {!c.date && (
+                    <p className="text-xs text-orange-700 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Veuillez sélectionner une date pour ce créneau
+                    </p>
+                  )}
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <Popover
+                      open={openPicker === i}
+                      onOpenChange={(o) => setOpenPicker(o ? i : null)}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <div className="w-9" />
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "justify-start text-left font-normal",
+                            !c.date && "text-muted-foreground",
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {c.date
+                            ? format(c.date, "EEEE d MMMM yyyy", { locale: fr })
+                            : `Choisir une date *`}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={c.date}
+                          onSelect={(d) => {
+                            updateCreneau(i, { date: d });
+                            setOpenPicker(null);
+                          }}
+                          disabled={(d) =>
+                            !isDateSelectable(d) || d > maxDate || isDateFullySature(d)
+                          }
+                          fromDate={minDate}
+                          toDate={maxDate}
+                          fromMonth={minDate}
+                          toMonth={maxDate}
+                          defaultMonth={minDate}
+                          initialFocus
+                          locale={fr}
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {creneaux.length > 2 ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeCreneau(i)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <div className="w-9" />
+                    )}
+                  </div>
+                  <RadioGroup
+                    value={c.creneau}
+                    onValueChange={(v) =>
+                      updateCreneau(i, { creneau: v as CreneauId })
+                    }
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    {CRENEAUX_HORAIRES.map((h) => {
+                      const sature = dateStr ? isSlotSature(dateStr, h.id as CreneauId) : false;
+                      return (
+                        <label
+                          key={h.id}
+                          className={cn(
+                            "flex items-center gap-2 rounded-md border p-2 text-xs",
+                            sature
+                              ? "opacity-50 cursor-not-allowed bg-muted"
+                              : "cursor-pointer hover:bg-accent/40",
+                          )}
+                        >
+                          <RadioGroupItem value={h.id} disabled={sature} />
+                          {h.label}
+                          {sature && (
+                            <span className="ml-auto text-muted-foreground">(Complet)</span>
+                          )}
+                        </label>
+                      );
+                    })}
+                  </RadioGroup>
+                  {dateStr && isSlotSature(dateStr, c.creneau) && (
+                    <p className="text-xs text-amber-700 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Ce créneau est complet. Veuillez choisir une autre demi-journée ou une autre date.
+                    </p>
                   )}
                 </div>
-                <RadioGroup
-                  value={c.creneau}
-                  onValueChange={(v) =>
-                    updateCreneau(i, { creneau: v as CreneauId })
-                  }
-                  className="grid grid-cols-2 gap-2"
-                >
-                  {CRENEAUX_HORAIRES.map((h) => (
-                    <label
-                      key={h.id}
-                      className="flex items-center gap-2 rounded-md border p-2 cursor-pointer hover:bg-accent/40 text-xs"
-                    >
-                      <RadioGroupItem value={h.id} />
-                      {h.label}
-                    </label>
-                  ))}
-                </RadioGroup>
-              </div>
-            ))}
+              );
+            })}
             {creneaux.length < 3 && (
               <Button
                 type="button"
@@ -401,16 +474,14 @@ export function CreerDemandeRdvDialog({
                 onClick={addCreneau}
                 className="w-full"
               >
-                <Plus className="h-4 w-4" /> Ajouter un autre créneau
+                <Plus className="h-4 w-4" /> Ajouter un troisième créneau
               </Button>
             )}
-            {hasDoublonCreneaux && (
+            {hasSameDayCreneaux && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Deux créneaux identiques (même date et même demi-journée) ne
-                  sont pas autorisés. Veuillez modifier ou supprimer l'un d'entre
-                  eux.
+                  Deux créneaux sont le même jour. Veuillez choisir des jours différents.
                 </AlertDescription>
               </Alert>
             )}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Loader2, CheckCircle2, XCircle, MapPin, Clock } from "lucide-react";
+import { AlertTriangle, Loader2, CheckCircle2, XCircle, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { sendEmail } from "@/lib/email";
@@ -66,6 +66,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
   const [selectedSlot, setSelectedSlot] = useState<"morning" | "afternoon" | "">("");
   const [selectedHeure, setSelectedHeure] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
   const [refusOpen, setRefusOpen] = useState(false);
   const [motif, setMotif] = useState("");
 
@@ -159,6 +160,37 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     }
   };
 
+  const handleGeocode = async () => {
+    if (!demande) return;
+    setGeocoding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("geocode-address", {
+        body: {
+          adresse: demande.adresse_intervention,
+          ville: demande.ville_intervention,
+          code_postal: demande.code_postal_intervention,
+        },
+      });
+      if (error) throw error;
+      if (!data?.latitude || !data?.longitude) {
+        toast.error("Adresse introuvable — vérifiez les champs.");
+        return;
+      }
+      await supabase
+        .from("demandes_rdv")
+        .update({ latitude: data.latitude, longitude: data.longitude })
+        .eq("id", demande.id);
+      // Update local demande reference for immediate UI feedback
+      demande.latitude = data.latitude;
+      demande.longitude = data.longitude;
+      toast.success("Adresse géocodée avec succès.");
+    } catch (e: unknown) {
+      toast.error((e as Error)?.message ?? "Erreur lors du géocodage");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
   if (!demande) return null;
 
   const op = operators.find((o) => o.id === selectedOperator);
@@ -207,6 +239,22 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
                       .filter(Boolean)
                       .join(", ")}
                   </p>
+                  {!demande.latitude && (
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <span className="flex items-center gap-1 text-xs text-amber-700">
+                        <AlertTriangle className="h-3 w-3" />
+                        Adresse non géocodée
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleGeocode}
+                        disabled={geocoding}
+                        className="text-xs underline text-primary hover:opacity-70 disabled:opacity-50"
+                      >
+                        {geocoding ? "Géocodage…" : "Géocoder"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

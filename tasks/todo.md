@@ -2,12 +2,22 @@
 
 ---
 
+## Session 9 terminée — Créneaux RDV + GPS/Carte
+
+- [x] **A — Formulaire client : 2 créneaux minimum** sur 2 jours différents
+- [x] **B1 — Migration SQL** : RPC `get_creneaux_disponibles` + guard race condition dans `creer_demande_rdv`
+- [x] **B2 — Frontend occupancy** : griser Calendar + RadioGroup
+- [x] **B3 — Regen types Supabase**
+- [x] **C1 — Edge function `geocode-address`** (Nominatim, JWT requis, déployée)
+- [x] **C2 — Migration SQL** : lat/lon dans `creer_demande_rdv` + propagation `assigner_rdv`
+- [x] **C3 — Frontend** : géocoder avant soumission (fire-and-forget)
+- [x] **C4 — Admin** : badge ⚠️ + bouton "Géocoder" dans `AssignerRdvDialog`
+- [x] **C5 — RouteMap** : centre adaptatif (dernier point DB → Paris fallback)
+
 ## Backlog actif
 
-- [ ] **Formulaire client — 2 créneaux minimum** : `CreerDemandeRdvDialog` imposer min. 2 créneaux sur jours différents + message explicatif. Actuellement 1 créneau suffit, ce qui prive l'admin de flexibilité. Modifier `canSubmit` : `creneauxRemplis.length >= 2` + validation dates différentes.
-- [ ] **Créneaux saturés côté client** : lors de la sélection des créneaux, masquer ou griser les dates/créneaux déjà à 3/3 interventions planifiées pour l'opérateur disponible.
-- [ ] **GPS / géolocalisation** : colonnes `latitude`/`longitude` existent sur `demandes_rdv` et `interventions` — géocodage via Nominatim à câbler dans `creer_demande_rdv` ou via un trigger, propagation vers les interventions via `assigner_rdv`.
-- [ ] **Carte interactive** : `RouteMap` (`/admin/planning/map`) toujours vide (lat/lon jamais alimentées). Une fois GPS câblé : afficher les points, optimisation de tournée (regroupement par zones proches), bouton « Optimiser », drag-drop sur carte.
+- [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.
+- [ ] **Carte interactive** : optimisation tournée (nearest-neighbor + bouton « Optimiser ») à faire quand plusieurs opérateurs.
 - [ ] **Refonte visuelle Claude Design** : migration écran par écran, garder les contrats de données (mêmes RPCs, mêmes champs), vérifier les invariants `lessons.md` à chaque écran.
 - [ ] **Migration domaine `izox.fr`** : mettre à jour `SITE_URL` env var Supabase + vérifier que `/reset-password` reste dans les redirect URLs.
 
