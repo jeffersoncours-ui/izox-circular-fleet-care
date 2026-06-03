@@ -242,15 +242,17 @@ function Inner() {
   );
 
   const todayCity = useMemo(() => {
-    const todayInt = interventions.find(
-      (i) => i.date_intervention === today && i.ville_intervention
+    return (
+      enCours.find((i) => i.ville_intervention)?.ville_intervention ??
+      interventions.find((i) => i.date_intervention === today && i.ville_intervention)?.ville_intervention ??
+      null
     );
-    return todayInt?.ville_intervention ?? null;
-  }, [interventions, today]);
+  }, [enCours, interventions, today]);
 
+  // en_cours = toujours actif (quel que soit date_intervention) + planifiées d'aujourd'hui
   const todayCount = useMemo(
-    () => interventions.filter((i) => ["en_cours", "planifiee"].includes(i.statut) && i.date_intervention === today).length,
-    [interventions, today]
+    () => enCours.length + avenir.filter((i) => i.date_intervention === today).length,
+    [enCours, avenir, today]
   );
 
   if (loadingInt) {
@@ -467,7 +469,9 @@ function TabEnCours({
                   key={i.id}
                   item={i}
                   loading={takingCharge === i.id}
+                  hasEnCours={enCours.length > 0}
                   onPrendreEnCharge={() => onPrendreEnCharge(i.id)}
+                  onNavigate={() => navigate({ to: "/terrain/intervention/$id", params: { id: i.id } })}
                 />
               ))}
             </div>
@@ -557,16 +561,24 @@ function EnCoursCard({ item, onClick }: { item: InterventionDashboard; onClick: 
 function AvenirCard({
   item,
   loading,
+  hasEnCours,
   onPrendreEnCharge,
+  onNavigate,
 }: {
   item: InterventionDashboard;
   loading: boolean;
+  hasEnCours: boolean;
   onPrendreEnCharge: () => void;
+  onNavigate: () => void;
 }) {
   const entreprise = item.vehicules?.entreprises?.nom;
   const typeLabel = getPackLabel(item.type_prestation);
   return (
-    <div className="rounded-xl bg-card border border-border p-4 flex items-center gap-3">
+    <button
+      type="button"
+      onClick={onNavigate}
+      className="w-full text-left rounded-xl bg-card border border-border p-4 flex items-center gap-3 hover:border-primary/40 hover:bg-muted/30 transition-colors"
+    >
       <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center shrink-0">
         <Car className="h-7 w-7 text-muted-foreground" />
       </div>
@@ -582,12 +594,17 @@ function AvenirCard({
             </p>
           </div>
           <Badge className="shrink-0 bg-amber-100 text-amber-900 border border-amber-300 text-xs">
-            prêt à démarrer
+            planifiée
           </Badge>
         </div>
         {item.heure_intervention && (
           <p className="text-xs text-muted-foreground mt-1">
-            {formatHeure(item.heure_intervention)} → PLANIFIÉE
+            {formatHeure(item.heure_intervention)} · PLANIFIÉE
+          </p>
+        )}
+        {item.date_intervention && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {formatDateFr(item.date_intervention)}
           </p>
         )}
         {item.ville_intervention && (
@@ -604,13 +621,19 @@ function AvenirCard({
           size="sm"
           variant="izox"
           className="mt-3 h-8 text-xs px-3"
-          disabled={loading}
-          onClick={onPrendreEnCharge}
+          disabled={loading || hasEnCours}
+          title={hasEnCours ? "Terminez votre intervention en cours d'abord" : undefined}
+          onClick={(e) => { e.stopPropagation(); onPrendreEnCharge(); }}
         >
-          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Play className="h-3 w-3 mr-1" />Prendre en charge</>}
+          {loading
+            ? <Loader2 className="h-3 w-3 animate-spin" />
+            : hasEnCours
+              ? "Intervention en cours..."
+              : <><Play className="h-3 w-3 mr-1" />Prendre en charge</>
+          }
         </Button>
       </div>
-    </div>
+    </button>
   );
 }
 
