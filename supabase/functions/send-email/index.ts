@@ -9,6 +9,7 @@ const corsHeaders = {
 type EmailType =
   | "gel_validee"
   | "rdv_confirmee"
+  | "rdv_modifie"
   | "intervention_close"
   | "rappel_24h"
   | "staff_notification"
@@ -236,6 +237,44 @@ function buildStaffNotificationHtml(d: Record<string, unknown>): string {
   `);
 }
 
+function buildRdvModifieHtml(d: Record<string, unknown>): string {
+  const ent = d.entreprises as Record<string, string> | null;
+  const nom = ent?.nom ?? "Votre entreprise";
+  const dateLabel = d.assigned_date ? formatDate(d.assigned_date as string) : "Date à préciser";
+  const slotLabels: Record<string, string> = {
+    morning: "Matin (08h – 12h)",
+    afternoon: "Après-midi (14h – 18h)",
+  };
+  const slot = slotLabels[d.assigned_time_slot as string] ?? (d.assigned_time_slot as string) ?? "—";
+  const heure = d.assigned_heure
+    ? "à " + String(d.assigned_heure).slice(0, 5).replace(":", "h")
+    : "";
+  return wrapHtml("Horaire de votre RDV modifié", `
+    <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">L'horaire de votre rendez-vous a été modifié</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
+    <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6">
+      L'heure de votre rendez-vous IZOX a été <strong style="color:#1B4332">mise à jour</strong> par votre équipe.
+    </p>
+    <table cellpadding="12" cellspacing="0" border="0" width="100%"
+      style="background:#f0fdf4;border-radius:8px;border-left:4px solid #1B4332;margin-bottom:24px">
+      <tr>
+        <td>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Date</p>
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827">${dateLabel}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Créneau</p>
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827">${slot}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Heure de début</p>
+          <p style="margin:0;font-size:15px;font-weight:600;color:#111827">${heure || "—"}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.6">
+      Assurez-vous que les véhicules concernés soient disponibles à l'horaire indiqué.
+      Pour toute question, contactez votre équipe IZOX.
+    </p>
+  `);
+}
+
 function rdvDateLabel(d: Record<string, unknown>): string {
   const dateStr = (d.assigned_date as string) ?? (d.date_confirmee as string) ?? null;
   const dateLabel = dateStr ? formatDate(dateStr) : "Date à préciser";
@@ -332,6 +371,21 @@ Deno.serve(async (req) => {
     const { type, target_id }: { type: EmailType; target_id: string } = await req.json();
     const admin = createClient(url, serviceKey);
 
+    // Role-based access control — clients can only trigger their own notification types
+    const { data: callerProfile } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", userData.user.id)
+      .maybeSingle();
+    const callerRole = callerProfile?.role ?? "client";
+    const CLIENT_ALLOWED_TYPES: EmailType[] = ["rdv_annule_client", "staff_notification"];
+    if (callerRole === "client" && !CLIENT_ALLOWED_TYPES.includes(type)) {
+      return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+    }
+    if (callerRole === "operateur") {
+      return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+    }
+
     let emailTo: string[];
     let subject: string;
     let html: string;
@@ -367,6 +421,20 @@ Deno.serve(async (req) => {
         emailTo = email ? [email] : [];
         subject = "✓ Votre rendez-vous IZOX est confirmé";
         html = buildRdvConfirmeeHtml(rdv as Record<string, unknown>);
+        break;
+      }
+
+      case "rdv_modifie": {
+        const { data: rdv, error } = await admin
+          .from("demandes_rdv")
+          .select("*, entreprises(nom, email_contact)")
+          .eq("id", target_id)
+          .single();
+        if (error || !rdv) throw new Error("Demande RDV introuvable");
+        const email = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        emailTo = email ? [email] : [];
+        subject = "⏰ Horaire de votre rendez-vous IZOX modifié";
+        html = buildRdvModifieHtml(rdv as Record<string, unknown>);
         break;
       }
 

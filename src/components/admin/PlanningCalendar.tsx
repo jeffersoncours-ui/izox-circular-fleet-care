@@ -124,8 +124,7 @@ export function PlanningCalendar() {
     setLoading(true);
     const weekEndStr = format(addDays(new Date(weekStartStr), 4), "yyyy-MM-dd");
     const [opsRes, intsRes] = await Promise.all([
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from as any)("operators").select("*").order("name"),
+      supabase.from("operators").select("*").order("name"),
       supabase
         .from("interventions")
         .select("id, operator_id, time_slot, heure_intervention, date_intervention, vehicules(immatriculation), entreprises(nom)")
@@ -134,7 +133,7 @@ export function PlanningCalendar() {
         .gte("date_intervention", weekStartStr)
         .lte("date_intervention", weekEndStr),
     ]);
-    setOperators(((opsRes as { data: unknown }).data ?? []) as Operator[]);
+    setOperators((opsRes.data ?? []) as Operator[]);
     setInterventions(((intsRes as { data: unknown }).data ?? []) as unknown as Intervention[]);
     setLoading(false);
   }, [weekStartStr]);

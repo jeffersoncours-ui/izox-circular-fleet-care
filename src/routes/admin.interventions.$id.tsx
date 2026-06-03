@@ -106,9 +106,9 @@ function AdminInterventionDetail() {
     setData(row as unknown as InterventionFull);
 
     // Charger l'opérateur si assigné
-    const operatorId = (row as any).operator_id;
+    const operatorId = (row as unknown as InterventionFull).operator_id;
     if (operatorId) {
-      const { data: opRow } = await (supabase as any)
+      const { data: opRow } = await supabase
         .from("operators")
         .select("id, name, color_hex")
         .eq("id", operatorId)

@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ClientRouteImport } from './routes/client'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TerrainIndexRouteImport } from './routes/terrain.index'
 import { Route as ClientIndexRouteImport } from './routes/client.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SettingsSecurityRouteImport } from './routes/settings.security'
@@ -83,6 +84,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TerrainIndexRoute = TerrainIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TerrainRoute,
 } as any)
 const ClientIndexRoute = ClientIndexRouteImport.update({
   id: '/',
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/settings/security': typeof SettingsSecurityRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
+  '/terrain/': typeof TerrainIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
@@ -291,7 +298,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
-  '/terrain': typeof TerrainRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
   '/admin/demandes-gel': typeof AdminDemandesGelRoute
@@ -311,6 +317,7 @@ export interface FileRoutesByTo {
   '/settings/security': typeof SettingsSecurityRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/client': typeof ClientIndexRoute
+  '/terrain': typeof TerrainIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
@@ -353,6 +360,7 @@ export interface FileRoutesById {
   '/settings/security': typeof SettingsSecurityRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/client/': typeof ClientIndexRoute
+  '/terrain/': typeof TerrainIndexRoute
   '/admin/clients/$id': typeof AdminClientsIdRoute
   '/admin/contrats/$id': typeof AdminContratsIdRoute
   '/admin/interventions/$id': typeof AdminInterventionsIdRoute
@@ -396,6 +404,7 @@ export interface FileRouteTypes {
     | '/settings/security'
     | '/admin/'
     | '/client/'
+    | '/terrain/'
     | '/admin/clients/$id'
     | '/admin/contrats/$id'
     | '/admin/interventions/$id'
@@ -413,7 +422,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/settings'
-    | '/terrain'
     | '/admin/clients'
     | '/admin/contrats'
     | '/admin/demandes-gel'
@@ -433,6 +441,7 @@ export interface FileRouteTypes {
     | '/settings/security'
     | '/admin'
     | '/client'
+    | '/terrain'
     | '/admin/clients/$id'
     | '/admin/contrats/$id'
     | '/admin/interventions/$id'
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | '/settings/security'
     | '/admin/'
     | '/client/'
+    | '/terrain/'
     | '/admin/clients/$id'
     | '/admin/contrats/$id'
     | '/admin/interventions/$id'
@@ -547,6 +557,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/terrain/': {
+      id: '/terrain/'
+      path: '/'
+      fullPath: '/terrain/'
+      preLoaderRoute: typeof TerrainIndexRouteImport
+      parentRoute: typeof TerrainRoute
     }
     '/client/': {
       id: '/client/'
@@ -933,10 +950,12 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 )
 
 interface TerrainRouteChildren {
+  TerrainIndexRoute: typeof TerrainIndexRoute
   TerrainInterventionIdRoute: typeof TerrainInterventionIdRoute
 }
 
 const TerrainRouteChildren: TerrainRouteChildren = {
+  TerrainIndexRoute: TerrainIndexRoute,
   TerrainInterventionIdRoute: TerrainInterventionIdRoute,
 }
 

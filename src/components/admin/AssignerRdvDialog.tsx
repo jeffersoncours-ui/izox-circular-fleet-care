@@ -88,8 +88,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
   // Load operators
   useEffect(() => {
     if (!open) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase.from as any)("operators").select("*").order("name").then(({ data }: { data: unknown }) => {
+    supabase.from("operators").select("*").order("name").then(({ data }) => {
       setOperators((data ?? []) as Operator[]);
     });
   }, [open]);
@@ -112,13 +111,12 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     if (!canConfirm || !demande) return;
     setSubmitting(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)("assigner_rdv", {
+      const { data, error } = await supabase.rpc("assigner_rdv", {
         p_demande_id:  demande.id,
         p_operator_id: selectedOperator,
         p_date:        selectedDate,
         p_time_slot:   selectedSlot,
-        p_heure:       selectedHeure || null,
+        p_heure:       selectedHeure || undefined,
       });
       if (error) throw error;
       sendEmail("rdv_confirmee", demande.id);
@@ -147,7 +145,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
       const { error } = await supabase.rpc("refuser_demande_rdv", {
         p_demande_id: demande.id,
         p_motif: motif.trim(),
-      } as any);
+      });
       if (error) throw error;
       toast.success("Demande refusée.");
       setRefusOpen(false);

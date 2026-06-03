@@ -197,6 +197,10 @@ function InterventionStepper() {
 
   const uploadPhoto = async (zoneKey: string, moment: Moment, file: File) => {
     if (!intervention) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Seules les images sont acceptées");
+      return;
+    }
     const k = `${zoneKey}__${moment}`;
     const localPreview = URL.createObjectURL(file);
     setPhotos((p) => ({ ...p, [k]: { state: "uploading", path: null, signedUrl: null, localPreview } }));
@@ -227,8 +231,7 @@ function InterventionStepper() {
     if (!user || !intervention) return;
     setTakingCharge(true);
     try {
-      const { error } = await (supabase as unknown as { rpc: (n: string, a: Record<string, unknown>) => Promise<{ error: unknown }> })
-        .rpc("prendre_en_charge_intervention", { p_intervention_id: id });
+      const { error } = await supabase.rpc("prendre_en_charge_intervention", { p_intervention_id: id });
       if (error) throw error;
       setIntervention({ ...intervention, statut: "en_cours", operateur_id: user.id });
     } catch {
