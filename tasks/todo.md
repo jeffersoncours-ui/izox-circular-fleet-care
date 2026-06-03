@@ -11,7 +11,14 @@
 - [x] Fix IMPORTANT : upload photo terrain sans validation MIME
 - [x] Régénérer types Supabase (éliminer `as any` casts sur `operators`, RPCs typés)
 - [x] Deploy edge function `send-email` v11
-- [ ] Commit + push
+- [x] Commit + push
+
+### Review session 13
+- Bug critique `rdv_modifie` corrigé : l'email de replanification était absent du switch → silencieusement ignoré depuis la session 8
+- Vérification de rôle ajoutée dans `send-email` : client ne peut plus déclencher types réservés admin
+- MIME validation ajoutée avant upload photo terrain
+- Casts `as any` supprimés sur `operators` + 3 RPCs (types déjà régénérés, dette non nettoyée)
+- `routeTree.gen.ts` régénéré : route `terrain.index` était absente (erreur TS silencieuse en local)
 
 ---
 

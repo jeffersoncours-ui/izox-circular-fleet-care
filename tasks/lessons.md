@@ -1,5 +1,17 @@
 # Lessons Learned — IZOX
 
+## Audit sécurité et correctifs (session 13)
+
+- **`routeTree.gen.ts` ne se régénère qu'au build** : après création d'une route index (`terrain.index.tsx`), `routeTree.gen.ts` n'est pas mis à jour localement → erreur TS silencieuse `keyof FileRoutesByPath`. Toujours lancer `npm run build` (ou au minimum vérifier avec `tsc --noEmit`) après création d'une nouvelle route. Le build Vercel régénère automatiquement, mais pas l'environnement de développement.
+
+- **Bug de sous-ensemble d'email type : toujours vérifier la synchronisation EmailType frontend ↔ edge function** : `rdv_modifie` était dans `src/lib/email.ts` (type union frontend) mais absent du switch de `send-email`. Résultat : l'email tombait dans `default: throw new Error("Type email inconnu")` → erreur 500 silencieuse (fire-and-forget). Règle : tout nouveau type ajouté à `EmailType` dans `email.ts` doit SIMULTANÉMENT avoir un `case` dans l'edge function.
+
+- **Vérification de rôle dans les edge functions** : authentification ≠ autorisation. Vérifier le JWT (auth.getUser()) prouve que l'utilisateur est connecté, pas qu'il a le droit d'appeler ce type d'action. Ajouter un lookup `profiles.role` après l'auth check pour limiter les types d'email par rôle (client ne peut appeler que ses propres types).
+
+- **Casts `as any` sur tables/RPCs non typés = dette à nettoyer à chaque regen** : après chaque `generate_typescript_types`, vérifier les fichiers qui utilisaient `(supabase.from as any)("table_nouvellement_typée")` et supprimer les casts. Le regen résout la cause racine, les casts sont des symptômes.
+
+- **Validation MIME côté client pour les uploads** : `file.type.startsWith("image/")` avant toute compression/upload. La vérification côté client ne remplace pas la validation storage policy (Supabase Storage), mais évite les erreurs de compression sur des non-images et améliore le feedback UX.
+
 ## Bug routing TanStack Router — terrain fiches non cliquables (session 12c)
 
 - **`terrain.tsx` pleine page sans `<Outlet/>` = fiches enfants invisibles** : même bug qu'`admin.interventions` (session 8, documenté dans CLAUDE.md). `terrain.intervention.$id.tsx` est un enfant de `terrain.tsx` dans TanStack Router (file-based routing par notation `.`). Quand le parent n'a pas `<Outlet/>`, le composant enfant n'a nulle part où se rendre — le clic navigue (URL change) mais l'écran reste identique. Résolution identique à admin.interventions : `terrain.tsx` → `component: () => <Outlet/>`, dashboard → `terrain.index.tsx` avec `createFileRoute("/terrain/")`.
