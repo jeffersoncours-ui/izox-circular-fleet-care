@@ -101,6 +101,8 @@ Prix V2 (mai 2026) : **pack_interieur=130€, pack_standard=170€, pack_vtc=240
 - **Lien "Retour" dans `/settings`** : utiliser `rolePath(profile?.role)` — `/settings` est accessible à tous les rôles, hardcoder `/admin` casserait la nav operateur/client
 - **`getPackLabel(type)`** depuis `@/lib/pricing` : toujours l'utiliser pour afficher un type de pack. Ne jamais afficher le code brut (`pack_standard`) avec CSS `capitalize`.
 - **Types Supabase** (`src/integrations/supabase/types.ts`) : régénérer via MCP `generate_typescript_types` après toute migration qui touche au schéma. Le fichier généré arrive sous forme JSON `{"types":"..."}` — extraire le contenu TS avec `python3 -c "import json; ..."`.
+- **`admin.interventions.tsx` = layout pur** : `component: () => <Outlet/>`, PAS de `beforeLoad`. Le redirect `/admin/planning` est dans `admin.interventions.index.tsx` (path exact). Un `beforeLoad` dans le parent s'applique aussi à `$id` → fiches non cliquables. Même pattern que `admin.planning.tsx` / `admin.planning.index.tsx`.
+- **Emails RDV** : types supportés dans `src/lib/email.ts` → `"rdv_confirmee"` | `"rdv_annule_client"` | `"rdv_annule_admin"` | `"rdv_modifie"`. Edge function `send-email` v9 gère tous ces types.
 
 ## Architecture gel véhicule
 
@@ -134,13 +136,29 @@ en **un seul onglet** hébergé sur `/admin/planning`, avec 3 sous-onglets :
 
 ### Flow RDV admin — `AssignerRdvDialog`
 
-**`AssignerRdvDialog`** (`src/components/admin/AssignerRdvDialog.tsx`) est le seul dialog admin pour traiter une demande :
+**`AssignerRdvDialog`** (`src/components/admin/AssignerRdvDialog.tsx`) est le seul dialog admin pour traiter une demande **en_attente** :
 - Affiche : créneaux demandés par le client, lieu d'intervention, commentaires
 - **Créneau verrouillé** : l'admin ne peut PAS choisir une date libre — il sélectionne uniquement parmi les `creneaux_preferes` du client (boutons avec occupancy X/3 chargée pour ces slots uniquement)
 - **Heure précise** : après avoir sélectionné un créneau, l'admin saisit une heure de début (`heure_intervention`) validée dans la plage (08:00–12:00 matin, 14:00–18:00 après-midi)
 - Permet : refus (avec motif min. 5 car.) → RPC `refuser_demande_rdv`
 - Permet : assignation opérateur + créneau + heure → RPC `assigner_rdv(demande_id, operator_id, date, time_slot, heure)` + `sendEmail("rdv_confirmee")`
 - `GererDemandeRdvDialog` a été supprimé — le chemin "confirmation directe sans opérateur" n'est plus accessible en UI.
+
+### Flow RDV admin — `GererRdvConfirmeDialog` (RDV confirmé)
+
+**`GererRdvConfirmeDialog`** (`src/components/admin/GererRdvConfirmeDialog.tsx`) gère les demandes **confirmee** :
+- Action par défaut : **replanifier l'heure** (créneau verrouillé, seule l'heure change) → RPC `modifier_heure_rdv(p_demande_id, p_heure)` + `sendEmail("rdv_modifie")`
+- Action secondaire (lien "Annuler le RDV…") : annulation avec motif → RPC `annuler_rdv_admin` + `sendEmail("rdv_annule_admin")`
+- Remplace `AnnulerRdvAdminDialog` (supprimé) — consolider sur 1 dialog par demande
+- Accessible depuis `DemandesRdvList` (clic sur carte confirmée) ET depuis la fiche intervention admin (bouton "Modifier l'horaire" → `/admin/planning?tab=demandes&demande=<id>`)
+- `AdminDemandeRdv` inclut `assigned_time_slot?: string | null` (champ requis pour `slotKey` et `HEURE_OPTIONS`)
+
+**RPC `modifier_heure_rdv`** :
+- SECURITY DEFINER, admin/staff uniquement
+- Valide heure dans la plage du créneau (08–12 matin / 14–18 après-midi)
+- Bloque si une intervention liée est déjà `validee` (déjà facturée)
+- Met à jour `demandes_rdv.assigned_heure` + `interventions.heure_intervention` (statuts `planifiee`/`en_cours`/`en_revision`)
+- Logge dans `admin_actions_log` (action `'rdv_heure_modifiee'`)
 
 ### Statuts interventions (tous valeurs valides en DB)
 
@@ -191,6 +209,7 @@ Affiche en haut une section **Planification** :
 - Opérateur assigné (nom + badge couleur depuis table `operators`)
 - Date + créneau (matin/après-midi) + heure précise
 - Lieu d'intervention (adresse/ville/CP)
+- Bouton **"Modifier l'horaire du RDV"** : visible si `profile.role === "admin"` + `demande_rdv_id` présent + statut `planifiee`/`en_cours`. Redirige vers `/admin/planning?tab=demandes&demande=<demande_rdv_id>` → ouvre `GererRdvConfirmeDialog` via `useAutoOpenFromSearch`.
 
 Puis : contrôle pré-intervention, photos avant/après, checklists, notes, signature.
 Actions admin (sticky bas) : visible uniquement si `statut = 'en_revision'` → Valider / Refuser.
