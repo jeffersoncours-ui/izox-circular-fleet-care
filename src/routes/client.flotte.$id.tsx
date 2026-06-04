@@ -206,19 +206,29 @@ function VehiculeDetail() {
           )}
         </div>
         <div className="p-5">
-          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-          <p className="font-mono text-base text-primary mt-1">{vehicule.immatriculation}</p>
-          <div className="flex items-center gap-2 mt-3">
-            <Badge variant="secondary">{typeLabel}</Badge>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-[22px] font-bold tracking-tight text-foreground leading-tight">{title}</h1>
+              <p className="font-mono text-sm font-bold text-primary mt-1">{vehicule.immatriculation}</p>
+            </div>
             {vehicule.statut !== "actif" && (
-              <Badge variant="outline" className="capitalize">{vehicule.statut.replace("_", " ")}</Badge>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0 mt-1 ${
+                vehicule.statut === "gele"
+                  ? "bg-[#D5E2F6] text-[#2A6FDB] border border-[#B3C8EF]"
+                  : "bg-amber-50 text-amber-700 border border-amber-200"
+              }`}>
+                {vehicule.statut === "gele" ? "Gelé" : "En attente"}
+              </span>
             )}
+          </div>
+          <div className="flex items-center gap-2 mt-3">
+            <Badge variant="secondary" className="text-[11px]">{typeLabel}</Badge>
           </div>
         </div>
       </Card>
 
       <Card className="p-5 shadow-card border-border/60 mb-5">
-        <h2 className="font-semibold text-foreground mb-4">Informations</h2>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Informations</p>
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <Row label="Marque" value={vehicule.marque} />
           <Row label="Modèle" value={vehicule.modele} />
@@ -326,17 +336,17 @@ function VehiculeDetail() {
         return (
           <>
             {vehicule.contrat_id && vehicule.statut === "actif" && gelProgramme && (
-              <Card className="bg-blue-50 border-blue-200 p-3 mb-2 text-xs text-blue-900">
-                <div className="flex items-center gap-1.5 font-medium">
+              <div className="rounded-lg bg-[#D5E2F6] border border-[#B3C8EF] p-3 mb-2 text-xs text-[#1A4E9C]">
+                <div className="flex items-center gap-1.5 font-semibold">
                   <CalendarIcon className="h-3.5 w-3.5" /> Gel programmé
                 </div>
-                <div className="mt-1">
+                <div className="mt-1 text-[#2A6FDB]">
                   Du {fmt(gelProgramme.date_debut)} au {fmt(gelProgramme.date_fin_prevue)}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full mt-2 text-red-600 border-red-200 hover:bg-red-50"
+                  className="w-full mt-2 border-[#B3C8EF] text-destructive hover:bg-destructive/5"
                   onClick={() => {
                     setDemandeCibleId(gelProgramme.id);
                     setAnnulerOpen(true);
@@ -344,20 +354,20 @@ function VehiculeDetail() {
                 >
                   Annuler le gel programmé
                 </Button>
-              </Card>
+              </div>
             )}
             {vehicule.contrat_id && vehicule.statut === "actif" && demandeEnAttente && !gelProgramme && (
-              <Card className="bg-orange-50 border-orange-200 p-3 mb-2 text-xs text-orange-900">
-                <div className="flex items-center gap-1.5 font-medium">
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 mb-2 text-xs text-amber-900">
+                <div className="flex items-center gap-1.5 font-semibold">
                   <Clock className="h-3.5 w-3.5" /> Demande de gel en attente de validation admin
                 </div>
-                <div className="mt-1">
+                <div className="mt-1 text-amber-700">
                   Créée le {fmt(demandeEnAttente.created_at)}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full mt-2 text-red-600 border-red-200 hover:bg-red-50"
+                  className="w-full mt-2 border-amber-200 text-destructive hover:bg-destructive/5"
                   onClick={() => {
                     setDemandeCibleId(demandeEnAttente.id);
                     setAnnulerOpen(true);
@@ -365,20 +375,20 @@ function VehiculeDetail() {
                 >
                   Annuler la demande de gel
                 </Button>
-              </Card>
+              </div>
             )}
             {vehicule.statut === "gele" && gelEnCours && (
-              <Card className="bg-blue-100 border-blue-300 p-3 mb-2 text-xs text-blue-900">
-                <div className="flex items-center gap-1.5 font-medium">
+              <div className="rounded-lg bg-[#D5E2F6] border border-[#B3C8EF] p-3 mb-2 text-xs text-[#1A4E9C]">
+                <div className="flex items-center gap-1.5 font-semibold">
                   <Snowflake className="h-3.5 w-3.5" /> Gel en cours
                 </div>
-                <div className="mt-1">
+                <div className="mt-1 text-[#2A6FDB]">
                   Du {fmt(gelEnCours.date_debut)} au {fmt(gelEnCours.date_fin_prevue)}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full mt-2 text-orange-600 border-orange-200 hover:bg-orange-50"
+                  className="w-full mt-2 border-[#B3C8EF] text-amber-700 hover:bg-amber-50"
                   onClick={() => {
                     setDemandeCibleId(gelEnCours.id);
                     setLeverOpen(true);
@@ -386,7 +396,7 @@ function VehiculeDetail() {
                 >
                   Mettre fin au gel anticipativement
                 </Button>
-              </Card>
+              </div>
             )}
 
             {vehicule.contrat_id && (

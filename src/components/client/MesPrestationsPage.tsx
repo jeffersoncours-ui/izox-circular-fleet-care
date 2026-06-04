@@ -146,27 +146,24 @@ export function MesPrestationsPage() {
   }
 
   return (
-    <div className="px-4 py-6 max-w-3xl mx-auto pb-24">
-      <div className="flex items-start justify-between gap-3 mb-4">
+    <div className="px-4 py-5 max-w-3xl mx-auto pb-24 flex flex-col gap-4">
+      <header className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Mes prestations</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            {nbAVenir} à venir · {nbHisto} dans l'historique
-          </p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">RDV à venir &amp; historique</p>
+          <h1 className="text-[24px] font-bold tracking-tight text-foreground mt-0.5">Mes prestations</h1>
         </div>
-      </div>
+        <Button size="sm" onClick={() => setShowCreer(true)}>
+          <CalendarPlus className="h-3.5 w-3.5" /> RDV
+        </Button>
+      </header>
 
       <Tabs defaultValue="a-venir">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="a-venir">À venir ({nbAVenir})</TabsTrigger>
           <TabsTrigger value="historique">Historique ({nbHisto})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="a-venir" className="space-y-5">
-          <Button onClick={() => setShowCreer(true)} className="w-full" variant="izox">
-            <CalendarPlus className="h-4 w-4" /> Demander un RDV
-          </Button>
-
+        <TabsContent value="a-venir" className="space-y-5 mt-4">
           {nbAVenir === 0 ? (
             <EmptyState text="Aucune prestation à venir." />
           ) : (
