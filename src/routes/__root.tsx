@@ -34,6 +34,17 @@ export const Route = createRootRoute({
       { title: "IZOX — Nettoyage circulaire" },
       { name: "description", content: "Plateforme B2B IZOX — gestion des prestations de nettoyage circulaire pour flottes professionnelles." },
       { name: "author", content: "IZOX" },
+      // Bloquer l'indexation par tous les moteurs et crawlers IA
+      { name: "robots",          content: "noindex, nofollow, noarchive, nosnippet, noimageindex" },
+      { name: "googlebot",       content: "noindex, nofollow" },
+      { name: "bingbot",         content: "noindex, nofollow" },
+      // Bloquer spécifiquement les crawlers IA
+      { name: "GPTBot",          content: "noindex" },
+      { name: "anthropic-ai",    content: "noindex" },
+      { name: "ClaudeBot",       content: "noindex" },
+      { name: "Google-Extended", content: "noindex" },
+      { name: "CCBot",           content: "noindex" },
+      // Pas d'Open Graph indexable
       { property: "og:title", content: "IZOX — Nettoyage circulaire" },
       { property: "og:description", content: "Plateforme B2B IZOX — gestion des prestations de nettoyage circulaire pour flottes professionnelles." },
       { property: "og:type", content: "website" },

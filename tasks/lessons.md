@@ -1,5 +1,14 @@
 # Lessons Learned — IZOX
 
+## Audit sécurité complet + hardening (session 18)
+
+- **Endpoint public `verify_jwt=false` + mot de passe hardcodé = exploit live** : `seed-users` était public ET contenait `const PASSWORD = "Izox2026!"` pour créer des comptes admin. N'importe qui avec l'URL Supabase (publique) pouvait appeler l'endpoint et créer un admin. Leçon : tout endpoint de seeding/bootstrap doit être désactivé en production ou protégé par une clé secrète. Immédiatement remplacer par un stub 410 Gone.
+- **CORS `"*"` sur edge functions authentifiées = fuite de confiance** : même si le JWT est vérifié, `Access-Control-Allow-Origin: *` permet à n'importe quelle page malveillante de détecter la présence de l'API, de faire des requêtes CORS cross-origin depuis le navigateur de l'utilisateur, etc. Toujours restreindre à `SITE_URL` pour les fonctions authentifiées.
+- **Open redirect dans les emails de reset** : `generateLink({ redirectTo: userInput })` sans validation permet à un attaquant d'envoyer un email IZOX avec un lien vers `attacker.com`. Toujours valider l'`origin` de `redirect_to` contre une whitelist avant de passer à `generateLink`. Le fallback doit être `/reset-password` sur le `SITE_URL` officiel.
+- **XSS dans les templates email** : les templates HTML construits par string interpolation avec des données DB (nom entreprise, motif de refus, immatriculation) sont vulnérables si un admin ou un client a entré `<script>alert(1)</script>`. Les emails HTML peuvent exécuter du JS dans certains clients mail anciens. Créer une fonction `esc()` et l'appliquer systématiquement à TOUTES les valeurs user-controlled dans les templates.
+- **Triple défense anti-crawlers IA** : robots.txt seul est insuffisant (les bots malveillants l'ignorent). Défense en profondeur : (1) `robots.txt` avec `Disallow: /` + directives par user-agent, (2) `X-Robots-Tag` HTTP header dans `vercel.json` (couvre toutes les réponses y compris les assets), (3) meta `<robots>` dans le HTML head (couvre les navigateurs qui ne liront pas les headers). Les trois niveaux ensemble maximisent la protection.
+- **CORS dynamique pour endpoint public** : un endpoint `verify_jwt=false` ne peut pas utiliser une valeur statique pour `Access-Control-Allow-Origin` si plusieurs origines sont légitimes (production + preview Vercel). Valider l'`Origin` request header contre un `Set` d'origines autorisées et refléter l'origine validée — jamais `"*"`.
+
 ## Handoff v2 — refonte visuelle avancée (session 17)
 
 - **Tailwind v4 : keyframes hors `@theme`, utilities dans `@layer utilities`** : les `@keyframes` se déclarent au niveau racine du fichier CSS (pas dans `@theme inline`). Les classes custom (`animate-check-pop`) vont dans `@layer utilities { .animate-... { animation: ... } }`. Les alias de couleur soft tint (`--color-success-soft`) vont dans `@theme inline` comme les autres tokens.

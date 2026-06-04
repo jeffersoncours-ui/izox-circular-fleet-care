@@ -2,6 +2,27 @@
 
 ---
 
+## Session 2026-06-04 (18) — Audit sécurité complet + Phase B
+
+### Audit & correctifs sécurité ✅ TERMINÉ
+
+- [x] **CRITIQUE** : `seed-users` — endpoint public `verify_jwt=false` avec mot de passe admin hardcodé `Izox2026!` → désactivé (410 Gone), redéployé v4 immédiatement. DB vérifiée : 4 comptes légitimes seulement, zéro exploitation.
+- [x] **CORS `*`** sur 6 edge functions → remplacé par `SITE_URL` (statique pour les fonctions authentifiées, dynamique + validation `Origin` pour `request-password-reset`)
+- [x] **XSS email templates** — `send-email` : ajout `esc()` (HTML-escape) sur toutes les valeurs user-controlled injectées dans les templates HTML
+- [x] **Open redirect** — `redirect_to` dans 3 fonctions (`request-password-reset`, `admin-reset-password`, `create-client-account`) → validé par `safeRedirectTo()` (whitelist origin)
+- [x] **robots.txt** — créé avec blocage complet : `Disallow: /` global + blocage explicite de 20 crawlers IA (GPTBot, Claude, CCBot, etc.)
+- [x] **vercel.json** — ajout headers sécurité : `X-Robots-Tag`, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-XSS-Protection`
+- [x] **`__root.tsx`** — meta robots : `noindex, nofollow, noarchive, nosnippet` + blocage crawlers IA en meta tags
+- [x] Déploiement 6 edge functions sécurisées (send-email v13, request-password-reset v6, admin-reset-password v13, create-client-account v16, geocode-address v2, compute-impact v4)
+- [x] `npm install` + `npx tsc --noEmit` → 0 erreur
+
+### Phase B — Code nouveau (en cours)
+
+- [ ] **B1. RGPD/CGV** `/legal` — nouvelle route, 2 onglets, sidebar sections smooth-scroll, contenu CGV/RGPD fourni, bloc acceptation, bannière cookies localStorage
+- [ ] **B2. Demandes RDV split view** — refactor `DemandesRdvList.tsx` : 40% liste + 60% Leaflet, filter pills, hover-pin interaction
+
+---
+
 ## Session 2026-06-04 (17) — Handoff v2 : 5 nouveaux écrans
 
 **Handoff reçu** : `IZOX-handoff-v2/` (commité). 5 écrans : Planning board, Carte, Demandes RDV split view, 2FA, RGPD/CGV.

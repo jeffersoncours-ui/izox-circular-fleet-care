@@ -8,11 +8,38 @@
 // email actually went out. Nothing about account existence is leaked.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+// Dynamic CORS — public endpoint, but Origin is validated against the known frontend.
+function corsFor(req: Request): Record<string, string> {
+  const siteUrl = Deno.env.get("SITE_URL") ?? "https://izox.fr";
+  const requestOrigin = req.headers.get("Origin") ?? "";
+  const allowed = new Set([
+    siteUrl,
+    "https://izox-circular-fleet-care.vercel.app",
+  ]);
+  const origin = allowed.has(requestOrigin) ? requestOrigin : siteUrl;
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
+
+// Validate redirect_to against allowed origins — prevents open-redirect in emails.
+function safeRedirectTo(raw: unknown, siteUrl: string): string {
+  const fallback = `${siteUrl}/reset-password`;
+  if (!raw || typeof raw !== "string") return fallback;
+  try {
+    const parsed = new URL(raw);
+    const allowed = new Set([
+      new URL(siteUrl).origin,
+      new URL("https://izox-circular-fleet-care.vercel.app").origin,
+    ]);
+    return allowed.has(parsed.origin) ? raw : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function buildResetText(link: string): string {
   return `Bonjour,
@@ -120,9 +147,10 @@ async function sendResetEmail(
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const cors = corsFor(req);
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
-  const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
+  const jsonHeaders = { ...cors, "Content-Type": "application/json" };
   // Generic response — never reveals whether the account exists.
   const genericOk = () =>
     new Response(JSON.stringify({ ok: true }), { headers: jsonHeaders });
@@ -147,7 +175,7 @@ Deno.serve(async (req) => {
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo: redirect_to || `${siteUrl}/reset-password` },
+      options: { redirectTo: safeRedirectTo(redirect_to, siteUrl) },
     });
 
     const actionLink = data?.properties?.action_link ?? null;
