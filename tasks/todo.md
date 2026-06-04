@@ -2,6 +2,87 @@
 
 ---
 
+## Session 2026-06-04 (17) — Handoff v2 : 5 nouveaux écrans
+
+**Handoff reçu** : `IZOX-handoff-v2/` (commité). 5 écrans : Planning board, Carte, Demandes RDV split view, 2FA, RGPD/CGV.
+
+**Stratégie décidée avec l'utilisateur** : d'abord **finir le correctif visuel** (refonte des pages déjà fonctionnelles), PUIS le **code nouveau** (pages/features inédites).
+
+### Classification des 5 écrans
+
+| Écran | Nature | Existant | Phase |
+|-------|--------|----------|-------|
+| **2FA** `/settings/security/2fa` | Refonte visuelle pure (logique TOTP intacte) | `TwoFactorSetup.tsx` (523 l, otpauth+qrcode fonctionnels) | **Visuel** |
+| **Planning board** `/admin/planning` | Refonte visuelle + states (dnd-kit déjà là) | `PlanningCalendar` | **Visuel** |
+| **Carte** `/admin/planning/map` | Refonte layout tripartite (Leaflet déjà là) | `RouteMap.tsx` (268 l) | **Visuel** (+ panel léger) |
+| **RGPD/CGV** `/legal` | Page nouvelle (statique, contenu fourni) | ❌ n'existe pas | **Code nouveau** |
+| **Demandes RDV** split view | Page + 2e Leaflet + modal refondu | redirection seule | **Code nouveau** (le + lourd) |
+
+### Phase A — Correctif visuel ✅ TERMINÉ (commit `dbfa00e`)
+
+- [x] **Cartographie fine** (agents parallèles) : PlanningCalendar, RouteMap, TwoFactorSetup, design tokens styles.css
+- [x] **A1. 2FA** — refonte visuelle `TwoFactorSetup.tsx` : cartes méthode radio, QR cadre blanc, OTP 14×12 mono, animations checkPop/drawCheck/shake, AnimatedCheck SVG, grille codes de secours 2 colonnes, note sécurité. Logique TOTP intacte.
+- [x] **A2. Planning board** — refonte `PlanningCalendar` : HalfDayBlock (matin/après-midi), InterventionCard border-left 3px couleur opérateur, EmptySlot dashed, OperatorColumn header avatar+barre de charge, vue semaine/jour, statut pills + pack labels. Business logic intacte.
+- [x] **A3. Carte** — layout tripartite `RouteMap` : drawer gauche 220px (opérateur + légende + km), map flex-1 (pins teardrop, polylines pointillées, opacité sélection), panel droit 280px (liste défilante + KM total + bouton "Valider la tournée" UI-only). Business logic intacte.
+- [x] `styles.css` : soft tints (success/warning/info/destructive-soft) + keyframes checkPop/drawCheck/shake/stripeMove/pulseDot
+- [x] Build TS 0 erreur · `npm run build` OK
+- [x] Commit + push
+
+### Données de test générées ✅ (2026-06-04)
+
+- [x] Opérateur : `adfda534` color_hex=#2A6FDB, linked user_id operateur.test@izox.fr
+- [x] Client : auth user `client.test@izox.fr` (id: `b1000000`) · profile Jean Dupont
+- [x] Entreprise : Cabify Paris (`e1000000`)
+- [x] Contrat : CTR-2026-001 (`c1000000`)
+- [x] Véhicules : AB-123-CD, DE-456-FG, GH-789-IJ, KL-012-MN
+- [x] Interventions : 8 sur la semaine (2026-06-02→05) avec GPS Paris · 4 statuts différents · tous types de pack
+- [x] Demandes RDV : 2 en_attente + 1 confirmee (liée intervention) + 1 refusee avec motif
+- [x] RPC `get_creneaux_disponibles` validé : slots 04/06 saturés (2/2), slots 05/06 disponibles (1/2)
+
+### Phase B — Code nouveau (APRÈS validation Phase A)
+
+- [ ] **B1. RGPD/CGV** `/legal` — nouvelle route, 2 onglets, sidebar sections smooth-scroll, contenu CGV/RGPD fourni, bloc acceptation, bannière cookies localStorage
+- [ ] **B2. Demandes RDV split view** — décision archi (sous-onglet vs page dédiée), table + Leaflet temps réel hover, modal assignation rapide
+
+### Décisions en suspens (à trancher avec l'utilisateur avant Phase B)
+
+- Demandes RDV : sous-onglet `/admin/planning` (cohérent fusion session 3) **vs** vraie page `/admin/demandes-rdv` (fidèle handoff)
+- « Valider la tournée » : état UI local **vs** persistance `interventions.ordre` (migration)
+- Acceptation CGV : `localStorage` **vs** colonne `profiles.cgv_accepted_at`
+- Backlog #1 (factures `/client/factures/$id`) : avant ou après le handoff v2 ?
+
+---
+
+## Session 2026-06-04 (16) — Complétion refonte visuelle (pages admin oubliées)
+
+**Constat** : audit empirique du code (pas du todo) → 3 pages admin majeures jamais refondues
+lors des sessions 14-15 (jamais listées dans la Phase 2). Client ✅ et terrain ✅ étaient bien faits
+(faux positifs grep = chiffres de stats / logos PDF). Designs présents dans le handoff :
+`admin-ops.jsx → A_Contrats` + `impact-admin.jsx`.
+
+- [x] `admin.contrats.tsx` → `PageHeader` + 4 `StatTile` (actifs, MRR, gel, résiliés calculés depuis données) + filtres pills + table redesign (raw table, statut en pills tokens) + cards mobiles restylées
+- [x] `admin.contrats.$id.tsx` → `PageHeader` (crumbs + numéro + entreprise) + statut pill + Retour, wrapper contenu `p-6 lg:p-8`, lien client préservé
+- [x] `admin.impact.tsx` → `PageHeader` + layout `flex flex-col min-h-full` + table coeff header uppercase/tracking + shadow-card (Tabs conservés — KPIs eau/CO₂ non ajoutés car nécessiteraient nouvelles requêtes = hors périmètre CSS-only)
+- [x] `login.tsx` → titres `font-semibold` → `font-bold tracking-tight` (poids display tokens ; Outfit déjà via `@layer base`)
+- [x] `settings.*` → vérifié : déjà cohérent (h1 Outfit via base layer + Card tokens + layout cross-rôle intentionnel) → pas de churn
+- [x] `npx tsc --noEmit --skipLibCheck` → 0 erreur · `npm run build` → OK
+- [x] Commit + push
+
+### Review session 16
+
+**Périmètre** : refonte purement visuelle des pages admin restantes. **Zéro logique métier touchée** —
+RPCs, appels Supabase, handlers (gel, résiliation, validation impact, dialogs) intacts. Uniquement
+classes CSS / structure JSX de présentation.
+
+**Méthode** : mirroring des patterns déjà éprouvés (`admin.clients.tsx` pour la liste, `admin.clients.$id.tsx`
++ `admin.interventions.$id.tsx` pour les fiches détail) + fidélité aux maquettes handoff.
+
+**Leçon clé** : les heuristiques grep (`font-display`, `text-3xl font-bold`) donnent des faux
+signaux car `@layer base` applique déjà Outfit à tous les `h1-h4`. Vraie rupture = absence de
+`PageHeader` parmi des pages sœurs qui l'utilisent (contrats + impact), pas le poids de police.
+
+---
+
 ## Session 2026-06-03 (13) — Audit complet + correctifs sécurité + inventaire design
 
 - [x] Audit code complet (79 points : 5 critiques, 28 importants, 46 mineurs)
@@ -144,6 +225,7 @@ uniquement classes CSS, layout et composants UI. RPCs, appels Supabase et hooks 
 
 ## Backlog actif
 
+- [ ] **#Feature — Détail facture client `/client/factures/$id`** : maquette `invoice.jsx` (handoff) non implémentée. Nécessite route `client.factures.$id` + fetch table `factures`/`factures_lignes` côté client + rendu aux normes FR (lignes, TVA, totaux). C'est une **nouvelle feature avec logique data**, pas une refonte CSS. La page liste `client.factures` est aujourd'hui un empty state.
 - [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.
 - [ ] **Carte interactive** : optimisation tournée (nearest-neighbor + bouton « Optimiser ») à faire quand plusieurs opérateurs.
 - [ ] **Migration domaine `izox.fr`** : mettre à jour `SITE_URL` env var Supabase + vérifier que `/reset-password` reste dans les redirect URLs.
