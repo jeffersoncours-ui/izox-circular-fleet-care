@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Leaf, Edit2, Loader2, CheckCircle2 } from "lucide-react";
+import { Edit2, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { useAuth } from "@/lib/auth-context";
 import {
   fetchImpactCoefficients,
@@ -25,28 +26,27 @@ export const Route = createFileRoute("/admin/impact")({
 
 function AdminImpactPage() {
   return (
-    <div className="p-6 lg:p-10 max-w-5xl mx-auto">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-          <Leaf className="h-7 w-7 text-primary" /> Impact RSE
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Gérez les coefficients de calcul et accusez réception des prestations validées.
-        </p>
-      </header>
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        crumbs={["Admin", "Impact RSE"]}
+        title="Impact RSE"
+        sub="Barème de calcul et validation des interventions éco-responsables"
+      />
 
-      <Tabs defaultValue="coefficients" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-sm">
-          <TabsTrigger value="coefficients">Coefficients</TabsTrigger>
-          <TabsTrigger value="validation">File de validation</TabsTrigger>
-        </TabsList>
-        <TabsContent value="coefficients" className="mt-6">
-          <CoefficientsTab />
-        </TabsContent>
-        <TabsContent value="validation" className="mt-6">
-          <ValidationTab />
-        </TabsContent>
-      </Tabs>
+      <div className="p-6 lg:p-8 max-w-5xl w-full mx-auto flex flex-col gap-5">
+        <Tabs defaultValue="coefficients" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-sm">
+            <TabsTrigger value="coefficients">Coefficients</TabsTrigger>
+            <TabsTrigger value="validation">File de validation</TabsTrigger>
+          </TabsList>
+          <TabsContent value="coefficients" className="mt-6">
+            <CoefficientsTab />
+          </TabsContent>
+          <TabsContent value="validation" className="mt-6">
+            <ValidationTab />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
@@ -76,19 +76,28 @@ function CoefficientsTab() {
         Les coefficients sont appliqués à chaque prestation validée (multiplicateur = 1 véhicule).
         Les modifications sont sauvegardées localement et appliquées aux nouveaux calculs.
       </p>
-      <Card className="overflow-hidden border-border/60">
+      <Card className="overflow-hidden border-border/60 shadow-card p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border/60 bg-muted/30 text-left">
-                <th className="px-4 py-3 font-medium text-muted-foreground">Code</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Libellé</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Catégorie</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground text-right">Valeur</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Unité</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">ESRS</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Source</th>
-                <th className="px-4 py-3" />
+              <tr className="border-b border-border bg-muted/50 text-left">
+                {[
+                  { l: "Code", r: false },
+                  { l: "Libellé", r: false },
+                  { l: "Catégorie", r: false },
+                  { l: "Valeur", r: true },
+                  { l: "Unité", r: false },
+                  { l: "ESRS", r: false },
+                  { l: "Source", r: false },
+                  { l: "", r: false },
+                ].map((h, i) => (
+                  <th
+                    key={h.l || i}
+                    className={`px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground ${h.r ? "text-right" : "text-left"}`}
+                  >
+                    {h.l}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40">

@@ -1,5 +1,13 @@
 # Lessons Learned — IZOX
 
+## Complétion refonte — pages admin oubliées (session 16)
+
+- **Auditer le code, jamais le `todo.md`** : le todo annonçait « refonte complète » mais 3 pages admin (`admin.contrats`, `admin.contrats.$id`, `admin.impact`) n'avaient jamais été refondues — elles n'étaient simplement jamais listées dans la Phase 2. Vérifier l'état réel par inspection du code (présence `PageHeader`, headers `text-3xl font-bold` résiduels) avant de déclarer une refonte terminée.
+- **Les heuristiques grep donnent des faux signaux sur la typo** : `@layer base { h1,h2,h3,h4 { font-family: var(--font-display) } }` dans `styles.css` applique **déjà Outfit à tous les titres**. Donc `grep "font-display"` retourne 0 sur des pages qui rendent pourtant en Outfit (login, settings). Et `grep "text-2xl font-bold"` matchait des **chiffres de stats** (quota X/Y) et **logos PDF**, pas des titres non refondus (faux positifs côté client/terrain). Conclusion : la vraie rupture visuelle = **absence de `PageHeader` parmi des pages sœurs qui l'utilisent**, pas le poids ou la famille de police.
+- **Vérifier le handoff avant d'extrapoler** : les designs manquants étaient déjà fournis (`admin-ops.jsx → A_Contrats`, `impact-admin.jsx`). Toujours `grep`/lister le dossier handoff avant de réinventer une maquette. Seul `settings` n'avait pas de mockup → extrapolation légitime du design system.
+- **Ne pas inventer de data pour coller à une maquette** : la maquette `impact-admin.jsx` affiche des KPIs (eau économisée, CO₂ total) absents de la page actuelle. Les ajouter = nouvelles requêtes Supabase = logique métier → **hors périmètre d'une refonte CSS-only**. Appliquer le `PageHeader` et le layout sans fabriquer de fetch de données. Les `StatTile` de `admin.contrats` sont OK car calculés depuis des données **déjà chargées** (`rows`), pas de nouvelle requête.
+- **Pattern fiche détail + `PageHeader`** : préserver le lien cliquable contextuel (ex. lien vers la fiche client) en le déplaçant dans le wrapper de contenu sous le `PageHeader` (le `sub` du `PageHeader` n'accepte qu'une string). Statut + Retour vont dans le slot `right`.
+
 ## Refonte visuelle — design system + 3 portails (sessions 14-15)
 
 - **Tailwind v4 CSS-only** : plus de `tailwind.config.ts` — toute la config (tokens, custom colors, shadows, fonts) se fait dans `src/styles.css` avec `@theme inline { --color-... }`. Ne jamais créer de `tailwind.config.ts` dans ce projet.
