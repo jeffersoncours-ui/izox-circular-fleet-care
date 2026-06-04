@@ -18,14 +18,26 @@
 | **RGPD/CGV** `/legal` | Page nouvelle (statique, contenu fourni) | ❌ n'existe pas | **Code nouveau** |
 | **Demandes RDV** split view | Page + 2e Leaflet + modal refondu | redirection seule | **Code nouveau** (le + lourd) |
 
-### Phase A — Correctif visuel (EN COURS)
+### Phase A — Correctif visuel ✅ TERMINÉ (commit `dbfa00e`)
 
-- [ ] **Cartographie fine** (agents parallèles) : PlanningCalendar, RouteMap, TwoFactorSetup, design tokens styles.css
-- [ ] **A1. 2FA** — refonte visuelle `TwoFactorSetup.tsx` : cartes méthode radio, QR cadre blanc + logo, OTP 46×54, animations (checkPop/drawCheck/shake), note sécurité. Zéro logique touchée.
-- [ ] **A2. Planning board** — refonte `PlanningCalendar` : colonnes 370px + header opérateur barre de charge, cartes créneau border-left 3px, drop zones dashed + stripeMove, bandeau drag, skeleton, mobile pills. Rendu dynamique (lire `operators`).
-- [ ] **A3. Carte** — layout tripartite `RouteMap` : drawer légende gauche 220px + carte + panel droit liste réordonnable + KM + bouton « Valider la tournée » (état UI). Pins goutte, polylines pointillées.
-- [ ] Build TS `npx tsc --noEmit --skipLibCheck` après chaque écran
-- [ ] Commit incrémental par écran
+- [x] **Cartographie fine** (agents parallèles) : PlanningCalendar, RouteMap, TwoFactorSetup, design tokens styles.css
+- [x] **A1. 2FA** — refonte visuelle `TwoFactorSetup.tsx` : cartes méthode radio, QR cadre blanc, OTP 14×12 mono, animations checkPop/drawCheck/shake, AnimatedCheck SVG, grille codes de secours 2 colonnes, note sécurité. Logique TOTP intacte.
+- [x] **A2. Planning board** — refonte `PlanningCalendar` : HalfDayBlock (matin/après-midi), InterventionCard border-left 3px couleur opérateur, EmptySlot dashed, OperatorColumn header avatar+barre de charge, vue semaine/jour, statut pills + pack labels. Business logic intacte.
+- [x] **A3. Carte** — layout tripartite `RouteMap` : drawer gauche 220px (opérateur + légende + km), map flex-1 (pins teardrop, polylines pointillées, opacité sélection), panel droit 280px (liste défilante + KM total + bouton "Valider la tournée" UI-only). Business logic intacte.
+- [x] `styles.css` : soft tints (success/warning/info/destructive-soft) + keyframes checkPop/drawCheck/shake/stripeMove/pulseDot
+- [x] Build TS 0 erreur · `npm run build` OK
+- [x] Commit + push
+
+### Données de test générées ✅ (2026-06-04)
+
+- [x] Opérateur : `adfda534` color_hex=#2A6FDB, linked user_id operateur.test@izox.fr
+- [x] Client : auth user `client.test@izox.fr` (id: `b1000000`) · profile Jean Dupont
+- [x] Entreprise : Cabify Paris (`e1000000`)
+- [x] Contrat : CTR-2026-001 (`c1000000`)
+- [x] Véhicules : AB-123-CD, DE-456-FG, GH-789-IJ, KL-012-MN
+- [x] Interventions : 8 sur la semaine (2026-06-02→05) avec GPS Paris · 4 statuts différents · tous types de pack
+- [x] Demandes RDV : 2 en_attente + 1 confirmee (liée intervention) + 1 refusee avec motif
+- [x] RPC `get_creneaux_disponibles` validé : slots 04/06 saturés (2/2), slots 05/06 disponibles (1/2)
 
 ### Phase B — Code nouveau (APRÈS validation Phase A)
 
