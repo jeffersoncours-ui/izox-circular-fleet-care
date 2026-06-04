@@ -92,13 +92,16 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
               to={item.to}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
                 active
                   ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                  : "text-sidebar-foreground/85 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground"
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              {active && (
+                <span className="absolute left-0 top-[7px] bottom-[7px] w-[3px] rounded-full bg-primary" />
+              )}
+              <Icon className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-foreground/40")} />
               <span className="flex-1">{item.label}</span>
               {badge > 0 && (
                 <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">

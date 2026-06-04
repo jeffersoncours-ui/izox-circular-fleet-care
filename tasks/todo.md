@@ -75,12 +75,20 @@
 
 ### Ordre d'implémentation recommandé
 
-#### Phase 1 — Design system (tokens + composants atomiques)
-- [ ] Lire `izox2/tokens.jsx` → extraire les variables CSS (couleurs, typo, espacements, radius)
-- [ ] Lire `izox2/brand.jsx` → vérifier cohérence avec `tailwind.config` et CSS variables actuelles
-- [ ] Lire `izox2/atoms.jsx` + `izox2/shell.jsx` + `izox2/system.jsx` → composants Button, Badge, Card, Layout
-- [ ] Mettre à jour `tailwind.config.ts` + `src/index.css` (CSS variables) pour matcher les tokens du design
-- [ ] Mettre à jour les composants shadcn/ui utilisés (`src/components/ui/`) pour matcher atoms
+#### Phase 1 — Design system (tokens + composants atomiques) ✅ SESSION 14
+- [x] Lire `izox2/tokens.jsx` → extraire les variables CSS (couleurs, typo, espacements, radius)
+- [x] Lire `izox2/brand.jsx` → vérifier cohérence avec `tailwind.config` et CSS variables actuelles
+- [x] Lire `izox2/atoms.jsx` + `izox2/shell.jsx` + `izox2/system.jsx` → composants Button, Badge, Card, Layout
+- [x] Mettre à jour `src/styles.css` (CSS variables) pour matcher les tokens du design
+  - Palette complète hex (#F9FAFB paper, #1B4332 brand, sémantiques ok/warn/danger/info)
+  - Sidebar blanche (bg white, accents verts, item actif #E7EFEA)
+  - Shadows design (elegant/card/strong)
+  - Radius : r4=8px(md) / r6=10px(lg) / r10=14px(xl)
+  - Ajout info color (#2A6FDB)
+- [x] Google Fonts : ajout Outfit (700/800 headings)
+- [x] `@layer base` : h1-h4 → Outfit, `.font-display`, `.font-mono`
+- [x] `AdminSidebar` : indicateur barre gauche item actif + opacités nav alignées
+- [x] `Card` : rounded-xl → rounded-lg (r6=10px) + shadow-card
 
 #### Phase 2 — Portail Admin
 - [ ] Lire `izox2/admin-overview.jsx` → Dashboard principal `/admin`
