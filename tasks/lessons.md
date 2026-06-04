@@ -1,5 +1,14 @@
 # Lessons Learned — IZOX
 
+## Phase B — /legal + split view RDV (session 18)
+
+- **Leaflet dans un composant non-route : `lazy()` + `Suspense` au niveau du composant consommateur** : `RouteMap` est lazy-chargé au niveau de la route (`admin.planning.map.tsx`). Pour `DemandesRdvMap` utilisé à l'intérieur de `DemandesRdvList` (composant, pas route), le `lazy()` doit être dans `DemandesRdvList.tsx` lui-même. Même pattern, niveau différent.
+- **Markers Leaflet impératifs vs react-leaflet déclaratifs pour l'interactivité hover** : mettre les markers dans des `<Marker>` react-leaflet et changer leur `icon` prop sur hover provoque un re-render complet de la carte (flash visuel). Solution : sous-composant `MarkerLayer` avec `useMap()` qui gère les markers impérativement via `L.marker().addTo(map)` et `marker.setIcon()`. Deux effets distincts : un pour le rebuild complet (changement de `rows`), un léger pour le hover (changement de `hoveredId` → `setIcon()` seulement + pan).
+- **Split view hauteur fixe dans un tab** : `flex-1 overflow-y-auto` sur un enfant ne fonctionne que si le parent a une hauteur définie. Dans un `TabsContent` sans hauteur fixe, utiliser `style={{ height: "520px" }}` sur la div split plutôt que `h-full` ou `flex-1` qui ne se propagent pas correctement depuis un tab parent à hauteur indéfinie.
+- **`routeTree.gen.ts` et nouvelles routes** : créer `src/routes/legal.tsx` avec `createFileRoute("/legal")` génère une erreur TS `Argument of type '"/legal"' is not assignable to parameter of type 'keyof FileRoutesByPath'` tant que le routeTree n'est pas régénéré. La solution est `npm run build` (pas juste `tsc --noEmit`). Le build régénère `routeTree.gen.ts` en premier, puis la vérification TS passe.
+- **`scrollRef.current.scrollTo` et `el.offsetTop`** : `el.offsetTop` retourne l'offset depuis l'`offsetParent` de l'élément, qui peut ne pas être le conteneur scroll. La méthode fiable pour smooth-scroll vers une section : `container.scrollTop + (el.getBoundingClientRect().top - container.getBoundingClientRect().top) - padding`.
+- **Page légale statique = 0 fetch Supabase** : les pages de contenu statique (CGV, RGPD) n'ont pas besoin d'appels DB. Les données sont directement dans le fichier source. Pas de `useEffect` de chargement, pas de `loading` state, rendu immédiat.
+
 ## Audit sécurité complet + hardening (session 18)
 
 - **Endpoint public `verify_jwt=false` + mot de passe hardcodé = exploit live** : `seed-users` était public ET contenait `const PASSWORD = "Izox2026!"` pour créer des comptes admin. N'importe qui avec l'URL Supabase (publique) pouvait appeler l'endpoint et créer un admin. Leçon : tout endpoint de seeding/bootstrap doit être désactivé en production ou protégé par une clé secrète. Immédiatement remplacer par un stub 410 Gone.

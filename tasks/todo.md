@@ -16,10 +16,16 @@
 - [x] Déploiement 6 edge functions sécurisées (send-email v13, request-password-reset v6, admin-reset-password v13, create-client-account v16, geocode-address v2, compute-impact v4)
 - [x] `npm install` + `npx tsc --noEmit` → 0 erreur
 
-### Phase B — Code nouveau (en cours)
+### Phase B — Code nouveau ✅ TERMINÉ (commit `65de7d0`)
 
-- [ ] **B1. RGPD/CGV** `/legal` — nouvelle route, 2 onglets, sidebar sections smooth-scroll, contenu CGV/RGPD fourni, bloc acceptation, bannière cookies localStorage
-- [ ] **B2. Demandes RDV split view** — refactor `DemandesRdvList.tsx` : 40% liste + 60% Leaflet, filter pills, hover-pin interaction
+- [x] **B1. RGPD/CGV** `/legal` — route créée, 2 onglets, sidebar 220px smooth-scroll, 8 sections CGV + 8 RGPD, bloc acceptation localStorage `izox_cgv_accepted`, bannière cookies localStorage `izox_cookie_consent`
+- [x] **B2. Demandes RDV split view** — `DemandesRdvList.tsx` refactorisé : filter pills, split 40%/60%, `DemandesRdvMap.tsx` (Leaflet markers colorés par statut, hover → pin actif + zoom + popup), logique métier/dialogs intacts
+
+### Review session 18
+
+**Sécurité :** 1 faille critique neutralisée (`seed-users` public + mdp hardcodé), CORS hardened sur 6 fonctions, XSS email templates corrigé, open redirect bloqué, triple défense anti-crawlers IA.
+
+**Phase B :** B1 + B2 livrés, build 0 erreur, TS 0 erreur. `routeTree.gen.ts` régénéré par le build (pattern confirmé : créer la route, lancer le build, TS passe).
 
 ---
 
