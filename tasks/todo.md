@@ -2,6 +2,45 @@
 
 ---
 
+## Session 2026-06-04 (17) — Handoff v2 : 5 nouveaux écrans
+
+**Handoff reçu** : `IZOX-handoff-v2/` (commité). 5 écrans : Planning board, Carte, Demandes RDV split view, 2FA, RGPD/CGV.
+
+**Stratégie décidée avec l'utilisateur** : d'abord **finir le correctif visuel** (refonte des pages déjà fonctionnelles), PUIS le **code nouveau** (pages/features inédites).
+
+### Classification des 5 écrans
+
+| Écran | Nature | Existant | Phase |
+|-------|--------|----------|-------|
+| **2FA** `/settings/security/2fa` | Refonte visuelle pure (logique TOTP intacte) | `TwoFactorSetup.tsx` (523 l, otpauth+qrcode fonctionnels) | **Visuel** |
+| **Planning board** `/admin/planning` | Refonte visuelle + states (dnd-kit déjà là) | `PlanningCalendar` | **Visuel** |
+| **Carte** `/admin/planning/map` | Refonte layout tripartite (Leaflet déjà là) | `RouteMap.tsx` (268 l) | **Visuel** (+ panel léger) |
+| **RGPD/CGV** `/legal` | Page nouvelle (statique, contenu fourni) | ❌ n'existe pas | **Code nouveau** |
+| **Demandes RDV** split view | Page + 2e Leaflet + modal refondu | redirection seule | **Code nouveau** (le + lourd) |
+
+### Phase A — Correctif visuel (EN COURS)
+
+- [ ] **Cartographie fine** (agents parallèles) : PlanningCalendar, RouteMap, TwoFactorSetup, design tokens styles.css
+- [ ] **A1. 2FA** — refonte visuelle `TwoFactorSetup.tsx` : cartes méthode radio, QR cadre blanc + logo, OTP 46×54, animations (checkPop/drawCheck/shake), note sécurité. Zéro logique touchée.
+- [ ] **A2. Planning board** — refonte `PlanningCalendar` : colonnes 370px + header opérateur barre de charge, cartes créneau border-left 3px, drop zones dashed + stripeMove, bandeau drag, skeleton, mobile pills. Rendu dynamique (lire `operators`).
+- [ ] **A3. Carte** — layout tripartite `RouteMap` : drawer légende gauche 220px + carte + panel droit liste réordonnable + KM + bouton « Valider la tournée » (état UI). Pins goutte, polylines pointillées.
+- [ ] Build TS `npx tsc --noEmit --skipLibCheck` après chaque écran
+- [ ] Commit incrémental par écran
+
+### Phase B — Code nouveau (APRÈS validation Phase A)
+
+- [ ] **B1. RGPD/CGV** `/legal` — nouvelle route, 2 onglets, sidebar sections smooth-scroll, contenu CGV/RGPD fourni, bloc acceptation, bannière cookies localStorage
+- [ ] **B2. Demandes RDV split view** — décision archi (sous-onglet vs page dédiée), table + Leaflet temps réel hover, modal assignation rapide
+
+### Décisions en suspens (à trancher avec l'utilisateur avant Phase B)
+
+- Demandes RDV : sous-onglet `/admin/planning` (cohérent fusion session 3) **vs** vraie page `/admin/demandes-rdv` (fidèle handoff)
+- « Valider la tournée » : état UI local **vs** persistance `interventions.ordre` (migration)
+- Acceptation CGV : `localStorage` **vs** colonne `profiles.cgv_accepted_at`
+- Backlog #1 (factures `/client/factures/$id`) : avant ou après le handoff v2 ?
+
+---
+
 ## Session 2026-06-04 (16) — Complétion refonte visuelle (pages admin oubliées)
 
 **Constat** : audit empirique du code (pas du todo) → 3 pages admin majeures jamais refondues
