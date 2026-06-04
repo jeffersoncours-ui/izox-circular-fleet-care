@@ -174,6 +174,7 @@ uniquement classes CSS, layout et composants UI. RPCs, appels Supabase et hooks 
 
 ## Backlog actif
 
+- [ ] **#Feature — Détail facture client `/client/factures/$id`** : maquette `invoice.jsx` (handoff) non implémentée. Nécessite route `client.factures.$id` + fetch table `factures`/`factures_lignes` côté client + rendu aux normes FR (lignes, TVA, totaux). C'est une **nouvelle feature avec logique data**, pas une refonte CSS. La page liste `client.factures` est aujourd'hui un empty state.
 - [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.
 - [ ] **Carte interactive** : optimisation tournée (nearest-neighbor + bouton « Optimiser ») à faire quand plusieurs opérateurs.
 - [ ] **Migration domaine `izox.fr`** : mettre à jour `SITE_URL` env var Supabase + vérifier que `/reset-password` reste dans les redirect URLs.
