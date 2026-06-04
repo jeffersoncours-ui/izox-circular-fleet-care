@@ -1,5 +1,20 @@
 # Lessons Learned — IZOX
 
+## Refonte visuelle — design system + 3 portails (sessions 14-15)
+
+- **Tailwind v4 CSS-only** : plus de `tailwind.config.ts` — toute la config (tokens, custom colors, shadows, fonts) se fait dans `src/styles.css` avec `@theme inline { --color-... }`. Ne jamais créer de `tailwind.config.ts` dans ce projet.
+- **Ordre des tokens CSS** : déclarer les variables sémantiques (`--color-primary`, `--shadow-card`) dans `@theme inline` *après* les variables hex raw. Sinon les utilitaires Tailwind générés n'ont pas accès aux valeurs.
+- **`PageHeader` comme composant boundary** : créer un composant `PageHeader` réutilisable (`src/components/ui/page-header.tsx`) avec `crumbs`, `title`, `sub`, et `right` permet d'homogénéiser toutes les pages admin sans duplication. L'ajouter dans le barrel export si on a un `ui/index.ts`.
+- **Ne jamais toucher la logique métier lors d'une refonte CSS** : tout changement de classe Tailwind sur un composant qui fait des appels Supabase doit être fait en ciblant uniquement les classes CSS. Les props de données (RPCs, hooks, useState) restent intacts. Si le composant est trop enchevêtré, isoler le shell HTML/CSS dans un sous-composant de présentation.
+- **`flex flex-col min-h-full` pour les pages avec PageHeader sticky** : le PageHeader est `sticky top-0 z-10`. Le parent doit être `flex flex-col min-h-full` pour que le contenu dessous occupe la hauteur restante correctement. Sans ça, les pages courtes ont un PageHeader qui "flotte" visuellement.
+- **Fermeture de `</div>` après refactor** : quand on remplace `<div className="p-6 max-w-5xl mx-auto">` par `<div flex-col min-h-full><PageHeader/><div p-6 max-w-5xl>`, il faut ajouter une fermeture `</div>` supplémentaire en fin de JSX. Oubli fréquent = erreur TS immédiate sur les balises déséquilibrées.
+- **Edit sans Read préalable = erreur** : le tool `Edit` exige un `Read` préalable dans la session. Toujours lire avant de modifier, même si le contenu est connu via le résumé de session.
+- **`PageHeader` dans les pages de détail async** : ne pas placer le `PageHeader` avant le guard de chargement (`if (loading) return <Loader/>`). Le placer dans le bloc `return` principal pour que les données (`entreprise.nom`, `vehicule.immatriculation`) soient disponibles quand il se rend.
+- **Statuts visuels — tokens design cohérents** : actif = `bg-[#E7EFEA] text-primary border-[#CBDDD2]`, gelé = `bg-[#D5E2F6] text-[#2A6FDB] border-[#B3C8EF]`, en_attente = `bg-amber-50 text-amber-700 border-amber-200`. Ne jamais mélanger les couleurs Tailwind générique (`sky-*`, `blue-*`) avec les tokens custom — toujours partir des valeurs hex du design system.
+- **Font Outfit sur les titres** : ajouter `font-family: var(--font-display)` via `@layer base { h1,h2,h3,h4 { font-family: ... } }` dans `styles.css`. La classe utilitaire `.font-display` + Tailwind `font-bold` suffit pour les titres isolés. Ne pas oublier de charger la fonte via le `<link>` Google Fonts dans `root.tsx`.
+- **Client portal mobile-first** : les pages `/client/*` n'ont pas de sidebar — layout `px-4 py-5 max-w-2xl mx-auto pb-24`. Le `pb-24` est crucial pour éviter que le bottom nav masque le contenu. Ne jamais le retirer.
+- **`Vercel MCP list_projects` peut retourner vide** malgré un projet live — problème de scope OAuth du token. Passer par le dashboard Vercel directement pour trouver le lien de preview. Déploiements auto branch = `https://<projet>-git-<branch>-<team>.vercel.app`.
+
 ## Audit sécurité et correctifs (session 13)
 
 - **`routeTree.gen.ts` ne se régénère qu'au build** : après création d'une route index (`terrain.index.tsx`), `routeTree.gen.ts` n'est pas mis à jour localement → erreur TS silencieuse `keyof FileRoutesByPath`. Toujours lancer `npm run build` (ou au minimum vérifier avec `tsc --noEmit`) après création d'une nouvelle route. Le build Vercel régénère automatiquement, mais pas l'environnement de développement.
