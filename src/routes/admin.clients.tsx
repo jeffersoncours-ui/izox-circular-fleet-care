@@ -1,12 +1,13 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Building2 } from "lucide-react";
+import { Plus, Search, Building2, Eye } from "lucide-react";
 import { CreateClientDialog } from "@/components/admin/CreateClientDialog";
+import { PageHeader } from "@/components/ui/page-header";
+import { cn } from "@/lib/utils";
 
 interface Entreprise {
   id: string;
@@ -18,6 +19,18 @@ interface Entreprise {
   created_at: string;
 }
 
+const TYPE_LABEL: Record<string, string> = {
+  vtc: "VTC",
+  location: "Location",
+  pme: "PME",
+};
+
+const TYPE_TONE: Record<string, string> = {
+  vtc: "bg-[#E7EFEA] text-[#1B4332] border-[#CBDDD2]",
+  location: "bg-[#D5E2F6] text-[#2A6FDB] border-[#B3C8EF]",
+  pme: "bg-muted text-muted-foreground border-border",
+};
+
 export const Route = createFileRoute("/admin/clients")({
   component: ClientsPage,
 });
@@ -27,6 +40,7 @@ function ClientsPage() {
   const [list, setList] = useState<Entreprise[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<string>("all");
   const [open, setOpen] = useState(false);
 
   const load = async () => {
@@ -43,88 +57,156 @@ function ClientsPage() {
     load();
   }, []);
 
-  const filtered = list.filter(
-    (e) =>
-      e.nom.toLowerCase().includes(search.toLowerCase()) ||
-      (e.ville ?? "").toLowerCase().includes(search.toLowerCase())
-  );
-
   if (location.pathname !== "/admin/clients") {
     return <Outlet />;
   }
 
+  const filtered = list.filter((e) => {
+    const matchSearch =
+      e.nom.toLowerCase().includes(search.toLowerCase()) ||
+      (e.ville ?? "").toLowerCase().includes(search.toLowerCase());
+    const matchFilter = filter === "all" || e.type_client === filter;
+    return matchSearch && matchFilter;
+  });
+
+  const counts = {
+    all: list.length,
+    vtc: list.filter((e) => e.type_client === "vtc").length,
+    location: list.filter((e) => e.type_client === "location").length,
+    pme: list.filter((e) => e.type_client === "pme").length,
+  };
+
+  const filters: { key: string; label: string }[] = [
+    { key: "all", label: `Tous · ${counts.all}` },
+    { key: "vtc", label: `VTC · ${counts.vtc}` },
+    { key: "location", label: `Location · ${counts.location}` },
+    { key: "pme", label: `PME · ${counts.pme}` },
+  ];
+
   return (
-    <div className="p-6 lg:p-10 max-w-7xl mx-auto">
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Clients</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {list.length} entreprise{list.length > 1 ? "s" : ""} suivie{list.length > 1 ? "s" : ""}
-          </p>
-        </div>
-        <Button variant="izox" onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Nouveau client
-        </Button>
-      </header>
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        crumbs={["Admin", "Clients"]}
+        title="Clients"
+        sub={`${list.length} entreprise${list.length > 1 ? "s" : ""} suivie${list.length > 1 ? "s" : ""}`}
+        right={
+          <Button size="sm" onClick={() => setOpen(true)} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            Nouveau client
+          </Button>
+        }
+      />
 
-      <Card className="p-4 mb-6 shadow-card border-border/60">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par nom ou ville..."
-            className="pl-10"
-          />
+      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto flex flex-col gap-5">
+        {/* Search + filter bar */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Nom, email, ville…"
+              className="pl-9 h-9 text-sm"
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {filters.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors",
+                  filter === key
+                    ? "bg-primary text-white border-primary"
+                    : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-      </Card>
 
-      {loading ? (
-        <p className="text-muted-foreground text-sm">Chargement...</p>
-      ) : filtered.length === 0 ? (
-        <Card className="p-12 text-center shadow-card border-border/60">
-          <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">
-            {list.length === 0 ? "Aucun client pour le moment." : "Aucun résultat."}
-          </p>
-        </Card>
-      ) : (
-        <div className="grid gap-3">
-          {filtered.map((e) => (
-            <Link
-              key={e.id}
-              to="/admin/clients/$id"
-              params={{ id: e.id }}
-              className="block cursor-pointer"
-            >
-              <Card className="p-5 cursor-pointer transition-all duration-150 ease-out hover:bg-muted/40 hover:shadow-strong hover:border-primary/30 shadow-card border-border/60">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="h-12 w-12 rounded-lg bg-primary-soft text-primary flex items-center justify-center shrink-0">
-                      <Building2 className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-foreground truncate">{e.nom}</h3>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {e.ville ?? "—"} · {e.email_contact ?? "Pas d'email"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant="secondary" className="capitalize">
-                      {e.type_client}
-                    </Badge>
-                    {!e.compte_active && (
-                      <Badge variant="destructive">Désactivé</Badge>
+        {/* Table */}
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Chargement…</p>
+        ) : filtered.length === 0 ? (
+          <div className="bg-card border border-border rounded-lg p-12 text-center">
+            <Building2 className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-sm text-muted-foreground">
+              {list.length === 0 ? "Aucun client pour le moment." : "Aucun résultat."}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-muted/50 border-b border-border">
+                  {["Entreprise", "Type", "Ville", "Email", "Statut", ""].map((h, i) => (
+                    <th
+                      key={h || i}
+                      className={cn(
+                        "px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground",
+                        i === 5 ? "text-right" : "text-left"
+                      )}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((e, i) => (
+                  <tr
+                    key={e.id}
+                    className={cn(
+                      "border-t border-border/60 hover:bg-muted/30 transition-colors",
+                      i === 0 && "border-t-0"
                     )}
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+                  >
+                    <td className="px-4 py-3.5">
+                      <span className="font-semibold text-foreground">{e.nom}</span>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span
+                        className={cn(
+                          "inline-flex items-center px-2 py-0.5 rounded-[4px] text-[11px] font-semibold border",
+                          TYPE_TONE[e.type_client] ?? TYPE_TONE.pme
+                        )}
+                      >
+                        {TYPE_LABEL[e.type_client] ?? e.type_client}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 text-muted-foreground">{e.ville ?? "—"}</td>
+                    <td className="px-4 py-3.5 font-mono text-[12px] text-muted-foreground">
+                      {e.email_contact ?? "—"}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      {e.compte_active ? (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#DCEEE4] text-[#1F8A5B] border border-[#1F8A5B]/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#1F8A5B]" />
+                          actif
+                        </span>
+                      ) : (
+                        <Badge variant="destructive" className="text-[10px] h-5">
+                          désactivé
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5 text-right">
+                      <Link to="/admin/clients/$id" params={{ id: e.id }}>
+                        <button className="inline-flex items-center justify-center h-7 w-7 rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors">
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <CreateClientDialog open={open} onOpenChange={setOpen} onCreated={load} />
     </div>

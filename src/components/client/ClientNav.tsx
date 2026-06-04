@@ -21,20 +21,22 @@ export function ClientHeader() {
     navigate({ to: "/login" });
   };
   return (
-    <header className="bg-primary text-primary-foreground sticky top-0 z-30">
-      <div className="px-4 py-3 flex items-center justify-between">
+    <header className="bg-card border-b border-border sticky top-0 z-30 shadow-elegant">
+      <div className="px-4 py-3 flex items-center justify-between max-w-3xl mx-auto">
         <img src="/logo-izox.png" alt="IZOX" className="h-7 w-auto object-contain" />
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <NotificationCenter
             hideTeamPin
-            triggerClassName="relative text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground h-8 w-8"
+            triggerClassName="relative text-muted-foreground hover:bg-muted hover:text-foreground h-8 w-8"
           />
-          <span className="text-xs hidden sm:inline">{profile?.prenom} {profile?.nom}</span>
+          <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
+            {profile?.prenom} {profile?.nom}
+          </span>
           <Button
             size="icon"
             variant="ghost"
             onClick={handleLogout}
-            className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
+            className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <LogOut className="h-4 w-4" />
           </Button>
@@ -47,8 +49,8 @@ export function ClientHeader() {
 export function ClientBottomNav() {
   const location = useLocation();
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border safe-area">
-      <ul className="grid grid-cols-5 max-w-3xl mx-auto">
+    <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border">
+      <ul className="grid grid-cols-5 max-w-3xl mx-auto" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         {TABS.map((tab) => {
           const active = tab.exact
             ? location.pathname === tab.to
@@ -60,11 +62,13 @@ export function ClientBottomNav() {
                 to={tab.to}
                 className={cn(
                   "flex flex-col items-center justify-center py-2.5 gap-1 transition-colors",
-                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  active
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
-                <span className={cn("text-[10px] font-medium", active && "font-semibold")}>
+                <span className={cn("text-[10px] font-medium", active && "font-semibold text-primary")}>
                   {tab.label}
                 </span>
               </Link>
@@ -78,7 +82,10 @@ export function ClientBottomNav() {
 
 export function ClientDocsLink() {
   return (
-    <Link to="/client/documents" className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+    <Link
+      to="/client/documents"
+      className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+    >
       <FolderOpen className="h-3 w-3" /> Mes documents
     </Link>
   );
