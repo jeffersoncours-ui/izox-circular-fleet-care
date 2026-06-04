@@ -69,11 +69,58 @@
 
 ---
 
+## 🎨 PROCHAINE SESSION — Refonte visuelle complète (design handoff disponible)
+
+**Fichiers de référence :** `refonte design izox/IZOX-handoff/` (28 fichiers JSX dans le repo main)
+
+### Ordre d'implémentation recommandé
+
+#### Phase 1 — Design system (tokens + composants atomiques)
+- [ ] Lire `izox2/tokens.jsx` → extraire les variables CSS (couleurs, typo, espacements, radius)
+- [ ] Lire `izox2/brand.jsx` → vérifier cohérence avec `tailwind.config` et CSS variables actuelles
+- [ ] Lire `izox2/atoms.jsx` + `izox2/shell.jsx` + `izox2/system.jsx` → composants Button, Badge, Card, Layout
+- [ ] Mettre à jour `tailwind.config.ts` + `src/index.css` (CSS variables) pour matcher les tokens du design
+- [ ] Mettre à jour les composants shadcn/ui utilisés (`src/components/ui/`) pour matcher atoms
+
+#### Phase 2 — Portail Admin
+- [ ] Lire `izox2/admin-overview.jsx` → Dashboard principal `/admin`
+- [ ] Lire `izox2/admin-clients.jsx` → Pages clients `/admin/clients`
+- [ ] Lire `izox2/admin-interventions.jsx` → Planning + interventions `/admin/planning`
+- [ ] Lire `izox2/admin-ops.jsx` → Équipe + opérateurs `/admin/equipe`
+- [ ] Lire `izox2/impact-admin.jsx` → Impact écologique admin
+- [ ] Lire `izox2/invoice.jsx` → Facturation `/admin/facturation`
+- [ ] Implémenter les changements visuels page par page (ne pas toucher à la logique métier)
+
+#### Phase 3 — Portail Client (desktop + mobile)
+- [ ] Lire `izox2/desktop-client.jsx` → Dashboard client desktop
+- [ ] Lire `izox2/mobile-client.jsx` + `mobile-client-2.jsx` + `mobile-client-3.jsx` → Vues mobile
+- [ ] Lire `izox2/booking.jsx` → Flow demande RDV
+- [ ] Lire `izox2/impact-client.jsx` → Page impact client
+- [ ] Implémenter en mobile-first
+
+#### Phase 4 — Portail Terrain
+- [ ] Lire `izox2/mobile-terrain.jsx` → Dashboard opérateur
+- [ ] Lire `izox2/photos.jsx` → Upload photos intervention
+- [ ] Implémenter
+
+#### Phase 5 — Composants transversaux
+- [ ] Lire `izox2/cards.jsx` → Cards réutilisables
+- [ ] Lire `izox2/empty.jsx` → États vides
+- [ ] Lire `izox2/print-app.jsx` → Impression
+- [ ] Lire `izox2/deliverables.jsx` + `izox2/impact-shared.jsx`
+
+### Règles impératives pour la refonte
+- **Ne jamais modifier la logique métier** : uniquement CSS classes, layout, composants UI. Les RPCs, Supabase calls, et hooks restent intacts.
+- **Vérifier le build TS après chaque phase** : `npx tsc --noEmit --skipLibCheck`
+- **Toujours garder la responsivité** : mobile-first, breakpoint `md:` pour desktop
+- **Pas de régression fonctionnelle** : tester visuellement chaque page modifiée avant de passer à la suivante
+
+---
+
 ## Backlog actif
 
 - [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.
 - [ ] **Carte interactive** : optimisation tournée (nearest-neighbor + bouton « Optimiser ») à faire quand plusieurs opérateurs.
-- [ ] **Refonte visuelle Claude Design** : ✅ compte opérateur terminé (session 10). Reste : côté admin + client.
 - [ ] **Migration domaine `izox.fr`** : mettre à jour `SITE_URL` env var Supabase + vérifier que `/reset-password` reste dans les redirect URLs.
 - [ ] **Lier nouveaux opérateurs** : quand un 2e opérateur est créé, ajouter `user_id` dans `operators` via migration ou UI admin.
 
