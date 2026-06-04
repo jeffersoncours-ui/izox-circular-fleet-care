@@ -1,5 +1,15 @@
 # Lessons Learned — IZOX
 
+## Handoff v2 — refonte visuelle avancée (session 17)
+
+- **Tailwind v4 : keyframes hors `@theme`, utilities dans `@layer utilities`** : les `@keyframes` se déclarent au niveau racine du fichier CSS (pas dans `@theme inline`). Les classes custom (`animate-check-pop`) vont dans `@layer utilities { .animate-... { animation: ... } }`. Les alias de couleur soft tint (`--color-success-soft`) vont dans `@theme inline` comme les autres tokens.
+- **`border-left` inline style pour les couleurs DB-driven** : quand la couleur vient de la DB (ex. `operators.color_hex`), impossible d'utiliser une classe Tailwind dynamique. Solution propre : `style={{ borderLeft: "3px solid {color_hex}" }}` (inline). Ne pas générer de classe dynamique `border-l-[${color}]` — pas purgeable par Tailwind au build.
+- **Composant AnimatedCheck SVG avec stroke-dashoffset** : l'animation `drawCheck` requiert `stroke-dasharray` ET `stroke-dashoffset` initiaux sur l'élément `<path>`. Le CSS seul (`animation: drawCheck`) ne fonctionne pas si l'état initial n'est pas déclaré via `style={{ strokeDasharray: 24, strokeDashoffset: 24 }}`. La classe `animate-draw-check` gère uniquement l'offset final (0).
+- **Layout tripartite Leaflet : `flex h-[560px]` + `overflow-y-auto` sur le panel droit** : ne pas utiliser `grid` pour un layout avec un élément de hauteur dynamique (la carte Leaflet). `flex` avec hauteur fixe + `flex-1` sur la carte + `w-[280px] overflow-y-auto` sur le panel droit évite les conflits de redimensionnement Leaflet.
+- **`createPinIcon` teardrop via CSS pur** : `border-radius: "50% 50% 50% 4px"` + `transform: "rotate(-45deg)"` sur un `div` carré donne la forme goutte Leaflet sans SVG externe. La mise à l'échelle (`width/height: 28px`) + `border: 2px solid white` + `box-shadow` donne le rendu propre. Compter le décalage pour `iconAnchor` : `[14, 28]` (pointe en bas).
+- **Validation empirique des données avant de déclarer un composant testable** : après avoir créé les données de test (interventions, demandes_rdv), toujours vérifier via `execute_sql` que les RPC dépendantes (`get_creneaux_disponibles`) retournent les bonnes valeurs, et que les colonnes GPS sont bien peuplées avant de passer la main au test manuel.
+- **Purge DB impérative avant merge main** : les données de test créées pendant le développement (entreprises, véhicules, interventions, demandes_rdv, comptes client) doivent toutes être supprimées avant merge. Le SQL de purge dans CLAUDE.md §7 liste l'ordre correct (FK enfants avant parents). Toujours vérifier `COUNT(auth.users) = 4` après purge.
+
 ## Complétion refonte — pages admin oubliées (session 16)
 
 - **Auditer le code, jamais le `todo.md`** : le todo annonçait « refonte complète » mais 3 pages admin (`admin.contrats`, `admin.contrats.$id`, `admin.impact`) n'avaient jamais été refondues — elles n'étaient simplement jamais listées dans la Phase 2. Vérifier l'état réel par inspection du code (présence `PageHeader`, headers `text-3xl font-bold` résiduels) avant de déclarer une refonte terminée.
