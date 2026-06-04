@@ -131,18 +131,18 @@ function ClientImpactPage() {
         <hr className="my-4 border-gray-200" />
       </div>
 
-      <div className="px-4 py-6 max-w-2xl mx-auto pb-24">
+      <div className="px-4 py-5 max-w-2xl mx-auto pb-24 flex flex-col gap-4">
         {/* ── En-tête ──────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between mb-4 print:hidden">
+        <div className="flex items-start justify-between gap-3 print:hidden">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Leaf className="h-5 w-5 text-primary" /> Mon Impact RSE
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Prestations IZOX validées · eau récupérée · pollution évitée
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Eau économisée · pollution évitée · compost produit
             </p>
+            <h1 className="text-[24px] font-bold tracking-tight text-foreground mt-0.5 flex items-center gap-2">
+              <Leaf className="h-5 w-5 text-primary shrink-0" /> Mon Impact RSE
+            </h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <Button
               size="sm" variant="outline" className="gap-1.5"
               onClick={() => exportImpactCSV(filteredRecords, entrepriseNom)}
@@ -157,7 +157,7 @@ function ClientImpactPage() {
         </div>
 
         {/* ── Filtres ──────────────────────────────────────────────── */}
-        <div className="flex gap-2 mb-5 print:hidden">
+        <div className="flex gap-2 print:hidden">
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="h-8 text-xs w-[160px]">
               <SelectValue />
@@ -190,7 +190,7 @@ function ClientImpactPage() {
         ) : (
           <>
             {/* ── Hero cards 3 catégories principales ──────────────── */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-3 gap-3">
               <HeroCard
                 icon={Droplets}
                 label="Eau économisée"

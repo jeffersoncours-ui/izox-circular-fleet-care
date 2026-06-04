@@ -75,45 +75,70 @@
 
 ### Ordre d'implémentation recommandé
 
-#### Phase 1 — Design system (tokens + composants atomiques)
-- [ ] Lire `izox2/tokens.jsx` → extraire les variables CSS (couleurs, typo, espacements, radius)
-- [ ] Lire `izox2/brand.jsx` → vérifier cohérence avec `tailwind.config` et CSS variables actuelles
-- [ ] Lire `izox2/atoms.jsx` + `izox2/shell.jsx` + `izox2/system.jsx` → composants Button, Badge, Card, Layout
-- [ ] Mettre à jour `tailwind.config.ts` + `src/index.css` (CSS variables) pour matcher les tokens du design
-- [ ] Mettre à jour les composants shadcn/ui utilisés (`src/components/ui/`) pour matcher atoms
+#### Phase 1 — Design system (tokens + composants atomiques) ✅ SESSION 14
+- [x] Lire `izox2/tokens.jsx` → extraire les variables CSS (couleurs, typo, espacements, radius)
+- [x] Lire `izox2/brand.jsx` → vérifier cohérence avec `tailwind.config` et CSS variables actuelles
+- [x] Lire `izox2/atoms.jsx` + `izox2/shell.jsx` + `izox2/system.jsx` → composants Button, Badge, Card, Layout
+- [x] Mettre à jour `src/styles.css` (CSS variables) pour matcher les tokens du design
+  - Palette complète hex (#F9FAFB paper, #1B4332 brand, sémantiques ok/warn/danger/info)
+  - Sidebar blanche (bg white, accents verts, item actif #E7EFEA)
+  - Shadows design (elegant/card/strong)
+  - Radius : r4=8px(md) / r6=10px(lg) / r10=14px(xl)
+  - Ajout info color (#2A6FDB)
+- [x] Google Fonts : ajout Outfit (700/800 headings)
+- [x] `@layer base` : h1-h4 → Outfit, `.font-display`, `.font-mono`
+- [x] `AdminSidebar` : indicateur barre gauche item actif + opacités nav alignées
+- [x] `Card` : rounded-xl → rounded-lg (r6=10px) + shadow-card
 
-#### Phase 2 — Portail Admin
-- [ ] Lire `izox2/admin-overview.jsx` → Dashboard principal `/admin`
-- [ ] Lire `izox2/admin-clients.jsx` → Pages clients `/admin/clients`
-- [ ] Lire `izox2/admin-interventions.jsx` → Planning + interventions `/admin/planning`
-- [ ] Lire `izox2/admin-ops.jsx` → Équipe + opérateurs `/admin/equipe`
-- [ ] Lire `izox2/impact-admin.jsx` → Impact écologique admin
-- [ ] Lire `izox2/invoice.jsx` → Facturation `/admin/facturation`
-- [ ] Implémenter les changements visuels page par page (ne pas toucher à la logique métier)
+#### Phase 2 — Portail Admin ✅ SESSION 15
+- [x] `admin.index` → Dashboard `PageHeader` + `StatTile` (KPIs live)
+- [x] `admin.clients` + `admin.clients.$id` → PageHeader, filtres pills, table redesign
+- [x] `admin.planning.index` → PageHeader + sous-onglets recalibrés
+- [x] `admin.vehicules` + `admin.vehicules.$id` → PageHeader
+- [x] `admin.demandes-gel` → PageHeader + filtre statut en right slot
+- [x] `admin.equipe` + `admin.facturation` → PageHeader + empty states stylisés
+- [x] `admin.interventions.$id` → PageHeader (immat + contexte) + Retour
+- [x] Composant `PageHeader` + `StatTile` créé (`src/components/ui/page-header.tsx`)
 
-#### Phase 3 — Portail Client (desktop + mobile)
-- [ ] Lire `izox2/desktop-client.jsx` → Dashboard client desktop
-- [ ] Lire `izox2/mobile-client.jsx` + `mobile-client-2.jsx` + `mobile-client-3.jsx` → Vues mobile
-- [ ] Lire `izox2/booking.jsx` → Flow demande RDV
-- [ ] Lire `izox2/impact-client.jsx` → Page impact client
-- [ ] Implémenter en mobile-first
+#### Phase 3 — Portail Client (desktop + mobile) ✅ SESSION 15
+- [x] `client.index` → date header, hero sombre, StatCards, PalierCard
+- [x] `client.flotte` + `client.flotte.$id` → filtres pills, MFleetRow cards, gel tokens
+- [x] `client.factures` + `client.documents` → empty states icon-block
+- [x] `MesPrestationsPage` → header + RDV en right slot
+- [x] `ClientNav` (header + bottom nav) → fond clair, accents verts
 
-#### Phase 4 — Portail Terrain
-- [ ] Lire `izox2/mobile-terrain.jsx` → Dashboard opérateur
-- [ ] Lire `izox2/photos.jsx` → Upload photos intervention
-- [ ] Implémenter
+#### Phase 4 — Portail Terrain ✅ SESSION 15
+- [x] `terrain.index` → hero `bg-foreground`, typo Outfit, badges design tokens
 
-#### Phase 5 — Composants transversaux
-- [ ] Lire `izox2/cards.jsx` → Cards réutilisables
-- [ ] Lire `izox2/empty.jsx` → États vides
-- [ ] Lire `izox2/print-app.jsx` → Impression
-- [ ] Lire `izox2/deliverables.jsx` + `izox2/impact-shared.jsx`
+#### Phase 5 — Composants transversaux ✅ SESSION 15
+- [x] `client.impact` → header redesign, hero cards
+- [x] États vides homogénéisés (icon-block + texte descriptif)
 
 ### Règles impératives pour la refonte
 - **Ne jamais modifier la logique métier** : uniquement CSS classes, layout, composants UI. Les RPCs, Supabase calls, et hooks restent intacts.
 - **Vérifier le build TS après chaque phase** : `npx tsc --noEmit --skipLibCheck`
 - **Toujours garder la responsivité** : mobile-first, breakpoint `md:` pour desktop
 - **Pas de régression fonctionnelle** : tester visuellement chaque page modifiée avant de passer à la suivante
+
+### Review — Refonte visuelle (Sessions 14-15)
+
+**Périmètre :** refonte purement visuelle des 3 portails (admin / client / terrain) à partir du
+handoff `refonte design izox/IZOX-handoff/izox2/`. **Zéro modification de logique métier** —
+uniquement classes CSS, layout et composants UI. RPCs, appels Supabase et hooks intacts.
+
+**Livré :**
+- Phase 1 (design system) : tokens CSS, fonts Outfit/Inter/JetBrains Mono, sidebar claire, shadows, radius
+- Phase 2 (admin) : `PageHeader` + `StatTile` généralisés sur 10 pages admin
+- Phase 3 (client) : dashboard, flotte, prestations, factures, documents — mobile-first
+- Phase 4 (terrain) : hero + typo alignés tokens
+- Phase 5 (transversal) : impact RSE, états vides homogènes
+
+**Vérifications :**
+- `npx tsc --noEmit --skipLibCheck` → 0 erreur à chaque phase
+- Commits incrémentaux par phase sur `claude/izox-visual-redesign-QRnfC`
+- Aucun appel DB / RPC touché → pas de validation empirique base requise (CSS/UI uniquement)
+
+**Commits clés :** `058dcb9`, `b116f54`, `1850c97`, `dac2c24`, `5f49754`
 
 ---
 

@@ -2,9 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Car, CalendarDays, Sparkles, Award, Leaf, KeyRound, UserCog } from "lucide-react";
+import {
+  Car,
+  CalendarDays,
+  Sparkles,
+  Award,
+  Leaf,
+  KeyRound,
+  UserCog,
+  ChevronRight,
+} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
 import { ChangePasswordDialog } from "@/components/client/ChangePasswordDialog";
@@ -20,13 +28,6 @@ const PALIER_LABEL: Record<string, string> = {
   pro: "Pro",
   business: "Business",
   premium: "Premium",
-};
-
-const PALIER_CARD_CLASS: Record<string, string> = {
-  starter: "bg-muted text-muted-foreground",
-  pro: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-200",
-  business: "bg-primary/10 text-primary",
-  premium: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-200",
 };
 
 function fmtShort(iso: string): string {
@@ -104,16 +105,24 @@ function ClientHome() {
   }, [profile]);
 
   return (
-    <div className="px-4 py-6 max-w-2xl mx-auto">
+    <div className="px-4 py-5 max-w-2xl mx-auto pb-24 flex flex-col gap-4">
       <PassagesReportesBanner />
-      <header className="mb-6">
-        <p className="text-sm text-muted-foreground">Bonjour</p>
-        <h1 className="text-2xl font-bold text-foreground">{profile?.prenom} {profile?.nom}</h1>
+
+      {/* Page header */}
+      <header>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}
+        </p>
+        <h1 className="text-[26px] font-bold tracking-tight text-foreground mt-1 leading-tight">
+          Bonjour {profile?.prenom},{" "}
+          <span className="text-primary">tout est sous contrôle.</span>
+        </h1>
       </header>
 
+      {/* KPI grid */}
       <div className="grid grid-cols-2 gap-3">
         <Link to="/client/flotte">
-          <SummaryCard
+          <StatCard
             icon={Car}
             label="Véhicules"
             value={String(vehiculeCount)}
@@ -121,91 +130,93 @@ function ClientHome() {
           />
         </Link>
         <Link to="/client/prestations">
-          <SummaryCard
+          <StatCard
             icon={CalendarDays}
             label="Prochain RDV"
             value={prochainRdvDate ? fmtShort(prochainRdvDate) : "—"}
             sub={prochainRdvDate ? fmtYear(prochainRdvDate) : "aucun RDV"}
+            accent={prochainRdvDate ? "var(--color-warning)" : undefined}
           />
         </Link>
         <Link to="/client/prestations">
-          <SummaryCard
+          <StatCard
             icon={Sparkles}
             label="Dernière prestation"
             value={dernierePrestDate ? fmtShort(dernierePrestDate) : "—"}
-            sub={dernierePrestDate ? fmtYear(dernierePrestDate) : "aucune prestation"}
+            sub={dernierePrestDate ? fmtYear(dernierePrestDate) : "aucune"}
           />
         </Link>
         {palier ? (
           contratId ? (
             <Link to="/client/contrats/$id" params={{ id: contratId }}>
-              <PalierCard
-                palier={palier}
-                vehiculeCount={vehiculeCount}
-                numeroContrat={numeroContrat}
-              />
+              <PalierCard palier={palier} vehiculeCount={vehiculeCount} numero={numeroContrat} />
             </Link>
           ) : (
-            <PalierCard
-              palier={palier}
-              vehiculeCount={vehiculeCount}
-              numeroContrat={numeroContrat}
-            />
+            <PalierCard palier={palier} vehiculeCount={vehiculeCount} numero={numeroContrat} />
           )
         ) : (
-          <SummaryCard
-            icon={Award}
-            label="Palier"
-            value="Aucun contrat"
-            sub="Contactez IZOX"
-            highlight
-          />
+          <StatCard icon={Award} label="Palier" value="—" sub="Contactez IZOX" />
         )}
       </div>
 
-      {/* Card Impact RSE — lien vers /client/impact */}
-      <Link to="/client/impact" className="block mt-4">
-        <Card className="p-4 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <Leaf className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-primary">Mon Impact RSE</p>
-              <p className="text-xs text-muted-foreground">
-                Eau économisée · Pollution évitée · Compost produit
-              </p>
-            </div>
-            <span className="ml-auto text-xs font-medium text-primary px-2 py-0.5
-              rounded-full bg-primary/10">Voir →</span>
+      {/* Hero contrat dark */}
+      <div className="bg-foreground text-card rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-white/50">
+          Contrat actif · {numeroContrat || "—"}
+        </p>
+        <div
+          className="text-[52px] font-bold leading-none tracking-[-1px]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {vehiculeCount}
+          <span className="text-primary text-[36px] ml-1">véh.</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/20 text-[#7CC9A5] border border-primary/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            {PALIER_LABEL[palier] ?? "Starter"}
+          </span>
+          <span className="text-white/45 text-xs">palier actif</span>
+        </div>
+        {/* bg icon */}
+        <Car className="absolute right-4 bottom-4 h-20 w-20 text-white opacity-[0.06]" />
+      </div>
+
+      {/* Impact RSE */}
+      <Link to="/client/impact" className="block">
+        <div className="bg-[#E7EFEA] border border-[#CBDDD2] rounded-lg p-4 flex items-center gap-3 hover:bg-[#DCEEE4] transition-colors">
+          <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+            <Leaf className="h-5 w-5 text-primary" />
           </div>
-        </Card>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-primary">Mon Impact RSE</p>
+            <p className="text-[11px] text-primary/60 mt-0.5">
+              Eau économisée · Pollution évitée · Compost produit
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-primary/40" />
+        </div>
       </Link>
 
-      <Card className="mt-4 p-5 bg-primary text-primary-foreground border-none shadow-strong">
-        <h2 className="font-semibold text-lg">Bienvenue chez IZOX</h2>
-        <p className="text-sm text-primary-foreground/85 mt-1">
-          Gérez votre flotte et suivez les prestations de nettoyage circulaire en un coup d'œil.
-        </p>
-      </Card>
-
-      {/* Mon compte — self-service for the client */}
-      <Card className="mt-4 p-5 shadow-card border-border/60">
-        <h2 className="font-semibold text-base text-foreground">Mon compte</h2>
-        <p className="text-xs text-muted-foreground mt-1 mb-4">
-          Gérez vos informations et votre mot de passe.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button variant="outline" className="justify-start" onClick={() => setInfoOpen(true)}>
-            <UserCog className="h-4 w-4" />
+      {/* Mon compte */}
+      <div className="bg-card border border-border rounded-lg p-4 shadow-card flex flex-col gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">Mon compte</h2>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Informations et mot de passe
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Button variant="outline" size="sm" className="justify-start gap-2" onClick={() => setInfoOpen(true)}>
+            <UserCog className="h-3.5 w-3.5" />
             Modifier mes informations
           </Button>
-          <Button variant="outline" className="justify-start" onClick={() => setPwOpen(true)}>
-            <KeyRound className="h-4 w-4" />
+          <Button variant="outline" size="sm" className="justify-start gap-2" onClick={() => setPwOpen(true)}>
+            <KeyRound className="h-3.5 w-3.5" />
             Changer mon mot de passe
           </Button>
         </div>
-      </Card>
+      </div>
 
       <ChangePasswordDialog open={pwOpen} onOpenChange={setPwOpen} />
       <EditMyInfoDialog open={infoOpen} onOpenChange={setInfoOpen} />
@@ -213,54 +224,70 @@ function ClientHome() {
   );
 }
 
-function SummaryCard({
+function StatCard({
   icon: Icon,
   label,
   value,
   sub,
-  highlight,
+  accent,
 }: {
   icon: typeof Car;
   label: string;
   value: string;
   sub: string;
-  highlight?: boolean;
+  accent?: string;
 }) {
   return (
-    <Card className="p-4 shadow-card border-border/60 h-full">
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">{label}</p>
-        <Icon className="h-4 w-4 text-primary" />
+    <div className="bg-card border border-border rounded-lg p-4 shadow-card h-full hover:border-primary/25 hover:shadow-strong transition-all">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          {label}
+        </span>
+        <Icon className="h-3.5 w-3.5 text-muted-foreground/50" />
       </div>
-      <p className="text-2xl font-bold text-foreground capitalize">{value}</p>
-      <p className={`text-[11px] mt-1 ${highlight ? "text-primary font-medium" : "text-muted-foreground"}`}>{sub}</p>
-    </Card>
+      <p
+        className="text-[28px] font-bold leading-none tracking-tight capitalize"
+        style={{
+          fontFamily: "var(--font-display)",
+          color: accent ?? "var(--color-foreground)",
+        }}
+      >
+        {value}
+      </p>
+      <p className="text-[11px] text-muted-foreground mt-1.5">{sub}</p>
+    </div>
   );
 }
 
 function PalierCard({
   palier,
   vehiculeCount,
-  numeroContrat,
+  numero,
 }: {
   palier: string;
   vehiculeCount: number;
-  numeroContrat: string;
+  numero: string;
 }) {
-  const cls = PALIER_CARD_CLASS[palier] ?? "bg-card text-foreground";
   return (
-    <Card className={cn("p-4 shadow-card border-border/60 h-full", cls)}>
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-xs uppercase tracking-wide font-medium opacity-80">Palier</p>
-        <Award className="h-4 w-4" />
+    <div className="bg-[#E7EFEA] border border-[#CBDDD2] rounded-lg p-4 h-full hover:bg-[#DCEEE4] transition-colors">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-primary/70">
+          Palier
+        </span>
+        <Award className="h-3.5 w-3.5 text-primary/50" />
       </div>
-      <p className="text-2xl font-bold capitalize">{PALIER_LABEL[palier] ?? palier}</p>
-      <p className="text-[11px] mt-1 opacity-80">
+      <p
+        className="text-[28px] font-bold leading-none tracking-tight text-primary capitalize"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        {PALIER_LABEL[palier] ?? palier}
+      </p>
+      <p className="text-[11px] text-primary/60 mt-1.5">
         {vehiculeCount} véhicule{vehiculeCount > 1 ? "s" : ""} actif{vehiculeCount > 1 ? "s" : ""}
       </p>
-      {numeroContrat && (
-        <p className="text-[11px] opacity-70 truncate">Contrat {numeroContrat}</p>
+      {numero && (
+        <p className="text-[10px] text-primary/50 mt-0.5 font-mono truncate">{numero}</p>
       )}
-    </Card>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Snowflake } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 import { format, parseISO } from "date-fns";
 import { z } from "zod";
 
@@ -108,31 +109,28 @@ function DemandesGelPage() {
   const nbEnAttente = rows.filter((r) => r.statut === "en_attente").length;
 
   return (
-    <div className="p-6 lg:p-10 max-w-6xl mx-auto">
-      <div className="flex items-start justify-between gap-3 mb-6 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <Snowflake className="h-7 w-7 text-blue-600" /> Demandes de gel
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            <strong>{nbEnAttente}</strong> demande{nbEnAttente > 1 ? "s" : ""} en attente
-            de traitement
-          </p>
-        </div>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous</SelectItem>
-            {STATUTS.map((s) => (
-              <SelectItem key={s} value={s}>
-                {STATUT_LABEL[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        crumbs={["Admin", "Demandes de gel"]}
+        title="Demandes de gel"
+        sub={`${nbEnAttente} demande${nbEnAttente > 1 ? "s" : ""} en attente de traitement`}
+        right={
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-48 h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous</SelectItem>
+              {STATUTS.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {STATUT_LABEL[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
+      />
+      <div className="p-6 lg:p-8 max-w-6xl w-full mx-auto flex flex-col gap-4">
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -202,6 +200,7 @@ function DemandesGelPage() {
           load();
         }}
       />
+      </div>
     </div>
   );
 }

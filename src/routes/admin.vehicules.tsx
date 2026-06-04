@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Car, Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/format";
@@ -146,22 +147,16 @@ function AdminVehiculesList() {
   const totalMRR = clientsFiltres.reduce((s, c) => s + (c.montant_net_mensuel ?? 0), 0);
 
   return (
-    <div className="p-6 lg:p-10 max-w-7xl mx-auto">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Véhicules</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {totalVehicules} véhicule{totalVehicules > 1 ? "s" : ""} suivi
-          {totalVehicules > 1 ? "s" : ""} chez {totalClients} client
-          {totalClients > 1 ? "s" : ""}
-          {isAdminStaff && totalMRR > 0 && (
-            <span className="ml-3 font-medium text-foreground">
-              · MRR total : {formatCurrency(totalMRR)} HT / mois
-            </span>
-          )}
-        </p>
-      </header>
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        crumbs={["Admin", "Véhicules"]}
+        title="Véhicules"
+        sub={`${totalVehicules} véhicule${totalVehicules > 1 ? "s" : ""} suivi${totalVehicules > 1 ? "s" : ""} chez ${totalClients} client${totalClients > 1 ? "s" : ""}${isAdminStaff && totalMRR > 0 ? ` · MRR : ${formatCurrency(totalMRR)} HT/mois` : ""}`}
+      />
 
-      <Card className="p-4 mb-6 shadow-card border-border/60">
+      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto flex flex-col gap-5">
+
+      <Card className="p-4 shadow-card border-border/60">
         <div className="flex flex-col md:flex-row md:items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -301,6 +296,7 @@ function AdminVehiculesList() {
           setAddDialogFor(null);
         }}
       />
+      </div>
     </div>
   );
 }

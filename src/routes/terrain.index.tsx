@@ -310,7 +310,7 @@ function TabPlanning({
   return (
     <div className="flex flex-col">
       {/* Hero sombre */}
-      <div className="bg-slate-900 text-white px-4 pt-12 pb-6">
+      <div className="bg-foreground text-white px-4 pt-12 pb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
             <span className="text-primary-foreground font-bold text-sm">IZ</span>
@@ -324,8 +324,8 @@ function TabPlanning({
             </p>
           </div>
         </div>
-        <p className="text-xs text-slate-500 font-semibold tracking-wider mb-1">{dateLine}</p>
-        <h1 className="text-3xl font-black text-white leading-none">
+        <p className="text-[10px] text-white/40 font-semibold tracking-widest mb-1">{dateLine}</p>
+        <h1 className="text-[28px] font-bold text-white leading-tight tracking-tight">
           {todayCount === 0 && enCours.length === 0
             ? "Aucune intervention aujourd'hui"
             : `${todayCount} intervention${todayCount > 1 ? "s" : ""}${matinCount > 0 ? ` · ${matinCount} matin` : ""}${amCount > 0 ? ` · ${amCount} après-midi` : ""}`}
@@ -408,7 +408,7 @@ function PlanningCard({ item, onClick }: { item: InterventionRow; onClick: () =>
       className="w-full text-left flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-muted/30 transition-colors"
     >
       <div className="text-right shrink-0 w-12">
-        <p className="text-base font-black text-foreground leading-tight">
+        <p className="text-base font-bold text-foreground leading-tight tabular-nums">
           {item.heure_intervention ? formatHeure(item.heure_intervention) : "—"}
         </p>
       </div>
@@ -485,7 +485,7 @@ function RdvDetailSheet({
           </div>
           <div className="flex items-center gap-2">
             {stepLabel && (
-              <span className="rounded-full bg-slate-700 text-white text-xs font-bold px-2.5 py-1">
+              <span className="rounded-full bg-foreground text-white text-xs font-bold px-2.5 py-1">
                 {stepLabel}
               </span>
             )}
