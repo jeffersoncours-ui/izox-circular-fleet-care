@@ -408,7 +408,7 @@ function PlanningCard({ item, onClick }: { item: InterventionRow; onClick: () =>
       className="w-full text-left flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-muted/30 transition-colors"
     >
       <div className="text-right shrink-0 w-12">
-        <p className="text-base font-black text-foreground leading-tight">
+        <p className="text-base font-bold text-foreground leading-tight tabular-nums">
           {item.heure_intervention ? formatHeure(item.heure_intervention) : "—"}
         </p>
       </div>
@@ -485,7 +485,7 @@ function RdvDetailSheet({
           </div>
           <div className="flex items-center gap-2">
             {stepLabel && (
-              <span className="rounded-full bg-slate-700 text-white text-xs font-bold px-2.5 py-1">
+              <span className="rounded-full bg-foreground text-white text-xs font-bold px-2.5 py-1">
                 {stepLabel}
               </span>
             )}
