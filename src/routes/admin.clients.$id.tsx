@@ -16,7 +16,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Car, Loader2, Plus, Pencil, Trash2, FileText, Info, Archive, Snowflake, Clock, KeyRound } from "lucide-react";
+import { Car, Loader2, Plus, Pencil, Trash2, FileText, Info, Archive, Snowflake, Clock, KeyRound } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Accordion,
   AccordionContent,
@@ -205,64 +206,28 @@ function ClientDetailPage() {
     return (
       <div className="p-6 lg:p-10 max-w-5xl mx-auto">
         <Button asChild variant="outline" size="sm" className="mb-6">
-          <Link to="/admin/clients">
-            <ArrowLeft className="h-4 w-4" /> Retour à la liste
-          </Link>
+          <Link to="/admin/clients">Retour à la liste</Link>
         </Button>
         <p className="text-muted-foreground">Client introuvable.</p>
       </div>
     );
   }
 
-  return (
-    <div className="p-6 lg:p-10 max-w-5xl mx-auto">
-      <Button asChild variant="outline" size="sm" className="mb-6">
-        <Link to="/admin/clients">
-          <ArrowLeft className="h-4 w-4" /> Retour à la liste
-        </Link>
-      </Button>
+  const TYPE_LABEL: Record<string, string> = { vtc: "VTC", location: "Location", pme: "PME" };
 
-      <Card className="p-6 shadow-card border-border/60 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{entreprise.nom}</h1>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <Badge variant="secondary" className="capitalize">{entreprise.type_client}</Badge>
-              {!entreprise.compte_active && <Badge variant="destructive">Désactivé</Badge>}
-            </div>
-            <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-              <Row label="Email" value={entreprise.email_contact} />
-              <Row label="Ville" value={entreprise.ville} />
-              <div className="sm:col-span-2">
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
-                  Commercial responsable
-                </dt>
-                <dd className="text-foreground mt-0.5 flex items-center gap-2 flex-wrap">
-                  <span>
-                    {commercialNom ?? (
-                      <span className="italic text-muted-foreground">
-                        Aucun commercial dédié
-                      </span>
-                    )}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => setReassignOpen(true)}
-                  >
-                    Réassigner
-                  </Button>
-                </dd>
-              </div>
-            </dl>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="izox" size="sm" onClick={() => setAddOpen(true)}>
-              <Plus className="h-4 w-4" /> Ajouter un véhicule
+  return (
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        crumbs={["Clients", entreprise.nom]}
+        title={entreprise.nom}
+        sub={`${TYPE_LABEL[entreprise.type_client] ?? entreprise.type_client}${entreprise.email_contact ? ` · ${entreprise.email_contact}` : ""}${!entreprise.compte_active ? " · Désactivé" : ""}`}
+        right={
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" onClick={() => setAddOpen(true)}>
+              <Plus className="h-3.5 w-3.5" /> Ajouter un véhicule
             </Button>
             <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
-              <Pencil className="h-4 w-4" /> Modifier
+              <Pencil className="h-3.5 w-3.5" /> Modifier
             </Button>
             <Button
               variant="outline"
@@ -271,29 +236,49 @@ function ClientDetailPage() {
               disabled={resettingMdp}
               title="Envoyer un email de réinitialisation de mot de passe au client"
             >
-              {resettingMdp ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              Réinitialiser MDP
+              {resettingMdp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">MDP</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setArchiveOpen(true)}
               disabled={nbContratsActifs > 0}
-              title={
-                nbContratsActifs > 0
-                  ? "Résilier le contrat avant d'archiver"
-                  : "Masquer le client tout en conservant ses données"
-              }
+              title={nbContratsActifs > 0 ? "Résilier le contrat avant d'archiver" : "Masquer le client tout en conservant ses données"}
               className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 disabled:opacity-40"
             >
-              <Archive className="h-4 w-4" /> Archiver
+              <Archive className="h-3.5 w-3.5" /> Archiver
             </Button>
           </div>
-        </div>
+        }
+      />
+
+      <div className="p-6 lg:p-8 max-w-5xl w-full mx-auto flex flex-col gap-4">
+
+      <Card className="p-5 shadow-card border-border/60">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <Row label="Email" value={entreprise.email_contact} />
+          <Row label="Ville" value={entreprise.ville} />
+          <div className="sm:col-span-2">
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+              Commercial responsable
+            </dt>
+            <dd className="text-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+              <span>
+                {commercialNom ?? (
+                  <span className="italic text-muted-foreground">Aucun commercial dédié</span>
+                )}
+              </span>
+              <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setReassignOpen(true)}>
+                Réassigner
+              </Button>
+            </dd>
+          </div>
+        </dl>
       </Card>
 
       {!loadingVehicules && vehicules.length === 0 && (
-        <Card className="p-4 mb-6 bg-primary/5 border-primary/20">
+        <Card className="p-4 bg-primary/5 border-primary/20">
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div className="flex-1">
@@ -431,6 +416,7 @@ function ClientDetailPage() {
         currentCommercialId={entreprise.commercial_id}
         onReassigned={loadEntreprise}
       />
+      </div>
     </div>
   );
 }
