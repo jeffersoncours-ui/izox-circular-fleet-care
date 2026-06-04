@@ -7,21 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
+import { PageHeader, StatTile } from "@/components/ui/page-header";
 import {
   Tooltip,
   TooltipProvider,
@@ -90,6 +76,12 @@ const STATUT_LABEL: Record<string, string> = {
   actif: "Actif",
   en_cours_gel: "Gelé",
   resilie: "Résilié",
+};
+
+const STATUT_TONE: Record<string, string> = {
+  actif: "bg-[#E7EFEA] text-[#1B4332] border-[#CBDDD2]",
+  en_cours_gel: "bg-[#D5E2F6] text-[#2A6FDB] border-[#B3C8EF]",
+  resilie: "bg-muted text-muted-foreground border-border",
 };
 
 function ContratsPage() {
@@ -238,6 +230,24 @@ function ContratsList() {
     });
   }, [rows, statutFilter, debouncedSearch]);
 
+  const stats = useMemo(() => {
+    const actifs = rows.filter((r) => r.statut === "actif");
+    const mrr = actifs.reduce((s, r) => s + r.mensualiteNetteHt, 0);
+    return {
+      actifs: actifs.length,
+      mrr,
+      gel: rows.filter((r) => r.statut === "en_cours_gel").length,
+      resilies: rows.filter((r) => r.statut === "resilie").length,
+    };
+  }, [rows]);
+
+  const statutFilters: { key: string; label: string }[] = [
+    { key: "tous", label: `Tous · ${rows.length}` },
+    { key: "actif", label: `Actifs · ${stats.actifs}` },
+    { key: "en_cours_gel", label: `Gelés · ${stats.gel}` },
+    { key: "resilie", label: `Résiliés · ${stats.resilies}` },
+  ];
+
   const handlePlaceholder = (label: string) => {
     toast.info(`${label} — bientôt disponible.`);
   };
@@ -254,216 +264,255 @@ function ContratsList() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto">
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Contrats</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {filtered.length} contrat{filtered.length > 1 ? "s" : ""}
-            {statutFilter !== "tous" &&
-              ` ${(STATUT_LABEL[statutFilter] ?? statutFilter).toLowerCase()}${filtered.length > 1 ? "s" : ""}`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        crumbs={["Admin", "Contrats"]}
+        title="Contrats"
+        sub={`${rows.length} contrat${rows.length > 1 ? "s" : ""} suivi${rows.length > 1 ? "s" : ""}`}
+        right={
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
+                  className="gap-1.5"
                   onClick={() => handlePlaceholder("Clôture mensuelle")}
                 >
-                  <CalendarIcon className="h-4 w-4" />
+                  <CalendarIcon className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Clôture mensuelle</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Clôture mensuelle des passages</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </div>
-      </header>
+        }
+      />
 
-      {/* Filtres */}
-      <Card className="p-4 mb-6 shadow-card border-border/60">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto flex flex-col gap-5">
+        {/* KPIs */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <StatTile label="Contrats actifs" value={stats.actifs} />
+          <StatTile
+            label="MRR contrats"
+            value={stats.mrr.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+            suffix="€"
+            sub="net HT / mois"
+            accent="var(--color-primary)"
+          />
+          <StatTile label="En gel" value={stats.gel} accent="#2A6FDB" />
+          <StatTile label="Résiliés" value={stats.resilies} accent="#C7811E" />
+        </div>
+
+        {/* Search + filter pills */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher par nom d'entreprise..."
-              className="pl-10"
+              placeholder="Rechercher par nom d'entreprise…"
+              className="pl-9 h-9 text-sm"
             />
           </div>
-          <Select value={statutFilter} onValueChange={setStatutFilter}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="tous">Tous les statuts</SelectItem>
-              <SelectItem value="actif">Actif</SelectItem>
-              <SelectItem value="en_cours_gel">Gelé</SelectItem>
-              <SelectItem value="resilie">Résilié</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </Card>
-
-      {loading ? (
-        <Card className="p-4 shadow-card border-border/60">
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+          <div className="flex gap-2 flex-wrap">
+            {statutFilters.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setStatutFilter(key)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors",
+                  statutFilter === key
+                    ? "bg-primary text-white border-primary"
+                    : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+                )}
+              >
+                {label}
+              </button>
             ))}
           </div>
-        </Card>
-      ) : filtered.length === 0 ? (
-        <Card className="p-12 text-center shadow-card border-border/60">
-          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">
-            {rows.length === 0
-              ? "Aucun contrat pour le moment. Les contrats sont créés automatiquement à l'ajout du premier véhicule depuis la fiche client."
-              : "Aucun résultat."}
-          </p>
-        </Card>
-      ) : (
-        <>
-          {/* Desktop table */}
-          <Card className="hidden lg:block shadow-card border-border/60 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Entreprise</TableHead>
-                  <TableHead>Packs</TableHead>
-                  <TableHead className="text-right">Véh. actifs</TableHead>
-                  <TableHead>Palier</TableHead>
-                  <TableHead className="text-right">Mensualité nette HT</TableHead>
-                  <TableHead className="text-right">Passages restants</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>
-                      <div className="font-medium">{r.entreprise?.nom ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {r.numero_contrat ?? "Sans numéro"}
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {r.vehiculesEnAttente > 0 && (
-                          <Badge variant="destructive" className="text-[10px]">
-                            {r.vehiculesEnAttente} véh. en attente
-                          </Badge>
+        </div>
+
+        {loading ? (
+          <Card className="p-4 shadow-card border-border/60">
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          </Card>
+        ) : filtered.length === 0 ? (
+          <div className="bg-card border border-border rounded-lg p-12 text-center shadow-card">
+            <FileText className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-sm text-muted-foreground">
+              {rows.length === 0
+                ? "Aucun contrat pour le moment. Les contrats sont créés automatiquement à l'ajout du premier véhicule depuis la fiche client."
+                : "Aucun résultat."}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop table */}
+            <div className="hidden lg:block bg-card border border-border rounded-lg overflow-hidden shadow-card">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-muted/50 border-b border-border">
+                    {[
+                      "Entreprise",
+                      "Packs",
+                      "Véh. actifs",
+                      "Palier",
+                      "Mensualité nette HT",
+                      "Passages restants",
+                      "Statut",
+                      "Actions",
+                    ].map((h, i) => (
+                      <th
+                        key={h}
+                        className={cn(
+                          "px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground",
+                          i === 2 || i === 4 || i === 5 || i === 7
+                            ? "text-right"
+                            : "text-left"
                         )}
-                        {r.passages_reportes > 0 && (
-                          <Badge className="text-[10px] bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-                            {r.passages_reportes} passage(s) reporté(s)
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {r.lignes
-                        .map(
-                          (l) =>
-                            `${getPackLabel(l.type_pack)} ×${l.nb_vehicules}`
-                        )
-                        .join(", ") || "—"}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {r.vehiculesActifs}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={cn(PALIER_BADGE[r.palier])}>
-                        {PALIER_LABEL[r.palier]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">
-                      {r.mensualiteNetteHt.toFixed(2)} €
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {r.passages_restants_mois}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={r.statut === "actif" ? "default" : "secondary"}>
-                        {STATUT_LABEL[r.statut] ?? r.statut}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end items-center gap-1">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                asChild
-                              >
-                                <Link to="/admin/contrats/$id" params={{ id: r.id }}>
-                                  <Eye className="h-4 w-4" />
-                                </Link>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Voir / Modifier</TooltipContent>
-                          </Tooltip>
-                          {r.statut === "actif" && (
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((r, idx) => (
+                    <tr
+                      key={r.id}
+                      className={cn(
+                        "border-t border-border/60 hover:bg-muted/30 transition-colors",
+                        idx === 0 && "border-t-0"
+                      )}
+                    >
+                      <td className="px-4 py-3.5">
+                        <div className="font-semibold text-foreground">{r.entreprise?.nom ?? "—"}</div>
+                        <div className="text-xs text-muted-foreground font-mono">
+                          {r.numero_contrat ?? "Sans numéro"}
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {r.vehiculesEnAttente > 0 && (
+                            <Badge variant="destructive" className="text-[10px]">
+                              {r.vehiculesEnAttente} véh. en attente
+                            </Badge>
+                          )}
+                          {r.passages_reportes > 0 && (
+                            <Badge className="text-[10px] bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                              {r.passages_reportes} passage(s) reporté(s)
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 text-xs text-muted-foreground">
+                        {r.lignes
+                          .map(
+                            (l) =>
+                              `${getPackLabel(l.type_pack)} ×${l.nb_vehicules}`
+                          )
+                          .join(", ") || "—"}
+                      </td>
+                      <td className="px-4 py-3.5 text-right tabular-nums">
+                        {r.vehiculesActifs}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <Badge className={cn(PALIER_BADGE[r.palier])}>
+                          {PALIER_LABEL[r.palier]}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3.5 text-right tabular-nums font-semibold">
+                        {r.mensualiteNetteHt.toFixed(2)} €
+                      </td>
+                      <td className="px-4 py-3.5 text-right tabular-nums">
+                        {r.passages_restants_mois}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span
+                          className={cn(
+                            "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border",
+                            STATUT_TONE[r.statut] ?? STATUT_TONE.resilie
+                          )}
+                        >
+                          {STATUT_LABEL[r.statut] ?? r.statut}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        <div className="flex justify-end items-center gap-1">
+                          <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => openGel(r)}>
-                                  <Pause className="h-4 w-4" />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  asChild
+                                >
+                                  <Link to="/admin/contrats/$id" params={{ id: r.id }}>
+                                    <Eye className="h-4 w-4" />
+                                  </Link>
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent>Mettre en veille</TooltipContent>
+                              <TooltipContent>Voir / Modifier</TooltipContent>
                             </Tooltip>
-                          )}
-                          {r.statut === "en_cours_gel" && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => openReactivate(r)}>
-                                  <Sun className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Réactiver le contrat</TooltipContent>
-                            </Tooltip>
-                          )}
-                          {r.statut !== "actif" && r.statut !== "en_cours_gel" && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span tabIndex={0}>
-                                  <Button variant="ghost" size="icon" disabled>
+                            {r.statut === "actif" && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={() => openGel(r)}>
                                     <Pause className="h-4 w-4" />
                                   </Button>
-                                </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Mettre en veille</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {r.statut === "en_cours_gel" && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={() => openReactivate(r)}>
+                                    <Sun className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Réactiver le contrat</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {r.statut !== "actif" && r.statut !== "en_cours_gel" && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span tabIndex={0}>
+                                    <Button variant="ghost" size="icon" disabled>
+                                      <Pause className="h-4 w-4" />
+                                    </Button>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {r.statut === "resilie" ? "Contrat clôturé" : "Action indisponible"}
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => openResil(r)}
+                                  disabled={r.statut === "resilie"}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
                               </TooltipTrigger>
-                              <TooltipContent>
-                                {r.statut === "resilie" ? "Contrat clôturé" : "Action indisponible"}
-                              </TooltipContent>
+                              <TooltipContent>Résilier</TooltipContent>
                             </Tooltip>
-                          )}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => openResil(r)}
-                                disabled={r.statut === "resilie"}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Résilier</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+                          </TooltipProvider>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
           {/* Mobile cards */}
           <div className="lg:hidden grid gap-3">
@@ -476,9 +525,14 @@ function ContratsList() {
                       {r.numero_contrat ?? "Sans numéro"}
                     </p>
                   </div>
-                  <Badge variant={r.statut === "actif" ? "default" : "secondary"}>
+                  <span
+                    className={cn(
+                      "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border shrink-0",
+                      STATUT_TONE[r.statut] ?? STATUT_TONE.resilie
+                    )}
+                  >
                     {STATUT_LABEL[r.statut] ?? r.statut}
-                  </Badge>
+                  </span>
                 </div>
                 <div className="text-xs text-muted-foreground mb-2">
                   {r.lignes
@@ -559,7 +613,8 @@ function ContratsList() {
             ))}
           </div>
         </>
-      )}
+        )}
+      </div>
       <ResiliationContratDialog
         open={!!resilTarget}
         onOpenChange={(o) => !o && setResilTarget(null)}

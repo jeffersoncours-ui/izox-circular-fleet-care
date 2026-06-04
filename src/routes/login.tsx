@@ -129,7 +129,7 @@ function LoginPage() {
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <Mail className="h-6 w-6 text-primary" />
                 </div>
-                <h2 className="text-xl font-semibold text-foreground mb-2">Email envoyé !</h2>
+                <h2 className="text-xl font-bold tracking-tight text-foreground mb-2">Email envoyé !</h2>
                 <p className="text-sm text-muted-foreground mb-6">
                   Si un compte existe pour <span className="font-medium text-foreground">{forgotEmail}</span>,
                   vous recevrez un lien de réinitialisation dans quelques instants.
@@ -148,7 +148,7 @@ function LoginPage() {
                   >
                     <ArrowLeft className="h-4 w-4" /> Retour
                   </button>
-                  <h1 className="text-2xl font-semibold text-foreground">Mot de passe oublié</h1>
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground">Mot de passe oublié</h1>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Entrez votre email pour recevoir un lien de réinitialisation.
                   </p>
@@ -192,7 +192,7 @@ function LoginPage() {
                 <KeyRound className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-foreground">Choisir un mot de passe</h1>
+                <h1 className="text-xl font-bold tracking-tight text-foreground">Choisir un mot de passe</h1>
                 <p className="text-sm text-muted-foreground">Définissez le mot de passe de votre compte IZOX.</p>
               </div>
             </div>
@@ -247,7 +247,7 @@ function LoginPage() {
       <div className="flex-1 flex items-start sm:items-center justify-center px-4 py-8 sm:py-12">
         <Card className="w-full max-w-md p-6 sm:p-8 shadow-strong border-border/60">
           <div className="mb-6">
-            <h1 className="text-2xl font-semibold text-foreground">Bienvenue</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Bienvenue</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Connectez-vous à votre espace IZOX
             </p>

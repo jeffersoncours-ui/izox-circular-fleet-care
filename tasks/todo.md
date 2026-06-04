@@ -2,6 +2,36 @@
 
 ---
 
+## Session 2026-06-04 (16) — Complétion refonte visuelle (pages admin oubliées)
+
+**Constat** : audit empirique du code (pas du todo) → 3 pages admin majeures jamais refondues
+lors des sessions 14-15 (jamais listées dans la Phase 2). Client ✅ et terrain ✅ étaient bien faits
+(faux positifs grep = chiffres de stats / logos PDF). Designs présents dans le handoff :
+`admin-ops.jsx → A_Contrats` + `impact-admin.jsx`.
+
+- [x] `admin.contrats.tsx` → `PageHeader` + 4 `StatTile` (actifs, MRR, gel, résiliés calculés depuis données) + filtres pills + table redesign (raw table, statut en pills tokens) + cards mobiles restylées
+- [x] `admin.contrats.$id.tsx` → `PageHeader` (crumbs + numéro + entreprise) + statut pill + Retour, wrapper contenu `p-6 lg:p-8`, lien client préservé
+- [x] `admin.impact.tsx` → `PageHeader` + layout `flex flex-col min-h-full` + table coeff header uppercase/tracking + shadow-card (Tabs conservés — KPIs eau/CO₂ non ajoutés car nécessiteraient nouvelles requêtes = hors périmètre CSS-only)
+- [x] `login.tsx` → titres `font-semibold` → `font-bold tracking-tight` (poids display tokens ; Outfit déjà via `@layer base`)
+- [x] `settings.*` → vérifié : déjà cohérent (h1 Outfit via base layer + Card tokens + layout cross-rôle intentionnel) → pas de churn
+- [x] `npx tsc --noEmit --skipLibCheck` → 0 erreur · `npm run build` → OK
+- [x] Commit + push
+
+### Review session 16
+
+**Périmètre** : refonte purement visuelle des pages admin restantes. **Zéro logique métier touchée** —
+RPCs, appels Supabase, handlers (gel, résiliation, validation impact, dialogs) intacts. Uniquement
+classes CSS / structure JSX de présentation.
+
+**Méthode** : mirroring des patterns déjà éprouvés (`admin.clients.tsx` pour la liste, `admin.clients.$id.tsx`
++ `admin.interventions.$id.tsx` pour les fiches détail) + fidélité aux maquettes handoff.
+
+**Leçon clé** : les heuristiques grep (`font-display`, `text-3xl font-bold`) donnent des faux
+signaux car `@layer base` applique déjà Outfit à tous les `h1-h4`. Vraie rupture = absence de
+`PageHeader` parmi des pages sœurs qui l'utilisent (contrats + impact), pas le poids de police.
+
+---
+
 ## Session 2026-06-03 (13) — Audit complet + correctifs sécurité + inventaire design
 
 - [x] Audit code complet (79 points : 5 critiques, 28 importants, 46 mineurs)
@@ -144,6 +174,7 @@ uniquement classes CSS, layout et composants UI. RPCs, appels Supabase et hooks 
 
 ## Backlog actif
 
+- [ ] **#Feature — Détail facture client `/client/factures/$id`** : maquette `invoice.jsx` (handoff) non implémentée. Nécessite route `client.factures.$id` + fetch table `factures`/`factures_lignes` côté client + rendu aux normes FR (lignes, TVA, totaux). C'est une **nouvelle feature avec logique data**, pas une refonte CSS. La page liste `client.factures` est aujourd'hui un empty state.
 - [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.
 - [ ] **Carte interactive** : optimisation tournée (nearest-neighbor + bouton « Optimiser ») à faire quand plusieurs opérateurs.
 - [ ] **Migration domaine `izox.fr`** : mettre à jour `SITE_URL` env var Supabase + vérifier que `/reset-password` reste dans les redirect URLs.

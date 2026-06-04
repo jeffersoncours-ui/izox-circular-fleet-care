@@ -63,6 +63,7 @@ import { ResiliationContratDialog } from "@/components/admin/ResiliationContratD
 import { GelContratDialog } from "@/components/admin/GelContratDialog";
 import { ReactiverContratDialog } from "@/components/admin/ReactiverContratDialog";
 import { GelInfoBanner } from "@/components/admin/GelInfoBanner";
+import { PageHeader } from "@/components/ui/page-header";
 import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 import { RemiseCommercialeDialog } from "@/components/admin/RemiseCommercialeDialog";
 
@@ -89,6 +90,12 @@ const STATUT_LABEL: Record<string, string> = {
   actif: "Actif",
   en_cours_gel: "Gelé",
   resilie: "Résilié",
+};
+
+const STATUT_TONE: Record<string, string> = {
+  actif: "bg-[#E7EFEA] text-[#1B4332] border-[#CBDDD2]",
+  en_cours_gel: "bg-[#D5E2F6] text-[#2A6FDB] border-[#B3C8EF]",
+  resilie: "bg-muted text-muted-foreground border-border",
 };
 
 const MODE_PAIEMENT_LABEL: Record<string, string> = {
@@ -353,47 +360,52 @@ function ContratDetailPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto">
-      <Button variant="outline" size="sm" className="mb-6" onClick={goBack}>
-        <ArrowLeft className="h-4 w-4" /> Retour
-      </Button>
-
-      <header className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            {contrat.numero_contrat ?? "Contrat sans numéro"}
-          </h1>
-          {contrat.entreprise && (
-            <Link
-              to="/admin/clients/$id"
-              params={{ id: contrat.entreprise.id }}
-              className="text-primary hover:underline text-sm inline-flex items-center gap-1.5 mt-1"
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        crumbs={["Contrats", contrat.numero_contrat ?? "Contrat"]}
+        title={contrat.numero_contrat ?? "Contrat sans numéro"}
+        sub={contrat.entreprise?.nom ?? undefined}
+        right={
+          <div className="flex items-center gap-2.5">
+            <span
+              className={cn(
+                "inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border",
+                STATUT_TONE[contrat.statut] ?? STATUT_TONE.resilie
+              )}
             >
-              <Building2 className="h-4 w-4" />
-              {contrat.entreprise.nom}
-            </Link>
-          )}
-        </div>
-        <Badge
-          variant={contrat.statut === "actif" ? "default" : "secondary"}
-          className="self-start sm:self-auto"
-        >
-          {STATUT_LABEL[contrat.statut] ?? contrat.statut}
-        </Badge>
-      </header>
+              {STATUT_LABEL[contrat.statut] ?? contrat.statut}
+            </span>
+            <Button variant="outline" size="sm" onClick={goBack}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Retour
+            </Button>
+          </div>
+        }
+      />
 
-      {contrat.gel_actif && (
-        <GelInfoBanner
-          gelType={contrat.gel_type}
-          gelDateDebut={contrat.gel_date_debut}
-          gelDateFin={contrat.gel_date_fin}
-          gelCommentaire={contrat.gel_commentaire}
-          gelNotifierClient={contrat.gel_notifier_client}
-          onReactivateClick={() => setReactivateDialogOpen(true)}
-        />
-      )}
+      <div className="p-6 lg:p-8 max-w-5xl w-full mx-auto flex flex-col gap-5">
+        {contrat.entreprise && (
+          <Link
+            to="/admin/clients/$id"
+            params={{ id: contrat.entreprise.id }}
+            className="text-primary hover:underline text-sm inline-flex items-center gap-1.5 self-start"
+          >
+            <Building2 className="h-4 w-4" />
+            {contrat.entreprise.nom}
+          </Link>
+        )}
 
-      <Tabs defaultValue="infos" className="w-full">
+        {contrat.gel_actif && (
+          <GelInfoBanner
+            gelType={contrat.gel_type}
+            gelDateDebut={contrat.gel_date_debut}
+            gelDateFin={contrat.gel_date_fin}
+            gelCommentaire={contrat.gel_commentaire}
+            gelNotifierClient={contrat.gel_notifier_client}
+            onReactivateClick={() => setReactivateDialogOpen(true)}
+          />
+        )}
+
+        <Tabs defaultValue="infos" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
           <TabsTrigger value="infos">Infos générales</TabsTrigger>
           <TabsTrigger value="vehicules">
@@ -692,7 +704,8 @@ function ContratDetailPage() {
             <p className="text-muted-foreground">Bientôt disponible</p>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
 
       {/* Resiliation dialog (shared) */}
       <ResiliationContratDialog
