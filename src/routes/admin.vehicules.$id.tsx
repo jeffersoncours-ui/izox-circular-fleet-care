@@ -9,6 +9,7 @@ import { getPackLabel } from "@/lib/pricing";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -188,11 +189,18 @@ function AdminVehiculeDetail() {
     d ? format(parseISO(d), "dd/MM/yyyy", { locale: fr }) : "—";
 
   return (
-    <div className="p-6 lg:p-10 max-w-3xl mx-auto">
-      <Button variant="outline" size="sm" className="mb-6" onClick={goBack}>
-        <ArrowLeft className="h-4 w-4" /> Retour
-      </Button>
-
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        crumbs={["Admin", "Véhicules"]}
+        title={title}
+        sub={vehicule.immatriculation}
+        right={
+          <Button variant="outline" size="sm" onClick={goBack}>
+            <ArrowLeft className="h-4 w-4" /> Retour
+          </Button>
+        }
+      />
+      <div className="p-6 lg:p-8 max-w-3xl w-full mx-auto">
       <Card className="overflow-hidden shadow-card border-border/60 mb-5">
         <div className="aspect-[16/10] bg-muted flex items-center justify-center text-muted-foreground/60 relative overflow-hidden">
           {photoUrl ? (
@@ -206,8 +214,7 @@ function AdminVehiculeDetail() {
           )}
         </div>
         <div className="p-5">
-          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-          <p className="font-mono text-base text-primary mt-1">{vehicule.immatriculation}</p>
+          <p className="font-mono text-base font-bold text-primary">{vehicule.immatriculation}</p>
           <div className="flex items-center gap-2 mt-3 flex-wrap">
             <Badge variant="secondary">{typeLabel}</Badge>
             {vehicule.statut !== "en_attente_validation" && (
@@ -461,6 +468,7 @@ function AdminVehiculeDetail() {
         onClose={() => setBillingState(null)}
         onResolved={() => navigate({ to: "/admin/vehicules" })}
       />
+      </div>
     </div>
   );
 }

@@ -29,6 +29,7 @@ import {
   type Moment,
 } from "@/lib/interventions";
 import { getPackLabel } from "@/lib/pricing";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const Route = createFileRoute("/admin/interventions/$id")({
   component: AdminInterventionDetail,
@@ -221,31 +222,34 @@ function AdminInterventionDetail() {
   const prestationFaite = ["en_revision", "validee", "refusee"].includes(data.statut);
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate({ to: "/admin/planning", search: { tab: "interventions" } })}
-        className="mb-4 -ml-2"
-      >
-        <ArrowLeft className="h-4 w-4 mr-1" /> Retour
-      </Button>
-
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        crumbs={["Admin", "Interventions"]}
+        title={data.vehicules?.immatriculation ?? "Intervention"}
+        sub={[
+          data.entreprises?.nom,
+          [data.vehicules?.marque, data.vehicules?.modele].filter(Boolean).join(" ") || "—",
+          data.date_intervention,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+        right={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate({ to: "/admin/planning", search: { tab: "interventions" } })}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" /> Retour
+          </Button>
+        }
+      />
+      <div className="p-4 md:p-8 max-w-5xl w-full mx-auto">
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-          {data.vehicules?.immatriculation}
-        </h1>
         <Badge className={statutColor(data.statut)} variant="outline">
           {statutLabel(data.statut)}
         </Badge>
         <Badge variant="secondary">{getPackLabel(data.type_prestation)}</Badge>
       </div>
-
-      <p className="text-sm text-muted-foreground mb-6">
-        {data.entreprises?.nom} ·{" "}
-        {[data.vehicules?.marque, data.vehicules?.modele].filter(Boolean).join(" ") || "—"} ·{" "}
-        {data.date_intervention}
-      </p>
 
       {/* Section planification */}
       {(data.date_intervention || data.adresse_intervention || operator) && (
@@ -499,6 +503,7 @@ function AdminInterventionDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
