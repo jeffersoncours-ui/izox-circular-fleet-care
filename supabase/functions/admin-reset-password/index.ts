@@ -3,11 +3,36 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const SITE_URL = Deno.env.get("SITE_URL") ?? "https://izox.fr";
-const corsHeaders = {
-  "Access-Control-Allow-Origin": SITE_URL,
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+
+// Dynamic CORS — reflect the request origin when it is a known IZOX frontend
+// (production site, or any *.vercel.app deploy: canonical app + preview URLs).
+// The static SITE_URL value broke this endpoint when the app is served from a
+// vercel.app domain: the OPTIONS preflight passed but the browser blocked the
+// POST because the allowed origin (izox.fr) didn't match. Authorization is
+// still enforced server-side via JWT + admin role, so reflecting a trusted
+// frontend origin here is safe.
+function corsFor(req: Request): Record<string, string> {
+  const requestOrigin = req.headers.get("Origin") ?? "";
+  let allow = SITE_URL;
+  try {
+    const o = new URL(requestOrigin);
+    if (
+      requestOrigin === SITE_URL ||
+      o.hostname === "izox.fr" ||
+      o.hostname.endsWith(".vercel.app")
+    ) {
+      allow = requestOrigin;
+    }
+  } catch {
+    /* malformed/absent Origin — keep SITE_URL fallback */
+  }
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 function safeRedirectTo(raw: unknown): string {
   const fallback = `${SITE_URL}/reset-password`;
@@ -130,6 +155,7 @@ async function sendResetEmail(
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsFor(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };

@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -52,6 +52,7 @@ interface Props {
 export function EditEntrepriseDialog({ open, onOpenChange, entreprise, onUpdated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [commerciaux, setCommerciaux] = useState<Commercial[]>([]);
+  const [resettingMdp, setResettingMdp] = useState(false);
 
   const [form, setForm] = useState({
     nom: entreprise.nom ?? "",
@@ -106,6 +107,36 @@ export function EditEntrepriseDialog({ open, onOpenChange, entreprise, onUpdated
 
   const update = <K extends keyof typeof form>(k: K) => (v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  // Envoie un email de réinitialisation de mot de passe au compte client lié.
+  const handleResetMdp = async () => {
+    setResettingMdp(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("entreprise_id", entreprise.id)
+        .eq("role", "client")
+        .maybeSingle();
+      if (!profile) {
+        toast.error("Aucun compte client trouvé pour cette entreprise");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+        body: { user_id: profile.id, redirect_to: `${window.location.origin}/reset-password` },
+      });
+      if (error || data?.error) throw new Error(data?.error ?? error?.message ?? "Erreur");
+      if (data?.email_sent) {
+        toast.success("Email de réinitialisation envoyé au client");
+      } else {
+        toast.error(`Email non envoyé : ${data?.email_error ?? "raison inconnue"}`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de la réinitialisation");
+    } finally {
+      setResettingMdp(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,6 +235,25 @@ export function EditEntrepriseDialog({ open, onOpenChange, entreprise, onUpdated
                 checked={form.compte_active}
                 onCheckedChange={(v) => setForm((f) => ({ ...f, compte_active: v }))}
               />
+            </div>
+            <div className="flex items-center justify-between gap-3 sm:col-span-2 rounded-md border border-border/60 p-3">
+              <div className="min-w-0">
+                <Label>Mot de passe du client</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Envoie un email de réinitialisation au compte client.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleResetMdp}
+                disabled={resettingMdp}
+                className="shrink-0"
+              >
+                {resettingMdp ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+                Réinitialiser
+              </Button>
             </div>
           </div>
 

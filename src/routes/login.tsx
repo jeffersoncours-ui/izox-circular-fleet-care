@@ -8,7 +8,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, KeyRound, ArrowLeft, Mail } from "lucide-react";
+import { Loader2, KeyRound, ArrowLeft, Mail, CornerDownLeft } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -102,20 +102,23 @@ function LoginPage() {
   };
 
   const brandHeader = (
-    <div className="bg-background border-b border-border py-10 sm:py-14 flex flex-col items-center justify-center px-6 gap-5">
-      <img
-        src="/logo-izox.png"
-        alt="IZOX — Nettoyage circulaire"
-        className="h-16 sm:h-20 w-auto object-contain"
-      />
-      <div className="text-center max-w-xs">
-        <p className="text-[22px] font-bold tracking-tight text-foreground leading-snug">
-          Une flotte propre,<br />sans friction.
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-          Lavage premium pour vos véhicules pros.
-          Programmez, gelez, suivez — depuis votre poche.
-        </p>
+    <div className="bg-background border-b border-border py-10 sm:py-14 px-6">
+      <div className="max-w-md mx-auto w-full flex flex-col items-start gap-6">
+        <img
+          src="/logo-izox.png"
+          alt="IZOX — Nettoyage circulaire"
+          className="h-14 sm:h-16 w-auto object-contain"
+        />
+        <div className="text-left">
+          <h2 className="text-[28px] sm:text-[32px] font-bold tracking-tight text-foreground leading-[1.1]">
+            Une flotte propre,<br />sans friction.
+            <CornerDownLeft className="inline-block h-5 w-5 sm:h-6 sm:w-6 ml-2 text-primary align-baseline" />
+          </h2>
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+            Lavage premium pour vos véhicules pros.
+            Programmez, gelez, suivez — depuis votre poche.
+          </p>
+        </div>
       </div>
     </div>
   );
