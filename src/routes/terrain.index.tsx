@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -965,6 +965,14 @@ function TabProfil({
           <LogOut className="h-4 w-4 mr-2" />
           Se déconnecter
         </Button>
+        <div className="mt-4 text-center">
+          <Link
+            to="/legal"
+            className="text-xs text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors"
+          >
+            CGV &amp; Confidentialité
+          </Link>
+        </div>
       </div>
     </div>
   );
