@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
+import { VehiculeThumbnail } from "@/components/client/VehiculeThumbnail";
 import { getPackLabel } from "@/lib/pricing";
 
 export const Route = createFileRoute("/client/flotte")({
@@ -26,6 +27,7 @@ interface Vehicule {
   immatriculation: string;
   statut: string;
   type_pack_souhaite: string | null;
+  photo_path: string | null;
 }
 
 function MaFlotte() {
@@ -44,7 +46,7 @@ function MaFlotte() {
     setLoading(true);
     const { data } = await supabase
       .from("vehicules")
-      .select("id, immatriculation, statut, type_pack_souhaite")
+      .select("id, immatriculation, statut, type_pack_souhaite, photo_path")
       .eq("entreprise_id", profile.entreprise_id)
       .in("statut", ["actif", "gele", "en_attente_validation"])
       .order("created_at", { ascending: false });
@@ -89,14 +91,17 @@ function MaFlotte() {
         }}
         className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/20 transition-colors cursor-pointer"
       >
-        <div className={cn(
-          "h-[60px] w-[60px] flex-shrink-0 rounded-md flex items-center justify-center",
-          isGele ? "bg-[#D5E2F6]" : isEnAttente ? "bg-amber-50" : "bg-[#E7EFEA]"
-        )}>
-          {isGele
-            ? <Snowflake className="h-6 w-6 text-[#2A6FDB]" />
-            : <Car className={cn("h-6 w-6", isEnAttente ? "text-amber-600" : "text-primary")} />
-          }
+        <div className="relative flex-shrink-0">
+          <VehiculeThumbnail
+            photoPath={v.photo_path}
+            alt={v.immatriculation}
+            className={isGele ? "opacity-70" : undefined}
+          />
+          {isGele && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#D5E2F6] border border-[#B3C8EF] flex items-center justify-center">
+              <Snowflake className="h-3 w-3 text-[#2A6FDB]" />
+            </span>
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
