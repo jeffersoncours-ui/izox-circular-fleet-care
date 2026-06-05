@@ -69,8 +69,8 @@ serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
   try {
-    const { action, intervention_id, entreprise_id, user_id } = await req.json();
     const authHeader = req.headers.get("Authorization");
+    const { action, intervention_id, entreprise_id, user_id } = await req.json();
 
     // 1. Generate impact records for an intervention
     if (action === "generate") {

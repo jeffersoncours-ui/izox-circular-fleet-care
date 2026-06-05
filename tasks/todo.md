@@ -2,6 +2,49 @@
 
 ---
 
+## Session 2026-06-05 (24) — Audit sécurité complet + hardening
+
+### Plan
+
+- [x] 1. Audit multi-agents (SQL, edge functions, frontend) — 3 agents parallèles
+- [x] 2. Migration DB `20260605020000_security_fixes.sql` — search_path injection, views security_invoker, RLS impact_records, v_contrats_passages_restants fix, assigner_rdv role guard + search_path, calculer_palier_remise thresholds + SECURITY DEFINER, generer_facture SECURITY DEFINER SET search_path, get_max_vehicules_par_demande SECURITY DEFINER
+- [x] 3. `compute-impact/index.ts` — `getCallerRole()` helper + role guards sur `generate` / `validate_intervention` / `get_estimated` (admin/staff only)
+- [x] 4. `update-client-info/index.ts` — CORS wildcard `"*"` → `corsFor(req)` dynamique
+- [x] 5. `admin-reset-password/index.ts` — CORS pattern regex étendu + token exposure (`link: emailSent ? null : actionLink`)
+- [x] 6. `create-client-account/index.ts` — `esc()` helper + `${esc(prenom)}` dans le template HTML
+- [x] 7. `send-email/index.ts` — `.select("role, entreprise_id")` + ownership checks IDOR dans `rdv_annule_client` et `staff_notification`
+- [x] 8. `AssignerRdvDialog.tsx` — double-submit prevention `disabled={!canConfirm || submitting}`
+- [x] 9. `client.flotte.tsx` — React Rules of Hooks : split `MaFlotte` (layout) + `MaFlotteList` (hooks)
+- [x] 10. `terrain.index.tsx` — stale async setState : `let alive = true` + `if (!alive) return` + cleanup `return () => { alive = false }`
+- [x] 11. Déploiement edge functions (compute-impact v6, admin-reset-password v17, update-client-info v2, create-client-account v18, send-email v15)
+- [x] 12. Commit + push branche `claude/izox-fleet-care-resume-yXUX9`
+
+### Review session 24
+
+**Livré — Sécurité hardening complet :**
+
+**DB (migration 20260605020000) :**
+- `search_path` injection éliminé : `assigner_rdv`, `calculer_palier_remise`, `generer_facture`, `get_max_vehicules_par_demande` tous avec `SET search_path = public`
+- `dispatcher_notification` : `CREATE OR REPLACE` (signature préservée, trigger intact) + `search_path`
+- Views avec `security_invoker = true` : `v_entreprises_vehicules_resume`, `v_demandes_gel_with_quota` → RLS s'applique per-caller
+- `v_contrats_passages_restants` : comptait uniquement `validee`, corrigé pour inclure `planifiee|en_cours|en_revision`
+- `calculer_palier_remise` : seuils corrects (5/10/20 interventions, 3%/5%/8%) + SECURITY DEFINER
+- RLS `impact_records` : policies INSERT/UPDATE publiques supprimées
+
+**Edge functions :**
+- `compute-impact` : `getCallerRole()` + guards sur actions sensibles (generate, validate_intervention, get_estimated)
+- `update-client-info` : CORS `"*"` → `corsFor(req)` dynamique (était la seule fonction avec wildcard)
+- `admin-reset-password` : CORS regex durci + token non exposé si email envoyé avec succès
+- `create-client-account` : `esc()` appliqué sur le prénom dans le template HTML
+- `send-email` : ownership checks IDOR sur `rdv_annule_client` et `staff_notification` (client ne peut notifier que sa propre demande)
+
+**Frontend :**
+- `AssignerRdvDialog` : double-submit bloqué par `submitting` state
+- `client.flotte.tsx` : React Rules of Hooks corrigé (split layout/content)
+- `terrain.index.tsx` : cancellation flag `alive` sur async useEffect
+
+---
+
 ## Session 2026-06-05 (23) — Onglet Factures contrat + notifications client complètes
 
 ### Plan

@@ -32,9 +32,7 @@ interface Vehicule {
 
 function MaFlotte() {
   const location = useLocation();
-  if (location.pathname !== "/client/flotte") {
-    return <Outlet />;
-  }
+  if (location.pathname !== "/client/flotte") return <Outlet />;
   return <MaFlotteList />;
 }
 
