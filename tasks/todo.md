@@ -2,6 +2,26 @@
 
 ---
 
+## Session 2026-06-05 (22 suite) — Cookies + RSE charts
+
+### Plan
+
+- [x] 1. `legal.tsx` — retrait banner cookie (état, fonctions, JSX), mise à jour section RGPD "Cookies" (seul cookie session Supabase, pas de Matomo, aucun consentement requis)
+- [x] 2. `client.impact.tsx` — 4ème hero card CO₂ évité (Zap icon, violet), grille 2×2, équivalences (douches économisées, km voiture évités), CO₂ ajouté à l'AreaChart
+- [x] 3. `admin.impact.tsx` — nouvel onglet "Vue globale" (défaut) : 4 KPI cards (interventions, eau, CO₂, clients actifs) + BarChart mensuel interventions + BarChart horizontal eau par client
+- [x] 4. `impact.ts` — `fetchGlobalImpactSummary()` + type `GlobalImpactSummary` exportés
+- [x] 5. Build 0 erreur + tsc 0 erreur + commit + push (`15e8ab6`)
+
+### Review session 22 suite
+
+**Livré :**
+- Cookie banner retiré de tous les portails (était sans objet sur un CRM B2B privé n'utilisant que des cookies techniques essentiels). Section RGPD "Cookies" mise à jour pour refléter la réalité (pas de Matomo, pas d'analytics).
+- RSE client : 4ème carte CO₂ (grille 2×2), section équivalences concrètes (X douches, X km voiture), CO₂ dans le graphe AreaChart.
+- RSE admin : "Vue globale" avec 4 KPIs + 2 BarCharts (tendance mensuelle + répartition par client). Tab actif par défaut.
+- `fetchGlobalImpactSummary()` : agrège toutes les interventions validées tous clients, calcule totaux, timeline mensuelle, top 6 clients par eau économisée.
+
+---
+
 ## Session 2026-06-05 (22) — Module facturation admin + liens /legal
 
 ### Plan
