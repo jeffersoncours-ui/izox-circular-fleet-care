@@ -1,5 +1,16 @@
 # Lessons Learned — IZOX
 
+## Onglet Factures contrat + notifications client (session 23)
+
+- **Audit par `pg_get_functiondef` avant de coder** : avant de modifier les RPCs, vérifier avec `pg_get_functiondef(oid) ILIKE '%notifications_internes%'` quels RPCs ont déjà des notifications. Sur 9 RPCs audités, 5 avaient déjà le pattern, 4 manquaient. Évite de réécrire des fonctions qui n'en ont pas besoin et identifie précisément la dette.
+- **`CREATE OR REPLACE FUNCTION` nécessite le corps complet** : PostgreSQL ne permet pas d'ajouter du code à une fonction existante. Pour enrichir un RPC, récupérer la définition complète via `pg_get_functiondef`, ajouter le code minimal (variables DECLARE + INSERT conditionnel en fin de corps), et remplacer. Toujours copier la définition exacte de la version cible (la plus récente en cas de surcharge) pour ne pas régresser.
+- **Pattern notification client standard** : `SELECT p.id INTO v_client_uid FROM profiles p JOIN user_roles ur ON ur.user_id = p.id WHERE p.entreprise_id = <id> AND ur.role = 'client' LIMIT 1` — puis `IF v_client_uid IS NOT NULL THEN INSERT INTO notifications_internes ...`. Le `LIMIT 1` est correct (un seul compte client par entreprise). Le `IF v_client_uid IS NOT NULL` évite l'erreur si aucun client n'est lié.
+- **INSERT RLS `notifications_internes` dans un SECURITY DEFINER** : la policy INSERT `has_role(auth.uid(), 'admin')` vérifie le JWT claims (`request.jwt.claims->>'sub'`), pas le DB role. Dans une SECURITY DEFINER function, `auth.uid()` retourne toujours l'UID de l'appelant (lu dans les GUC JWT). L'INSERT par un admin dans la fonction passera donc bien le check RLS, même si le `user_id` inséré est celui d'un client.
+- **Onglet Factures contrat vs client — seul le filtre change** : la page client montre TOUTES les factures de l'entreprise (`entreprise_id`). L'onglet contrat montre les factures liées à CE contrat (`contrat_id`). Le composant `FacturesTab` est identique sauf la prop et le filtre. Pas besoin de refactoring commun — les deux vues sont légitimement différentes.
+- **`action_requise=true` pour les événements négatifs** : les notifications d'annulation (`rdv_annule_admin`) utilisent `action_requise=true` pour signaler que le client doit agir (prendre un nouveau RDV). Les confirmations et modifications d'horaire utilisent `action_requise=false`.
+
+
+
 ## Cookies B2B + RSE charts (session 22)
 
 - **Une bannière cookies sur un CRM B2B privé est une faute, pas une conformité** : le banner annonçait des cookies Matomo « soumis à consentement » qui n'existaient pas dans le code (aucun analytics chargé). Afficher un consentement pour des traceurs absents est trompeur. La règle RGPD/ePrivacy : seuls les cookies **non essentiels** (analytics, pub, tracking cross-site) requièrent un consentement ; un cookie de **session d'authentification** est exempté. IZOX n'utilise que ce dernier (JWT Supabase) → suppression totale du banner + réécriture de la section RGPD pour dire la vérité. Toujours vérifier ce qui est **réellement** chargé avant d'écrire une politique de cookies.

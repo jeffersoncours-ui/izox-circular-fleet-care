@@ -2,6 +2,42 @@
 
 ---
 
+## Session 2026-06-05 (23) — Onglet Factures contrat + notifications client complètes
+
+### Plan
+
+- [x] 1. `admin.contrats.$id.tsx` — onglet Factures : remplace placeholder par `FacturesTab` (filtre `contrat_id`, copie pattern `admin.clients.$id`) — build 0 erreur (`e062687`)
+- [x] 2. Audit notifications : `valider_vehicule`/`valider_gel`/`refuser_gel` ✅ déjà faits ; `assigner_rdv`/`annuler_rdv_admin`/`modifier_heure_rdv`/`emettre_facture` ❌ manquants
+- [x] 3. Migration `20260605010000` — notifications client dans les 4 RPCs manquants, validé en DB (`46eb300`)
+- [x] 4. Push branche `claude/izox-fleet-care-resume-yXUX9`
+
+### Review session 23
+
+**Livré :**
+- Onglet Factures dans `/admin/contrats/$id` : liste réelle + dialog détail imprimable (FactureDocument). Admin voit tous statuts (brouillons inclus). Filtre `contrat_id`.
+- Notifications client complètes : les 4 RPCs (`assigner_rdv`, `annuler_rdv_admin`, `modifier_heure_rdv`, `emettre_facture`) insèrent désormais une `notification_interne` pour le `user_id` client de l'entreprise concernée — exactement comme `valider_vehicule`.
+
+**État notifications client après cette session :**
+| Événement | Notification client |
+|-----------|---------------------|
+| Véhicule validé | ✅ `valider_vehicule` |
+| Gel approuvé | ✅ `valider_gel` |
+| Gel refusé | ✅ `refuser_gel` |
+| RDV confirmé | ✅ `assigner_rdv` (session 23) |
+| RDV annulé par IZOX | ✅ `annuler_rdv_admin` (session 23) |
+| Horaire RDV modifié | ✅ `modifier_heure_rdv` (session 23) |
+| Facture émise | ✅ `emettre_facture` (session 23) |
+
+**Validation empirique :**
+- Colonnes SQL `factures.contrat_id` validées en base
+- 4 RPCs vérifiés via `pg_get_functiondef` : tous `has_notification=true`, `has_client_uid=true`
+- DB vierge (4 comptes tech, 0 client) → test RLS ignoré normalement ; pattern identique à `valider_vehicule` déjà validé en prod
+
+**Reste à faire :**
+- [ ] Merge sur `main` + purge DB si besoin
+
+---
+
 ## Session 2026-06-05 (22 suite) — Cookies + RSE charts
 
 ### Plan
