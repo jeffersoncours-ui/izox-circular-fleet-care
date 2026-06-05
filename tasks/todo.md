@@ -2,6 +2,23 @@
 
 ---
 
+## Session 2026-06-05 (20) — Correctifs UI (lot 2)
+
+### Plan
+
+- [x] 1. `login.tsx` — hero blanc (bg-background) + tagline "Une flotte propre, sans friction." sous le logo
+- [x] 2. `admin.index.tsx` + `page-header.tsx` — StatTile `h-full` pour égaliser la hauteur des 4 KPI cards
+- [x] 3. `admin.clients.$id.tsx` — boutons : 3 en ligne (Ajouter / Modifier / MDP toujours visible) + Archiver en barre pleine largeur dessous ; explication disabled quand contrat actif
+- [x] 4. `PlanningCalendar.tsx` — `goToday()` bascule aussi en vue "Jour" pour rendre le clic visible
+- [ ] 5. Build + commit + push
+
+### Contexte décisions
+- **Archiver désactivé** : volontaire — `disabled={nbContratsActifs > 0}` → résilier le contrat d'abord. Info affichée dans le titre du bouton.
+- **Bouton MDP** : envoie un email via edge function `admin-reset-password`. Profil client confirmé en DB (jeffersonjouenne@outlook.com, entreprise_id lié). Le texte "MDP" était caché sur mobile → toujours visible désormais.
+- **Planning "Aujourd'hui"** : bug UX — si déjà sur la semaine courante en vue Semaine, le clic ne changeait rien visuellement. Fix : bascule en vue Jour pour que la journée soit bien visible.
+
+---
+
 ## Session 2026-06-05 (19) — Phase C : Factures & Documents (B3)
 
 **Constat audit** : aucun bouton "télécharger facture" n'existe (mémoire user erronée).

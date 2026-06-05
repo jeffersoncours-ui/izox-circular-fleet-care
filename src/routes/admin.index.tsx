@@ -113,13 +113,13 @@ function AdminDashboard() {
         {/* KPI row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
           {kpis.map(({ label, value, sub, accent, to, search }) => (
-            <Link key={label} to={to} search={search} className="block group">
+            <Link key={label} to={to} search={search} className="block group h-full">
               <StatTile
                 label={label}
                 value={value}
                 sub={sub}
                 accent={accent}
-                className="group-hover:border-primary/25 group-hover:shadow-strong transition-all duration-150"
+                className="h-full group-hover:border-primary/25 group-hover:shadow-strong transition-all duration-150"
               />
             </Link>
           ))}

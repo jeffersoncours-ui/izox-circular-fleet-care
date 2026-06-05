@@ -233,32 +233,37 @@ function ClientDetailPage() {
         title={entreprise.nom}
         sub={`${TYPE_LABEL[entreprise.type_client] ?? entreprise.type_client}${entreprise.email_contact ? ` · ${entreprise.email_contact}` : ""}${!entreprise.compte_active ? " · Désactivé" : ""}`}
         right={
-          <div className="flex gap-2 flex-wrap">
-            <Button size="sm" onClick={() => setAddOpen(true)}>
-              <Plus className="h-3.5 w-3.5" /> Ajouter un véhicule
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
-              <Pencil className="h-3.5 w-3.5" /> Modifier
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetMdp}
-              disabled={resettingMdp}
-              title="Envoyer un email de réinitialisation de mot de passe au client"
-            >
-              {resettingMdp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
-              <span className="hidden sm:inline">MDP</span>
-            </Button>
+          <div className="flex flex-col gap-2 w-full sm:w-auto">
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => setAddOpen(true)}>
+                <Plus className="h-3.5 w-3.5" /> Ajouter un véhicule
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
+                <Pencil className="h-3.5 w-3.5" /> Modifier
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetMdp}
+                disabled={resettingMdp}
+                title="Envoyer un email de réinitialisation de mot de passe au client"
+              >
+                {resettingMdp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+                MDP
+              </Button>
+            </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setArchiveOpen(true)}
               disabled={nbContratsActifs > 0}
               title={nbContratsActifs > 0 ? "Résilier le contrat avant d'archiver" : "Masquer le client tout en conservant ses données"}
-              className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 disabled:opacity-40"
+              className="w-full text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 disabled:opacity-40"
             >
               <Archive className="h-3.5 w-3.5" /> Archiver
+              {nbContratsActifs > 0 && (
+                <span className="ml-1 text-[10px] font-normal opacity-70">— contrat actif</span>
+              )}
             </Button>
           </div>
         }

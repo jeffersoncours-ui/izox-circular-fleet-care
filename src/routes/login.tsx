@@ -102,12 +102,21 @@ function LoginPage() {
   };
 
   const brandHeader = (
-    <div className="bg-primary py-12 sm:py-16 flex items-center justify-center px-4">
+    <div className="bg-background border-b border-border py-10 sm:py-14 flex flex-col items-center justify-center px-6 gap-5">
       <img
         src="/logo-izox.png"
         alt="IZOX — Nettoyage circulaire"
         className="h-16 sm:h-20 w-auto object-contain"
       />
+      <div className="text-center max-w-xs">
+        <p className="text-[22px] font-bold tracking-tight text-foreground leading-snug">
+          Une flotte propre,<br />sans friction.
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+          Lavage premium pour vos véhicules pros.
+          Programmez, gelez, suivez — depuis votre poche.
+        </p>
+      </div>
     </div>
   );
 
