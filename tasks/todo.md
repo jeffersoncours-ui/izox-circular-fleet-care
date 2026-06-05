@@ -2,6 +2,34 @@
 
 ---
 
+## Session 2026-06-05 (22) — Module facturation admin + liens /legal
+
+### Plan
+
+- [x] 1. `admin.facturation.tsx` — page complète (KPIs brouillons/émises/payées/CA mois, filtres statut+recherche, liste cross-client avec actions Émettre/Payée/Supprimer brouillon, dialog Clôture mensuelle, dialog détail imprimable)
+- [x] 2. `AdminSidebar.tsx` — lien "CGV & Confidentialité" dans le footer (avant Déconnexion)
+- [x] 3. `ClientNav.tsx` — lien légal discret au-dessus de la bottom nav mobile
+- [x] 4. `terrain.index.tsx` — lien légal en bas du tab Profil opérateur
+- [x] 5. `izox-legal.ts` — retrait `tvaIntracom` (inutilisé, N/A franchise de base) + marqueurs `TODO_LEGAL` clairs
+- [x] 6. Build 0 erreur + tsc 0 erreur + commit + push (`3744c2e`)
+
+### Review session 22
+
+**Livré :**
+- Module facturation admin `/admin/facturation` : liste globale toutes factures, 4 KPIs, filtres pills + recherche, actions par statut (Émettre → `emettre_facture` RPC, Payée → UPDATE direct permis par la machine d'états, Supprimer brouillon), dialog Clôture mensuelle (sélection mois/année, liste contrats actifs, `generer_facture` idempotent, rapport résultats créé/vide/erreur), dialog détail/impression réutilisant `FactureDocument`.
+- Lien `/legal` dans les 3 portails : AdminSidebar footer, ClientBottomNav (barre discrète au-dessus des tabs), tab Profil terrain.
+- `izox-legal.ts` : `tvaIntracom` retiré (franchise de base = pas de N° TVA), marqueurs `TODO_LEGAL` uniformisés.
+
+**Décisions techniques :**
+- UPDATE direct `statut='payee' + date_paiement` sur facture émise : permis par `trg_protect_facture_immuable` (seuls les champs métier sont figés, pas statut/date_paiement) + validé par `trg_factures_machine_etats` (emise→payee autorisé si date_paiement non null).
+- `snapshot_client.raison_sociale` pour le nom client en liste (pas de join, toujours disponible depuis le snapshot immuable).
+- `generer_facture` idempotent : retourne null si 0 prestation validée, UUID si créée ou existante.
+
+**À faire avant production :**
+- Remplacer les `TODO_LEGAL` dans `izox-legal.ts` par les vraies valeurs SIRET/adresse/IBAN une fois la société créée.
+
+---
+
 ## Session 2026-06-05 (21) — Correctifs UI (lot 3) + fix CORS reset MDP
 
 ### Plan
