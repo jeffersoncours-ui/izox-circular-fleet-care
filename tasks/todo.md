@@ -2,6 +2,22 @@
 
 ---
 
+## Session 2026-06-05 (21) — Correctifs UI (lot 3) + fix CORS reset MDP
+
+### Plan
+
+- [x] 1. `login.tsx` — texte titre/sous-titre aligné à gauche + flèche verte `CornerDownLeft` après "sans friction." ; logo **recentré** (`mx-auto`) et agrandi (`h-[72px]/sm:h-24`)
+- [x] 2. `admin-reset-password` (edge function) — **CORS dynamique** (`corsFor(req)`) reflétant `izox.fr` + tout `*.vercel.app`. Déployé v15.
+- [x] 3. `admin.clients.$id.tsx` + `EditEntrepriseDialog.tsx` — bouton MDP retiré du header (corrige le débordement horizontal) → déplacé dans le dialog "Modifier" (section "Mot de passe du client → Réinitialiser")
+- [x] 4. `admin.clients.$id.tsx` — boutons d'action sortis du `PageHeader` vers le conteneur de contenu → mêmes bords gauche/droit que les cartes. Mobile : grille `[1.6fr_1fr]` (Ajouter + Modifier) + Archiver pleine largeur. Desktop : ligne alignée à droite.
+- [x] 5. Build 0 erreur + commits + push (`d5bdabc`, `4c1a1cb`)
+
+### Contexte décisions / cause racine
+- **Cause racine bouton MDP en erreur** : `admin-reset-password` utilisait un CORS statique `Access-Control-Allow-Origin: SITE_URL` (= `izox.fr`). Servie depuis un domaine `*.vercel.app`, l'OPTIONS preflight passait (200) mais le navigateur **bloquait le POST** (origine non concordante). Preuve dans les logs edge : que des OPTIONS, jamais de POST. Fix mirror du pattern `request-password-reset`. **Confirmé fonctionnel par l'utilisateur** (email reçu côté client).
+- **Logo login** : seul le texte devait être à gauche, le logo reste centré (correction du lot précédent qui avait tout aligné à gauche).
+
+---
+
 ## Session 2026-06-05 (20) — Correctifs UI (lot 2)
 
 ### Plan
@@ -10,11 +26,11 @@
 - [x] 2. `admin.index.tsx` + `page-header.tsx` — StatTile `h-full` pour égaliser la hauteur des 4 KPI cards
 - [x] 3. `admin.clients.$id.tsx` — boutons : 3 en ligne (Ajouter / Modifier / MDP toujours visible) + Archiver en barre pleine largeur dessous ; explication disabled quand contrat actif
 - [x] 4. `PlanningCalendar.tsx` — `goToday()` bascule aussi en vue "Jour" pour rendre le clic visible
-- [ ] 5. Build + commit + push
+- [x] 5. Build + commit + push
 
 ### Contexte décisions
 - **Archiver désactivé** : volontaire — `disabled={nbContratsActifs > 0}` → résilier le contrat d'abord. Info affichée dans le titre du bouton.
-- **Bouton MDP** : envoie un email via edge function `admin-reset-password`. Profil client confirmé en DB (jeffersonjouenne@outlook.com, entreprise_id lié). Le texte "MDP" était caché sur mobile → toujours visible désormais.
+- **Bouton MDP** : envoie un email via edge function `admin-reset-password`. Le texte "MDP" était caché sur mobile → toujours visible (puis déplacé dans le dialog Modifier en session 21).
 - **Planning "Aujourd'hui"** : bug UX — si déjà sur la semaine courante en vue Semaine, le clic ne changeait rien visuellement. Fix : bascule en vue Jour pour que la journée soit bien visible.
 
 ---

@@ -1,5 +1,12 @@
 # Lessons Learned — IZOX
 
+## CORS statique vs dynamique sur edge function authentifiée (session 21)
+
+- **`Access-Control-Allow-Origin: SITE_URL` statique casse une fonction servie depuis `*.vercel.app`** : `admin-reset-password` figeait l'origine à `izox.fr` (SITE_URL). Servie depuis le domaine Vercel (prod ou preview), le navigateur recevait le preflight OPTIONS 200 PUIS **bloquait le POST** car l'origine de la réponse (`izox.fr`) ≠ origine de la requête (`*.vercel.app`). Côté client, `supabase.functions.invoke` renvoyait `{ error }` générique → toast "Erreur" trompeur (aucune erreur serveur réelle).
+- **Signature diagnostique dans les logs edge : OPTIONS sans POST** : `get_logs(service: "edge-function")` montrait des `OPTIONS | 200` répétés pour `admin-reset-password` mais **aucun `POST`**. C'est LA signature d'un rejet de preflight CORS au niveau navigateur (le POST n'atteint jamais la fonction). Toujours regarder ce ratio OPTIONS/POST avant de suspecter la logique métier.
+- **Fix = CORS dynamique reflété** : `corsFor(req)` lit `Origin`, et si l'hôte est `izox.fr` ou se termine par `.vercel.app`, reflète l'origine exacte (sinon fallback `SITE_URL`). Ajouter `"Vary": "Origin"`. Couvre prod + canonical app + tous les déploiements preview (URLs changeantes). La sécurité reste assurée **côté serveur** (JWT + vérif rôle admin) — le CORS n'est pas la frontière d'autorisation, donc refléter un preview vercel est sûr. Pattern identique à `request-password-reset` (déjà éprouvé).
+- **Réseau sortant bloqué dans le container** : impossible de `curl` `*.supabase.co` depuis l'env d'exécution ("Host not in allowlist", même avec sandbox désactivé). La validation HTTP en direct du header CORS doit se faire via le test utilisateur sur l'app déployée. La validation "empirique" possible ici = logs edge (cause racine) + parité avec un pattern connu + build OK.
+
 ## Phase C — Factures & Documents (session 19)
 
 - **Rendre depuis les snapshots, jamais les tables live** : une facture est un document légal immuable. `generer_facture` fige `snapshot_client` / `snapshot_izox` / `snapshot_contrat` / `snapshot_prestations` (JSONB) + les `factures_lignes`. La page de détail lit ces snapshots, pas les jointures live (sinon un changement d'adresse entreprise modifierait une facture déjà émise). Lire la source de la RPC pour connaître la forme EXACTE des snapshots avant de typer le frontend.
