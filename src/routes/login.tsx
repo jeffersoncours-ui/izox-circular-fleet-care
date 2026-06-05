@@ -103,13 +103,13 @@ function LoginPage() {
 
   const brandHeader = (
     <div className="bg-background border-b border-border py-10 sm:py-14 px-6">
-      <div className="max-w-md mx-auto w-full flex flex-col items-start gap-6">
+      <div className="max-w-md mx-auto w-full flex flex-col gap-6">
         <img
           src="/logo-izox.png"
           alt="IZOX — Nettoyage circulaire"
-          className="h-14 sm:h-16 w-auto object-contain"
+          className="h-[72px] sm:h-24 w-auto object-contain mx-auto"
         />
-        <div className="text-left">
+        <div className="w-full text-left">
           <h2 className="text-[28px] sm:text-[32px] font-bold tracking-tight text-foreground leading-[1.1]">
             Une flotte propre,<br />sans friction.
             <CornerDownLeft className="inline-block h-5 w-5 sm:h-6 sm:w-6 ml-2 text-primary align-baseline" />

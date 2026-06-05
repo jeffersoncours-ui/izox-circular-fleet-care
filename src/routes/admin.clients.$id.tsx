@@ -202,34 +202,34 @@ function ClientDetailPage() {
         crumbs={["Clients", entreprise.nom]}
         title={entreprise.nom}
         sub={`${TYPE_LABEL[entreprise.type_client] ?? entreprise.type_client}${entreprise.email_contact ? ` · ${entreprise.email_contact}` : ""}${!entreprise.compte_active ? " · Désactivé" : ""}`}
-        right={
-          <div className="flex flex-col gap-2 w-full sm:w-auto">
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => setAddOpen(true)}>
-                <Plus className="h-3.5 w-3.5" /> Ajouter un véhicule
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
-                <Pencil className="h-3.5 w-3.5" /> Modifier
-              </Button>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setArchiveOpen(true)}
-              disabled={nbContratsActifs > 0}
-              title={nbContratsActifs > 0 ? "Résilier le contrat avant d'archiver" : "Masquer le client tout en conservant ses données"}
-              className="w-full text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 disabled:opacity-40"
-            >
-              <Archive className="h-3.5 w-3.5" /> Archiver
-              {nbContratsActifs > 0 && (
-                <span className="ml-1 text-[10px] font-normal opacity-70">— contrat actif</span>
-              )}
-            </Button>
-          </div>
-        }
       />
 
       <div className="p-6 lg:p-8 max-w-5xl w-full mx-auto flex flex-col gap-4">
+
+      {/* Actions — mêmes bords que les cartes ci-dessous */}
+      <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-[1.6fr_1fr] gap-2 sm:flex sm:justify-end">
+          <Button size="sm" onClick={() => setAddOpen(true)}>
+            <Plus className="h-3.5 w-3.5" /> Ajouter un véhicule
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
+            <Pencil className="h-3.5 w-3.5" /> Modifier
+          </Button>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setArchiveOpen(true)}
+          disabled={nbContratsActifs > 0}
+          title={nbContratsActifs > 0 ? "Résilier le contrat avant d'archiver" : "Masquer le client tout en conservant ses données"}
+          className="w-full sm:w-auto sm:self-end text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 disabled:opacity-40"
+        >
+          <Archive className="h-3.5 w-3.5" /> Archiver
+          {nbContratsActifs > 0 && (
+            <span className="ml-1 text-[10px] font-normal opacity-70">— contrat actif</span>
+          )}
+        </Button>
+      </div>
 
       <Card className="p-5 shadow-card border-border/60">
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
