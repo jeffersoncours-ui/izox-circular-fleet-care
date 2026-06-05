@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState, useEffect } from "react";
-import { ChevronLeft, Cookie } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { RoleGuard } from "@/components/RoleGuard";
 import { useAuth, rolePath } from "@/lib/auth-context";
 
@@ -143,13 +143,11 @@ Pour exercer vos droits, contactez notre DPO à dpo@izox.fr ou par courrier. Vou
   {
     id: "cookies",
     title: "6. Cookies et traceurs",
-    content: `IZOX Pro utilise les types de cookies suivants :
+    content: `IZOX Pro utilise uniquement des cookies strictement nécessaires au fonctionnement de l'application :
 
-• Cookies strictement nécessaires : authentification, session, sécurité CSRF. Ces cookies ne peuvent pas être désactivés.
-• Cookies de performance (Matomo) : mesure d'audience anonymisée, hébergée en France. Soumis à consentement.
-• Cookies de fonctionnalité : mémorisation des préférences (langue, thème). Soumis à consentement.
+• Cookie de session d'authentification (Supabase) : maintient votre connexion sécurisée durant la session. Obligatoire, ne peut pas être désactivé.
 
-Aucun cookie publicitaire ou de tracking cross-site n'est utilisé. Vous pouvez gérer vos préférences via le gestionnaire de cookies accessible depuis le pied de page.`,
+Aucun cookie analytique (Matomo, Google Analytics), publicitaire ou de tracking cross-site n'est utilisé. La plateforme étant un CRM B2B à accès restreint, aucun consentement supplémentaire n'est requis au titre du RGPD ou de la directive ePrivacy pour ces cookies techniques.`,
   },
   {
     id: "securite",
@@ -192,7 +190,6 @@ function LegalPage() {
   const [activeSection, setActiveSection] = useState<string>("objet");
   const [cgvAccepted, setCgvAccepted] = useState(false);
   const [cgvAcceptDate, setCgvAcceptDate] = useState<string | null>(null);
-  const [showCookieBanner, setShowCookieBanner] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const sections = tab === "cgv" ? CGV_SECTIONS : RGPD_SECTIONS;
@@ -210,10 +207,7 @@ function LegalPage() {
           }),
         );
       }
-      if (!localStorage.getItem("izox_cookie_consent")) {
-        setShowCookieBanner(true);
-      }
-    } catch {
+} catch {
       // localStorage unavailable
     }
   }, []);
@@ -249,17 +243,6 @@ function LegalPage() {
     });
     setCgvAccepted(true);
     setCgvAcceptDate(date);
-  };
-
-  const acceptCookies = () => {
-    try {
-      localStorage.setItem("izox_cookie_consent", String(Date.now()));
-    } catch {}
-    setShowCookieBanner(false);
-  };
-
-  const refuseCookies = () => {
-    setShowCookieBanner(false);
   };
 
   return (
@@ -423,44 +406,6 @@ function LegalPage() {
           </div>
         </div>
 
-        {/* Cookie banner */}
-        {showCookieBanner && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-[0_-4px_24px_rgba(17,24,39,.08)] px-6 py-3 flex items-center gap-4 flex-wrap">
-            <Cookie className="h-5 w-5 text-primary flex-shrink-0" />
-            <div className="flex-1 min-w-[260px]">
-              <p className="text-xs font-semibold text-foreground mb-0.5">
-                Gestion des cookies
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Nous utilisons des cookies nécessaires au fonctionnement, ainsi que des cookies
-                d'analyse anonymisée (Matomo, hébergé en France).{" "}
-                <button
-                  onClick={() => {
-                    setTab("rgpd");
-                    setTimeout(() => scrollToSection("cookies"), 100);
-                  }}
-                  className="text-primary font-semibold hover:underline"
-                >
-                  Personnaliser mes choix
-                </button>
-              </p>
-            </div>
-            <div className="flex gap-2 flex-shrink-0">
-              <button
-                onClick={refuseCookies}
-                className="text-xs px-3 py-1.5 border border-border rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
-              >
-                Refuser les optionnels
-              </button>
-              <button
-                onClick={acceptCookies}
-                className="text-xs px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-semibold"
-              >
-                Accepter
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </RoleGuard>
   );
