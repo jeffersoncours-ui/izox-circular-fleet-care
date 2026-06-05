@@ -2,6 +2,33 @@
 
 ---
 
+## Session 2026-06-04 (18) — Audit sécurité complet + Phase B
+
+### Audit & correctifs sécurité ✅ TERMINÉ
+
+- [x] **CRITIQUE** : `seed-users` — endpoint public `verify_jwt=false` avec mot de passe admin hardcodé `Izox2026!` → désactivé (410 Gone), redéployé v4 immédiatement. DB vérifiée : 4 comptes légitimes seulement, zéro exploitation.
+- [x] **CORS `*`** sur 6 edge functions → remplacé par `SITE_URL` (statique pour les fonctions authentifiées, dynamique + validation `Origin` pour `request-password-reset`)
+- [x] **XSS email templates** — `send-email` : ajout `esc()` (HTML-escape) sur toutes les valeurs user-controlled injectées dans les templates HTML
+- [x] **Open redirect** — `redirect_to` dans 3 fonctions (`request-password-reset`, `admin-reset-password`, `create-client-account`) → validé par `safeRedirectTo()` (whitelist origin)
+- [x] **robots.txt** — créé avec blocage complet : `Disallow: /` global + blocage explicite de 20 crawlers IA (GPTBot, Claude, CCBot, etc.)
+- [x] **vercel.json** — ajout headers sécurité : `X-Robots-Tag`, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-XSS-Protection`
+- [x] **`__root.tsx`** — meta robots : `noindex, nofollow, noarchive, nosnippet` + blocage crawlers IA en meta tags
+- [x] Déploiement 6 edge functions sécurisées (send-email v13, request-password-reset v6, admin-reset-password v13, create-client-account v16, geocode-address v2, compute-impact v4)
+- [x] `npm install` + `npx tsc --noEmit` → 0 erreur
+
+### Phase B — Code nouveau ✅ TERMINÉ (commit `65de7d0`)
+
+- [x] **B1. RGPD/CGV** `/legal` — route créée, 2 onglets, sidebar 220px smooth-scroll, 8 sections CGV + 8 RGPD, bloc acceptation localStorage `izox_cgv_accepted`, bannière cookies localStorage `izox_cookie_consent`
+- [x] **B2. Demandes RDV split view** — `DemandesRdvList.tsx` refactorisé : filter pills, split 40%/60%, `DemandesRdvMap.tsx` (Leaflet markers colorés par statut, hover → pin actif + zoom + popup), logique métier/dialogs intacts
+
+### Review session 18
+
+**Sécurité :** 1 faille critique neutralisée (`seed-users` public + mdp hardcodé), CORS hardened sur 6 fonctions, XSS email templates corrigé, open redirect bloqué, triple défense anti-crawlers IA.
+
+**Phase B :** B1 + B2 livrés, build 0 erreur, TS 0 erreur. `routeTree.gen.ts` régénéré par le build (pattern confirmé : créer la route, lancer le build, TS passe).
+
+---
+
 ## Session 2026-06-04 (17) — Handoff v2 : 5 nouveaux écrans
 
 **Handoff reçu** : `IZOX-handoff-v2/` (commité). 5 écrans : Planning board, Carte, Demandes RDV split view, 2FA, RGPD/CGV.

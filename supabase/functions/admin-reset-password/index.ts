@@ -2,11 +2,27 @@
 // Also sends a branded password-reset email via Resend automatically.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://izox.fr";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": SITE_URL,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+function safeRedirectTo(raw: unknown): string {
+  const fallback = `${SITE_URL}/reset-password`;
+  if (!raw || typeof raw !== "string") return fallback;
+  try {
+    const parsed = new URL(raw);
+    const allowed = new Set([
+      new URL(SITE_URL).origin,
+      new URL("https://izox-circular-fleet-care.vercel.app").origin,
+    ]);
+    return allowed.has(parsed.origin) ? raw : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function buildResetText(link: string): string {
   return `Bonjour,
@@ -173,7 +189,7 @@ Deno.serve(async (req) => {
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo: redirect_to || `${siteUrl}/reset-password` },
+      options: { redirectTo: safeRedirectTo(redirect_to) },
     });
 
     if (error) throw error;

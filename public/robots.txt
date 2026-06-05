@@ -1,0 +1,83 @@
+# IZOX Circular Fleet Care — robots.txt
+# SaaS B2B : toutes les pages applicatives sont confidentielles.
+# Seule la page de connexion est tolérée ; le reste est interdit à tout crawler.
+
+# ─── Moteurs de recherche classiques ────────────────────────────────────────
+User-agent: *
+Disallow: /
+Allow: /login
+
+# ─── Crawlers IA — blocage total ────────────────────────────────────────────
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+# Anthropic / Claude
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+# Common Crawl (source principale des LLMs open-source)
+User-agent: CCBot
+Disallow: /
+
+# Google (Bard / Gemini training)
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: GoogleOther
+Disallow: /
+
+# Meta (LLaMA training)
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+# Apple (AppleBot)
+User-agent: Applebot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+# Cohere
+User-agent: cohere-ai
+Disallow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Disallow: /
+
+# Bytedance / TikTok
+User-agent: Bytespider
+Disallow: /
+
+# Amazon / Alexa
+User-agent: Amazonbot
+Disallow: /
+
+# Scrapers génériques
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
