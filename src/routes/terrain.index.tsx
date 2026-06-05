@@ -741,6 +741,7 @@ function TabObservations({ userId }: { userId: string }) {
   useEffect(() => {
     if (!selectedEntId) { setInterventions([]); setObservations({}); return; }
     setLoadingInts(true);
+    let alive = true;
     (async () => {
       const { data: intData } = await supabase
         .from("interventions")
@@ -749,6 +750,7 @@ function TabObservations({ userId }: { userId: string }) {
         .in("statut", ["en_revision", "validee"])
         .order("date_intervention", { ascending: false })
         .limit(50);
+      if (!alive) return;
       const ints = (intData as unknown as InterventionObs[]) ?? [];
       setInterventions(ints);
 
@@ -759,6 +761,7 @@ function TabObservations({ userId }: { userId: string }) {
           .select("intervention_id, note")
           .in("intervention_id", ids)
           .eq("operateur_id", userId);
+        if (!alive) return;
         const obsMap: Record<string, string> = {};
         for (const row of (obsData ?? []) as any[]) {
           obsMap[row.intervention_id] = row.note ?? "";
@@ -767,6 +770,7 @@ function TabObservations({ userId }: { userId: string }) {
       }
       setLoadingInts(false);
     })();
+    return () => { alive = false; };
   }, [selectedEntId, userId]);
 
   const saveObservation = async (interventionId: string, note: string) => {

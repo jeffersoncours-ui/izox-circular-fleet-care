@@ -48,6 +48,15 @@ interface Payload {
   redirect_to?: string;
 }
 
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 function buildWelcomeText(prenom: string, link: string): string {
   return `Bonjour ${prenom},
 
@@ -89,7 +98,7 @@ function buildWelcomeHtml(prenom: string, link: string): string {
           <tr>
             <td style="padding:36px">
               <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Bienvenue chez IZOX ✓</h2>
-              <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${prenom},</p>
+              <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${esc(prenom)},</p>
               <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6">
                 Votre compte IZOX vient d'être créé. Cliquez sur le bouton ci-dessous pour
                 <strong style="color:#1B4332">définir votre mot de passe</strong> et accéder à votre espace client.

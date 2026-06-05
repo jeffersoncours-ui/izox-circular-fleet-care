@@ -54,15 +54,28 @@ const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: CORS });
 
+async function getCallerRole(authHeader: string | null): Promise<string | null> {
+  if (!authHeader) return null;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const userClient = createClient(SUPABASE_URL, anonKey, { global: { headers: { Authorization: authHeader } } });
+  const { data: userData } = await userClient.auth.getUser();
+  if (!userData.user) return null;
+  const { data: profile } = await db.from("profiles").select("role").eq("id", userData.user.id).maybeSingle();
+  return profile?.role ?? null;
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
   try {
+    const authHeader = req.headers.get("Authorization");
     const { action, intervention_id, entreprise_id, user_id } = await req.json();
 
     // 1. Generate impact records for an intervention
     if (action === "generate") {
+      const role = await getCallerRole(authHeader);
+      if (!role || !["admin", "staff"].includes(role)) return json({ error: "Accès refusé" }, 403);
       const { data: inter, error: interErr } = await db
         .from("interventions")
         .select("*")
@@ -163,6 +176,8 @@ serve(async (req: Request) => {
 
     // 4. Validate records by intervention
     if (action === "validate_intervention") {
+      const role = await getCallerRole(authHeader);
+      if (!role || !["admin", "staff"].includes(role)) return json({ error: "Accès refusé" }, 403);
       const now = new Date().toISOString();
       const { error: err } = await db
         .from("impact_records")
@@ -189,6 +204,8 @@ serve(async (req: Request) => {
 
     // 6. Get estimated records (admin validation queue)
     if (action === "get_estimated") {
+      const role = await getCallerRole(authHeader);
+      if (!role || !["admin", "staff"].includes(role)) return json({ error: "Accès refusé" }, 403);
       const { data, error: err } = await db
         .from("impact_records")
         .select(`*, interventions(date_intervention, vehicule_id, vehicules(immatriculation)), entreprises(nom)`)
