@@ -2,6 +2,47 @@
 
 ---
 
+## Session 2026-06-05 (19) — Phase C : Factures & Documents (B3)
+
+**Constat audit** : aucun bouton "télécharger facture" n'existe (mémoire user erronée).
+Seulement des onglets "Factures" placeholder "Bientôt disponible" (admin.clients.$id,
+admin.contrats.$id). Backend prêt (RPC generer_facture/emettre_facture, snapshots, RLS client).
+**Décision archi** : fusionner Factures dans Documents côté client (Option B validée user).
+**Décision légale IZOX** : placeholders marqués TODO (Option A validée user).
+**Point fiscal** : franchise de base (art. 293 B CGI) → TVA non applicable, HT = TTC. Ne pas suivre le mockup (20%).
+
+### Plan
+
+- [x] 1. `src/lib/izox-legal.ts` — constante IZOX_LEGAL (placeholder SIRET/adresse/IBAN, marqué TODO)
+- [x] 2. `src/lib/factures.ts` — types snapshots + helpers (formatEuro, formatPeriode, formatDateFr, STATUT_FACTURE config)
+- [x] 3. `src/components/factures/FactureDocument.tsx` — facture imprimable partagée (client + admin)
+- [x] 4. `src/routes/client.factures.$id.tsx` — page détail (fetch RLS-scoped + lignes, bouton Imprimer → window.print)
+- [x] 5. `src/routes/client.factures.tsx` → layout pur `<Outlet/>` (éviter le bug redirect parent→enfant)
+- [x] 6. `src/routes/client.factures.index.tsx` — redirect /client/factures → /client/documents
+- [x] 7. `src/routes/client.documents.tsx` — refonte : sous-onglets Factures | Autres docs (liste réelle DB)
+- [x] 8. `src/components/client/ClientNav.tsx` — retirer "Factures" → grid-cols-4
+- [x] 9. `src/routes/admin.clients.$id.tsx` — onglet Factures = liste réelle + détail en Dialog (FactureDocument)
+- [x] 10. `src/styles.css` — `@media print` (n'imprimer que la facture)
+- [x] 11. `npm run build` (régénère routeTree.gen.ts) → 0 erreur TS · tsc --noEmit 0 erreur
+- [x] 12. Validation empirique : fixture (entreprise + contrat pro 5% + remise commerciale 10% + 4 interventions validées), générer + émettre → FA-B2B-2026-000001, RLS client (1 émise visible, 0 brouillon) + admin (2 dont brouillon), puis purge complète (tout à 0, users=4, triggers réactivés)
+- [ ] 13. Commit + push
+
+### Review session 19
+
+**Livré (B3 — Factures & Documents) :**
+- Page détail facture client `/client/factures/$id` (mockup invoice.jsx adapté au régime réel).
+- Fusion Factures → Documents côté client (Option B) : `/client/documents` avec sous-onglets Factures | Autres docs. `/client/factures` redirige (layout+index pour ne pas casser `$id`). Nav client 5→4 items.
+- Onglet Factures admin (`/admin/clients/$id`) : liste réelle + détail imprimable en Dialog (réutilise `FactureDocument`).
+- Impression : `window.print()` + `@media print` (n'imprime que `.facture-print-root`). Pas de dépendance PDF (le navigateur fait "Enregistrer en PDF").
+
+**Décisions :**
+- Régime fiscal **franchise de base** (art. 293 B CGI) respecté : TVA non applicable, HT=TTC. Le mockup (TVA 20%) volontairement ignoré.
+- Infos légales IZOX = placeholders marqués TODO dans `src/lib/izox-legal.ts` (Option A user) → **à remplacer par les vraies valeurs avant émission réelle**.
+
+**Preuves empiriques :** facture FA-B2B-2026-000001 générée (334,31 € TTC), lignes prestation/remise palier/remise commerciale conformes, snapshots cohérents avec les types TS, RLS client/admin validés positif+négatif, purge vérifiée.
+
+---
+
 ## Session 2026-06-04 (18) — Audit sécurité complet + Phase B
 
 ### Audit & correctifs sécurité ✅ TERMINÉ
