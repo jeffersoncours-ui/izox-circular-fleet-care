@@ -2,6 +2,54 @@
 
 ---
 
+## Session 2026-06-05 (22 suite) — Cookies + RSE charts
+
+### Plan
+
+- [x] 1. `legal.tsx` — retrait banner cookie (état, fonctions, JSX), mise à jour section RGPD "Cookies" (seul cookie session Supabase, pas de Matomo, aucun consentement requis)
+- [x] 2. `client.impact.tsx` — 4ème hero card CO₂ évité (Zap icon, violet), grille 2×2, équivalences (douches économisées, km voiture évités), CO₂ ajouté à l'AreaChart
+- [x] 3. `admin.impact.tsx` — nouvel onglet "Vue globale" (défaut) : 4 KPI cards (interventions, eau, CO₂, clients actifs) + BarChart mensuel interventions + BarChart horizontal eau par client
+- [x] 4. `impact.ts` — `fetchGlobalImpactSummary()` + type `GlobalImpactSummary` exportés
+- [x] 5. Build 0 erreur + tsc 0 erreur + commit + push (`15e8ab6`)
+
+### Review session 22 suite
+
+**Livré :**
+- Cookie banner retiré de tous les portails (était sans objet sur un CRM B2B privé n'utilisant que des cookies techniques essentiels). Section RGPD "Cookies" mise à jour pour refléter la réalité (pas de Matomo, pas d'analytics).
+- RSE client : 4ème carte CO₂ (grille 2×2), section équivalences concrètes (X douches, X km voiture), CO₂ dans le graphe AreaChart.
+- RSE admin : "Vue globale" avec 4 KPIs + 2 BarCharts (tendance mensuelle + répartition par client). Tab actif par défaut.
+- `fetchGlobalImpactSummary()` : agrège toutes les interventions validées tous clients, calcule totaux, timeline mensuelle, top 6 clients par eau économisée.
+
+---
+
+## Session 2026-06-05 (22) — Module facturation admin + liens /legal
+
+### Plan
+
+- [x] 1. `admin.facturation.tsx` — page complète (KPIs brouillons/émises/payées/CA mois, filtres statut+recherche, liste cross-client avec actions Émettre/Payée/Supprimer brouillon, dialog Clôture mensuelle, dialog détail imprimable)
+- [x] 2. `AdminSidebar.tsx` — lien "CGV & Confidentialité" dans le footer (avant Déconnexion)
+- [x] 3. `ClientNav.tsx` — lien légal discret au-dessus de la bottom nav mobile
+- [x] 4. `terrain.index.tsx` — lien légal en bas du tab Profil opérateur
+- [x] 5. `izox-legal.ts` — retrait `tvaIntracom` (inutilisé, N/A franchise de base) + marqueurs `TODO_LEGAL` clairs
+- [x] 6. Build 0 erreur + tsc 0 erreur + commit + push (`3744c2e`)
+
+### Review session 22
+
+**Livré :**
+- Module facturation admin `/admin/facturation` : liste globale toutes factures, 4 KPIs, filtres pills + recherche, actions par statut (Émettre → `emettre_facture` RPC, Payée → UPDATE direct permis par la machine d'états, Supprimer brouillon), dialog Clôture mensuelle (sélection mois/année, liste contrats actifs, `generer_facture` idempotent, rapport résultats créé/vide/erreur), dialog détail/impression réutilisant `FactureDocument`.
+- Lien `/legal` dans les 3 portails : AdminSidebar footer, ClientBottomNav (barre discrète au-dessus des tabs), tab Profil terrain.
+- `izox-legal.ts` : `tvaIntracom` retiré (franchise de base = pas de N° TVA), marqueurs `TODO_LEGAL` uniformisés.
+
+**Décisions techniques :**
+- UPDATE direct `statut='payee' + date_paiement` sur facture émise : permis par `trg_protect_facture_immuable` (seuls les champs métier sont figés, pas statut/date_paiement) + validé par `trg_factures_machine_etats` (emise→payee autorisé si date_paiement non null).
+- `snapshot_client.raison_sociale` pour le nom client en liste (pas de join, toujours disponible depuis le snapshot immuable).
+- `generer_facture` idempotent : retourne null si 0 prestation validée, UUID si créée ou existante.
+
+**À faire avant production :**
+- Remplacer les `TODO_LEGAL` dans `izox-legal.ts` par les vraies valeurs SIRET/adresse/IBAN une fois la société créée.
+
+---
+
 ## Session 2026-06-05 (21) — Correctifs UI (lot 3) + fix CORS reset MDP
 
 ### Plan
