@@ -19,7 +19,8 @@ function corsFor(req: Request): Record<string, string> {
     if (
       requestOrigin === SITE_URL ||
       o.hostname === "izox.fr" ||
-      o.hostname.endsWith(".vercel.app")
+      o.hostname === "izox-circular-fleet-care.vercel.app" ||
+      /^izox-circular-fleet-care[a-z0-9-]*\.vercel\.app$/.test(o.hostname)
     ) {
       allow = requestOrigin;
     }
@@ -244,7 +245,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      link: actionLink,
+      link: emailSent ? null : actionLink,
       email_sent: emailSent,
       email_error: emailError,
     }), { headers: jsonHeaders });

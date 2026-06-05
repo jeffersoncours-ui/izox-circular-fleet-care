@@ -35,6 +35,10 @@ function MaFlotte() {
   if (location.pathname !== "/client/flotte") {
     return <Outlet />;
   }
+  return <MaFlotteList />;
+}
+
+function MaFlotteList() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [list, setList] = useState<Vehicule[]>([]);

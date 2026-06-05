@@ -419,7 +419,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
             >
               Annuler
             </Button>
-            <Button onClick={handleConfirm} disabled={!canConfirm}>
+            <Button onClick={handleConfirm} disabled={!canConfirm || submitting}>
               {submitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (

@@ -386,7 +386,7 @@ Deno.serve(async (req) => {
     // Role-based access control — clients can only trigger their own notification types
     const { data: callerProfile } = await admin
       .from("profiles")
-      .select("role")
+      .select("role, entreprise_id")
       .eq("id", userData.user.id)
       .maybeSingle();
     const callerRole = callerProfile?.role ?? "client";
@@ -457,6 +457,9 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
+        if (callerRole === "client" && rdv.entreprise_id !== callerProfile?.entreprise_id) {
+          return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+        }
 
         const { data: staffProfiles } = await admin
           .from("profiles")
@@ -509,6 +512,9 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !demande) throw new Error("Demande gel introuvable");
+        if (callerRole === "client" && demande.entreprise_id !== callerProfile?.entreprise_id) {
+          return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+        }
 
         const { data: staffProfiles } = await admin
           .from("profiles")
