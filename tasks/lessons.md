@@ -1,5 +1,11 @@
 # Lessons Learned — IZOX
 
+## Email invite/reset : toujours hardcoder SITE_URL/reset-password comme redirectTo (session 26)
+
+- **Ne jamais laisser le frontend dicter le `redirectTo` des liens auth** : quand le frontend passe son `window.location.origin` (ex. URL Vercel preview) comme `redirect_to`, et que cette URL n'est pas dans l'allowlist Supabase Auth, Supabase l'ignore silencieusement et utilise le `SITE_URL` racine. La SSR de TanStack Start redirige alors vers `/login` SANS le hash `#access_token=...&type=recovery`. `detectAuthCallback()` trouve un hash vide → `isRecovery = false` → formulaire de login normal affiché, pas de set-password.
+- **Pattern correct** : dans les 3 edge functions (`create-client-account`, `admin-reset-password`, `request-password-reset`), toujours utiliser `options: { redirectTo: \`${siteUrl}/reset-password\` }` en hardcodant le chemin. `siteUrl` vient de la var d'env `SITE_URL` qui est en allowlist. Le `redirect_to` du payload client peut être utile pour le CORS mais pas pour le `redirectTo` Supabase.
+- **Diagnostic rapide** : si l'utilisateur clique sur le lien et arrive sur la page de login sans le formulaire de changement de MDP → c'est presque toujours un problème de `redirectTo` hors allowlist + SSR qui perd le hash.
+
 ## Faille auth post-reset : signOut obligatoire après updateUser (session 26)
 
 - **La session de récupération Supabase est une session authentifiée à part entière** : quand un utilisateur clique sur un lien d'invite/reset, Supabase établit une session valide (ACCESS_TOKEN en hash ou code échangé). Cette session sert à appeler `updateUser({ password })`. Si on ne la détruit pas ensuite, l'utilisateur (ou quiconque a le mail ouvert) se retrouve connecté sans avoir saisi les identifiants — accès direct au dashboard.
