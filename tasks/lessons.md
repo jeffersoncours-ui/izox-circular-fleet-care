@@ -1,5 +1,28 @@
 # Lessons Learned — IZOX
 
+## Export CSV côté client — pattern partagé (session 27)
+
+- **BOM UTF-8 (`﻿`) obligatoire pour Excel** : sans BOM, Excel ouvre les fichiers CSV UTF-8 en ANSI et les accents (é, è, ç) s'affichent en caractères corrompus. LibreOffice lit correctement sans BOM mais le tolère. Toujours préfixer le contenu avec `"﻿"` (BOM littéral) ou `"﻿"`.
+- **Séparateur `;` pour la France** : Excel FR utilise `;` comme séparateur CSV par défaut (le `,` est le séparateur décimal). Utiliser `,` oblige l'utilisateur à importer manuellement. Avec `;`, double-clic → tableau direct.
+- **Utilitaire partagé `src/lib/csv.ts`** : évite de dupliquer la logique d'échappement dans chaque composant. Interface simple `downloadCSV(rows: Record<string, unknown>[], filename: string)`. Les clés du premier objet deviennent les en-têtes — utiliser des labels lisibles en français directement dans les keys (`"N° Facture"`, `"Montant TTC (€)"`).
+- **Désactiver le bouton si liste vide** : `disabled={filtered.length === 0}` évite un CSV vide et un UX confus. Corollaire : l'export respecte toujours le filtre actif, pas la liste complète — c'est le comportement attendu ("j'exporte ce que je vois").
+- **`URL.createObjectURL` + clic programmatique** : pas besoin de serveur ni de dépendance. Pattern : `new Blob([csv], {type:"text/csv;charset=utf-8;"})` → `URL.createObjectURL` → `document.createElement("a")` avec `download` → `.click()` → `URL.revokeObjectURL`. Fonctionne dans tous les navigateurs modernes.
+
+## Widget alertes dashboard — pattern surveillance passif (session 27)
+
+- **Alertes calculées au chargement, pas en temps réel** : pour un dashboard admin qui se recharge à chaque visite, une requête COUNT au mount est suffisante. Pas besoin de subscription Realtime pour des données qui changent rarement (contrats expirants, brouillons anciens).
+- **N'afficher la section que si ≥ 1 alerte active** : `{alerts.length > 0 && <section>}` — évite un bloc vide qui occupe de l'espace et génère des questions. `setAlerts(rawAlerts.filter(a => a.count > 0))` en fin de query.
+- **Deux niveaux de criticité visuels** : rouge (`danger`) pour les actions immédiates (fiche non validée depuis 24h, RDV sans réponse 48h) ; ambre (`warn`) pour les actions à planifier (brouillons 30j, contrats expirant 30j). Ne pas tout mettre en rouge — ça dévalue l'alerte rouge.
+- **Chaque alerte = un lien direct** : l'utilisateur ne doit pas chercher où aller. `to` + `search` permettent de pré-sélectionner l'onglet (`?tab=demandes`, `?tab=interventions`). Le click sur l'alerte amène directement à la liste filtrée.
+- **Étendre `Promise.all` existant** : ajouter les 4 requêtes d'alertes dans le même `Promise.all` que les KPIs évite un 2e `useEffect` et un 2e cycle de rendu. Un seul chargement, tout est cohérent temporellement.
+
+## B3 — Disponibilités opérateurs : ne pas démarrer sans raccord à la RPC (session 27)
+
+- **Une table sans consommateur = dette silencieuse** : `disponibilites_operateurs` existe depuis le début mais `get_creneaux_disponibles` ne la lit pas. Créer l'UI sans modifier la RPC aurait produit une interface fonctionnellement vide — les données auraient été saisies et ignorées. Toujours vérifier `pg_get_functiondef` avant de se lancer sur un formulaire qui alimente une table.
+- **Déclencheur métier > déclencheur technique** : avec 1 seul opérateur, `COUNT(operators)*2 = 2` est exact sans même consulter les disponibilités. Le bon moment pour implémenter B3 est l'arrivée d'un 2e opérateur avec des disponibilités différentes — pas avant.
+
+
+
 ## `isRecovery` doit être réinitialisé sur `SIGNED_OUT` dans `auth-context.tsx` (session 26)
 
 - **Symptôme** : après avoir défini son mot de passe sur `/reset-password`, l'utilisateur est renvoyé sur le formulaire "Choisir un mot de passe" au lieu du formulaire de connexion normal.
