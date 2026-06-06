@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, ChevronRight, ClipboardCheck } from "lucide-react";
+import { Loader2, Search, ChevronRight, ClipboardCheck, Download } from "lucide-react";
+import { downloadCSV } from "@/lib/csv";
 import { supabase } from "@/integrations/supabase/client";
 import { statutColor, statutLabel, type Statut } from "@/lib/interventions";
 import { getPackLabel } from "@/lib/pricing";
@@ -73,6 +74,21 @@ export function InterventionsListPanel() {
 
   const aValider = items.filter((i) => i.statut === "en_revision").length;
 
+  const handleExportCSV = () => {
+    const rows = filtered.map((i) => ({
+      "Immatriculation": i.vehicules?.immatriculation ?? "—",
+      "Marque": i.vehicules?.marque ?? "",
+      "Modèle": i.vehicules?.modele ?? "",
+      "Client": i.entreprises?.nom ?? "—",
+      "Pack": getPackLabel(i.type_prestation),
+      "Statut": i.statut,
+      "Date": i.date_intervention ?? "",
+      "Créneau": i.time_slot ? (TIME_SLOT_LABEL[i.time_slot] ?? i.time_slot) : "",
+    }));
+    const now = new Date().toISOString().slice(0, 10);
+    downloadCSV(rows, `interventions-izox-${now}.csv`);
+  };
+
   return (
     <div>
       {aValider > 0 && (
@@ -107,6 +123,15 @@ export function InterventionsListPanel() {
             <SelectItem value="annulee">Annulées</SelectItem>
           </SelectContent>
         </Select>
+        <button
+          type="button"
+          onClick={handleExportCSV}
+          disabled={filtered.length === 0}
+          className="flex items-center gap-1.5 px-3 h-10 text-sm font-medium border border-border rounded-md bg-background text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors disabled:opacity-40 disabled:pointer-events-none shrink-0"
+        >
+          <Download className="h-3.5 w-3.5" />
+          CSV
+        </button>
       </Card>
 
       {loading ? (

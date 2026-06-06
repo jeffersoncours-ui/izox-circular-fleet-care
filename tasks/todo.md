@@ -2,6 +2,34 @@
 
 ---
 
+## Session 2026-06-06 (27) — Exports CSV + Alertes dashboard + Rapport B3
+
+### Plan
+
+- [x] B1. `src/lib/csv.ts` — utilitaire `downloadCSV(rows, filename)` partagé (BOM UTF-8 Excel)
+- [x] B1. `admin.facturation.tsx` — bouton "Exporter CSV" dans la barre de filtres (respecte filtre actif)
+- [x] B1. `admin.clients.tsx` — bouton "CSV" dans le PageHeader (respecte filtre actif)
+- [x] B1. `InterventionsListPanel.tsx` — bouton "CSV" inline dans la Card filtres
+- [x] B2. `admin.index.tsx` — section "À traiter" : 4 alertes calculées au chargement (en_revision > 24h, RDV sans réponse > 48h, brouillons factures > 30j, contrats expirant dans 30j)
+- [x] B3. Rapport disponibilites_operateurs — audit schéma + get_creneaux_disponibles → reporter
+- [x] Guide tests manuels complet (client/admin/opérateur) fourni à l'utilisateur
+- [x] Build 0 erreur tsc + npm run build
+- [x] Purge DB (toutes tables à 0, auth.users = 4)
+- [x] Commit + push + merge main
+
+### Review session 27
+
+**Livré :**
+- **B1 — Exports CSV** : 3 points d'export admin. `src/lib/csv.ts` : utilitaire partagé avec BOM UTF-8 (compatible Excel/LibreOffice), séparateur `;`, échappement des guillemets. Boutons désactivés si liste vide. Nommage automatique `{type}-izox-{date}.csv`.
+- **B2 — Alertes dashboard** : section "À traiter" sur `/admin` — rouge si critique (fiches en_revision > 24h, demandes RDV sans réponse > 48h), ambre si warning (brouillons > 30j, contrats expirant dans 30j). N'apparaît que si ≥ 1 alerte active. Chaque alerte est un lien direct vers la section concernée.
+- **B3 — Rapport** : `disponibilites_operateurs` bien structurée (7 colonnes, FK operateur_id → auth.users, actif + dates_validite). Bloquant : `get_creneaux_disponibles` ne l'utilise pas du tout (capacité = `COUNT(operators)*2`). UI inutile avant migration de la RPC. À reporter quand 2e opérateur recruté.
+
+**Validation empirique :**
+- tsc 0 erreur, npm run build 0 erreur ✓
+- Purge DB : 9 tables à 0, auth.users = 4 ✓
+
+---
+
 ## Session 2026-06-06 (26) — Corrections UX + sécurité auth + suppression /legal
 
 ### Plan

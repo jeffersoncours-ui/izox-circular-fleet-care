@@ -39,7 +39,9 @@ import {
   Trash2,
   AlertCircle,
   TrendingUp,
+  Download,
 } from "lucide-react";
+import { downloadCSV } from "@/lib/csv";
 
 export const Route = createFileRoute("/admin/facturation")({
   component: AdminFacturationPage,
@@ -194,6 +196,20 @@ function AdminFacturationPage() {
     setActingId(null);
   };
 
+  const handleExportCSV = () => {
+    const rows = filtered.map((f) => ({
+      "N° Facture": f.numero_facture ?? "brouillon",
+      "Client": String(f.snapshot_client?.raison_sociale ?? "—"),
+      "Période début": f.periode_debut,
+      "Période fin": f.periode_fin,
+      "Montant TTC (€)": f.montant_ttc,
+      "Statut": f.statut,
+      "Date émission": f.date_emission ?? "",
+    }));
+    const now = new Date().toISOString().slice(0, 10);
+    downloadCSV(rows, `factures-izox-${now}.csv`);
+  };
+
   const handleSupprimerBrouillon = async (factureId: string) => {
     setActingId(factureId);
     const { error } = await supabase
@@ -256,6 +272,16 @@ function AdminFacturationPage() {
 
           {/* Filtres */}
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={filtered.length === 0}
+              className="gap-1.5 ml-auto order-last sm:order-none"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Exporter CSV
+            </Button>
             {STATUT_PILLS.map((p) => (
               <button
                 key={p.key}
