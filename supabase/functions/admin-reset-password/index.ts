@@ -16,12 +16,8 @@ function corsFor(req: Request): Record<string, string> {
   let allow = SITE_URL;
   try {
     const o = new URL(requestOrigin);
-    if (
-      requestOrigin === SITE_URL ||
-      o.hostname === "izox.fr" ||
-      o.hostname === "izox-circular-fleet-care.vercel.app" ||
-      /^izox-circular-fleet-care[a-z0-9-]*\.vercel\.app$/.test(o.hostname)
-    ) {
+    const siteHost = new URL(SITE_URL).hostname;
+    if (o.hostname === siteHost || o.hostname.endsWith(".vercel.app")) {
       allow = requestOrigin;
     }
   } catch {
@@ -216,7 +212,7 @@ Deno.serve(async (req) => {
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo: safeRedirectTo(redirect_to) },
+      options: { redirectTo: `${siteUrl}/reset-password` },
     });
 
     if (error) throw error;

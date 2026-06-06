@@ -12,11 +12,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 function corsFor(req: Request): Record<string, string> {
   const siteUrl = Deno.env.get("SITE_URL") ?? "https://izox.fr";
   const requestOrigin = req.headers.get("Origin") ?? "";
-  const allowed = new Set([
-    siteUrl,
-    "https://izox-circular-fleet-care.vercel.app",
-  ]);
-  const origin = allowed.has(requestOrigin) ? requestOrigin : siteUrl;
+  let origin = siteUrl;
+  try {
+    const o = new URL(requestOrigin);
+    const siteHost = new URL(siteUrl).hostname;
+    if (o.hostname === siteHost || o.hostname.endsWith(".vercel.app")) {
+      origin = requestOrigin;
+    }
+  } catch { /* keep siteUrl fallback */ }
   return {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -175,7 +178,7 @@ Deno.serve(async (req) => {
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo: safeRedirectTo(redirect_to, siteUrl) },
+      options: { redirectTo: `${siteUrl}/reset-password` },
     });
 
     const actionLink = data?.properties?.action_link ?? null;
