@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Building2, Eye, ChevronRight } from "lucide-react";
+import { Plus, Search, Building2, Eye, ChevronRight, Download } from "lucide-react";
+import { downloadCSV } from "@/lib/csv";
 import { CreateClientDialog } from "@/components/admin/CreateClientDialog";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
@@ -85,6 +86,20 @@ function ClientsPage() {
     return matchSearch && matchFilter;
   });
 
+  const handleExportCSV = () => {
+    const rows = filtered.map((e) => ({
+      "Entreprise": e.nom,
+      "Type": TYPE_LABEL[e.type_client] ?? e.type_client,
+      "Ville": e.ville ?? "",
+      "Email": e.email_contact ?? "",
+      "MRR (€ HT)": e.montant_net_mensuel ?? "",
+      "Compte actif": e.compte_active ? "Oui" : "Non",
+      "Créé le": new Date(e.created_at).toLocaleDateString("fr-FR"),
+    }));
+    const now = new Date().toISOString().slice(0, 10);
+    downloadCSV(rows, `clients-izox-${now}.csv`);
+  };
+
   const counts = {
     all: list.length,
     vtc: list.filter((e) => e.type_client === "vtc").length,
@@ -106,10 +121,22 @@ function ClientsPage() {
         title="Clients"
         sub={`${list.length} entreprise${list.length > 1 ? "s" : ""} suivie${list.length > 1 ? "s" : ""}`}
         right={
-          <Button size="sm" onClick={() => setOpen(true)} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
-            Nouveau client
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={filtered.length === 0}
+              className="gap-1.5"
+            >
+              <Download className="h-3.5 w-3.5" />
+              CSV
+            </Button>
+            <Button size="sm" onClick={() => setOpen(true)} className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" />
+              Nouveau client
+            </Button>
+          </div>
         }
       />
 
