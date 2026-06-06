@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
-import { Home, Car, ClipboardList, FolderOpen, LogOut, Scale } from "lucide-react";
+import { Home, Car, ClipboardList, FolderOpen, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/admin/NotificationCenter";
@@ -50,11 +50,6 @@ export function ClientBottomNav() {
   const location = useLocation();
   return (
     <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border">
-      <div className="flex justify-center pt-0.5">
-        <Link to="/legal" className="text-[9px] text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors">
-          CGV &amp; Confidentialité
-        </Link>
-      </div>
       <ul className="grid grid-cols-4 max-w-3xl mx-auto" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         {TABS.map((tab) => {
           const active = tab.exact
@@ -96,13 +91,3 @@ export function ClientDocsLink() {
   );
 }
 
-export function ClientLegalLink() {
-  return (
-    <Link
-      to="/legal"
-      className="text-xs text-muted-foreground/60 hover:text-muted-foreground inline-flex items-center gap-1 transition-colors"
-    >
-      <Scale className="h-3 w-3" /> CGV &amp; Confidentialité
-    </Link>
-  );
-}

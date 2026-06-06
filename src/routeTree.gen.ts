@@ -13,7 +13,6 @@ import { Route as TerrainRouteImport } from './routes/terrain'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as LegalRouteImport } from './routes/legal'
 import { Route as ClientRouteImport } from './routes/client'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -71,11 +70,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalRoute = LegalRouteImport.update({
-  id: '/legal',
-  path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientRoute = ClientRouteImport.update({
@@ -273,7 +267,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
-  '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
@@ -316,7 +309,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
@@ -358,7 +350,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
-  '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
@@ -405,7 +396,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/client'
-    | '/legal'
     | '/login'
     | '/reset-password'
     | '/settings'
@@ -448,7 +438,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/legal'
     | '/login'
     | '/reset-password'
     | '/settings'
@@ -489,7 +478,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/client'
-    | '/legal'
     | '/login'
     | '/reset-password'
     | '/settings'
@@ -535,7 +523,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   ClientRoute: typeof ClientRouteWithChildren
-  LegalRoute: typeof LegalRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRouteWithChildren
@@ -570,13 +557,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal': {
-      id: '/legal'
-      path: '/legal'
-      fullPath: '/legal'
-      preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client': {
@@ -1036,7 +1016,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   ClientRoute: ClientRouteWithChildren,
-  LegalRoute: LegalRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRouteWithChildren,

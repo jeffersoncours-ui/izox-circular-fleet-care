@@ -158,7 +158,8 @@ Tout est calculé **on-the-fly** depuis `interventions.statut='validee'` × coef
 
 ## Points de vigilance
 
-- **Pas de bannière cookies** — supprimée volontairement (session 22). IZOX Pro est un CRM B2B privé qui n'utilise QUE le cookie de session d'authentification Supabase (essentiel, exempté de consentement RGPD/ePrivacy). Aucun analytics (Matomo/GA), aucun traceur. Ne pas réintroduire `izox_cookie_consent` ni de banner. Le seul localStorage légal conservé : `izox_cgv_accepted` (acceptation CGV). La section RGPD §6 de `/legal` reflète cette réalité.
+- **Pas de bannière cookies** — supprimée volontairement (session 22). IZOX Pro est un CRM B2B privé qui n'utilise QUE le cookie de session d'authentification Supabase (essentiel, exempté de consentement RGPD/ePrivacy). Aucun analytics (Matomo/GA), aucun traceur. Ne pas réintroduire `izox_cookie_consent` ni de banner.
+- **Pas de page `/legal`** — retirée session 26. Les CGV/RGPD seront intégrées dans l'onglet "Documents" du compte client quand le contenu définitif sera prêt. Ne pas recréer la route `/legal` ni les liens associés.
 - **Ne pas utiliser le SMTP natif Supabase** — toujours passer par les edge functions + Resend
 - **`routeTree.gen.ts`** est auto-généré par TanStack Router au build — ne pas modifier manuellement en production
 - **Variables d'env Supabase** nécessaires : `RESEND_API_KEY`, `SITE_URL`, `EMAIL_FROM`

@@ -90,11 +90,14 @@ function ResetPasswordPage() {
     }
     setSaving(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast.error("Erreur : " + error.message);
     } else {
-      toast.success("Mot de passe défini avec succès — bienvenue !");
+      // Destroy the recovery session — user must authenticate explicitly.
+      await supabase.auth.signOut();
+      setSaving(false);
+      toast.success("Mot de passe défini. Connectez-vous pour accéder à votre espace.");
       navigate({ to: "/login" });
     }
   };

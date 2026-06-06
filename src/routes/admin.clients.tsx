@@ -125,13 +125,13 @@ function ClientsPage() {
               className="pl-9 h-9 text-sm"
             />
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none flex-nowrap">
             {filters.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setFilter(key)}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors",
+                  "px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors whitespace-nowrap shrink-0",
                   filter === key
                     ? "bg-primary text-white border-primary"
                     : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"

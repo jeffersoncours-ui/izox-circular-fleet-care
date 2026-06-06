@@ -12,7 +12,6 @@ import {
   LogOut,
   Menu,
   CalendarRange,
-  Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -133,13 +132,6 @@ function SidebarFooter({ onAfterLogout }: { onAfterLogout?: () => void }) {
         </p>
         <p className="text-xs text-sidebar-foreground/70 capitalize">{profile?.role}</p>
       </div>
-      <Link
-        to="/legal"
-        className="flex items-center gap-2 px-3 py-1.5 text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground/80 transition-colors rounded-md"
-      >
-        <Scale className="h-3.5 w-3.5" />
-        CGV &amp; Confidentialité
-      </Link>
       <Button
         variant="ghost"
         className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

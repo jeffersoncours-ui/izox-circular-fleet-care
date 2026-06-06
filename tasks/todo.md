@@ -2,6 +2,19 @@
 
 ---
 
+## Session 2026-06-06 (26) — Corrections UX + sécurité auth + suppression /legal
+
+### Plan
+
+- [x] 1. `reset-password.tsx` + `login.tsx` — `signOut()` obligatoire après `updateUser` pour détruire la session de récupération avant redirect `/login` (faille critique)
+- [x] 2. `login.tsx` — retirer `border-b` du brandHeader + resserrer `py-10` pour remonter la carte vers le texte
+- [x] 3. `admin.contrats.tsx` + `admin.clients.tsx` — pills filtres sur une seule ligne (overflow-x-auto nowrap)
+- [x] 4. Suppression complète `/legal` + liens (AdminSidebar, ClientNav, terrain.index.tsx) + nettoyage CLAUDE.md
+- [x] 5. `npx tsc --noEmit --skipLibCheck` + `npm run build` → 0 erreur
+- [ ] 6. Commit + push sur `claude/izox-fleet-care-planning-RJ00W`
+
+---
+
 ## Session 2026-06-06 (25) — Lier opérateurs + messagerie V1 admin↔terrain
 
 ### Plan

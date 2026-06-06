@@ -1028,14 +1028,6 @@ function TabProfil({
           <LogOut className="h-4 w-4 mr-2" />
           Se déconnecter
         </Button>
-        <div className="mt-4 text-center">
-          <Link
-            to="/legal"
-            className="text-xs text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors"
-          >
-            CGV &amp; Confidentialité
-          </Link>
-        </div>
       </div>
     </div>
   );
