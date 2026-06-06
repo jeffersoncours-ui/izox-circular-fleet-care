@@ -4,22 +4,35 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const SITE_URL = Deno.env.get("SITE_URL") ?? "https://izox.fr";
-const corsHeaders = {
-  "Access-Control-Allow-Origin": SITE_URL,
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+
+function corsFor(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? SITE_URL;
+  let allowed = SITE_URL;
+  try {
+    const u = new URL(origin);
+    const siteHost = new URL(SITE_URL).hostname;
+    if (u.hostname === siteHost || u.hostname.endsWith(".vercel.app")) {
+      allowed = origin;
+    }
+  } catch { /* ignore */ }
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
 
 function safeRedirectTo(raw: unknown): string {
   const fallback = `${SITE_URL}/reset-password`;
   if (!raw || typeof raw !== "string") return fallback;
   try {
     const parsed = new URL(raw);
-    const allowed = new Set([
-      new URL(SITE_URL).origin,
-      new URL("https://izox-circular-fleet-care.vercel.app").origin,
-    ]);
-    return allowed.has(parsed.origin) ? raw : fallback;
+    const siteHost = new URL(SITE_URL).hostname;
+    if (parsed.hostname === siteHost || parsed.hostname.endsWith(".vercel.app")) {
+      return raw;
+    }
+    return fallback;
   } catch {
     return fallback;
   }
@@ -165,9 +178,10 @@ async function sendWelcomeEmail(
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const cors = corsFor(req);
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
-  const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
+  const jsonHeaders = { ...cors, "Content-Type": "application/json" };
 
   try {
     const authHeader = req.headers.get("Authorization");
