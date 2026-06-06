@@ -1,6 +1,13 @@
 # Lessons Learned — IZOX
 
-## Email invite/reset : toujours hardcoder SITE_URL/reset-password comme redirectTo (session 26)
+## `isRecovery` doit être réinitialisé sur `SIGNED_OUT` dans `auth-context.tsx` (session 26)
+
+- **Symptôme** : après avoir défini son mot de passe sur `/reset-password`, l'utilisateur est renvoyé sur le formulaire "Choisir un mot de passe" au lieu du formulaire de connexion normal.
+- **Cause** : `reset-password.tsx` appelle `supabase.auth.signOut()` puis `navigate({ to: "/login" })`. Le `SIGNED_OUT` event vide `session`/`user`/`profile` dans le contexte, mais `isRecovery` reste `true` (il était à `true` depuis la détection du hash `#type=recovery` au chargement). Sur `/login`, le `if (isRecovery) return <SetPasswordForm/>` s'affiche donc à nouveau — sans session valide.
+- **Fix** : dans `onAuthStateChange`, ajouter `else if (event === "SIGNED_OUT") { setIsRecovery(false); }`. Sémantiquement correct : se déconnecter met fin à tout flow de récupération.
+- **Règle** : `isRecovery = true` doit toujours être nettoyé par deux chemins : (1) `clearRecovery()` explicite après succès de `updateUser` dans `login.tsx`, (2) `SIGNED_OUT` event dans `auth-context.tsx` (filet de sécurité pour tous les autres appels `signOut()`).
+
+
 
 - **Ne jamais laisser le frontend dicter le `redirectTo` des liens auth** : quand le frontend passe son `window.location.origin` (ex. URL Vercel preview) comme `redirect_to`, et que cette URL n'est pas dans l'allowlist Supabase Auth, Supabase l'ignore silencieusement et utilise le `SITE_URL` racine. La SSR de TanStack Start redirige alors vers `/login` SANS le hash `#access_token=...&type=recovery`. `detectAuthCallback()` trouve un hash vide → `isRecovery = false` → formulaire de login normal affiché, pas de set-password.
 - **Pattern correct** : dans les 3 edge functions (`create-client-account`, `admin-reset-password`, `request-password-reset`), toujours utiliser `options: { redirectTo: \`${siteUrl}/reset-password\` }` en hardcodant le chemin. `siteUrl` vient de la var d'env `SITE_URL` qui est en allowlist. Le `redirect_to` du payload client peut être utile pour le CORS mais pas pour le `redirectTo` Supabase.

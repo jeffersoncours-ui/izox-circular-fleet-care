@@ -12,6 +12,25 @@
 - [x] 4. Suppression complète `/legal` + liens (AdminSidebar, ClientNav, terrain.index.tsx) + nettoyage CLAUDE.md
 - [x] 5. `npx tsc --noEmit --skipLibCheck` + `npm run build` → 0 erreur
 - [x] 6. Commit + push sur `claude/izox-fleet-care-planning-RJ00W`
+- [x] 7. Fix CORS `create-client-account` — accepter `*.vercel.app` (CORS bloquait depuis les previews Vercel)
+- [x] 8. Fix `redirectTo` toutes les edge functions — hardcoder `${siteUrl}/reset-password` (URL dans l'allowlist Supabase) au lieu du `redirect_to` du frontend (non whitelisté → Supabase ignorait → SSR perdait le hash)
+- [x] 9. Fix `isRecovery` non remis à `false` au `SIGNED_OUT` → boucle set-password après soumission. Fix : `onAuthStateChange` SIGNED_OUT → `setIsRecovery(false)` dans `auth-context.tsx`
+
+### Review session 26
+
+**Livré :**
+- Faille sécurité auth : session recovery non détruite après `updateUser` → `signOut()` ajouté dans `reset-password.tsx` et `login.tsx`. L'utilisateur doit se ré-authentifier explicitement.
+- Login page : retrait `border-b` + espacement resserré entre hero et carte auth.
+- Pills filtres : `flex-wrap` → `flex-nowrap overflow-x-auto` sur contrats et clients.
+- Suppression complète de `/legal` (route, liens sidebar admin, nav client, terrain profil).
+- CORS dynamique `create-client-account` : accepte tous `*.vercel.app`.
+- `redirectTo` toutes edge functions : toujours `${siteUrl}/reset-password` (URL dans l'allowlist Supabase) — le `redirect_to` du frontend n'est plus utilisé pour le lien Supabase.
+- `isRecovery` remis à `false` sur `SIGNED_OUT` — empêche la boucle où `/login` re-affichait le formulaire de changement de MDP après soumission.
+
+**Versions edge functions déployées :**
+- `create-client-account` v21
+- `admin-reset-password` v19
+- `request-password-reset` v7
 
 ---
 
