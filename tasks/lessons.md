@@ -1,5 +1,21 @@
 # Lessons Learned — IZOX
 
+## Messagerie V1 admin↔terrain — architecture offline-first (session 25)
+
+- **`client_local_id UUID` est non-négociable pour la déduplication Realtime** : sans cette colonne en DB, le webhook Realtime ne retourne pas le localId côté client. Le front ne peut pas faire correspondre le message reçu avec le `LocalMessage` 'pending' → doublons visuels garantis. Ajouter la colonne dès la migration C1, pas comme afterthought.
+- **Realtime subscribe INSERT only (anti-boucle)** : `subscribeToConversation` doit utiliser `event: "INSERT"` et jamais `event: "*"`. Un `markRead` UPDATE déclencherait un callback Realtime → nouveau fetch → re-render → boucle infinie. Règle : ne souscrire qu'aux événements qui apportent de l'information nouvelle (INSERT = nouveau message).
+- **SECURITY DEFINER + `SET search_path` sur le trigger de notification** : l'opérateur terrain a le droit d'INSERT sur `operateur_messages` (RLS), mais pas nécessairement d'INSERT sur `notifications_internes`. Le trigger `tg_message_notify_fn` doit être `SECURITY DEFINER SET search_path = public` pour bypasser la RLS lors de l'insertion de notification. Vérifier `pg_trigger.tgfoid` → `prosecdef=true` et `proconfig=[search_path=public]`.
+- **`inFlightIds` ref contre le double-envoi StrictMode** : React StrictMode monte les composants deux fois en dev. Sans guard, le même message serait envoyé deux fois. Pattern : `Set<string>` de localIds déjà en vol, check + add avant INSERT, delete après (succès ou échec).
+- **`sentLocalIds` ref pour la déduplication Realtime** : quand le message revient via le channel Realtime (confirmation serveur), matcher sur `client_local_id`. Stocker les localIds déjà traités dans un `Set` pour éviter d'ajouter deux fois le même message DB.
+- **localStorage offline pending** : clé `izox_chat_pending_${operatorId}`, format `LocalMessage[]`. Au chargement : messages pending → status `failed` (ils n'ont pas été envoyés). Au retour en ligne (`window.addEventListener('online', ...)`) : retry automatique de tous les `failed`. Ce pattern garantit qu'aucun message ne disparaît silencieusement en cas de coupure réseau terrain.
+- **`conversation_operator_id` toujours = `profiles.id` de l'opérateur** : non pas un ID de conversation par paire, mais l'ID user de l'opérateur. Ainsi tous les admins/staff lisent la même conversation avec un opérateur donné, sans avoir besoin de créer une table de "conversations". Simplification architecturale intentionnelle.
+
+## Régression `assigner_rdv` — cause et prévention (session 25)
+
+- **`CREATE OR REPLACE` sans `DEFAULT` écrase le `DEFAULT` d'une version précédente** : la migration `20260605020000_security_fixes` a recréé `assigner_rdv` avec `p_heure time without time zone` (sans `DEFAULT NULL`), écrasant la version précédente qui avait `DEFAULT NULL::time without time zone`. Le TypeScript client essaie de passer `p_heure: undefined` quand l'heure n'est pas saisie — sans DEFAULT côté DB, PostgreSQL rejette l'appel → TS type error `"assigner_rdv"` not in RPC types.
+- **Régression silencieuse détectée uniquement par `tsc`** : la fonction existait bien en DB mais avec une signature différente de celle attendue par le front. Sans `npx tsc --noEmit --skipLibCheck`, la régression serait passée inaperçue jusqu'au test manuel. La règle "tsc 0 erreur obligatoire avant commit" a permis la détection.
+- **Fix pattern** : nouvelle migration `20260606010000_fix_assigner_rdv_restore.sql` recréant la fonction avec la signature combinée : role guard (session 24) + `DEFAULT NULL` sur `p_heure` (session 23) + notification client + SECURITY DEFINER SET search_path = public. Toujours vérifier `pg_proc.proargdefaults` après une migration touchant des fonctions avec paramètres par défaut.
+
 ## Audit sécurité complet — hardening multi-couches (session 24)
 
 - **`search_path` injection sur les SECURITY DEFINER functions** : une fonction `SECURITY DEFINER` sans `SET search_path = public` est vulnérable à une élévation de privilège via la substitution de schéma. Si un attaquant crée un objet malveillant dans un schéma prioritaire (`pg_temp`, schéma utilisateur), il peut intercepter les appels de fonctions built-in. Toujours écrire `LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog`. Vérifier avec `pg_proc.proconfig IS NULL` pour auditer les fonctions existantes.

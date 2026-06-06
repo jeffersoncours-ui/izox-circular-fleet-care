@@ -2,6 +2,57 @@
 
 ---
 
+## Session 2026-06-06 (25) — Lier opérateurs + messagerie V1 admin↔terrain
+
+### Plan
+
+- [x] B. Nettoyage backlog — retirer item stale `client/factures/$id` (déjà livré session 19)
+- [x] A1. `admin.equipe.tsx` — charger operators + profiles opérateurs, cards état liaison + unread count
+- [x] A2. Dialog "Lier un compte terrain" — dropdown profiles.role=operateur non liés + UPDATE operators.user_id
+- [x] C1. Migration `20260605030000_operateur_messages` — table + index + RLS (5 policies) + trigger SECURITY DEFINER `tg_message_notify_fn` → notifications_internes
+- [x] C2. Régénérer types Supabase
+- [x] C3. `src/lib/messaging.ts` — types OperateurMessage/LocalMessage/MessageStatus + fetchConversation + sendMessage + markReadAdmin + markReadOperator + subscribeToConversation (INSERT only) + loadPendingMessages + savePendingMessages
+- [x] C4. `src/hooks/useMessaging.ts` — hook optimiste avec inFlightIds + sentLocalIds + localStorage pending + retry on 'online' event + realtime INSERT only (anti-boucle)
+- [x] C5. `src/components/messaging/MessageBubble.tsx` — bulle message (gauche/droite selon sender) + indicateurs status (⏳ pending / ✓ sent / ⚠️ failed + retry)
+- [x] C6. `src/components/messaging/ChatWindow.tsx` — liste messages auto-scroll + input + envoi Enter/clic
+- [x] C7. `admin.equipe.tsx` — intégrer ChatWindow dans split view desktop / full mobile + badge unread par opérateur
+- [x] C8. `terrain.index.tsx` — sous-onglet "Messages" dans Suivi + ChatWindow + badge unread bottom nav Suivi
+- [x] C9. `npx tsc --noEmit --skipLibCheck` + `npm run build` → 0 erreur
+- [x] C10. Validation empirique : table schema + RLS + trigger SECURITY DEFINER + assigner_rdv restauré + types régénérés + build 0 erreur
+- [x] Fix hors-plan : `assigner_rdv` accidentellement supprimé par session 24 → migration `20260606010000_fix_assigner_rdv_restore.sql`
+
+### Review session 25
+
+**Livré — Messagerie V1 admin↔terrain + liaison opérateurs :**
+
+**DB (migration 20260605030000) :**
+- Table `operateur_messages` : `id`, `conversation_operator_id` (FK → auth.users), `sender_id`, `content`, `image_url`, `client_local_id UUID` (déduplication Realtime), `created_at`, `read_at_admin`, `read_at_operator`
+- Contrainte `chk_om_has_content` : content OR image_url requis
+- 5 RLS policies : INSERT open authenticated, SELECT admin/staff, SELECT own conversation (operateur), UPDATE admin/staff, UPDATE own conversation (operateur)
+- Trigger `tg_message_notify` → `tg_message_notify_fn()` SECURITY DEFINER + `search_path=public` : notifie tous les admin/staff si opérateur envoie, notifie l'opérateur si admin/staff envoie
+
+**Fix (migration 20260606010000) :**
+- `assigner_rdv` restauré avec signature correcte : `DEFAULT NULL` sur `p_heure` + role guard admin/staff + notification client RDV confirmé + SECURITY DEFINER SET search_path = public
+
+**Frontend :**
+- `src/lib/messaging.ts` : fetch, send (avec client_local_id), markRead, subscribe INSERT-only, localStorage pending
+- `src/hooks/useMessaging.ts` : optimistic UI, inFlightIds (StrictMode), sentLocalIds (Realtime dedup), retry on 'online'
+- `src/components/messaging/MessageBubble.tsx` : bulles gauche/droite, états pending/failed+retry
+- `src/components/messaging/ChatWindow.tsx` : auto-scroll, Enter/Shift+Enter, empty state
+- `admin.equipe.tsx` : split view desktop 320px/reste, mobile full, cards opérateur avec badge unread, LinkOperatorDialog + UnlinkOperatorDialog
+- `terrain.index.tsx` : sous-onglet "Messages IZOX" dans Suivi, ChatWindow, badge unread bottom nav
+
+**Validation empirique :**
+- `assigner_rdv` : présent en DB, SECURITY DEFINER, signature 5 params ✓
+- `operateur_messages` : 9 colonnes dont `client_local_id` ✓
+- RLS : 5 policies correctes ✓
+- Trigger `tg_message_notify` : SECURITY DEFINER + search_path ✓
+- `operators.user_id` : colonne présente (nullable) ✓
+- `npx tsc --noEmit --skipLibCheck` : 0 erreur ✓
+- `npm run build` : 0 erreur ✓
+
+---
+
 ## Session 2026-06-05 (24) — Audit sécurité complet + hardening
 
 ### Plan
@@ -453,7 +504,6 @@ uniquement classes CSS, layout et composants UI. RPCs, appels Supabase et hooks 
 
 ## Backlog actif
 
-- [ ] **#Feature — Détail facture client `/client/factures/$id`** : maquette `invoice.jsx` (handoff) non implémentée. Nécessite route `client.factures.$id` + fetch table `factures`/`factures_lignes` côté client + rendu aux normes FR (lignes, TVA, totaux). C'est une **nouvelle feature avec logique data**, pas une refonte CSS. La page liste `client.factures` est aujourd'hui un empty state.
 - [ ] **#TechDebt — Nominatim → API cartographique SLA** : Nominatim (OSM) sans garantie de SLA, limité à 1 req/s. Prévoir migration vers Mapbox Geocoding API ou Google Maps Geocoding API quand le volume le justifie.
 - [ ] **Carte interactive** : optimisation tournée (nearest-neighbor + bouton « Optimiser ») à faire quand plusieurs opérateurs.
 - [ ] **Migration domaine `izox.fr`** : mettre à jour `SITE_URL` env var Supabase + vérifier que `/reset-password` reste dans les redirect URLs.

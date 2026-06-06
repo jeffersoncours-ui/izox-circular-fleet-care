@@ -1635,6 +1635,42 @@ export type Database = {
           },
         ]
       }
+      operateur_messages: {
+        Row: {
+          client_local_id: string | null
+          content: string | null
+          conversation_operator_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          read_at_admin: string | null
+          read_at_operator: string | null
+          sender_id: string
+        }
+        Insert: {
+          client_local_id?: string | null
+          content?: string | null
+          conversation_operator_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_at_admin?: string | null
+          read_at_operator?: string | null
+          sender_id: string
+        }
+        Update: {
+          client_local_id?: string | null
+          content?: string | null
+          conversation_operator_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_at_admin?: string | null
+          read_at_operator?: string | null
+          sender_id?: string
+        }
+        Relationships: []
+      }
       operateur_observations: {
         Row: {
           created_at: string
@@ -2484,31 +2520,21 @@ export type Database = {
         Args: { p_entreprise_id: string; p_reason?: string }
         Returns: Json
       }
-      assigner_rdv:
-        | {
-            Args: {
-              p_date: string
-              p_demande_id: string
-              p_operator_id: string
-              p_time_slot: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_date: string
-              p_demande_id: string
-              p_heure?: string
-              p_operator_id: string
-              p_time_slot: string
-            }
-            Returns: Json
-          }
+      assigner_rdv: {
+        Args: {
+          p_date: string
+          p_demande_id: string
+          p_heure?: string
+          p_operator_id: string
+          p_time_slot: string
+        }
+        Returns: Json
+      }
       calculer_palier_remise: {
         Args: { p_nb_vehicules: number }
         Returns: {
           palier: string
-          remise_pct: number
+          taux_remise: number
         }[]
       }
       calculer_quota_gel_consomme: {
