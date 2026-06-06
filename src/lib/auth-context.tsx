@@ -63,6 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
+      } else if (event === "SIGNED_OUT") {
+        setIsRecovery(false);
       }
       setSession(newSession);
       setUser(newSession?.user ?? null);
