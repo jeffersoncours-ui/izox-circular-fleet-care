@@ -1,5 +1,19 @@
 # Lessons Learned — IZOX
 
+## Faille auth post-reset : signOut obligatoire après updateUser (session 26)
+
+- **La session de récupération Supabase est une session authentifiée à part entière** : quand un utilisateur clique sur un lien d'invite/reset, Supabase établit une session valide (ACCESS_TOKEN en hash ou code échangé). Cette session sert à appeler `updateUser({ password })`. Si on ne la détruit pas ensuite, l'utilisateur (ou quiconque a le mail ouvert) se retrouve connecté sans avoir saisi les identifiants — accès direct au dashboard.
+- **Pattern correct** : `await supabase.auth.updateUser({ password })` → si succès → `await supabase.auth.signOut()` → `navigate("/login")`. L'utilisateur doit se ré-authentifier normalement. Ce pattern s'applique à `reset-password.tsx` ET à la branche `isRecovery` de `login.tsx`.
+- **Symptôme trompeur** : `navigate("/login")` semblait protecteur, mais `login.tsx` a un effet qui redirige immédiatement vers le dashboard si une session active est détectée (`if (!loading && session && profile && !isRecovery)`). Sans `signOut()` préalable, la session récupérée reste active → redirect automatique vers `/client` ou `/admin`. La protection était donc illusoire.
+- **Audit systématique des flows auth** : à chaque nouveau flow d'authentification (invite, recovery, TOTP, OAuth), vérifier explicitement ce qui se passe avec la session APRÈS la transaction. Ne jamais supposer qu'un `navigate()` isole l'utilisateur d'une session active.
+
+## Suppression /legal — pattern retrait feature (session 26)
+
+- **Retirer une route = 5 points obligatoires** : (1) supprimer le fichier route, (2) supprimer TOUS les liens vers cette route (grep `to="/legal"`), (3) supprimer les imports orphelins (icônes, exports), (4) mettre à jour CLAUDE.md pour documenter l'absence, (5) `npm run build` pour régénérer `routeTree.gen.ts`. Oublier un seul lien = erreur TS au build.
+- **Les mentions légales facture ≠ CGV/RGPD** : `FactureDocument.tsx` + `izox-legal.ts` contiennent les mentions obligatoires sur les factures (raison sociale, SIRET, TVA art. 293 B). Ce ne sont PAS des pages CGV — les retirer rendrait les factures non conformes. Toujours distinguer : contenu légal pages web (optionnel) vs mentions légales documents comptables (obligatoires).
+
+
+
 ## Messagerie V1 admin↔terrain — architecture offline-first (session 25)
 
 - **`client_local_id UUID` est non-négociable pour la déduplication Realtime** : sans cette colonne en DB, le webhook Realtime ne retourne pas le localId côté client. Le front ne peut pas faire correspondre le message reçu avec le `LocalMessage` 'pending' → doublons visuels garantis. Ajouter la colonne dès la migration C1, pas comme afterthought.

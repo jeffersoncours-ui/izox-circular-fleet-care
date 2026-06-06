@@ -11,7 +11,7 @@
 - [x] 3. `admin.contrats.tsx` + `admin.clients.tsx` — pills filtres sur une seule ligne (overflow-x-auto nowrap)
 - [x] 4. Suppression complète `/legal` + liens (AdminSidebar, ClientNav, terrain.index.tsx) + nettoyage CLAUDE.md
 - [x] 5. `npx tsc --noEmit --skipLibCheck` + `npm run build` → 0 erreur
-- [ ] 6. Commit + push sur `claude/izox-fleet-care-planning-RJ00W`
+- [x] 6. Commit + push sur `claude/izox-fleet-care-planning-RJ00W`
 
 ---
 
