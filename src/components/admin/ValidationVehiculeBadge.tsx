@@ -52,11 +52,12 @@ export function ValidationVehiculeBadge({
   useEffect(() => {
     if (!createdBy || statut !== "en_attente_validation") return;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", createdBy)
         .maybeSingle();
+      if (error) toast.error("Impossible de charger le rôle du créateur : " + error.message);
       setCreateurRole((data?.role as string) ?? null);
     })();
   }, [createdBy, statut]);

@@ -363,3 +363,10 @@
 
 - **Après chaque migration schéma** : régénérer via MCP `generate_typescript_types`. La RPC renvoie `{"types":"..."}` (JSON wrapper) — extraire avec `python3 -c "import json; open('src/integrations/supabase/types.ts','w').write(json.loads(open('...').read())['types'])"`. Sans regen, les nouveaux RPCs ne sont pas typés et les appels `supabase.rpc(...)` déclenchent des erreurs TS.
 - **Cast temporaire `as never`** : acceptable pendant le développement si les types ne sont pas encore régénérés, mais toujours régénérer et supprimer les casts avant le commit final.
+
+## Session 27c — audit & cleanup (2026-06-10)
+
+- **Code mort déployé = risque latent** : `compute-impact` n'était appelée par aucun frontend mais restait déployée avec un IDOR (`entreprise_id` sans check). Une edge function non utilisée doit être supprimée, pas laissée "au cas où". Le MCP Supabase ne sait pas supprimer une edge function (seulement redéployer) → en attendant la suppression dashboard, la neutraliser avec un stub 410.
+- **`beforeLoad` + auth client-side = piège** : avec Supabase implicit flow, la session vit dans le contexte React (`auth-context`), pas dans le router. Mettre un guard auth en `beforeLoad` TanStack exige d'exposer l'auth au router context — changement architectural risqué (cf bug fiches interventions non cliquables). Le pattern retenu : `RoleGuard` composant partout + RLS/guards RPC en backstop. Ne pas "unifier" vers beforeLoad sans raison forte.
+- **Capture d'erreur minimale > refactor massif** : pour corriger 22 requêtes silencieuses, convertir chaque `load()` au hook `useSupabaseQuery` aurait churné 15 fichiers. La capture minimale (`const { data, error }` + toast) corrige le problème réel avec un diff de 2 lignes par site. Réserver le hook aux nouveaux composants et aux cas simples.
+- **Paramètres optionnels RPC typés** : les types générés Supabase déclarent les params optionnels comme `string | undefined` (pas `| null`). Passer `undefined`, pas `null`, sinon erreur TS2322 après regen.

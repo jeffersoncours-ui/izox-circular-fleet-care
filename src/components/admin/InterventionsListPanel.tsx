@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Search, ChevronRight, ClipboardCheck, Download } from "lucide-react";
 import { downloadCSV } from "@/lib/csv";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { statutColor, statutLabel, type Statut } from "@/lib/interventions";
 import { getPackLabel } from "@/lib/pricing";
@@ -41,12 +42,13 @@ export function InterventionsListPanel() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("interventions")
       .select(
         "id, statut, type_prestation, date_intervention, time_slot, created_at, vehicules(immatriculation, marque, modele), entreprises(nom)"
       )
       .order("created_at", { ascending: false });
+    if (error) toast.error("Impossible de charger les interventions : " + error.message);
     setItems((data as unknown as Item[]) || []);
     setLoading(false);
   };

@@ -22,57 +22,41 @@
 #### 🟠 IMPORTANT
 
 - [x] **`supprimer_vehicule` — commercial sans contrôle d'appartenance** : corrigé (migration `20260610_supprimer_vehicule_commercial_guard`) — commercial limité aux entreprises qu'il gère (signataire / commercial_id / accès délégué). Client et admin/staff inchangés.
-- [ ] **IDOR `compute-impact` (get_summary / get_client_records)** : acceptent `entreprise_id` sans check d'appartenance ni rôle. **MAIS code mort** : le frontend n'appelle jamais `compute-impact` (l'impact est calculé on-the-fly via `src/lib/impact.ts`, pas de table `impact_records` consommée — cf CLAUDE.md). L'edge function reste néanmoins déployée et appelable en direct. → **Recommandation : supprimer l'edge function `compute-impact` + la table `impact_records`** (nettoyage + suppression du risque latent). À valider avec l'utilisateur avant suppression.
-- [ ] **22 requêtes Supabase sans capture d'`error`** (`const { data } = await ...`) : échecs DB silencieux → listes vides sans feedback (ex. `admin.clients.$id.tsx:106,145`, `admin.contrats.$id.tsx:204`, `client.flotte.tsx:49`). Pattern à corriger : `const { data, error }` + `if (error) toast.error(...)`. Candidat idéal pour un hook `useSupabaseQuery` (voir simplifications).
-- [ ] **`compute-impact` fuite `error.message` au client** (catch ligne 220) : révèle la structure SQL. Sans objet si la fonction est supprimée ; sinon → message générique.
+- [x] **IDOR `compute-impact` (get_summary / get_client_records)** : SUPPRIMÉ (validé utilisateur). Table `impact_records` droppée (migration `20260610_drop_impact_records_dead_code`, vérifiée vide + 0 dépendance DB), edge function remplacée par un stub 410 Gone (v8 — le MCP ne permet pas la suppression ; suppression définitive possible depuis le dashboard), dossier `supabase/functions/compute-impact` supprimé du repo, types régénérés.
+- [x] **22 requêtes Supabase sans capture d'`error`** : TOUTES corrigées. 4 via hook `useSupabaseQuery` (client.flotte, PassagesReportesBanner, QuotaGelDecompose, DemandesRdvList) + 19 sites via capture minimale `const { data, error }` + toast (3 agents parallèles, batchs A/B/C). `auth-context` et `TwoFactorSetup` en `console.error` (pas de toast pour éviter le bruit).
+- [x] **`compute-impact` fuite `error.message` au client** : sans objet — fonction supprimée.
 
 #### 🟡 MINEUR
 
-- [ ] **`admin.facturation.tsx` — RoleGuard au rendu mais pas en `beforeLoad`** : un staff/commercial peut atteindre l'URL et voir un chargement avant masquage. Aligner sur un middleware `beforeLoad` (cohérence avec les autres routes admin-only).
-- [ ] **Casts `(supabase as any).rpc(...)`** dans `terrain.index.tsx` (158,170,818,838), `terrain.intervention.$id.tsx:191`, `TwoFactorSetup.tsx:265` : dette post-regen types. Régénérer types + retirer les casts.
+- [x] **`admin.facturation.tsx` — RoleGuard `beforeLoad`** : RÉÉVALUÉ → ne pas faire. L'architecture est déjà cohérente : layout `/admin` = `RoleGuard [admin,staff,commercial]`, les 4 routes admin-only (facturation, equipe, planning.map, board planning) = même `RoleGuard [admin]`. Un `beforeLoad` exigerait d'exposer l'auth Supabase (client-side) au contexte router — risqué (cf bug `admin.interventions` beforeLoad documenté dans CLAUDE.md) pour gain nul : le RoleGuard bloque le rendu (spinner→redirect, jamais de données affichées) et les données sont protégées par RLS/RPC durcis cette session.
+- [x] **Casts `(supabase as any).rpc(...)`** : TOUS retirés (`terrain.index.tsx` ×4, `TwoFactorSetup.tsx` ×3 ; `terrain.intervention.$id.tsx` n'en avait plus). Types régénérés post-drop `impact_records` ; fix `null` → `undefined` sur params optionnels `setup_2fa`.
 - [ ] **`compute-impact` / `send-email` CORS statique** (pas de `corsFor()` dynamique) : OK en prod, KO pour previews Vercel. Aligner si besoin de previews.
 - [ ] **"XSS `rdvDateLabel`" signalé par l'audit → NON exploitable** : `assigned_heure` (TIME) et `assigned_date` (DATE) sont des colonnes typées, pas du texte libre. Pas de fix nécessaire (noté pour mémoire).
 - [ ] **Enum `interventions.statut` en CHECK text** (vs type PG) : ajout de `annulee` a nécessité une redéf. Migrer vers un vrai ENUM PG un jour pour discipline.
 
 #### 🔧 SIMPLIFICATIONS (refactor sans changement de comportement, classées gain/risque)
 
-- [ ] **RoleGuard `beforeLoad` unifié** (gain 8 / risque 1) : middleware unique pour toutes les routes `/admin/*` au lieu de 2 patterns incohérents.
-- [ ] **Dialogs de gel factorisés** (gain 8 / risque 2) : `GelContratDialog` + `GelerVehiculeAdminDialog` + `DemanderGelDialog` + `LeverGelAnticipeDialog` partagent date_debut/fin/motif/submit → `<GelFormDialog>` commun (~-400 LOC).
-- [ ] **Hook `useSupabaseQuery<T>`** (gain 6 / risque 4) : centralise loading + error toast + `data ?? []` → corrige d'un coup les 22 erreurs non capturées.
-- [ ] **`useRdvSelection` + `<DateSlotPicker>`** (gain 7 / risque 2) : `CreerDemandeRdvDialog` + `ReplaceVehiculeDialog` + `GererRdvConfirmeDialog` dupliquent la logique calendrier/créneaux.
-- [ ] **`<FormDialog<T>>` générique** (gain 7 / risque 3) : pattern form+submitting+lookup répété sur 4 gros dialogs admin. Abstraction plus risquée — à faire en dernier.
+- [x] **RoleGuard `beforeLoad` unifié** : réévalué → ne pas faire (voir 🟡 MINEUR ci-dessus — déjà cohérent, beforeLoad risqué pour gain nul).
+- [x] **Hook `useSupabaseQuery<T>`** : fait — `src/lib/hooks/useSupabaseQuery.ts` (loading + error toast + defaultValue + refetch + deps). Utilisé sur 4 fichiers ; les autres sites corrigés en capture minimale (moins de churn).
+- [ ] **Dialogs de gel factorisés** (gain 8 / risque 2) : `GelContratDialog` + `GelerVehiculeAdminDialog` + `DemanderGelDialog` + `LeverGelAnticipeDialog` partagent date_debut/fin/motif/submit → `<GelFormDialog>` commun (~-400 LOC). **Backlog — session dédiée.**
+- [ ] **`useRdvSelection` + `<DateSlotPicker>`** (gain 7 / risque 2) : `CreerDemandeRdvDialog` + `ReplaceVehiculeDialog` + `GererRdvConfirmeDialog` dupliquent la logique calendrier/créneaux. **Backlog — session dédiée.**
+- [ ] **`<FormDialog<T>>` générique** (gain 7 / risque 3) : abstraction plus risquée — à faire en dernier. **Backlog.**
 
-### Session 2026-06-10 (27c) suite — Quick wins (RoleGuard + useSupabaseQuery)
+### Review session 27c (finale)
 
-Décision utilisateur : FAIRE quick wins d'abord (gain/risque favorable) puis compute-impact cleanup.
+**Sécurité (DB, vérifié en prod)** :
+1. 3 IDOR/guards critiques corrigés (`ajouter_vehicule`, `generer_facture`, RLS `vehicules_operateur_select`) + guard commercial `supprimer_vehicule`.
+2. `compute-impact` neutralisée (stub 410) + table `impact_records` droppée + types régénérés.
+3. RPC `ajouter_vehicule` testée en DB avec succès (admin → véhicule actif, palier OK) — données de test nettoyées.
 
-#### Étape 1 : Hook `useSupabaseQuery<T>` ✅
+**Qualité code** :
+4. Hook `useSupabaseQuery` créé + 4 composants migrés.
+5. 19 requêtes silencieuses → capture `error` + toast (ou console.error pour auth/2FA).
+6. 7 casts `as any` retirés (terrain, 2FA) grâce aux types régénérés.
 
-- [x] Créer `src/lib/hooks/useSupabaseQuery.ts` — centralise loading + error + refetch
-- [x] Refactor 3 fichiers clés : `client.flotte.tsx`, `PassagesReportesBanner`, `QuotaGelDecompose`
-- [x] Build TS — ✅ 0 erreurs
-- [ ] Continuer refactor des 20 autres usages (pattern automatisable)
-- [ ] Commit
+**Décision archi** : pas de `beforeLoad` auth — RoleGuard composant conservé (cohérent partout, RLS en backstop).
 
-**Refactorisés** (4) ✅ :
-- `src/routes/client.flotte.tsx` : load() → useSupabaseQuery + refetch
-- `src/components/client/PassagesReportesBanner.tsx` : suppression état manuel
-- `src/components/client/QuotaGelDecompose.tsx` : suppression état manuel
-- `src/components/admin/DemandesRdvList.tsx` : load() callback → refetch
-
-**Reste** (19 fichiers) : GererDemandeGelDialog, InterventionsListPanel, CreateContratDialog, etc. → À continuer en batch après test utilisateur
-
-**Prêt pour test utilisateur** : Pousser et demander vérification que les RPC fonctionnent maintenant (vehicule ajout, RDV, etc.)
-
-#### Étape 2 : RoleGuard `beforeLoad` unifié (après quick hook)
-
-- [ ] TBD
-
-### Reste à faire
-
-- [ ] Terminer quick wins (hook + RoleGuard)
-- [ ] Supprimer `compute-impact` edge function + table `impact_records` (après hook)
-- [ ] Build TS + commit + push
+**Reste en backlog (sessions futures)** : factorisation dialogs gel, DateSlotPicker partagé, FormDialog générique, enum PG `interventions.statut`, CORS dynamique `send-email`, suppression définitive de `compute-impact` depuis le dashboard Supabase (le MCP ne sait que redéployer, pas supprimer).
 
 ---
 

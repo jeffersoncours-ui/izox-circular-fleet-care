@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card } from "@/components/ui/card";
@@ -43,12 +44,13 @@ function MesDocuments() {
     }
     setLoading(true);
     // RLS limite déjà aux factures emise/payee/annulee de l'entreprise.
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("factures")
       .select("id, numero_facture, statut, periode_debut, periode_fin, date_emission, montant_ttc")
       .eq("entreprise_id", profile.entreprise_id)
       .order("date_emission", { ascending: false, nullsFirst: false })
       .order("periode_debut", { ascending: false });
+    if (error) toast.error("Erreur lors du chargement des factures");
     setFactures((data as FactureListItem[]) ?? []);
     setLoading(false);
   }, [profile?.entreprise_id]);

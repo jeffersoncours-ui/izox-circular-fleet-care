@@ -54,11 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const recoveryInProgress = useRef(detectAuthCallback());
 
   const loadProfile = useCallback(async (uid: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, prenom, nom, entreprise_id, role")
       .eq("id", uid)
       .maybeSingle();
+    if (error) console.error("Erreur chargement profil:", error.message);
     setProfile((data as Profile) ?? null);
   }, []);
 

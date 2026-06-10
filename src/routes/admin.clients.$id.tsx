@@ -103,22 +103,24 @@ function ClientDetailPage() {
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("vehicules")
       .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, photo_path, statut, type_pack_souhaite")
       .eq("entreprise_id", id)
       .order("created_at", { ascending: false });
+    if (error) toast.error("Impossible de charger les véhicules : " + error.message);
     setVehicules((data as Vehicule[]) ?? []);
     setLoadingVehicules(false);
   }, [id]);
 
   const loadEntreprise = useCallback(async () => {
     setLoadingEntreprise(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("entreprises")
       .select("id, nom, siret, adresse, ville, code_postal, email_contact, telephone, type_client, palier_remise, commercial_id, compte_active")
       .eq("id", id)
       .maybeSingle();
+    if (error) toast.error("Impossible de charger l'entreprise : " + error.message);
     setEntreprise((data as Entreprise) ?? null);
     setLoadingEntreprise(false);
   }, [id]);
@@ -142,11 +144,12 @@ function ClientDetailPage() {
       return;
     }
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("prenom, nom")
         .eq("id", entreprise.commercial_id!)
         .maybeSingle();
+      if (error) toast.error("Impossible de charger le commercial : " + error.message);
       setCommercialNom(
         data ? `${data.prenom ?? ""} ${data.nom ?? ""}`.trim() || null : null
       );
@@ -844,12 +847,13 @@ function FacturesTab({ entrepriseId }: { entrepriseId: string }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("factures")
       .select("id, numero_facture, statut, periode_debut, periode_fin, date_emission, montant_ttc")
       .eq("entreprise_id", entrepriseId)
       .order("date_emission", { ascending: false, nullsFirst: false })
       .order("periode_debut", { ascending: false });
+    if (error) toast.error("Impossible de charger les factures : " + error.message);
     setFactures((data as FactureListItem[]) ?? []);
     setLoading(false);
   }, [entrepriseId]);

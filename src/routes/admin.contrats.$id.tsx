@@ -201,12 +201,13 @@ function FacturesTab({ contratId }: { contratId: string }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("factures")
       .select("id, numero_facture, statut, periode_debut, periode_fin, date_emission, montant_ttc")
       .eq("contrat_id", contratId)
       .order("date_emission", { ascending: false, nullsFirst: false })
       .order("periode_debut", { ascending: false });
+    if (error) toast.error("Impossible de charger les factures : " + error.message);
     setFactures((data as FactureListItem[]) ?? []);
     setLoading(false);
   }, [contratId]);

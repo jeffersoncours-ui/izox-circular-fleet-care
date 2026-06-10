@@ -101,13 +101,14 @@ function AdminFacturationPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("factures")
       .select(
         "id, numero_facture, statut, periode_debut, periode_fin, date_emission, montant_ttc, snapshot_client, entreprise_id, contrat_id, created_at"
       )
       .order("date_emission", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
+    if (error) toast.error("Impossible de charger les factures : " + error.message);
     setFactures((data as unknown as FactureListItem[]) ?? []);
     setLoading(false);
   }, []);
@@ -515,11 +516,12 @@ function ClotureDialog({
     }
     const loadContrats = async () => {
       setLoadingContrats(true);
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("contrats")
         .select("id, numero_contrat, entreprises!inner(nom)")
         .in("statut", ["actif", "en_cours_gel"])
         .order("entreprise_id");
+      if (error) toast.error("Impossible de charger les contrats : " + error.message);
       setContrats(
         (data ?? []).map((c: any) => ({
           id: c.id,

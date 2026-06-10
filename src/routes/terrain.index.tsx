@@ -155,19 +155,19 @@ function Inner() {
   // Badge messages non lus dans Suivi
   useEffect(() => {
     if (!user?.id) return;
-    (supabase as any)
+    supabase
       .from("operateur_messages")
       .select("id", { count: "exact", head: true })
       .eq("conversation_operator_id", user.id)
       .is("read_at_operator", null)
       .neq("sender_id", user.id)
-      .then(({ count }: { count: number | null }) => setUnreadMessages(count ?? 0));
+      .then(({ count }) => setUnreadMessages(count ?? 0));
   }, [user?.id]);
 
   const prendreEnCharge = async (interventionId: string) => {
     setTakingCharge(interventionId);
     try {
-      const { error } = await (supabase as any).rpc("prendre_en_charge_intervention", {
+      const { error } = await supabase.rpc("prendre_en_charge_intervention", {
         p_intervention_id: interventionId,
       });
       if (error) throw error;
@@ -779,11 +779,12 @@ function TabObservations({ userId }: { userId: string }) {
   useEffect(() => {
     if (!userId) return;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("interventions")
         .select("entreprises(id, nom)")
         .not("statut", "in", '("annulee","planifiee")')
         .limit(200);
+      if (error) toast.error("Erreur lors du chargement des entreprises");
       if (!data) return;
       const map = new Map<string, string>();
       for (const row of data as any[]) {
@@ -815,14 +816,14 @@ function TabObservations({ userId }: { userId: string }) {
 
       if (ints.length > 0) {
         const ids = ints.map((i) => i.id);
-        const { data: obsData } = await (supabase as any)
+        const { data: obsData } = await supabase
           .from("operateur_observations")
           .select("intervention_id, note")
           .in("intervention_id", ids)
           .eq("operateur_id", userId);
         if (!alive) return;
         const obsMap: Record<string, string> = {};
-        for (const row of (obsData ?? []) as any[]) {
+        for (const row of obsData ?? []) {
           obsMap[row.intervention_id] = row.note ?? "";
         }
         setObservations(obsMap);
@@ -835,7 +836,7 @@ function TabObservations({ userId }: { userId: string }) {
   const saveObservation = async (interventionId: string, note: string) => {
     setSavingObs((prev) => ({ ...prev, [interventionId]: true }));
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("operateur_observations")
         .upsert(
           {
