@@ -8,11 +8,18 @@
 - **Distinguer code mort de risque actif** : `compute-impact` (edge function) + `impact_records` (table) avaient un IDOR, mais le frontend ne les appelle jamais (impact calculé on-the-fly dans `src/lib/impact.ts`). Avant de prioriser un fix, vérifier si le chemin est réellement atteignable depuis l'app. Ici → rétrogradé + recommandation de SUPPRESSION (le code mort déployé reste appelable en direct = risque latent + dette).
 - **Vérifier les claims des agents d'audit avant de coder** : l'agent edge-functions a signalé un « XSS critique » sur `rdvDateLabel` — faux positif : `assigned_heure`/`assigned_date` sont des colonnes TIME/DATE (pas de texte libre injectable). Et il a dit `emettre_facture` « sans guard » alors que `pg_proc` montrait `has_role_guard=true`. Toujours confirmer en DB (`pg_get_functiondef`, `pg_policy`) avant d'agir sur un finding d'agent.
 
-## Bug critique : noms de colonnes mal synchronisés entre RPC (session 27c)
+## Double-chargement page client quand auth tarde à résoudre (session 28)
+
+- **Symptôme** : page `/client/flotte/$id` "saute" au chargement — le contenu s'affiche, disparaît brièvement (spinner), puis réapparaît.
+- **Cause** : `load` dépend de `profile?.entreprise_id` via `useCallback`. Au montage, `profile = null` (auth pas encore résolue) → `load` est appelé une 1ère fois (gel check sauté). Quand l'auth résout, `profile?.entreprise_id` passe de `null` à un UUID → `load` est recrée → `useEffect` le rappelle → `setLoading(true)` flash visible → 2e chargement.
+- **Fix** : extraire `loading: authLoading` depuis `useAuth()` et garder le `useEffect` avec `if (!authLoading) load()` + `authLoading` dans les deps. La 1ère exécution de l'effet est sautée tant que l'auth charge ; quand elle résout, `authLoading=false` ET `profile?.entreprise_id` changent ensemble (React 18 batch) → un seul chargement.
+- **Règle** : quand `useCallback` dépend d'une valeur provenant du contexte auth (souvent `null` au départ), toujours ajouter un guard `if (!authLoading)` dans le `useEffect` pour éviter le double-chargement au montage.
+
+## Bug critique : noms de colonnes mal synchronisés entre RPC (session 27c / 28)
 
 - **Symptôme** : RPC returns HTTP 400 silencieusement, aucun message d'erreur frontend clair. Logs PostgreSQL montraient `"column \"remise_pct\" does not exist"`.
 - **Cause racine** : `calculer_palier_remise` retourne `TABLE(palier text, taux_remise numeric)`, mais `ajouter_vehicule` et `supprimer_vehicule` faisaient `SELECT palier, remise_pct INTO ...`. Erreur de synchronisation suite à une refonte de noms de colonnes qui n'avait pas été propagée uniformément.
-- **Pattern à éviter** : créer une RPC qui retourne des résultats nommés (par opposition à un scalar ou json), puis modifier les noms des colonnes résultats sans vérifier systématiquement tous les appels à cette RPC. Solution : une seule définition de la signature (en commentaire en haut de la RPC), et un scan grep `calculer_palier_remise.*SELECT.*INTO` avant chaque refonte.
+- **Pattern à éviter** : créer une RPC qui retourne des résultats nommés (par opposition à un scalar ou json), puis modifier les noms des colonnes résultats sans vérifier systématiquement TOUTES les RPC qui l'appellent. Le fix session 27c a corrigé `ajouter_vehicule` + `supprimer_vehicule` mais a manqué `valider_vehicule` — même bug, même erreur. Solution : grep exhaustif `calculer_palier_remise.*SELECT.*INTO` sur tout le schéma avant de clore un fix de synchronisation de colonnes.
 - **Diagnostic rapide** : quand une RPC cloud retourne 400 sans contexte, toujours consulter les logs PostgreSQL (pas seulement les logs API). L'erreur est souvent loggée en DB même si le client reçoit une réponse vague.
 
 ## Export CSV côté client — pattern partagé (session 27)
