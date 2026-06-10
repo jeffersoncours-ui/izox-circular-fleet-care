@@ -2,6 +2,48 @@
 
 ---
 
+## Session 2026-06-10 (27b) — Fix liens email reset/invite MDP
+
+### Contexte (bug remonté en test manuel)
+
+Cliquer sur le lien d'un email d'invitation ("Définir mon mot de passe") ou de reset
+("Mot de passe oublié") atterrissait sur `/login` avec les identifiants admin pré-remplis
+(autofill navigateur) au lieu de `/reset-password`.
+
+### Causes racines identifiées
+
+1. **Edge functions** : les 3 fonctions (`create-client-account`, `admin-reset-password`,
+   `request-password-reset`) définissaient `safeRedirectTo()` mais ne l'appelaient JAMAIS.
+   `generateLink` utilisait `${siteUrl}/reset-password` avec `siteUrl = SITE_URL ?? "https://izox.fr"`.
+   Si cette URL n'est pas dans l'allowlist Supabase, Supabase ignore silencieusement le
+   `redirect_to` et retombe sur la Site URL (racine de l'app) → `/login`.
+2. **`reset-password.tsx`** : lecture des params URL dans `useEffect` (après commit React).
+   Supabase-js peut nettoyer l'URL (`history.replaceState`) avant → `hasCode/hasToken = false`
+   → `navigate("/login")`.
+3. **`auth-context.tsx`** : `SIGNED_OUT` (déclenché quand la session admin existante est
+   remplacée par la session recovery) remettait `isRecovery = false` avant que
+   `PASSWORD_RECOVERY` n'arrive.
+
+### Plan
+
+- [x] Fix 1 — les 3 edge functions appellent réellement `safeRedirectTo(redirect_to)` du payload frontend
+- [x] Fix 2 — `reset-password.tsx` : capture des params URL en `useState` lazy (synchrone, avant tout nettoyage)
+- [x] Fix 3 — `auth-context.tsx` : `SIGNED_OUT` ne reset plus `isRecovery` si un callback recovery était présent au chargement (`recoveryInProgress` ref)
+- [x] Déploiement edge functions : `create-client-account` v23, `admin-reset-password` v21, `request-password-reset` v8
+- [x] `npm run build` → 0 erreur
+- [x] Commit + push branche session
+
+### À vérifier côté Supabase Dashboard (action utilisateur)
+
+- Auth → URL Configuration → Redirect URLs doit contenir
+  `https://izox-circular-fleet-care.vercel.app/reset-password` (et idéalement
+  `https://*.vercel.app/reset-password` pour les previews).
+- Retester : 1) création compte client → email invitation → lien → `/reset-password` ;
+  2) "Mot de passe oublié" → email reset → lien → `/reset-password` ;
+  3) reset depuis fiche client admin → idem.
+
+---
+
 ## Session 2026-06-06 (27) — Exports CSV + Alertes dashboard + Rapport B3
 
 ### Plan
