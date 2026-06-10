@@ -2,6 +2,24 @@
 
 ---
 
+## Session 2026-06-10 (27c) — Bug critique véhicule + audit complet app
+
+### Bug bloquant corrigé
+
+**Problème** : ajout de véhicule impossible côté client ET admin (RPC retournait 400)
+**Cause** : `ajouter_vehicule` et `supprimer_vehicule` lisaient `remise_pct` au lieu de `taux_remise` depuis `calculer_palier_remise`
+**Fix** : migration `20260610_fix_calculer_palier_remise_column.sql` → redéploiement immédiat en prod
+**Preuve** : 5 erreurs PostgreSQL "column remise_pct does not exist" dans les logs avant la fix
+
+### Audit complet application en cours
+
+Plan en 3 temps :
+1. **Analyse parallèle** : SQL/RLS (agent), edge functions (agent), frontend (agent)
+2. **Audit sécurité** : scan complet des patterns (IDOR, injection, XSS, auth flaws)
+3. **Report de bugs + fixes** : intégration dans todo.md (à faire mercredi) + corrections si pertinent
+
+---
+
 ## Session 2026-06-10 (27b) — Fix liens email reset/invite MDP
 
 ### Contexte (bug remonté en test manuel)

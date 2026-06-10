@@ -1,5 +1,12 @@
 # Lessons Learned — IZOX
 
+## Bug critique : noms de colonnes mal synchronisés entre RPC (session 27c)
+
+- **Symptôme** : RPC returns HTTP 400 silencieusement, aucun message d'erreur frontend clair. Logs PostgreSQL montraient `"column \"remise_pct\" does not exist"`.
+- **Cause racine** : `calculer_palier_remise` retourne `TABLE(palier text, taux_remise numeric)`, mais `ajouter_vehicule` et `supprimer_vehicule` faisaient `SELECT palier, remise_pct INTO ...`. Erreur de synchronisation suite à une refonte de noms de colonnes qui n'avait pas été propagée uniformément.
+- **Pattern à éviter** : créer une RPC qui retourne des résultats nommés (par opposition à un scalar ou json), puis modifier les noms des colonnes résultats sans vérifier systématiquement tous les appels à cette RPC. Solution : une seule définition de la signature (en commentaire en haut de la RPC), et un scan grep `calculer_palier_remise.*SELECT.*INTO` avant chaque refonte.
+- **Diagnostic rapide** : quand une RPC cloud retourne 400 sans contexte, toujours consulter les logs PostgreSQL (pas seulement les logs API). L'erreur est souvent loggée en DB même si le client reçoit une réponse vague.
+
 ## Export CSV côté client — pattern partagé (session 27)
 
 - **BOM UTF-8 (`﻿`) obligatoire pour Excel** : sans BOM, Excel ouvre les fichiers CSV UTF-8 en ANSI et les accents (é, è, ç) s'affichent en caractères corrompus. LibreOffice lit correctement sans BOM mais le tolère. Toujours préfixer le contenu avec `"﻿"` (BOM littéral) ou `"﻿"`.
