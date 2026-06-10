@@ -38,6 +38,20 @@ function safeRedirectTo(raw: unknown): string {
   }
 }
 
+// Build a "set password" link that points DIRECTLY at our app with the
+// one-time token in the query string (token_hash + type), instead of the
+// Supabase action_link which goes through /auth/v1/verify and redirects with
+// a URL hash (#access_token=...). The hash is client-only and is silently
+// dropped by any server-side redirect, and depends on the Supabase redirect
+// allowlist. The query-string form survives SSR and redirects, and the page
+// calls supabase.auth.verifyOtp({ token_hash, type }) to establish the session.
+function buildRecoveryLink(baseRedirect: string, hashedToken: string): string {
+  const u = new URL(baseRedirect);
+  u.searchParams.set("token_hash", hashedToken);
+  u.searchParams.set("type", "recovery");
+  return u.toString();
+}
+
 interface Payload {
   entreprise: {
     nom: string;
@@ -274,12 +288,16 @@ Deno.serve(async (req) => {
     // 5. Generate a "set password" recovery link (non-fatal if it fails)
     let inviteLink: string | null = null;
     try {
+      const redirectBase = safeRedirectTo(payload.redirect_to);
       const { data: linkData } = await admin.auth.admin.generateLink({
         type: "recovery",
         email: payload.user.email,
-        options: { redirectTo: safeRedirectTo(payload.redirect_to) },
+        options: { redirectTo: redirectBase },
       });
-      inviteLink = linkData?.properties?.action_link ?? null;
+      const hashedToken = linkData?.properties?.hashed_token ?? null;
+      inviteLink = hashedToken
+        ? buildRecoveryLink(redirectBase, hashedToken)
+        : (linkData?.properties?.action_link ?? null);
     } catch {
       // Account was created — link generation failure is non-fatal
     }

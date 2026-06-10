@@ -44,6 +44,17 @@ function safeRedirectTo(raw: unknown, siteUrl: string): string {
   }
 }
 
+// Build a reset link pointing DIRECTLY at our app with the one-time token in
+// the query string (token_hash + type). Avoids the fragile Supabase
+// action_link (/auth/v1/verify → URL hash redirect, allowlist-dependent).
+// The reset page calls supabase.auth.verifyOtp({ token_hash, type }).
+function buildRecoveryLink(baseRedirect: string, hashedToken: string): string {
+  const u = new URL(baseRedirect);
+  u.searchParams.set("token_hash", hashedToken);
+  u.searchParams.set("type", "recovery");
+  return u.toString();
+}
+
 function buildResetText(link: string): string {
   return `Bonjour,
 
@@ -175,13 +186,17 @@ Deno.serve(async (req) => {
 
     // Generate the recovery link. If the user does not exist, generateLink
     // returns an error — we swallow it and respond generically (no enumeration).
+    const redirectBase = safeRedirectTo(redirect_to, siteUrl);
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo: safeRedirectTo(redirect_to, siteUrl) },
+      options: { redirectTo: redirectBase },
     });
 
-    const actionLink = data?.properties?.action_link ?? null;
+    const hashedToken = data?.properties?.hashed_token ?? null;
+    const actionLink = hashedToken
+      ? buildRecoveryLink(redirectBase, hashedToken)
+      : (data?.properties?.action_link ?? null);
     if (error || !actionLink) return genericOk();
 
     // Send the branded reset email via the Resend HTTP API.
