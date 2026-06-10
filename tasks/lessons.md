@@ -1,5 +1,16 @@
 # Lessons Learned — IZOX
 
+## Boucle infinie `useSupabaseQuery` — pattern ref pour callbacks stables (session 28)
+
+- **Symptôme** : pages `/client/flotte` et `/admin/planning` "sautent" en continu, impossible d'interagir. Réseau : des dizaines de requêtes Supabase par seconde.
+- **Cause racine** : `fetch = useCallback(fn, [queryFn, options])` — `queryFn` est une arrow function inline (nouvelle référence à chaque render), `options` est un objet inline (même chose). `fetch` est donc recrée à chaque render. Le `useEffect([fetch])` se déclenche à chaque render → `setLoading(true)` → re-render → nouvelle `queryFn` → `fetch` recrée → `useEffect` se redéclenche → boucle infinie.
+- **Fix — ref pattern pour callbacks stables** :
+  1. Stocker `queryFn` et chaque valeur d'`options` dans des `useRef` mis à jour à chaque render (sans être dans les deps).
+  2. `useCallback(fn, [])` avec deps vide → `fetch` est **une seule fois** créée et ne change jamais.
+  3. `useEffect(..., deps ?? [])` — ne pas inclure `fetch` dans les deps (inutile puisque stable).
+- **Règle** : quand un callback doit être stable mais doit toujours lire les valeurs les plus récentes, utiliser `useRef` pour les valeurs + `useCallback(fn, [])`. Ne **jamais** mettre une inline arrow function ou un objet inline comme dépendance d'un `useCallback` qui est lui-même dans les deps d'un `useEffect`.
+- **Diagnostiquer rapidement** : si un `useEffect` se déclenche à chaque render, chercher dans ses deps une valeur dont la référence change à chaque render (souvent : inline function, inline object, résultat de `.filter()/.map()`).
+
 ## Audit complet app — IDOR sur RPC SECURITY DEFINER (session 27c)
 
 - **Une RPC SECURITY DEFINER bypasse TOUTE la RLS** : elle s'exécute avec les droits du owner (postgres). Le seul rempart est le code de la fonction elle-même. Donc chaque RPC qui prend un `entreprise_id`/`contrat_id`/`user_id` en paramètre DOIT vérifier explicitement l'appartenance pour un appelant client/commercial — sinon IDOR direct (un client appelle `/rest/v1/rpc/xxx` avec l'id d'un autre). La RLS sur les tables ne protège PAS les écritures faites dans une SECURITY DEFINER.
@@ -8,11 +19,18 @@
 - **Distinguer code mort de risque actif** : `compute-impact` (edge function) + `impact_records` (table) avaient un IDOR, mais le frontend ne les appelle jamais (impact calculé on-the-fly dans `src/lib/impact.ts`). Avant de prioriser un fix, vérifier si le chemin est réellement atteignable depuis l'app. Ici → rétrogradé + recommandation de SUPPRESSION (le code mort déployé reste appelable en direct = risque latent + dette).
 - **Vérifier les claims des agents d'audit avant de coder** : l'agent edge-functions a signalé un « XSS critique » sur `rdvDateLabel` — faux positif : `assigned_heure`/`assigned_date` sont des colonnes TIME/DATE (pas de texte libre injectable). Et il a dit `emettre_facture` « sans guard » alors que `pg_proc` montrait `has_role_guard=true`. Toujours confirmer en DB (`pg_get_functiondef`, `pg_policy`) avant d'agir sur un finding d'agent.
 
-## Bug critique : noms de colonnes mal synchronisés entre RPC (session 27c)
+## Double-chargement page client quand auth tarde à résoudre (session 28)
+
+- **Symptôme** : page `/client/flotte/$id` "saute" au chargement — le contenu s'affiche, disparaît brièvement (spinner), puis réapparaît.
+- **Cause** : `load` dépend de `profile?.entreprise_id` via `useCallback`. Au montage, `profile = null` (auth pas encore résolue) → `load` est appelé une 1ère fois (gel check sauté). Quand l'auth résout, `profile?.entreprise_id` passe de `null` à un UUID → `load` est recrée → `useEffect` le rappelle → `setLoading(true)` flash visible → 2e chargement.
+- **Fix** : extraire `loading: authLoading` depuis `useAuth()` et garder le `useEffect` avec `if (!authLoading) load()` + `authLoading` dans les deps. La 1ère exécution de l'effet est sautée tant que l'auth charge ; quand elle résout, `authLoading=false` ET `profile?.entreprise_id` changent ensemble (React 18 batch) → un seul chargement.
+- **Règle** : quand `useCallback` dépend d'une valeur provenant du contexte auth (souvent `null` au départ), toujours ajouter un guard `if (!authLoading)` dans le `useEffect` pour éviter le double-chargement au montage.
+
+## Bug critique : noms de colonnes mal synchronisés entre RPC (session 27c / 28)
 
 - **Symptôme** : RPC returns HTTP 400 silencieusement, aucun message d'erreur frontend clair. Logs PostgreSQL montraient `"column \"remise_pct\" does not exist"`.
 - **Cause racine** : `calculer_palier_remise` retourne `TABLE(palier text, taux_remise numeric)`, mais `ajouter_vehicule` et `supprimer_vehicule` faisaient `SELECT palier, remise_pct INTO ...`. Erreur de synchronisation suite à une refonte de noms de colonnes qui n'avait pas été propagée uniformément.
-- **Pattern à éviter** : créer une RPC qui retourne des résultats nommés (par opposition à un scalar ou json), puis modifier les noms des colonnes résultats sans vérifier systématiquement tous les appels à cette RPC. Solution : une seule définition de la signature (en commentaire en haut de la RPC), et un scan grep `calculer_palier_remise.*SELECT.*INTO` avant chaque refonte.
+- **Pattern à éviter** : créer une RPC qui retourne des résultats nommés (par opposition à un scalar ou json), puis modifier les noms des colonnes résultats sans vérifier systématiquement TOUTES les RPC qui l'appellent. Le fix session 27c a corrigé `ajouter_vehicule` + `supprimer_vehicule` mais a manqué `valider_vehicule` — même bug, même erreur. Solution : grep exhaustif `calculer_palier_remise.*SELECT.*INTO` sur tout le schéma avant de clore un fix de synchronisation de colonnes.
 - **Diagnostic rapide** : quand une RPC cloud retourne 400 sans contexte, toujours consulter les logs PostgreSQL (pas seulement les logs API). L'erreur est souvent loggée en DB même si le client reçoit une réponse vague.
 
 ## Export CSV côté client — pattern partagé (session 27)

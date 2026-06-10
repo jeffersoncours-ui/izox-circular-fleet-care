@@ -55,7 +55,7 @@ interface Vehicule {
 function VehiculeDetail() {
   const { id } = useParams({ from: "/client/flotte/$id" });
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [vehicule, setVehicule] = useState<Vehicule | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,8 +145,8 @@ function VehiculeDetail() {
   }, [id, profile?.entreprise_id]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!authLoading) load();
+  }, [load, authLoading]);
 
   const handleDelete = async () => {
     setDeleting(true);
