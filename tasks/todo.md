@@ -11,12 +11,43 @@
 **Fix** : migration `20260610_fix_calculer_palier_remise_column.sql` → redéploiement immédiat en prod
 **Preuve** : 5 erreurs PostgreSQL "column remise_pct does not exist" dans les logs avant la fix
 
-### Audit complet application en cours
+### Audit complet application — résultats (3 agents parallèles + vérif DB)
 
-Plan en 3 temps :
-1. **Analyse parallèle** : SQL/RLS (agent), edge functions (agent), frontend (agent)
-2. **Audit sécurité** : scan complet des patterns (IDOR, injection, XSS, auth flaws)
-3. **Report de bugs + fixes** : intégration dans todo.md (à faire mercredi) + corrections si pertinent
+#### 🔴 CRITIQUE — corrigés cette session (migration `20260610_security_fixes_idor_guards`)
+
+- [x] **IDOR `ajouter_vehicule`** : un client pouvait créer véhicules/contrats chez n'importe quelle entreprise (RPC SECURITY DEFINER appelable en direct avec un `p_entreprise_id` arbitraire, aucun check d'appartenance). → garde `get_user_entreprise(uid) = p_entreprise_id` pour les clients. Vérifié en DB.
+- [x] **RLS `vehicules_operateur_select` grande ouverte** : la policy filtrait uniquement `has_role(operateur)` → tout opérateur voyait les véhicules de TOUTES les entreprises (immat, marques, notes, pricing). → ajout filtre `EXISTS interventions liées (operateur_id OU operator_id)`. Vérifié en DB.
+- [x] **`generer_facture` sans guard de rôle** : SECURITY DEFINER appelable par tout authenticated → un client pouvait générer des brouillons de facture pour n'importe quel contrat. → guard admin/staff en tête de fonction. Vérifié en DB.
+
+#### 🟠 IMPORTANT
+
+- [x] **`supprimer_vehicule` — commercial sans contrôle d'appartenance** : corrigé (migration `20260610_supprimer_vehicule_commercial_guard`) — commercial limité aux entreprises qu'il gère (signataire / commercial_id / accès délégué). Client et admin/staff inchangés.
+- [ ] **IDOR `compute-impact` (get_summary / get_client_records)** : acceptent `entreprise_id` sans check d'appartenance ni rôle. **MAIS code mort** : le frontend n'appelle jamais `compute-impact` (l'impact est calculé on-the-fly via `src/lib/impact.ts`, pas de table `impact_records` consommée — cf CLAUDE.md). L'edge function reste néanmoins déployée et appelable en direct. → **Recommandation : supprimer l'edge function `compute-impact` + la table `impact_records`** (nettoyage + suppression du risque latent). À valider avec l'utilisateur avant suppression.
+- [ ] **22 requêtes Supabase sans capture d'`error`** (`const { data } = await ...`) : échecs DB silencieux → listes vides sans feedback (ex. `admin.clients.$id.tsx:106,145`, `admin.contrats.$id.tsx:204`, `client.flotte.tsx:49`). Pattern à corriger : `const { data, error }` + `if (error) toast.error(...)`. Candidat idéal pour un hook `useSupabaseQuery` (voir simplifications).
+- [ ] **`compute-impact` fuite `error.message` au client** (catch ligne 220) : révèle la structure SQL. Sans objet si la fonction est supprimée ; sinon → message générique.
+
+#### 🟡 MINEUR
+
+- [ ] **`admin.facturation.tsx` — RoleGuard au rendu mais pas en `beforeLoad`** : un staff/commercial peut atteindre l'URL et voir un chargement avant masquage. Aligner sur un middleware `beforeLoad` (cohérence avec les autres routes admin-only).
+- [ ] **Casts `(supabase as any).rpc(...)`** dans `terrain.index.tsx` (158,170,818,838), `terrain.intervention.$id.tsx:191`, `TwoFactorSetup.tsx:265` : dette post-regen types. Régénérer types + retirer les casts.
+- [ ] **`compute-impact` / `send-email` CORS statique** (pas de `corsFor()` dynamique) : OK en prod, KO pour previews Vercel. Aligner si besoin de previews.
+- [ ] **"XSS `rdvDateLabel`" signalé par l'audit → NON exploitable** : `assigned_heure` (TIME) et `assigned_date` (DATE) sont des colonnes typées, pas du texte libre. Pas de fix nécessaire (noté pour mémoire).
+- [ ] **Enum `interventions.statut` en CHECK text** (vs type PG) : ajout de `annulee` a nécessité une redéf. Migrer vers un vrai ENUM PG un jour pour discipline.
+
+#### 🔧 SIMPLIFICATIONS (refactor sans changement de comportement, classées gain/risque)
+
+- [ ] **RoleGuard `beforeLoad` unifié** (gain 8 / risque 1) : middleware unique pour toutes les routes `/admin/*` au lieu de 2 patterns incohérents.
+- [ ] **Dialogs de gel factorisés** (gain 8 / risque 2) : `GelContratDialog` + `GelerVehiculeAdminDialog` + `DemanderGelDialog` + `LeverGelAnticipeDialog` partagent date_debut/fin/motif/submit → `<GelFormDialog>` commun (~-400 LOC).
+- [ ] **Hook `useSupabaseQuery<T>`** (gain 6 / risque 4) : centralise loading + error toast + `data ?? []` → corrige d'un coup les 22 erreurs non capturées.
+- [ ] **`useRdvSelection` + `<DateSlotPicker>`** (gain 7 / risque 2) : `CreerDemandeRdvDialog` + `ReplaceVehiculeDialog` + `GererRdvConfirmeDialog` dupliquent la logique calendrier/créneaux.
+- [ ] **`<FormDialog<T>>` générique** (gain 7 / risque 3) : pattern form+submitting+lookup répété sur 4 gros dialogs admin. Abstraction plus risquée — à faire en dernier.
+
+### Reste à faire (suite session)
+
+- [ ] Décision utilisateur : supprimer `compute-impact` + `impact_records` (code mort + IDOR latent) ?
+- [ ] Implémenter les simplifications validées (proposer par ordre gain/risque)
+- [ ] Corriger les 22 erreurs Supabase non capturées (via hook ou au cas par cas)
+- [ ] Build TS + commit + push
 
 ---
 

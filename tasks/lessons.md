@@ -1,5 +1,13 @@
 # Lessons Learned — IZOX
 
+## Audit complet app — IDOR sur RPC SECURITY DEFINER (session 27c)
+
+- **Une RPC SECURITY DEFINER bypasse TOUTE la RLS** : elle s'exécute avec les droits du owner (postgres). Le seul rempart est le code de la fonction elle-même. Donc chaque RPC qui prend un `entreprise_id`/`contrat_id`/`user_id` en paramètre DOIT vérifier explicitement l'appartenance pour un appelant client/commercial — sinon IDOR direct (un client appelle `/rest/v1/rpc/xxx` avec l'id d'un autre). La RLS sur les tables ne protège PAS les écritures faites dans une SECURITY DEFINER.
+- **3 IDOR trouvés sur des RPC qui déterminaient le rôle sans l'utiliser comme garde** : `ajouter_vehicule` calculait `v_role_initiateur='client'` mais ne vérifiait jamais `get_user_entreprise = p_entreprise_id` ; `generer_facture` était SECURITY DEFINER sans aucun guard de rôle ; `supprimer_vehicule` ne contrôlait pas le commercial. Pattern de référence correct déjà présent ailleurs : `creer_demande_rdv` et `demander_gel` vérifient bien l'appartenance. **Règle : déterminer un rôle ≠ l'appliquer. Toujours suivre la détermination d'un `RAISE EXCEPTION` si l'appartenance ne matche pas.**
+- **RLS « role-only » = fuite de données inter-tenant** : `vehicules_operateur_select` faisait juste `has_role(operateur)` → tout opérateur voyait les véhicules de toutes les entreprises. Une policy pour un rôle non-admin doit TOUJOURS filtrer par la donnée (ici : EXISTS interventions liées via `operateur_id` ou `operator_id`), pas seulement par le rôle. Même leçon que les 3 bugs RLS passés (vehicules/entreprises sans policy).
+- **Distinguer code mort de risque actif** : `compute-impact` (edge function) + `impact_records` (table) avaient un IDOR, mais le frontend ne les appelle jamais (impact calculé on-the-fly dans `src/lib/impact.ts`). Avant de prioriser un fix, vérifier si le chemin est réellement atteignable depuis l'app. Ici → rétrogradé + recommandation de SUPPRESSION (le code mort déployé reste appelable en direct = risque latent + dette).
+- **Vérifier les claims des agents d'audit avant de coder** : l'agent edge-functions a signalé un « XSS critique » sur `rdvDateLabel` — faux positif : `assigned_heure`/`assigned_date` sont des colonnes TIME/DATE (pas de texte libre injectable). Et il a dit `emettre_facture` « sans guard » alors que `pg_proc` montrait `has_role_guard=true`. Toujours confirmer en DB (`pg_get_functiondef`, `pg_policy`) avant d'agir sur un finding d'agent.
+
 ## Bug critique : noms de colonnes mal synchronisés entre RPC (session 27c)
 
 - **Symptôme** : RPC returns HTTP 400 silencieusement, aucun message d'erreur frontend clair. Logs PostgreSQL montraient `"column \"remise_pct\" does not exist"`.
