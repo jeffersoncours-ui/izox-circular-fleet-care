@@ -25,7 +25,7 @@ import { toast } from "sonner";
  * ```
  */
 export function useSupabaseQuery<T>(
-  queryFn: () => Promise<{ data: T | null; error: PostgrestError | null }>,
+  queryFn: () => Promise<any> | any,
   options: {
     defaultValue?: T;
     errorMessage?: string;

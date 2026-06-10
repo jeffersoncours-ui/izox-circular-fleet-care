@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, useCallback } from "react";
+import { lazy, Suspense, useState, useCallback } from "react";
 import { Loader2, MapPin } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useNavigate } from "@tanstack/react-router";
@@ -9,6 +9,7 @@ import { type AdminDemandeRdv } from "@/components/admin/demande-rdv-types";
 import { AssignerRdvDialog } from "@/components/admin/AssignerRdvDialog";
 import { GererRdvConfirmeDialog } from "@/components/admin/GererRdvConfirmeDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
+import { useSupabaseQuery } from "@/lib/hooks/useSupabaseQuery";
 import { Route as PlanningRoute } from "@/routes/admin.planning";
 
 // Leaflet is browser-only — lazy-import to prevent SSR issues
@@ -48,8 +49,6 @@ const PILL_CONFIG = [
 ] as const;
 
 export function DemandesRdvList() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("en_attente");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [assigning, setAssigning] = useState<AdminDemandeRdv | null>(null);
@@ -67,19 +66,14 @@ export function DemandesRdvList() {
     });
   }, [navigate]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from("demandes_rdv")
-      .select("*, entreprises(nom)")
-      .order("created_at", { ascending: false });
-    setRows((data ?? []) as unknown as Row[]);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data: rows, loading, refetch } = useSupabaseQuery<Row[]>(
+    async () =>
+      await supabase
+        .from("demandes_rdv")
+        .select("*, entreprises(nom)")
+        .order("created_at", { ascending: false }),
+    { defaultValue: [] }
+  );
 
   const search = PlanningRoute.useSearch();
   useAutoOpenFromSearch<Row>(
@@ -269,7 +263,7 @@ export function DemandesRdvList() {
         onAssigned={() => {
           setAssigning(null);
           clearDemandeParam();
-          load();
+          refetch();
         }}
       />
 
@@ -285,7 +279,7 @@ export function DemandesRdvList() {
         onUpdated={() => {
           setManaging(null);
           clearDemandeParam();
-          load();
+          refetch();
         }}
       />
     </div>
