@@ -54,12 +54,15 @@ Décision utilisateur : FAIRE quick wins d'abord (gain/risque favorable) puis co
 - [ ] Continuer refactor des 20 autres usages (pattern automatisable)
 - [ ] Commit
 
-**Refactorisés** (3) :
-- `src/routes/client.flotte.tsx` : remplacé load() async + setState par useSupabaseQuery + refetch
+**Refactorisés** (4) ✅ :
+- `src/routes/client.flotte.tsx` : load() → useSupabaseQuery + refetch
 - `src/components/client/PassagesReportesBanner.tsx` : suppression état manuel
 - `src/components/client/QuotaGelDecompose.tsx` : suppression état manuel
+- `src/components/admin/DemandesRdvList.tsx` : load() callback → refetch
 
-**Reste** (20 fichiers) : GererDemandeGelDialog, InterventionsListPanel, CreatContratDialog, etc. → À continuer en batch
+**Reste** (19 fichiers) : GererDemandeGelDialog, InterventionsListPanel, CreateContratDialog, etc. → À continuer en batch après test utilisateur
+
+**Prêt pour test utilisateur** : Pousser et demander vérification que les RPC fonctionnent maintenant (vehicule ajout, RDV, etc.)
 
 #### Étape 2 : RoleGuard `beforeLoad` unifié (après quick hook)
 
