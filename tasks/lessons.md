@@ -20,6 +20,14 @@
 - **Fix** : state local `geocoded: boolean` initialisé à `false`, remis à `false` à chaque ouverture du dialog (`useEffect([open, demande])`). Après géocodage réussi : `setGeocoded(true)`. Condition : `!demande.latitude && !geocoded`. Le badge disparaît immédiatement après l'action sans muter le prop.
 - **Règle** : ne jamais muter un objet prop (même si JS le permet). Pour un état UI local (ex. "action vient d'être faite"), utiliser un `boolean` state local au composant. Pour exposer la mise à jour au parent, passer un callback (ex. `onGeocoded(lat, lng)`) dans les props.
 
+## `remise_pct` vs `taux_remise` — colonne de retour de `calculer_palier_remise` (sessions 27c/28/29)
+
+- **Symptôme** : `degeler_contrat` échoue avec `ERROR 42703: column "remise_pct" does not exist` côté front. Toast d'erreur affiché, contrat reste en `en_cours_gel`.
+- **Cause** : `_recalculer_caches_contrat` lisait `SELECT palier, remise_pct FROM calculer_palier_remise(v_nb)` mais la fonction retourne `TABLE(palier text, taux_remise numeric)`. Le nom de colonne dans le SELECT doit correspondre au nom déclaré dans le RETURNS TABLE.
+- **Correctif appliqué** : migration `20260610c_fix_recalculer_caches_contrat_taux_remise.sql` → `SELECT palier, taux_remise INTO v_palier, v_remise`. La colonne destination (`remise_pct` sur `contrats`) garde son nom, seul le alias de lecture depuis la fonction change.
+- **Historique** : même bug corrigé sur `ajouter_vehicule`, `supprimer_vehicule`, `valider_vehicule` en sessions 27c/28. `_recalculer_caches_contrat` (appelé par `degeler_contrat`) avait été oublié.
+- **Règle** : quand `calculer_palier_remise` change sa signature RETURNS TABLE, chercher TOUTES les fonctions qui l'appellent avec `grep -r "calculer_palier_remise"` et mettre à jour chaque `SELECT` en conséquence. Vérifier aussi `_recalculer_caches_contrat` qui est un helper intermédiaire appelé par plusieurs RPCs.
+
 ## Boucle infinie `useSupabaseQuery` — pattern ref pour callbacks stables (session 28)
 
 - **Symptôme** : pages `/client/flotte` et `/admin/planning` "sautent" en continu, impossible d'interagir. Réseau : des dizaines de requêtes Supabase par seconde.
