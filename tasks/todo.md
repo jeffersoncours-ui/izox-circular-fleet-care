@@ -56,6 +56,9 @@
 
 **Décision archi** : pas de `beforeLoad` auth — RoleGuard composant conservé (cohérent partout, RLS en backstop).
 
+**Purge DB complète (2026-06-10 finale)** :
+7. Base vidée de toutes données de test : 0 notifications, 0 observations, 0 actions log, 0 emails logs, 0 photos, 0 interventions, 0 demandes RDV/gel, 0 factures/avoirs, 0 contrats, 0 véhicules, 0 entreprises clients. Conservés : exactement 4 comptes techniques (admin.test, staff.test, commercial.test, operateur.test). Vérifié via execute_sql : `COUNT(auth.users)=4` + tous les tables métier à 0. État vierge ready pour prochaine session.
+
 **Reste en backlog (sessions futures)** : factorisation dialogs gel, DateSlotPicker partagé, FormDialog générique, enum PG `interventions.statut`, CORS dynamique `send-email`, suppression définitive de `compute-impact` depuis le dashboard Supabase (le MCP ne sait que redéployer, pas supprimer).
 
 ---
