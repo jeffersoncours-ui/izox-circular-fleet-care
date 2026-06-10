@@ -67,6 +67,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
   const [selectedHeure, setSelectedHeure] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const [geocoded, setGeocoded] = useState(false);
   const [refusOpen, setRefusOpen] = useState(false);
   const [motif, setMotif] = useState("");
 
@@ -81,6 +82,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     setSelectedDate("");
     setSelectedSlot("");
     setSelectedHeure("");
+    setGeocoded(false);
     setRefusOpen(false);
     setMotif("");
   }, [open, demande]);
@@ -178,9 +180,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
         .from("demandes_rdv")
         .update({ latitude: data.latitude, longitude: data.longitude })
         .eq("id", demande.id);
-      // Update local demande reference for immediate UI feedback
-      demande.latitude = data.latitude;
-      demande.longitude = data.longitude;
+      setGeocoded(true);
       toast.success("Adresse géocodée avec succès.");
     } catch (e: unknown) {
       toast.error((e as Error)?.message ?? "Erreur lors du géocodage");
@@ -237,7 +237,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
                       .filter(Boolean)
                       .join(", ")}
                   </p>
-                  {!demande.latitude && (
+                  {!demande.latitude && !geocoded && (
                     <div className="mt-1.5 flex items-center gap-2">
                       <span className="flex items-center gap-1 text-xs text-amber-700">
                         <AlertTriangle className="h-3 w-3" />

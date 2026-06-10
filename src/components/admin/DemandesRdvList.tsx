@@ -236,8 +236,8 @@ export function DemandesRdvList() {
             </div>
           </div>
 
-          {/* Map — 60% */}
-          <div className="flex-1 relative overflow-hidden">
+          {/* Map — 60% : isolation:isolate confine les z-indexes Leaflet (600-800) pour ne pas transpercer le Dialog (z-50) */}
+          <div className="flex-1 relative overflow-hidden" style={{ isolation: "isolate" }}>
             <Suspense
               fallback={
                 <div className="w-full h-full flex items-center justify-center bg-muted/10">

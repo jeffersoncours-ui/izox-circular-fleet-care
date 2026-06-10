@@ -238,10 +238,14 @@ Deno.serve(async (req) => {
 
     const payload: Payload = await req.json();
 
-    // 1. Create entreprise
+    // 1. Create entreprise — default email_contact to the user's email so
+    //    transactional emails (RDV, interventions) always have a recipient.
     const { data: entreprise, error: entErr } = await admin
       .from("entreprises")
-      .insert(payload.entreprise)
+      .insert({
+        ...payload.entreprise,
+        email_contact: payload.entreprise.email_contact ?? payload.user.email,
+      })
       .select("id")
       .single();
     if (entErr) throw new Error(`Entreprise: ${entErr.message}`);
