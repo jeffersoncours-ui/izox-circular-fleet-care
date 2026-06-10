@@ -48,11 +48,12 @@ export function EditMyInfoDialog({ open, onOpenChange, onUpdated }: Props) {
         email_contact: "",
       };
       if (profile?.entreprise_id) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("entreprises")
           .select("adresse, ville, code_postal, telephone, email_contact")
           .eq("id", profile.entreprise_id)
           .maybeSingle();
+        if (error) toast.error("Erreur lors du chargement des informations");
         if (data) {
           entreprise = {
             adresse: data.adresse ?? "",

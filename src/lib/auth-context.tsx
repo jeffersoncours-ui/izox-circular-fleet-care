@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState, useCallback, createContext, useContext, type ReactNode } from "react";
+import { useEffect, useState, useRef, useCallback, createContext, useContext, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 
 export type AppRole = "admin" | "staff" | "commercial" | "operateur" | "client";
@@ -48,13 +48,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // True when a PASSWORD_RECOVERY flow is in progress.
   // Seeded from the URL so it's correct before the async code exchange fires.
   const [isRecovery, setIsRecovery] = useState(detectAuthCallback);
+  // Tracks whether a recovery flow was active at page load so SIGNED_OUT
+  // (fired when the existing admin session is replaced) doesn't clear it
+  // before the PASSWORD_RECOVERY event arrives.
+  const recoveryInProgress = useRef(detectAuthCallback());
 
   const loadProfile = useCallback(async (uid: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, prenom, nom, entreprise_id, role")
       .eq("id", uid)
       .maybeSingle();
+    if (error) console.error("Erreur chargement profil:", error.message);
     setProfile((data as Profile) ?? null);
   }, []);
 
@@ -62,7 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 1. Subscribe FIRST
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (event === "PASSWORD_RECOVERY") {
+        recoveryInProgress.current = false;
         setIsRecovery(true);
+      } else if (event === "SIGNED_OUT") {
+        if (!recoveryInProgress.current) setIsRecovery(false);
       }
       setSession(newSession);
       setUser(newSession?.user ?? null);

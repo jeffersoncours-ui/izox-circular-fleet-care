@@ -261,8 +261,8 @@ function VerifyBody({
       isValid = code === "123456";
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.rpc as any)("record_2fa_attempt", { p_success: isValid });
+    const { data, error } = await supabase.rpc("record_2fa_attempt", { p_success: isValid });
+    if (error) console.error("Erreur record_2fa_attempt:", error.message);
     const result = data as { success: boolean; locked: boolean; attempts: number } | null;
 
     if (isValid) {
@@ -489,11 +489,10 @@ export function TwoFactorSetup({ onDone }: { onDone: () => void }) {
   const handleStep2Next = async () => {
     setLoading(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)("setup_2fa", {
+      const { error } = await supabase.rpc("setup_2fa", {
         p_method: method,
-        p_totp_secret: method === "totp" ? totpData?.secret : null,
-        p_phone: method === "sms" ? phone : null,
+        p_totp_secret: method === "totp" ? totpData?.secret : undefined,
+        p_phone: method === "sms" ? phone : undefined,
       });
       if (error) throw error;
       setStep(3);
@@ -508,8 +507,7 @@ export function TwoFactorSetup({ onDone }: { onDone: () => void }) {
     const codes = generateRecoveryCodes();
     setLoading(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)("store_2fa_recovery_codes", { p_codes: codes });
+      const { error } = await supabase.rpc("store_2fa_recovery_codes", { p_codes: codes });
       if (error) throw error;
       setRecoveryCodes(codes);
       setStep(4);

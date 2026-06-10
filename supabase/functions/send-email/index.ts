@@ -1,10 +1,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+// Restrict CORS to the configured frontend origin — never expose to arbitrary origins.
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://izox.fr";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": SITE_URL,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+// HTML-escape all user-controlled strings before injecting into email templates.
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
 
 type EmailType =
   | "gel_validee"
@@ -75,10 +87,10 @@ function wrapHtml(title: string, content: string): string {
 
 function buildGelValideeHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
   const dateDebut = formatDate(d.date_debut as string);
   const dateFin = formatDate(d.date_fin_prevue as string);
-  const type = d.type_demande === "contrat" ? "Contrat complet" : "Véhicules spécifiques";
+  const type = esc(d.type_demande === "contrat" ? "Contrat complet" : "Véhicules spécifiques");
   return wrapHtml("Demande de gel validée", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Votre demande de gel a été validée ✓</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
@@ -106,7 +118,7 @@ function buildGelValideeHtml(d: Record<string, unknown>): string {
 
 function buildRdvConfirmeeHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
   const dateConf = d.date_confirmee ? formatDate(d.date_confirmee as string) : "Date à préciser";
   const nbVeh = d.nb_vehicules_rdv ?? 1;
   return wrapHtml("RDV confirmé", `
@@ -137,16 +149,16 @@ function buildRdvConfirmeeHtml(d: Record<string, unknown>): string {
 function buildInterventionCloseHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
   const veh = d.vehicules as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
-  const immat = veh?.immatriculation ?? "—";
-  const marque = [veh?.marque, veh?.modele].filter(Boolean).join(" ") || "—";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
+  const immat = esc(veh?.immatriculation ?? "—");
+  const marque = esc([veh?.marque, veh?.modele].filter(Boolean).join(" ") || "—");
   const dateInter = d.date_intervention ? formatDate(d.date_intervention as string) : "—";
   const prestationLabels: Record<string, string> = {
     interieur: "Nettoyage Intérieur",
     standard: "Nettoyage Standard",
     vtc: "Nettoyage VTC Premium",
   };
-  const type = prestationLabels[d.type_prestation as string] ?? d.type_prestation as string ?? "Prestation";
+  const type = esc(prestationLabels[d.type_prestation as string] ?? d.type_prestation as string ?? "Prestation");
   return wrapHtml("Prestation terminée", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Votre prestation est terminée ✓</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
@@ -176,7 +188,7 @@ function buildInterventionCloseHtml(d: Record<string, unknown>): string {
 
 function buildRappel24hHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
   const dateDebut = formatDate(d.date_debut as string);
   const dateFin = formatDate(d.date_fin_prevue as string);
   return wrapHtml("Rappel gel demain", `
@@ -205,11 +217,11 @@ function buildRappel24hHtml(d: Record<string, unknown>): string {
 
 function buildStaffNotificationHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "—";
+  const nom = esc(ent?.nom ?? "—");
   const dateDebut = formatDate(d.date_debut as string);
   const dateFin = formatDate(d.date_fin_prevue as string);
-  const type = d.type_demande === "contrat" ? "Contrat complet" : "Véhicules spécifiques";
-  const motif = d.motif as string ?? "—";
+  const type = esc(d.type_demande === "contrat" ? "Contrat complet" : "Véhicules spécifiques");
+  const motif = esc((d.motif as string) ?? "—");
   return wrapHtml("Nouvelle demande de gel", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">⚡ Nouvelle demande de gel à traiter</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Notification équipe IZOX</p>
@@ -239,15 +251,15 @@ function buildStaffNotificationHtml(d: Record<string, unknown>): string {
 
 function buildRdvModifieHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
   const dateLabel = d.assigned_date ? formatDate(d.assigned_date as string) : "Date à préciser";
   const slotLabels: Record<string, string> = {
     morning: "Matin (08h – 12h)",
     afternoon: "Après-midi (14h – 18h)",
   };
-  const slot = slotLabels[d.assigned_time_slot as string] ?? (d.assigned_time_slot as string) ?? "—";
+  const slot = esc(slotLabels[d.assigned_time_slot as string] ?? (d.assigned_time_slot as string) ?? "—");
   const heure = d.assigned_heure
-    ? "à " + String(d.assigned_heure).slice(0, 5).replace(":", "h")
+    ? "à " + esc(String(d.assigned_heure).slice(0, 5).replace(":", "h"))
     : "";
   return wrapHtml("Horaire de votre RDV modifié", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">L'horaire de votre rendez-vous a été modifié</h2>
@@ -287,8 +299,8 @@ function rdvDateLabel(d: Record<string, unknown>): string {
 // Annulation par le CLIENT → notifie l'équipe IZOX
 function buildRdvAnnuleClientHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "—";
-  const motif = (d.annulation_motif as string) ?? "—";
+  const nom = esc(ent?.nom ?? "—");
+  const motif = esc((d.annulation_motif as string) ?? "—");
   return wrapHtml("RDV annulé par le client", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">⚠ Un client a annulé un rendez-vous</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Notification équipe IZOX</p>
@@ -314,8 +326,8 @@ function buildRdvAnnuleClientHtml(d: Record<string, unknown>): string {
 // Annulation par l'ADMIN → notifie le client
 function buildRdvAnnuleAdminHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
-  const motif = (d.annulation_motif as string) ?? "—";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
+  const motif = esc((d.annulation_motif as string) ?? "—");
   return wrapHtml("Rendez-vous annulé", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Votre rendez-vous a été annulé</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
@@ -374,7 +386,7 @@ Deno.serve(async (req) => {
     // Role-based access control — clients can only trigger their own notification types
     const { data: callerProfile } = await admin
       .from("profiles")
-      .select("role")
+      .select("role, entreprise_id")
       .eq("id", userData.user.id)
       .maybeSingle();
     const callerRole = callerProfile?.role ?? "client";
@@ -445,6 +457,9 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
+        if (callerRole === "client" && rdv.entreprise_id !== callerProfile?.entreprise_id) {
+          return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+        }
 
         const { data: staffProfiles } = await admin
           .from("profiles")
@@ -497,6 +512,9 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !demande) throw new Error("Demande gel introuvable");
+        if (callerRole === "client" && demande.entreprise_id !== callerProfile?.entreprise_id) {
+          return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+        }
 
         const { data: staffProfiles } = await admin
           .from("profiles")

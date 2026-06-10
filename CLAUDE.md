@@ -147,8 +147,19 @@ Prix V2 (mai 2026) : **pack_interieur=130€, pack_standard=170€, pack_vtc=240
 - `montant_brut_mensuel` / `montant_net_mensuel` en DB = cache calculé par les RPCs. Ne pas les afficher directement : calculer dynamiquement depuis `facture.*` pour éviter les dérives.
 - Tout changement de tarif → migration SQL sur `prestations_catalogue` + mise à jour `PACKS_CATALOG`.
 
+## Architecture RSE / Impact
+
+Tout est calculé **on-the-fly** depuis `interventions.statut='validee'` × coefficients — il n'y a **pas de table `impact_records`** persistée. Source unique : `src/lib/impact.ts`.
+
+- **Coefficients** : 4 catégories (`water`, `pollution`, `circular`, `ghg`) avec valeurs par défaut (`DEFAULT_COEFFICIENTS`) surchargeables via `localStorage` (`izox_impact_coeffs`). Les valeurs CO₂ sont des **PLACEHOLDER** à recalibrer sur la Base Empreinte ADEME avant communication officielle.
+- **Client** (`/client/impact`) : `getClientImpactSummary(entrepriseId)` + `fetchClientRecords()` → 4 hero cards (eau/pollution/compost/CO₂), équivalences concrètes (douches = eau/60, km voiture = CO₂/0.12), AreaChart mensuel, export CSV, impression.
+- **Admin** (`/admin/impact`) : 3 onglets — **Vue globale** (`fetchGlobalImpactSummary()` : KPIs + BarChart interventions/mois + BarChart eau par client top 6), **Coefficients** (édition localStorage), **File de validation** (accusé réception, tracké via `localStorage` `izox_impact_reviewed`).
+- `CATEGORY_META` (label/unit/color/fillColor par catégorie) : toujours l'utiliser pour le rendu, ne jamais hardcoder les couleurs.
+
 ## Points de vigilance
 
+- **Pas de bannière cookies** — supprimée volontairement (session 22). IZOX Pro est un CRM B2B privé qui n'utilise QUE le cookie de session d'authentification Supabase (essentiel, exempté de consentement RGPD/ePrivacy). Aucun analytics (Matomo/GA), aucun traceur. Ne pas réintroduire `izox_cookie_consent` ni de banner.
+- **Pas de page `/legal`** — retirée session 26. Les CGV/RGPD seront intégrées dans l'onglet "Documents" du compte client quand le contenu définitif sera prêt. Ne pas recréer la route `/legal` ni les liens associés.
 - **Ne pas utiliser le SMTP natif Supabase** — toujours passer par les edge functions + Resend
 - **`routeTree.gen.ts`** est auto-généré par TanStack Router au build — ne pas modifier manuellement en production
 - **Variables d'env Supabase** nécessaires : `RESEND_API_KEY`, `SITE_URL`, `EMAIL_FROM`

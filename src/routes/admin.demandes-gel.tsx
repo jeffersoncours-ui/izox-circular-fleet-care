@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { format, parseISO } from "date-fns";
 import { z } from "zod";
+import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -65,10 +66,11 @@ function DemandesGelPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("v_demandes_gel_with_quota")
       .select("*")
       .order("created_at", { ascending: false });
+    if (error) toast.error("Impossible de charger les demandes de gel : " + error.message);
     const list = (data ?? []) as unknown as Row[];
     setRows(list);
 

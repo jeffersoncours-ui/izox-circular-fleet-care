@@ -22,6 +22,18 @@ type PageState = "loading" | "ready" | "error";
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
+  // Capture URL params synchronously at init, before Supabase cleans them
+  // via history.replaceState after PKCE code exchange.
+  const [initialUrl] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    return {
+      error: params.get("error"),
+      errorDescription: params.get("error_description"),
+      hasCode: !!params.get("code"),
+      hasToken: hash.includes("access_token") || hash.includes("type=recovery"),
+    };
+  });
   const [pageState, setPageState] = useState<PageState>("loading");
   const [errorMessage, setErrorMessage] = useState("Lien invalide ou expiré.");
   const [newPassword, setNewPassword] = useState("");
@@ -29,19 +41,15 @@ function ResetPasswordPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const hash = window.location.hash;
+    const { error, errorDescription, hasCode, hasToken } = initialUrl;
 
     // Supabase redirects with ?error=access_denied when the token is expired
-    if (params.get("error")) {
-      const desc = params.get("error_description") ?? "Lien invalide ou expiré";
-      setErrorMessage(desc.replace(/\+/g, " "));
+    if (error) {
+      const desc = (errorDescription ?? "Lien invalide ou expiré").replace(/\+/g, " ");
+      setErrorMessage(desc);
       setPageState("error");
       return;
     }
-
-    const hasCode = !!params.get("code");
-    const hasToken = hash.includes("access_token");
 
     // No recovery data in URL — this page should not be accessed directly
     if (!hasCode && !hasToken) {
@@ -76,7 +84,7 @@ function ResetPasswordPage() {
       sub.subscription.unsubscribe();
       clearTimeout(timer);
     };
-  }, [navigate]);
+  }, [navigate, initialUrl]);
 
   const handleSetPassword = async (e: FormEvent) => {
     e.preventDefault();
@@ -90,11 +98,14 @@ function ResetPasswordPage() {
     }
     setSaving(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast.error("Erreur : " + error.message);
     } else {
-      toast.success("Mot de passe défini avec succès — bienvenue !");
+      // Destroy the recovery session — user must authenticate explicitly.
+      await supabase.auth.signOut();
+      setSaving(false);
+      toast.success("Mot de passe défini. Connectez-vous pour accéder à votre espace.");
       navigate({ to: "/login" });
     }
   };

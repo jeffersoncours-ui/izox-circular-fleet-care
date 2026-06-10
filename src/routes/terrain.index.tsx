@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   CalendarDays, ClipboardList, FileText, User,
   ChevronRight, Loader2, Car, LogOut,
-  Play, MapPin, Phone, Clock, X, Search,
+  MessageSquare, Play, MapPin, Phone, Clock, X, Search,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import { getPackLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 import { RoleGuard } from "@/components/RoleGuard";
+import { ChatWindow } from "@/components/messaging/ChatWindow";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,6 +133,7 @@ function Inner() {
   const [loadingInt, setLoadingInt] = useState(true);
   const [takingCharge, setTakingCharge] = useState<string | null>(null);
   const [selectedIntervention, setSelectedIntervention] = useState<InterventionRow | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const loadInterventions = useCallback(async () => {
     const { data, error } = await supabase
@@ -150,10 +152,22 @@ function Inner() {
 
   useEffect(() => { loadInterventions(); }, [loadInterventions]);
 
+  // Badge messages non lus dans Suivi
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from("operateur_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("conversation_operator_id", user.id)
+      .is("read_at_operator", null)
+      .neq("sender_id", user.id)
+      .then(({ count }) => setUnreadMessages(count ?? 0));
+  }, [user?.id]);
+
   const prendreEnCharge = async (interventionId: string) => {
     setTakingCharge(interventionId);
     try {
-      const { error } = await (supabase as any).rpc("prendre_en_charge_intervention", {
+      const { error } = await supabase.rpc("prendre_en_charge_intervention", {
         p_intervention_id: interventionId,
       });
       if (error) throw error;
@@ -210,7 +224,7 @@ function Inner() {
   const bottomNavItems: { tabId: Tab; icon: LucideIcon; label: string; badge?: number }[] = [
     { tabId: "planning",      icon: CalendarDays,  label: "Planning",      badge: todayPlanifiees.length || undefined },
     { tabId: "interventions", icon: ClipboardList, label: "Interventions", badge: enCours.length || undefined },
-    { tabId: "suivi",         icon: FileText,      label: "Suivi" },
+    { tabId: "suivi",         icon: FileText,      label: "Suivi", badge: unreadMessages || undefined },
     { tabId: "profil",        icon: User,          label: "Profil" },
   ];
 
@@ -232,7 +246,7 @@ function Inner() {
         <TabInterventions interventions={interventions} />
       )}
       {tab === "suivi" && (
-        <TabSuivi userId={user?.id ?? ""} />
+        <TabSuivi userId={user?.id ?? ""} onMessagesSeen={() => setUnreadMessages(0)} />
       )}
       {tab === "profil" && (
         <TabProfil profile={profile} enCoursCount={enCours.length} onLogout={handleLogout} />
@@ -692,18 +706,63 @@ function TabInterventions({ interventions }: { interventions: InterventionRow[] 
 
 // ─── Tab SUIVI ────────────────────────────────────────────────────────────────
 
-function TabSuivi({ userId }: { userId: string }) {
+type SuiviSubTab = "observations" | "messages";
+
+function TabSuivi({
+  userId,
+  onMessagesSeen,
+}: {
+  userId: string;
+  onMessagesSeen: () => void;
+}) {
+  const [subTab, setSubTab] = useState<SuiviSubTab>("observations");
+
+  const handleMessagesTab = () => {
+    setSubTab("messages");
+    // Vider le badge après un court délai (le hook markRead s'exécute dans ChatWindow)
+    setTimeout(onMessagesSeen, 1500);
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-full">
       <div className="px-4 pt-12 pb-3 border-b border-border">
         <h2 className="text-xl font-black text-foreground mb-3">Suivi</h2>
         <div className="flex gap-2">
-          <span className="px-3 py-1.5 rounded-full bg-foreground text-background text-xs font-semibold">
+          <button
+            type="button"
+            onClick={() => setSubTab("observations")}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors",
+              subTab === "observations"
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
             Observations clients
-          </span>
+          </button>
+          <button
+            type="button"
+            onClick={handleMessagesTab}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5",
+              subTab === "messages"
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <MessageSquare className="h-3 w-3" />
+            Messages IZOX
+          </button>
         </div>
       </div>
-      <TabObservations userId={userId} />
+
+      {subTab === "observations" && <TabObservations userId={userId} />}
+
+      {subTab === "messages" && userId && (
+        <div className="flex flex-col flex-1 min-h-0" style={{ height: "calc(100vh - 13rem)" }}>
+          <ChatWindow operatorId={userId} role="operator" className="h-full" />
+        </div>
+      )}
     </div>
   );
 }
@@ -720,11 +779,12 @@ function TabObservations({ userId }: { userId: string }) {
   useEffect(() => {
     if (!userId) return;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("interventions")
         .select("entreprises(id, nom)")
         .not("statut", "in", '("annulee","planifiee")')
         .limit(200);
+      if (error) toast.error("Erreur lors du chargement des entreprises");
       if (!data) return;
       const map = new Map<string, string>();
       for (const row of data as any[]) {
@@ -741,6 +801,7 @@ function TabObservations({ userId }: { userId: string }) {
   useEffect(() => {
     if (!selectedEntId) { setInterventions([]); setObservations({}); return; }
     setLoadingInts(true);
+    let alive = true;
     (async () => {
       const { data: intData } = await supabase
         .from("interventions")
@@ -749,30 +810,33 @@ function TabObservations({ userId }: { userId: string }) {
         .in("statut", ["en_revision", "validee"])
         .order("date_intervention", { ascending: false })
         .limit(50);
+      if (!alive) return;
       const ints = (intData as unknown as InterventionObs[]) ?? [];
       setInterventions(ints);
 
       if (ints.length > 0) {
         const ids = ints.map((i) => i.id);
-        const { data: obsData } = await (supabase as any)
+        const { data: obsData } = await supabase
           .from("operateur_observations")
           .select("intervention_id, note")
           .in("intervention_id", ids)
           .eq("operateur_id", userId);
+        if (!alive) return;
         const obsMap: Record<string, string> = {};
-        for (const row of (obsData ?? []) as any[]) {
+        for (const row of obsData ?? []) {
           obsMap[row.intervention_id] = row.note ?? "";
         }
         setObservations(obsMap);
       }
       setLoadingInts(false);
     })();
+    return () => { alive = false; };
   }, [selectedEntId, userId]);
 
   const saveObservation = async (interventionId: string, note: string) => {
     setSavingObs((prev) => ({ ...prev, [interventionId]: true }));
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("operateur_observations")
         .upsert(
           {

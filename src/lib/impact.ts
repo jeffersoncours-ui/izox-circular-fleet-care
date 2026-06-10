@@ -249,6 +249,77 @@ export async function generateImpactRecords(_interventionId: string): Promise<vo
 }
 
 // ─────────────────────────────────────────────────────────────
+// Admin — global impact across all clients
+// ─────────────────────────────────────────────────────────────
+
+export interface GlobalImpactSummary {
+  totalInterventions: number;
+  activeClients: number;
+  totals: { water: number; pollution: number; circular: number; ghg: number };
+  timeline: Array<{ month: string; interventions: number; water: number; co2: number }>;
+  byClient: Array<{ nom: string; interventions: number; water: number }>;
+}
+
+export async function fetchGlobalImpactSummary(): Promise<GlobalImpactSummary> {
+  const { data, error } = await supabase
+    .from("interventions")
+    .select("id, date_intervention, entreprise_id, entreprises(nom)")
+    .eq("statut", "validee")
+    .order("date_intervention", { ascending: false })
+    .limit(500);
+  if (error) throw error;
+
+  const interventions = data ?? [];
+  const coeffs = getActiveCoefficients();
+  const waterCoeff     = coeffs.find((c) => c.category === "water")?.value     ?? 140;
+  const ghgCoeff       = coeffs.find((c) => c.category === "ghg")?.value       ?? 0.5;
+  const pollutionCoeff = coeffs.find((c) => c.category === "pollution")?.value ?? 140;
+  const circularCoeff  = coeffs.find((c) => c.category === "circular")?.value  ?? 0.2;
+
+  const clientIds = new Set<string>();
+  const timelineMap = new Map<string, { interventions: number; water: number; co2: number }>();
+  const clientMap   = new Map<string, { nom: string; interventions: number; water: number }>();
+
+  interventions.forEach((inter) => {
+    if (inter.entreprise_id) clientIds.add(inter.entreprise_id);
+
+    const month = (inter.date_intervention ?? "").slice(0, 7);
+    if (month) {
+      const e = timelineMap.get(month) ?? { interventions: 0, water: 0, co2: 0 };
+      e.interventions += 1;
+      e.water += waterCoeff;
+      e.co2   += ghgCoeff;
+      timelineMap.set(month, e);
+    }
+
+    const nom = ((inter.entreprises as { nom: string } | null)?.nom) ?? "—";
+    const key = inter.entreprise_id ?? nom;
+    const c = clientMap.get(key) ?? { nom, interventions: 0, water: 0 };
+    c.interventions += 1;
+    c.water += waterCoeff;
+    clientMap.set(key, c);
+  });
+
+  const n = interventions.length;
+  return {
+    totalInterventions: n,
+    activeClients: clientIds.size,
+    totals: {
+      water:     Math.round(n * waterCoeff),
+      pollution: Math.round(n * pollutionCoeff),
+      circular:  Math.round(n * circularCoeff * 100) / 100,
+      ghg:       Math.round(n * ghgCoeff * 100) / 100,
+    },
+    timeline: Array.from(timelineMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([month, v]) => ({ month, ...v })),
+    byClient: Array.from(clientMap.values())
+      .sort((a, b) => b.interventions - a.interventions)
+      .slice(0, 6),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
 // Labels et couleurs par catégorie
 // ─────────────────────────────────────────────────────────────
 
