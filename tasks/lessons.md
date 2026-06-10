@@ -1,5 +1,25 @@
 # Lessons Learned — IZOX
 
+## Leaflet z-index dans un Radix Dialog — isolation CSS (session 29)
+
+- **Symptôme** : en ouvrant `AssignerRdvDialog`, la carte Leaflet (tiles, markers, contrôles) restait visible par-dessus le contenu du dialog. La `DialogOverlay` (fond noir semi-transparent) était bien rendue, mais les éléments Leaflet "transperçaient".
+- **Cause** : Leaflet impose des z-indexes élevés (markers : 600, popups : 700, contrôles : 800) via son propre CSS. La `DialogContent` Radix utilise `z-50` (Tailwind = CSS z-index: 50), insuffisant pour battre les couches Leaflet dans le même contexte d'empilement document.
+- **Fix** : `style={{ isolation: "isolate" }}` sur le container de la carte. La propriété CSS `isolation: isolate` crée un nouveau stacking context — tous les z-indexes internes à ce container (y compris ceux de Leaflet) sont confinés à l'intérieur et ne peuvent plus concurrencer des éléments extérieurs (le Dialog). Zéro changement de z-index nécessaire.
+- **Règle** : quand une bibliothèque tierce (Leaflet, D3, des drag'n'drop libs) impose des z-indexes élevés en dur, ne pas essayer de les battre en augmentant le z-index du dialog. Isoler le container de la bibliothèque avec `isolation: isolate` à la place.
+
+## Emails skippés silencieusement — email_contact null (session 29)
+
+- **Symptôme** : `email_logs` montrait `status=skipped`, `error_message="Aucun email destinataire valide"` pour `rdv_confirmee` et `rdv_modifie`. L'utilisateur n'avait reçu aucun email après assignation d'un RDV.
+- **Cause racine** : `create-client-account` insère l'entreprise avec `payload.entreprise.email_contact` qui peut être null (champ optionnel dans le formulaire admin). `send-email` résolvait alors `email ? [email] : []` → liste vide → skip. Le formulaire "Créer un compte client" ne requiert pas l'email de contact de l'entreprise (le champ existe mais n'est pas obligatoire).
+- **Fix double** : (1) `create-client-account` : `email_contact: payload.entreprise.email_contact ?? payload.user.email` — toujours avoir un destinataire en defaultant sur l'email auth du compte créé. (2) `send-email` : helper `resolveClientEmail(admin, entrepriseId, knownEmail)` — si `email_contact` est null, chercher le profil client lié (`profiles.role='client'`) et récupérer son email via `auth.admin.getUserById()`. Le fallback garantit que les emails arrivent même pour les entreprises créées avant le fix.
+- **Règle** : un champ `email_contact` optionnel sur `entreprises` rend toute la chaîne email fragile. Pour un CRM, l'email de notification doit toujours être résolvable. Soit le rendre obligatoire en DB (NOT NULL), soit implémenter systématiquement le fallback auth email. Choisir l'un ou l'autre — pas les deux à moitié.
+
+## Mutation directe de prop React — masquer un état UI post-action (session 29)
+
+- **Anti-pattern** : après géocodage d'une adresse, le code faisait `demande.latitude = data.latitude` pour masquer le badge "Adresse non géocodée". Cela mutait l'objet prop directement, ce qui ne déclenche pas de re-render React et peut causer des incohérences si le parent re-passe la prop originale.
+- **Fix** : state local `geocoded: boolean` initialisé à `false`, remis à `false` à chaque ouverture du dialog (`useEffect([open, demande])`). Après géocodage réussi : `setGeocoded(true)`. Condition : `!demande.latitude && !geocoded`. Le badge disparaît immédiatement après l'action sans muter le prop.
+- **Règle** : ne jamais muter un objet prop (même si JS le permet). Pour un état UI local (ex. "action vient d'être faite"), utiliser un `boolean` state local au composant. Pour exposer la mise à jour au parent, passer un callback (ex. `onGeocoded(lat, lng)`) dans les props.
+
 ## Boucle infinie `useSupabaseQuery` — pattern ref pour callbacks stables (session 28)
 
 - **Symptôme** : pages `/client/flotte` et `/admin/planning` "sautent" en continu, impossible d'interagir. Réseau : des dizaines de requêtes Supabase par seconde.

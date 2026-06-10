@@ -2,6 +2,36 @@
 
 ---
 
+## Session 2026-06-10 (29) — Stress test complet + corrections
+
+### Bugs corrigés
+
+- [x] **Leaflet z-index transperçant le Dialog** : la carte `DemandesRdvMap` (Leaflet, z-index 600-800) débordait visuellement au-dessus du `AssignerRdvDialog` (Radix, z-50). Fix : `style={{ isolation: "isolate" }}` sur le container carte (60%) dans `DemandesRdvList.tsx` — crée un nouveau stacking context qui confine les z-indexes Leaflet.
+- [x] **Emails transactionnels silencieusement skippés** : `entreprises.email_contact` était null pour les comptes créés sans le champ → `send-email` loggait `"Aucun email destinataire valide"` pour `rdv_confirmee`, `rdv_modifie`, `rdv_annule_admin`, `intervention_close`, `gel_validee`, `rappel_24h`. Deux fixes : (1) `send-email` v17 — helper `resolveClientEmail()` qui fallback vers l'email auth Supabase si `email_contact` est null ; (2) `create-client-account` v26 — defaulte `email_contact = payload.user.email` à la création. DB : `UPDATE entreprises SET email_contact='jeffersoncours@gmail.com'` pour le compte existant.
+- [x] **Mutation directe de prop dans `AssignerRdvDialog`** : `demande.latitude = data.latitude` mutait l'objet prop (anti-pattern React). Fix : state local `geocoded: boolean`, reset à chaque ouverture, utilisé dans `!demande.latitude && !geocoded` pour masquer le badge après géocodage réussi.
+
+### Tests empiriques validés (session 29)
+
+- [x] `modifier_heure_rdv` : rejette 13h00 (hors plage matin), accepte 09h00 ✓
+- [x] `prendre_en_charge_intervention` : bloque si intervention future (verrou horaire) ✓
+- [x] `seed-users` : retourne 410 Gone (safe malgré verify_jwt=false) ✓
+- [x] `emettre_facture` : protégé par RLS (clients n'ont que SELECT) ✓
+- [x] `email_contact` DB : corrigé → `jeffersoncours@gmail.com` ✓
+- [x] `resolveClientEmail` fallback : pipeline vérifié (profiles.role=client → auth email) ✓
+
+### Bugs identifiés non bloquants (backlog)
+
+- [ ] **`temp-test-recovery`** : edge function v3 en prod, absente du repo local. À neutraliser (stub 410) ou supprimer via le dashboard Supabase.
+- [ ] **`buildRdvConfirmeeHtml` : `date_confirmee` peut être null** si la date vient uniquement de `assigned_date`. Aligner `rdvDateLabel()` sur le template `rdv_confirmee`.
+
+### Review session 29
+
+- 3 bugs corrigés, 2 edge functions déployées (send-email v17, create-client-account v26)
+- Commit `9434503` pushé sur `claude/izox-fleet-care-session-io8syg`
+- `email_contact` DB corrigé + pipeline `resolveClientEmail` validé en prod
+
+---
+
 ## Session 2026-06-10 (28) — Bugfixes boucle infinie + validation véhicule + audit email
 
 ### Bugs corrigés
