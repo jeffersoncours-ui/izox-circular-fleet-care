@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { Plus, Car, ChevronRight, Snowflake } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSupabaseQuery } from "@/lib/hooks/useSupabaseQuery";
 
 import { AddVehiculeDialog } from "@/components/client/AddVehiculeDialog";
 import { PassagesReportesBanner } from "@/components/client/PassagesReportesBanner";
@@ -39,26 +40,19 @@ function MaFlotte() {
 function MaFlotteList() {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [list, setList] = useState<Vehicule[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
 
-  const load = async () => {
-    if (!profile?.entreprise_id) return;
-    setLoading(true);
-    const { data } = await supabase
-      .from("vehicules")
-      .select("id, immatriculation, statut, type_pack_souhaite, photo_path")
-      .eq("entreprise_id", profile.entreprise_id)
-      .in("statut", ["actif", "gele", "en_attente_validation"])
-      .order("created_at", { ascending: false });
-    setList((data as Vehicule[]) ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    load();
-  }, [profile]);
+  const { data: list, loading, refetch } = useSupabaseQuery<Vehicule[]>(
+    async () =>
+      await supabase
+        .from("vehicules")
+        .select("id, immatriculation, statut, type_pack_souhaite, photo_path")
+        .eq("entreprise_id", profile?.entreprise_id ?? "")
+        .in("statut", ["actif", "gele", "en_attente_validation"])
+        .order("created_at", { ascending: false }),
+    { defaultValue: [], enabled: !!profile?.entreprise_id },
+    [profile?.entreprise_id]
+  );
 
   const [statusFilter, setStatusFilter] = useState<"tous" | "actif" | "gele" | "en_attente">("tous");
 
@@ -254,7 +248,7 @@ function MaFlotteList() {
       <AddVehiculeDialog
         open={open}
         onOpenChange={setOpen}
-        onCreated={load}
+        onCreated={refetch}
         mode="client"
         nbVehiculesActifs={vehiculesActifs.length}
       />

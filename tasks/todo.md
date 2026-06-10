@@ -42,11 +42,33 @@
 - [ ] **`useRdvSelection` + `<DateSlotPicker>`** (gain 7 / risque 2) : `CreerDemandeRdvDialog` + `ReplaceVehiculeDialog` + `GererRdvConfirmeDialog` dupliquent la logique calendrier/créneaux.
 - [ ] **`<FormDialog<T>>` générique** (gain 7 / risque 3) : pattern form+submitting+lookup répété sur 4 gros dialogs admin. Abstraction plus risquée — à faire en dernier.
 
-### Reste à faire (suite session)
+### Session 2026-06-10 (27c) suite — Quick wins (RoleGuard + useSupabaseQuery)
 
-- [ ] Décision utilisateur : supprimer `compute-impact` + `impact_records` (code mort + IDOR latent) ?
-- [ ] Implémenter les simplifications validées (proposer par ordre gain/risque)
-- [ ] Corriger les 22 erreurs Supabase non capturées (via hook ou au cas par cas)
+Décision utilisateur : FAIRE quick wins d'abord (gain/risque favorable) puis compute-impact cleanup.
+
+#### Étape 1 : Hook `useSupabaseQuery<T>` ✅
+
+- [x] Créer `src/lib/hooks/useSupabaseQuery.ts` — centralise loading + error + refetch
+- [x] Refactor 3 fichiers clés : `client.flotte.tsx`, `PassagesReportesBanner`, `QuotaGelDecompose`
+- [x] Build TS — ✅ 0 erreurs
+- [ ] Continuer refactor des 20 autres usages (pattern automatisable)
+- [ ] Commit
+
+**Refactorisés** (3) :
+- `src/routes/client.flotte.tsx` : remplacé load() async + setState par useSupabaseQuery + refetch
+- `src/components/client/PassagesReportesBanner.tsx` : suppression état manuel
+- `src/components/client/QuotaGelDecompose.tsx` : suppression état manuel
+
+**Reste** (20 fichiers) : GererDemandeGelDialog, InterventionsListPanel, CreatContratDialog, etc. → À continuer en batch
+
+#### Étape 2 : RoleGuard `beforeLoad` unifié (après quick hook)
+
+- [ ] TBD
+
+### Reste à faire
+
+- [ ] Terminer quick wins (hook + RoleGuard)
+- [ ] Supprimer `compute-impact` edge function + table `impact_records` (après hook)
 - [ ] Build TS + commit + push
 
 ---

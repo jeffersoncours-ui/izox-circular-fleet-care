@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Snowflake, Calendar, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import {
   type DemandeGelRow,
   type QuotaGelDecompose,
 } from "@/lib/quota-gel";
+import { useSupabaseQuery } from "@/lib/hooks/useSupabaseQuery";
 
 interface Props {
   entrepriseId: string;
@@ -14,27 +14,23 @@ interface Props {
 }
 
 export function QuotaGelDecompose({ entrepriseId, dureeDemandeeJours = 0 }: Props) {
-  const [decompose, setDecompose] = useState<QuotaGelDecompose>({
-    joursActifs: 0,
-    joursProgrammes: 0,
-    total: 0,
-  });
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() - 365);
+  const minISO = minDate.toISOString().split("T")[0];
 
-  useEffect(() => {
-    if (!entrepriseId) return;
-    (async () => {
-      const minDate = new Date();
-      minDate.setDate(minDate.getDate() - 365);
-      const minISO = minDate.toISOString().split("T")[0];
-      const { data } = await supabase
+  const { data: demandesGel } = useSupabaseQuery<DemandeGelRow[]>(
+    async () =>
+      await supabase
         .from("demandes_gel")
         .select("statut, date_debut, date_fin_prevue, date_fin_effective")
         .eq("entreprise_id", entrepriseId)
         .in("statut", ["en_attente", "validee", "active", "close"])
-        .gte("date_debut", minISO);
-      setDecompose(computeQuotaGelDecompose((data ?? []) as DemandeGelRow[]));
-    })();
-  }, [entrepriseId]);
+        .gte("date_debut", minISO),
+    { defaultValue: [] },
+    [entrepriseId]
+  );
+
+  const decompose = computeQuotaGelDecompose(demandesGel);
 
   const { joursActifs, joursProgrammes, total } = decompose;
   const apres = total + dureeDemandeeJours;
