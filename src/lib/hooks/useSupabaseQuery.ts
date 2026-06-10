@@ -1,4 +1,4 @@
-import { DependencyList, useCallback, useEffect, useState } from "react";
+import { DependencyList, useCallback, useEffect, useRef, useState } from "react";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
@@ -37,37 +37,53 @@ export function useSupabaseQuery<T>(
   const [loading, setLoading] = useState(options.enabled !== false);
   const [error, setError] = useState<PostgrestError | null>(null);
 
+  // Refs hold the latest values so fetch() is a stable reference that never
+  // becomes stale. Without this, passing an inline queryFn / options object
+  // would recreate fetch on every render → useEffect fires every render → ∞ loop.
+  const queryFnRef = useRef(queryFn);
+  queryFnRef.current = queryFn;
+  const defaultValueRef = useRef(options.defaultValue);
+  defaultValueRef.current = options.defaultValue;
+  const errorMessageRef = useRef(options.errorMessage);
+  errorMessageRef.current = options.errorMessage;
+  const enabledRef = useRef(options.enabled);
+  enabledRef.current = options.enabled;
+
+  // Stable reference — never recreated, always reads the latest queryFn via ref.
   const fetch = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await queryFn();
+      const result = await queryFnRef.current();
       if (result.error) {
         setError(result.error);
-        if (options.errorMessage) {
-          toast.error(options.errorMessage);
+        if (errorMessageRef.current) {
+          toast.error(errorMessageRef.current);
         }
-        setData(options.defaultValue ?? (null as any));
+        setData(defaultValueRef.current ?? (null as any));
       } else {
         setError(null);
-        setData(result.data ?? (options.defaultValue ?? (null as any)));
+        setData(result.data ?? (defaultValueRef.current ?? (null as any)));
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
       setError(new Error(errorMsg) as any);
-      if (options.errorMessage) toast.error(options.errorMessage);
-      setData(options.defaultValue ?? (null as any));
+      if (errorMessageRef.current) toast.error(errorMessageRef.current);
+      setData(defaultValueRef.current ?? (null as any));
     } finally {
       setLoading(false);
     }
-  }, [queryFn, options]);
+  }, []); // stable — reads queryFn/options via refs, never needs to be recreated
 
   useEffect(() => {
-    if (options.enabled === false) {
+    if (enabledRef.current === false) {
       setLoading(false);
       return;
     }
     fetch();
-  }, deps ? [...deps, fetch] : [fetch]);
+    // Run once on mount (no deps) or whenever explicit deps change.
+    // NOT [fetch] — that would re-run on every render since fetch was unstable before.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps ?? []);
 
   return { data, loading, error, refetch: fetch };
 }
