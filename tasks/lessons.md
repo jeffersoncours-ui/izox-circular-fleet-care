@@ -1,5 +1,16 @@
 # Lessons Learned — IZOX
 
+## Boucle infinie `useSupabaseQuery` — pattern ref pour callbacks stables (session 28)
+
+- **Symptôme** : pages `/client/flotte` et `/admin/planning` "sautent" en continu, impossible d'interagir. Réseau : des dizaines de requêtes Supabase par seconde.
+- **Cause racine** : `fetch = useCallback(fn, [queryFn, options])` — `queryFn` est une arrow function inline (nouvelle référence à chaque render), `options` est un objet inline (même chose). `fetch` est donc recrée à chaque render. Le `useEffect([fetch])` se déclenche à chaque render → `setLoading(true)` → re-render → nouvelle `queryFn` → `fetch` recrée → `useEffect` se redéclenche → boucle infinie.
+- **Fix — ref pattern pour callbacks stables** :
+  1. Stocker `queryFn` et chaque valeur d'`options` dans des `useRef` mis à jour à chaque render (sans être dans les deps).
+  2. `useCallback(fn, [])` avec deps vide → `fetch` est **une seule fois** créée et ne change jamais.
+  3. `useEffect(..., deps ?? [])` — ne pas inclure `fetch` dans les deps (inutile puisque stable).
+- **Règle** : quand un callback doit être stable mais doit toujours lire les valeurs les plus récentes, utiliser `useRef` pour les valeurs + `useCallback(fn, [])`. Ne **jamais** mettre une inline arrow function ou un objet inline comme dépendance d'un `useCallback` qui est lui-même dans les deps d'un `useEffect`.
+- **Diagnostiquer rapidement** : si un `useEffect` se déclenche à chaque render, chercher dans ses deps une valeur dont la référence change à chaque render (souvent : inline function, inline object, résultat de `.filter()/.map()`).
+
 ## Audit complet app — IDOR sur RPC SECURITY DEFINER (session 27c)
 
 - **Une RPC SECURITY DEFINER bypasse TOUTE la RLS** : elle s'exécute avec les droits du owner (postgres). Le seul rempart est le code de la fonction elle-même. Donc chaque RPC qui prend un `entreprise_id`/`contrat_id`/`user_id` en paramètre DOIT vérifier explicitement l'appartenance pour un appelant client/commercial — sinon IDOR direct (un client appelle `/rest/v1/rpc/xxx` avec l'id d'un autre). La RLS sur les tables ne protège PAS les écritures faites dans une SECURITY DEFINER.

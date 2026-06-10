@@ -2,6 +2,29 @@
 
 ---
 
+## Session 2026-06-10 (28) — Bugfixes boucle infinie + validation véhicule + audit email
+
+### Bugs corrigés
+
+- [x] **`valider_vehicule` — "column remise_pct does not exist"** : même bug que session 27c sur `ajouter_vehicule`/`supprimer_vehicule`. Migration `20260610b_fix_valider_vehicule_remise_pct.sql` appliquée. Fix : `SELECT palier, taux_remise INTO ...` (pas `remise_pct`). Vérifié en DB.
+- [x] **Boucle infinie `/client/flotte` et `/admin/planning`** : cause racine — `useSupabaseQuery` mettait `queryFn` et `options` (inline arrow + inline object) dans les deps de `useCallback`, ce qui recréait `fetch` à chaque render → `useEffect([fetch])` se déclenchait à chaque render → `setLoading(true)` → re-render → ∞. Fix : ref pattern — `queryFnRef`/`defaultValueRef`/etc. mis à jour à chaque render, `useCallback(fn, [])` pour un `fetch` stable, `useEffect(..., deps ?? [])` sans `fetch` dans les deps.
+- [x] **Double-chargement `/client/flotte/$id`** : guard `if (!authLoading)` dans le `useEffect` de `load` pour éviter le chargement pendant que `profile=null`, puis un 2e chargement quand l'auth résout.
+
+### Audit email — résultats
+
+- 8 types `EmailType` couverts par l'edge function `send-email`
+- 7 appels `sendEmail()` dans le frontend (gel, RDV confirmé/modifié/annulé, intervention close, annulation client)
+- **Email manquant identifié** : validation véhicule (`ValidationVehiculeBadge.tsx`) — aucun `sendEmail` appelé après `valider_vehicule`. Pas de type `"vehicule_valide"` dans l'enum. À implémenter en session dédiée si souhaité.
+- **`rdv_confirmee`** : bien déclenché dans `AssignerRdvDialog.tsx` — à diagnostiquer en DB via `email_logs` si non reçu.
+
+### Review session 28
+
+- 3 bugs corrigés, buildTS 0 erreur, commits pushés sur `claude/vehicle-validation-errors-xsbt9t`
+- Purge DB complète : `auth.users=4`, toutes tables métier à 0
+- Merge sur `main` effectué
+
+---
+
 ## Session 2026-06-10 (27c) — Bug critique véhicule + audit complet app
 
 ### Bug bloquant corrigé
