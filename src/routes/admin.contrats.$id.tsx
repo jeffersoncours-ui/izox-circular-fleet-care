@@ -58,6 +58,7 @@ import {
   Activity,
   Printer,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 
 import { FactureDocument } from "@/components/factures/FactureDocument";
@@ -1164,6 +1165,23 @@ function getActionMeta(
         subtitle: dateRes ? `Effective le ${dateRes}` : "Contrat clôturé",
         note: d.motif ? `Motif : ${d.motif}` : undefined,
         colorClass: "bg-muted text-muted-foreground border border-border",
+      };
+    }
+    case "intervention_validee": {
+      const dateInt = safeFormat(d.date_intervention, "d MMMM yyyy");
+      const pack = d.type_prestation ? getPackLabel(d.type_prestation) : null;
+      const immat = d.immatriculation ?? null;
+      return {
+        icon: Sparkles,
+        title: "Prestation validée",
+        subtitle:
+          immat && pack
+            ? `${immat} · ${pack}`
+            : immat
+            ? immat
+            : pack ?? "Intervention validée",
+        note: dateInt ? `Réalisée le ${dateInt}` : undefined,
+        colorClass: "bg-primary/10 text-primary border border-primary/20",
       };
     }
     case "cloture_mensuelle":

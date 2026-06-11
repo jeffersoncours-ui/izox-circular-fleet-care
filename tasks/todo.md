@@ -2,6 +2,55 @@
 
 ---
 
+## Session 2026-06-11 (30) — Audit fiches admin + scope intervention + timeline prestations
+
+### Audit (3 zones, demandé par l'utilisateur après tests manuels)
+
+1. **Timeline « Historique » fiche contrat** (`/admin/contrats/$id`, PAS la fiche client) :
+   source = `admin_actions_log` filtré sur `details->>'contrat_id'`. 11 types d'événements
+   mappés (création, ajustement flotte, validation/refus véhicule, gel/reprise, résiliation,
+   clôture mensuelle, maintenance cron…). **Manquait** : la validation d'une intervention
+   n'écrivait rien dans `admin_actions_log` → invisible dans la timeline.
+2. **Fiche validation intervention admin** (`/admin/interventions/$id`) : affichait l'extérieur
+   (zones photo + checklist) même pour un `pack_interieur`. Cause = `typeScope()` **redéfinie
+   localement** (cassée, renvoyait `complet` pour tous les packs) au lieu d'importer celle de
+   `interventions.ts`. La fiche terrain, elle, importait la bonne.
+3. **Observations clients opérateur** (`/terrain` → Suivi) : écriture inline (textarea onBlur →
+   upsert `operateur_observations`, 1 note/intervention, `now()` forcé, pas d'antidate). Souhait
+   futur = cliquer fiche → page dédiée → journal multi-notes antidatées.
+
+### Corrigés cette session
+
+- [x] **Sujet 2 — scope fiche admin** : `admin.interventions.$id.tsx` importe désormais
+  `typeScope` depuis `@/lib/interventions`, suppression de la version locale cassée. `scope`,
+  `showInt`, `showExt` recalés. Un `pack_interieur` n'affiche plus que l'habitacle + checklist
+  intérieur (parité avec la fiche terrain).
+- [x] **Sujet 1 — log prestation validée** : migration `20260611010000_log_intervention_validee.sql`
+  → trigger `trg_log_intervention_validee` (AFTER UPDATE, SECURITY DEFINER, search_path=public)
+  insère `action='intervention_validee'` dans `admin_actions_log` (contrat_id, immat, pack, date,
+  validated_by) à la transition vers `validee`. Mapping UI ajouté dans `getActionMeta()` de
+  `admin.contrats.$id.tsx` (icône Sparkles, « Prestation validée · {immat} · {pack} »).
+
+### Tests empiriques (session 30)
+
+- [x] Trigger : fixture entreprise+contrat+vehicule+intervention `pack_interieur` → UPDATE→validee
+  → log créé avec `contrat_id`, `immatriculation=TEST-LOG-99`, `pack=pack_interieur`, date, user ✓
+- [x] Mise en défaut : UPDATE ultérieur (notes / re-set validee) → pas de doublon (condition
+  `OLD.statut IS DISTINCT FROM 'validee'`) ✓
+- [x] Fixture nettoyée : 0 entreprise test, 0 intervention, `auth.users=4` ✓
+- [x] `npm install` + `npx tsc --noEmit --skipLibCheck` → 0 erreur ✓
+
+### Décidé, à faire en session dédiée
+
+- [ ] **Sujet 3 — journal multi-notes antidatées (opérateur)** : nouvelle table `operateur_notes`
+  (1 ligne = 1 note, `date_observation`, `entreprise_id`/`vehicule_id`, `note`, `created_at`,
+  `operateur_id`) + nouvelle route terrain `/terrain/client/$id` (cards cliquables → page dédiée
+  avec date picker antidaté borné à aujourd'hui + liste des notes). La table actuelle
+  `operateur_observations` (UNIQUE intervention+operateur, pas de date d'obs) ne permet pas le
+  multi-notes — décision utilisateur : **journal multi-notes**.
+
+---
+
 ## Session 2026-06-11 (29 — suite) — Bugs terrain + géocodage + dégel contrat
 
 ### Bugs corrigés
