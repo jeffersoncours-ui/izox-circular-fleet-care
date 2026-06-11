@@ -26,7 +26,8 @@ type EmailType =
   | "rappel_24h"
   | "staff_notification"
   | "rdv_annule_client"
-  | "rdv_annule_admin";
+  | "rdv_annule_admin"
+  | "facture_emise";
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00");
@@ -352,6 +353,60 @@ function buildRdvAnnuleAdminHtml(d: Record<string, unknown>): string {
   `);
 }
 
+function formatEuro(v: unknown): string {
+  const n = Number(v ?? 0);
+  return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+}
+
+// Facture émise → notifie le client qu'une facture est disponible dans son espace
+function buildFactureEmiseHtml(d: Record<string, unknown>): string {
+  const ent = d.entreprises as Record<string, string> | null;
+  const nom = esc(ent?.nom ?? "Votre entreprise");
+  const numero = esc((d.numero_facture as string) ?? "—");
+  const montant = formatEuro(d.montant_ttc);
+  const periode = d.periode_debut && d.periode_fin
+    ? `${formatDate(d.periode_debut as string)} → ${formatDate(d.periode_fin as string)}`
+    : "—";
+  const echeance = d.date_echeance ? formatDate(d.date_echeance as string) : "—";
+  return wrapHtml("Facture disponible", `
+    <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Votre facture est disponible</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
+    <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6">
+      Une nouvelle facture IZOX a été émise et est désormais
+      <strong style="color:#1B4332">disponible dans votre espace client</strong>.
+    </p>
+    <table cellpadding="12" cellspacing="0" border="0" width="100%"
+      style="background:#f0fdf4;border-radius:8px;border-left:4px solid #1B4332;margin-bottom:24px">
+      <tr>
+        <td>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Numéro de facture</p>
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827">${numero}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Période facturée</p>
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827">${periode}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Montant à régler (TTC)</p>
+          <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#1B4332">${montant}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Date d'échéance</p>
+          <p style="margin:0;font-size:15px;font-weight:600;color:#111827">${echeance}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:13px;line-height:1.6">
+      Connectez-vous à votre espace client IZOX, rubrique « Documents », pour consulter,
+      télécharger ou imprimer votre facture.
+    </p>
+    <table cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="border-radius:8px;background:#1B4332">
+          <a href="https://izox-circular-fleet-care.vercel.app/client/documents"
+            style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">
+            Voir ma facture
+          </a>
+        </td>
+      </tr>
+    </table>
+  `);
+}
+
 // When entreprises.email_contact is null, fall back to the auth email of the
 // client profile linked to that entreprise. Avoids silent skips on new accounts.
 async function resolveClientEmail(
@@ -512,6 +567,21 @@ Deno.serve(async (req) => {
         emailTo = email ? [email] : [];
         subject = "Votre rendez-vous IZOX a été annulé";
         html = buildRdvAnnuleAdminHtml(rdv as Record<string, unknown>);
+        break;
+      }
+
+      case "facture_emise": {
+        const { data: facture, error } = await admin
+          .from("factures")
+          .select("numero_facture, montant_ttc, periode_debut, periode_fin, date_echeance, entreprise_id, entreprises(nom, email_contact)")
+          .eq("id", target_id)
+          .single();
+        if (error || !facture) throw new Error("Facture introuvable");
+        const emailContact = (facture.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, facture.entreprise_id as string, emailContact);
+        emailTo = email ? [email] : [];
+        subject = `Votre facture IZOX ${facture.numero_facture ?? ""} est disponible`.trim();
+        html = buildFactureEmiseHtml(facture as Record<string, unknown>);
         break;
       }
 

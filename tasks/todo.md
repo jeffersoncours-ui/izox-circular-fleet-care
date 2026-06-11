@@ -2,6 +2,43 @@
 
 ---
 
+## Session 2026-06-11 (32) — Email "Facture disponible" + test cycle facturation
+
+### Constat (audit facturation)
+- `emettre_facture` (RPC) : attribue le numéro séquentiel + crée une **notification interne** client, mais **aucun email Resend** n'est envoyé.
+- `send-email` (edge function) : 8 types couverts, **`facture_emise` absent**.
+- `src/lib/email.ts` : union `EmailType` sans `facture_emise`.
+- `admin.facturation.tsx` `handleEmettre` : n'appelle pas `sendEmail` après l'émission.
+- Conséquence : le client reçoit une notif in-app mais aucun email l'informant qu'une facture est disponible.
+
+### Plan
+- [x] **email.ts** : ajouter `"facture_emise"` à l'union `EmailType`
+- [x] **send-email/index.ts** : `buildFactureEmiseHtml()` (numéro, période, montant TTC, échéance, bouton → `/client/documents`) + case `facture_emise` (lecture `factures` + `entreprises(nom, email_contact)` + `resolveClientEmail` fallback). Déployée **v18 ACTIVE**.
+- [x] **admin.facturation.tsx** : `sendEmail("facture_emise", factureId)` (fire-and-forget) après succès de `emettre_facture`
+- [x] **Bug session 31 corrigé** (bloquait le build) : `terrain.index.tsx` `.sort()` utilisait `a.last`/`b.last` au lieu de `a.lastNoteDate`/`b.lastNoteDate` → TS2339. Corrigé.
+- [x] `npx tsc --noEmit --skipLibCheck` → 0 erreur
+- [x] **Test empirique du cycle complet** (voir Review) : fixture → `generer_facture` → `emettre_facture` → vérifs OK. Fixture nettoyée, DB vierge (users=4, tout à 0).
+- [ ] Commit + push
+
+### Review session 32
+
+**Livré — email "Facture disponible" :**
+- Nouveau type `facture_emise` (frontend `email.ts` + edge `send-email` v18). Template avec numéro, période facturée, montant TTC, date d'échéance, bouton CTA vers `/client/documents`.
+- `handleEmettre` (admin.facturation) déclenche `sendEmail("facture_emise", id)` en fire-and-forget après l'émission — le client reçoit désormais un **email Resend** EN PLUS de la notification in-app (qui existait déjà).
+- Destinataire résolu via `resolveClientEmail` : `entreprises.email_contact` → fallback email auth du compte client. RBAC : `facture_emise` hors `CLIENT_ALLOWED_TYPES` → seuls admin/staff/commercial peuvent le déclencher.
+
+**Hors-plan corrigé :** bug TS session 31 dans `terrain.index.tsx` (`.last` inexistant) qui cassait `tsc`/build.
+
+**Validation empirique (cycle complet, fixture nettoyée) :**
+- `generer_facture(CT-TEST-S32, 6, 2026)` → brouillon. Lignes : 2 passages × 97,75 € (= 85 × 1,15 multiplicateur mensuel) = **195,50 € HT**, palier starter (1 véh., 0%), franchise TVA. ✓
+- `emettre_facture` → **FA-B2B-2026-000003**, statut `emise`, `date_echeance` = émission +30j (2026-07-11). ✓
+- Données lues par l'email vérifiées en DB : numéro, montant TTC 195,50, période 01→30 juin, échéance, **destinataire `jeffersoncours@gmail.com`** (résolution `email_contact` OK). ✓
+- Notification interne créée : « Nouvelle facture disponible — FA-B2B-2026-000003 », lien `/client/documents`. ✓
+- RLS client **positif** : le client voit la facture émise. **négatif** : un brouillon (juillet) reste invisible au client. ✓
+- Envoi Resend réel non testable depuis SQL (invoke JWT requis) — à confirmer côté app déployée (parité avec les 8 types email déjà fonctionnels). DB remise vierge.
+
+---
+
 ## Session 2026-06-11 (31) — Journal multi-notes opérateur + vue admin/équipe
 
 ### Décisions utilisateur

@@ -809,9 +809,9 @@ function TabObservations({ userId }: { userId: string }) {
         })
         .sort((a, b) => {
           // Clients avec notes en premier (par date décroissante), puis alphabétique
-          if (a.last && b.last) return b.last.localeCompare(a.last);
-          if (a.last) return -1;
-          if (b.last) return 1;
+          if (a.lastNoteDate && b.lastNoteDate) return b.lastNoteDate.localeCompare(a.lastNoteDate);
+          if (a.lastNoteDate) return -1;
+          if (b.lastNoteDate) return 1;
           return a.nom.localeCompare(b.nom);
         });
 

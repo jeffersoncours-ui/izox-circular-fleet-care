@@ -27,6 +27,7 @@ import {
   formatDateFr,
 } from "@/lib/factures";
 import { FactureDocument } from "@/components/factures/FactureDocument";
+import { sendEmail } from "@/lib/email";
 import {
   Receipt,
   FileText,
@@ -175,6 +176,8 @@ function AdminFacturationPage() {
       toast.error("Erreur lors de l'émission", { description: error.message });
     } else {
       toast.success(`Facture émise : ${data}`);
+      // Notifie le client par email (fire-and-forget, ne bloque pas l'UI)
+      void sendEmail("facture_emise", factureId);
       await load();
     }
     setActingId(null);
