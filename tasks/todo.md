@@ -19,25 +19,46 @@
 
 ---
 
-### Phase 1 — Routes publiques + contenu statique
+### Phase 1 — Routes publiques + contenu statique ✅ (session 33)
 
-- [ ] `npm install framer-motion` (animations — utilisé à partir Phase 4 uniquement, l'installer tôt pour éviter un redéploiement inutile)
-- [ ] **`src/routes/index.tsx`** : remplace le redirect vers `/login` par le composant `LandingPage`
-- [ ] **`src/components/landing/PublicLayout.tsx`** : layout public (navbar vert forêt logo + CTA + lien app, footer)
-- [ ] **`src/lib/pricing-b2c.ts`** : catalogue TTC B2C (types véhicule × formule + options Puzzi/Ozone)
-- [ ] **Section Hero** : accroche circularité, double CTA, lien discret B2B, bandeau confiance
-- [ ] **Section Comment ça marche** : 3 étapes icon
-- [ ] **Section Boucle d'eau** : texte chiffré statique (animation Phase 4) — 50L / 80% / 50%
-- [ ] **Section Preuve RSE** : chiffres vrais, libellés conformes DGCCRF (voir §8 brief)
-- [ ] **Section Grille tarifaire** : matrice complète véhicule × formule + options
-- [ ] **Section Vision "demain"** : clairement labellisée "feuille de route"
-- [ ] **Section Abonnement** : module discret, économie estimée
-- [ ] **Section FAQ** : zone, paiement, annulation, produits, durée
-- [ ] **Footer** : mentions légales, CGV, RGPD, contact
-- [ ] **`src/routes/entreprises.tsx`** : route `/entreprises` — argumentaire B2B + formulaire lead (DB Phase 1)
-- [ ] **Migration Supabase** `leads_b2b` (nom, societe, taille_flotte, email, telephone, created_at, traite BOOLEAN)
-- [ ] **Edge function `create-lead-b2b`** : INSERT lead + email interne notif admin
-- [ ] SEO : meta `title`/`description`/og sans `noindex` sur les routes publiques
+- [x] `npm install framer-motion` (v12.40 — utilisé à partir Phase 4)
+- [x] **`src/routes/index.tsx`** : landing publique. Guard auth callback préservé (hash `#access_token`/`type=recovery` → redirect client-side `/login`)
+- [x] **`src/components/landing/PublicLayout.tsx`** : navbar (Tarifs, Boucle d'eau, Entreprises, **Espace client → /login**, CTA Réserver) + footer + menu mobile
+- [x] **`src/lib/pricing-b2c.ts`** : catalogue TTC (4 véhicules × 2 formules + Puzzi/Ozone), `prixTotalB2C()`, `ZONE_INTERVENTION`, `CHIFFRES_EAU` (source unique chiffres RSE)
+- [x] **Hero** : « On lave à l'eau. On la récupère. On la fait revivre. » + double CTA + lien flotte + bandeau confiance
+- [x] **Comment ça marche** : 3 étapes
+- [x] **Boucle d'eau** (statique Phase 1) : 50 L / 80 % / 50 % avec base de comparaison nommée
+- [x] **Preuve RSE** : « 2 à 4× moins d'eau qu'un lavage au jet », aucune certification mentionnée
+- [x] **Grille tarifaire** : matrice complète + options détaillées par véhicule
+- [x] **Avant/après** : placeholders explicites (vraies photos à fournir)
+- [x] **Vision** : badge « Notre feuille de route », rentabilité écologique mentionnée
+- [x] **Abonnement** : module discret (mailto en attendant l'offre définitive)
+- [x] **Avis clients** : empty-state honnête — AUCUN faux avis (L121-2 C. conso)
+- [x] **FAQ** : 6 questions (zone, paiement, annulation L221-28, produits, durée, autonomie)
+- [x] **Footer** : liens juridiques marqués « à venir » (contenus définitifs pas prêts)
+- [x] **`src/routes/entreprises.tsx`** : hero B2B + 4 leviers + stats RSE + formulaire lead complet
+- [x] **`src/routes/reservation.tsx`** : page d'attente avec capture email (zéro 404 sur le CTA, zéro lead perdu) — remplacée par le tunnel en Phase 2
+- [x] **Migration `leads_landing`** : type b2b|b2c_attente, CHECK champs b2b, unique lower(email)+type, RLS deny-by-default (SELECT/UPDATE internes, DELETE admin, zéro policy anon)
+- [x] **Edge function `create-lead` v1** (publique, verify_jwt=false) : whitelist types, validation email, caps longueur, doublon idempotent, notification interne équipe sur lead B2B
+- [x] **SEO** : meta robots `index,follow` sur `/`, `/reservation`, `/entreprises` (override du noindex root) + og tags
+- [x] **robots.txt** : réécrit — pages vitrine ouvertes aux moteurs classiques, CRM bloqué (`/admin`, `/client`, `/terrain`, `/settings`, `/reset-password`), crawlers IA toujours bloqués
+- [x] Types Supabase régénérés (95 101 chars) + `npm run build` ✓ + `tsc` 0 erreur
+- [x] Validation empirique (voir Review)
+
+### Review Phase 1 (session 33)
+
+**Validation empirique DB (fixture nettoyée, leads=0) :**
+- INSERT b2b nominal ✓ · INSERT b2c_attente nominal ✓
+- Doublon email+type → 23505 bloqué ✓ (l'edge function le mappe sur `{ok:true}` idempotent)
+- CHECK b2b sans téléphone → bloqué ✓ · type hors whitelist → bloqué ✓
+- RLS négatif : `SET ROLE anon` → SELECT 0 rows, INSERT direct refusé ✓
+- RLS positif : impersonation admin → voit les 2 leads ✓
+- ⚠️ Invoke HTTP réel de `create-lead` non testable depuis le sandbox (réseau sortant bloqué) — à vérifier sur l'app déployée : soumettre le formulaire `/entreprises` et la page `/reservation`.
+
+**À fournir par l'utilisateur avant ouverture :**
+- Vraies photos avant/après (`public/landing/`)
+- Contenus juridiques : mentions légales, CGV (annulation + L221-28), politique de confidentialité
+- Email `contact@izox.fr` à créer chez OVH (utilisé dans footer + abonnement)
 
 ---
 

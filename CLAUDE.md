@@ -55,6 +55,7 @@ Avant tout merge sur `main`, exécuter via MCP `execute_sql` la purge complète 
 
 ```sql
 -- Tables de données métier (ordre FK)
+DELETE FROM leads_landing;
 DELETE FROM notifications_internes;
 DELETE FROM operateur_observations;
 DELETE FROM admin_actions_log;
@@ -127,11 +128,23 @@ Supabase Auth avec flow **implicit** (pas PKCE — confirmé dans les logs).
 | `admin-reset-password` | oui (admin only) | Reset depuis la fiche client admin |
 | `create-client-account` | oui (admin/staff) | Création entreprise + compte client |
 | `geocode-address` | oui (authenticated) | Géocodage Nominatim — retourne `{latitude, longitude}` depuis `{adresse, ville, code_postal}` |
+| `create-lead` | non (public) | Leads du site vitrine (`b2b` /entreprises, `b2c_attente` /reservation) → `leads_landing` + notif interne équipe |
 
 Toutes envoient les emails via l'API HTTP Resend (pas SMTP natif Supabase — SMTP était cassé "535 Authentication credentials invalid").
 `geocode-address` : appel Nominatim server-side (User-Agent `IZOX-CircularFleetCare/1.0`), fire-and-forget côté client — ne bloque jamais la création de demande.
 
 Logs d'envoi dans la table `email_logs` (type, target_id, email_to, status, error_message).
+
+## Site vitrine public (landing B2C)
+
+Brief complet : **`tasks/brief-landing-b2c.md`** — à lire avant tout travail sur la vitrine.
+
+- Routes publiques : `/` (landing), `/reservation` (tunnel — placeholder Phase 1, vrai tunnel Phase 2), `/entreprises` (lead B2B). Composants dans `src/components/landing/`.
+- **`/` n'est plus un redirect vers `/login`** — la landing garde le guard auth callback (hash `#access_token`/`type=recovery` → redirect client-side `/login`, jamais server-side).
+- **Espace client** : bouton navbar → `/login` (les utilisateurs CRM passent par là).
+- **`src/lib/pricing-b2c.ts`** : tarifs TTC B2C + `CHIFFRES_EAU` (chiffres RSE réels : 50 L / 80 % / 50 %). ⚠️ Ne JAMAIS mélanger avec `pricing.ts` (B2B HT). Ne jamais modifier les chiffres RSE sans mesure étayable (DGCCRF), jamais de certification inventée, jamais de faux avis clients.
+- SEO : meta `robots index,follow` sur les routes publiques (override du `noindex` global root) ; `robots.txt` bloque le CRM et les crawlers IA.
+- Leads dans `leads_landing` (RLS deny-by-default, insertion uniquement via edge function `create-lead`).
 
 ## Architecture pricing
 

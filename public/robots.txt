@@ -1,11 +1,15 @@
-# IZOX Circular Fleet Care — robots.txt
-# SaaS B2B : toutes les pages applicatives sont confidentielles.
-# Seule la page de connexion est tolérée ; le reste est interdit à tout crawler.
+# IZOX — robots.txt
+# Pages vitrine publiques (/, /reservation, /entreprises) : indexables.
+# CRM (admin/client/terrain/settings) : interdit aux crawlers — doublé par les
+# meta robots noindex du root pour les routes applicatives.
 
 # ─── Moteurs de recherche classiques ────────────────────────────────────────
 User-agent: *
-Disallow: /
-Allow: /login
+Disallow: /admin
+Disallow: /client
+Disallow: /terrain
+Disallow: /settings
+Disallow: /reset-password
 
 # ─── Crawlers IA — blocage total ────────────────────────────────────────────
 # OpenAI / ChatGPT
@@ -46,10 +50,7 @@ Disallow: /
 User-agent: Meta-ExternalAgent
 Disallow: /
 
-# Apple (AppleBot)
-User-agent: Applebot
-Disallow: /
-
+# Apple
 User-agent: Applebot-Extended
 Disallow: /
 
@@ -69,7 +70,7 @@ Disallow: /
 User-agent: Amazonbot
 Disallow: /
 
-# Scrapers génériques
+# Scrapers SEO
 User-agent: AhrefsBot
 Disallow: /
 

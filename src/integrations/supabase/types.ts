@@ -1461,6 +1461,45 @@ export type Database = {
         }
         Relationships: []
       }
+      leads_landing: {
+        Row: {
+          code_postal: string | null
+          created_at: string
+          email: string
+          id: string
+          nom: string | null
+          societe: string | null
+          taille_flotte: string | null
+          telephone: string | null
+          traite: boolean
+          type: string
+        }
+        Insert: {
+          code_postal?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          nom?: string | null
+          societe?: string | null
+          taille_flotte?: string | null
+          telephone?: string | null
+          traite?: boolean
+          type: string
+        }
+        Update: {
+          code_postal?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          nom?: string | null
+          societe?: string | null
+          taille_flotte?: string | null
+          telephone?: string | null
+          traite?: boolean
+          type?: string
+        }
+        Relationships: []
+      }
       notifications_internes: {
         Row: {
           action_requise: boolean

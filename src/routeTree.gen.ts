@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TerrainRouteImport } from './routes/terrain'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ReservationRouteImport } from './routes/reservation'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as EntreprisesRouteImport } from './routes/entreprises'
 import { Route as ClientRouteImport } from './routes/client'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -68,9 +70,19 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReservationRoute = ReservationRouteImport.update({
+  id: '/reservation',
+  path: '/reservation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntreprisesRoute = EntreprisesRouteImport.update({
+  id: '/entreprises',
+  path: '/entreprises',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientRoute = ClientRouteImport.update({
@@ -273,7 +285,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
+  '/entreprises': typeof EntreprisesRoute
   '/login': typeof LoginRoute
+  '/reservation': typeof ReservationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
   '/terrain': typeof TerrainRouteWithChildren
@@ -316,7 +330,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/entreprises': typeof EntreprisesRoute
   '/login': typeof LoginRoute
+  '/reservation': typeof ReservationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
   '/admin/clients': typeof AdminClientsRouteWithChildren
@@ -358,7 +374,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/client': typeof ClientRouteWithChildren
+  '/entreprises': typeof EntreprisesRoute
   '/login': typeof LoginRoute
+  '/reservation': typeof ReservationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
   '/terrain': typeof TerrainRouteWithChildren
@@ -405,7 +423,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/client'
+    | '/entreprises'
     | '/login'
+    | '/reservation'
     | '/reset-password'
     | '/settings'
     | '/terrain'
@@ -448,7 +468,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/entreprises'
     | '/login'
+    | '/reservation'
     | '/reset-password'
     | '/settings'
     | '/admin/clients'
@@ -489,7 +511,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/client'
+    | '/entreprises'
     | '/login'
+    | '/reservation'
     | '/reset-password'
     | '/settings'
     | '/terrain'
@@ -535,7 +559,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   ClientRoute: typeof ClientRouteWithChildren
+  EntreprisesRoute: typeof EntreprisesRoute
   LoginRoute: typeof LoginRoute
+  ReservationRoute: typeof ReservationRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRouteWithChildren
   TerrainRoute: typeof TerrainRouteWithChildren
@@ -564,11 +590,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reservation': {
+      id: '/reservation'
+      path: '/reservation'
+      fullPath: '/reservation'
+      preLoaderRoute: typeof ReservationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entreprises': {
+      id: '/entreprises'
+      path: '/entreprises'
+      fullPath: '/entreprises'
+      preLoaderRoute: typeof EntreprisesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client': {
@@ -1037,7 +1077,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   ClientRoute: ClientRouteWithChildren,
+  EntreprisesRoute: EntreprisesRoute,
   LoginRoute: LoginRoute,
+  ReservationRoute: ReservationRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRouteWithChildren,
   TerrainRoute: TerrainRouteWithChildren,
