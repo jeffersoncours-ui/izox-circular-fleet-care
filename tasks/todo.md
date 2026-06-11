@@ -2,7 +2,42 @@
 
 ---
 
-## Session 2026-06-10 (29) — Stress test complet + corrections
+## Session 2026-06-11 (29 — suite) — Bugs terrain + géocodage + dégel contrat
+
+### Bugs corrigés
+
+- [x] **`_recalculer_caches_contrat` — colonne `remise_pct` inexistante** : `degeler_contrat` échouait avec ERROR 42703. Migration `20260610c_fix_recalculer_caches_contrat_taux_remise.sql` → `SELECT palier, taux_remise` (même oubli que sessions 27c/28 sur les autres RPCs). Vérifié : `degeler_contrat('CT-202606-0001', 'cron')` retourne `{success:true}`, contrat repassé `actif`, caches recalculés.
+- [x] **Intervention annulée encore réalisable côté opérateur** : `terrain.intervention.$id.tsx` n'avait pas de garde pour `statut='annulee'` → le stepper s'affichait, les photos échouaient silencieusement (RLS bloque INSERT si `statut ≠ 'en_cours'`). Fix : écran dédié "Intervention annulée — aucune action possible" avant tout rendu du stepper.
+- [x] **Photo terrain : caméra forcée, galerie impossible** : `capture="environment"` dans `PhotoSlot.tsx` forçait l'ouverture directe de l'appareil photo. Fix : retrait de `capture` → picker natif propose caméra OU photothèque.
+- [x] **Géocodage Nominatim fragile sur abréviations** : "18 Av. du Gén Leclerc" → Nominatim retournait 0 résultat → coords null → carte vide. Fix triple : (1) `geocode-address` v3 déployée — normalisation abréviations FR + cascade adresse exacte → normalisée → ville+CP fallback. (2) `AssignerRdvDialog` : géocodage automatique best-effort dans `ensureGeocoded({silent:true})` avant `assigner_rdv`. (3) `ensureGeocoded` propage aussi les coords aux interventions déjà créées via `UPDATE interventions WHERE demande_rdv_id`.
+- [x] **Backfill intervention de test sans GPS** : intervention `eca72099` (Chaumes-en-Brie, 77390) mise à jour avec `latitude=48.6736, longitude=2.8689`.
+
+### Tests empiriques validés (session 29 suite)
+
+- [x] `degeler_contrat` : OK après fix `taux_remise` ✓
+- [x] `tsc --noEmit` : 0 erreur ✓
+- [x] `geocode-address` v3 : déployée ACTIVE ✓
+
+### Backlog non bloquant (inchangé)
+
+- [ ] **`temp-test-recovery`** : edge function à neutraliser (stub 410) via dashboard Supabase.
+- [ ] **`buildRdvConfirmeeHtml` : `date_confirmee` peut être null** — aligner `rdvDateLabel()`.
+- [ ] Factorisation dialogs gel, DateSlotPicker partagé, FormDialog générique — sessions futures.
+- [ ] CORS dynamique `send-email` (pour previews Vercel).
+- [ ] Suppression définitive `compute-impact` depuis le dashboard (le MCP ne peut pas supprimer).
+- [ ] Migration enum PG `interventions.statut` (actuellement CHECK text).
+- [ ] RDV `refusee` : workflow "admin refuse → opérateur reprend" (RPC + statut en_cours requis par RLS).
+
+### Review session 29 complète
+
+**DB :** `degeler_contrat` fix + backfill coords test. Supabase MCP : `geocode-address` v3 déployée.  
+**Frontend :** 3 fichiers (terrain.intervention, PhotoSlot, AssignerRdvDialog).  
+**Edge function :** geocode-address v3 (normalisation abréviations + cascade fallback).  
+**Commits :** `9434503` (session 29 début) → `085fca9` (dégel fix) → `d563da4` (terrain+géocodage).
+
+---
+
+
 
 ### Bugs corrigés
 
