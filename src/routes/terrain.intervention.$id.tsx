@@ -330,6 +330,40 @@ function InterventionStepper() {
     );
   }
 
+  // Intervention annulée : aucune action terrain possible (RLS bloque déjà
+  // photos/update, mais on évite d'afficher un stepper trompeur).
+  if (intervention.statut === "annulee") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="bg-primary text-primary-foreground sticky top-0 z-20 px-4 py-3 flex items-center gap-3">
+          <Button
+            size="icon" variant="ghost"
+            className="h-9 w-9 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
+            onClick={() => navigate({ to: "/terrain" })}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <p className="text-xs opacity-70 font-mono">#{id.slice(0, 8).toUpperCase()}</p>
+        </header>
+        <main className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
+          <div className="h-14 w-14 rounded-full bg-red-100 flex items-center justify-center">
+            <AlertTriangle className="h-7 w-7 text-red-600" />
+          </div>
+          <div>
+            <h1 className="text-lg font-black text-foreground">Intervention annulée</h1>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+              Ce rendez-vous a été annulé. Aucune prestation ne peut être réalisée
+              ni aucune photo ajoutée.
+            </p>
+          </div>
+          <Button variant="izox" onClick={() => navigate({ to: "/terrain" })}>
+            Retour au planning
+          </Button>
+        </main>
+      </div>
+    );
+  }
+
   const readOnly = intervention.statut === "en_revision" || intervention.statut === "validee";
   const packLabel = getPackLabel(intervention.type_prestation);
   const entreprise = vehicule?.entreprises?.nom;

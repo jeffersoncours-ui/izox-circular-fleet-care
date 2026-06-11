@@ -89,11 +89,13 @@ export function PhotoSlot({
         </button>
       )}
 
+      {/* Pas de `capture` : le sélecteur natif propose au choix l'appareil
+          photo OU la photothèque (indispensable pour les photos « après »
+          prises plus tôt, ou reprendre une photo ratée). */}
       <input
         ref={ref}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];

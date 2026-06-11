@@ -113,6 +113,13 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     if (!canConfirm || !demande) return;
     setSubmitting(true);
     try {
+      // Géocodage automatique si la demande n'a pas encore de coordonnées :
+      // garantit que l'intervention créée par assigner_rdv aura un GPS pour
+      // la carte des tournées. Best-effort — n'échoue pas l'assignation.
+      if (!demande.latitude && !geocoded) {
+        await ensureGeocoded({ silent: true });
+      }
+
       const { data, error } = await supabase.rpc("assigner_rdv", {
         p_demande_id:  demande.id,
         p_operator_id: selectedOperator,
@@ -160,8 +167,11 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
     }
   };
 
-  const handleGeocode = async () => {
-    if (!demande) return;
+  // Géocode la demande + propage les coords sur l'intervention déjà créée
+  // (cas RDV confirmé). Retourne true si des coords ont été obtenues.
+  // `silent` : pas de toast (utilisé en auto avant assignation).
+  const ensureGeocoded = async ({ silent = false }: { silent?: boolean } = {}): Promise<boolean> => {
+    if (!demande) return false;
     setGeocoding(true);
     try {
       const { data, error } = await supabase.functions.invoke("geocode-address", {
@@ -173,17 +183,25 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
       });
       if (error) throw error;
       if (!data?.latitude || !data?.longitude) {
-        toast.error("Adresse introuvable — vérifiez les champs.");
-        return;
+        if (!silent) toast.error("Adresse introuvable — vérifiez les champs.");
+        return false;
       }
       await supabase
         .from("demandes_rdv")
         .update({ latitude: data.latitude, longitude: data.longitude })
         .eq("id", demande.id);
+      // Propager aux interventions déjà créées depuis cette demande
+      // (RDV confirmé : assigner_rdv a copié les coords null à la création).
+      await supabase
+        .from("interventions")
+        .update({ latitude: data.latitude, longitude: data.longitude })
+        .eq("demande_rdv_id", demande.id);
       setGeocoded(true);
-      toast.success("Adresse géocodée avec succès.");
+      if (!silent) toast.success("Adresse géocodée avec succès.");
+      return true;
     } catch (e: unknown) {
-      toast.error((e as Error)?.message ?? "Erreur lors du géocodage");
+      if (!silent) toast.error((e as Error)?.message ?? "Erreur lors du géocodage");
+      return false;
     } finally {
       setGeocoding(false);
     }
@@ -245,7 +263,7 @@ export function AssignerRdvDialog({ open, onOpenChange, demande, onAssigned }: P
                       </span>
                       <button
                         type="button"
-                        onClick={handleGeocode}
+                        onClick={() => ensureGeocoded()}
                         disabled={geocoding}
                         className="text-xs underline text-primary hover:opacity-70 disabled:opacity-50"
                       >

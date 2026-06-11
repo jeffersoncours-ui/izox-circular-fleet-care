@@ -1,5 +1,29 @@
 # Lessons Learned — IZOX
 
+## Géocodage Nominatim fragile sur abréviations FR + intervention sans GPS (session 29)
+
+- **Symptôme** : la carte des tournées affiche "non géolocalisé" / point absent pour les nouveaux RDV. Une demande créée avec "18 Av. du Gén Leclerc" n'avait aucune coordonnée (`latitude/longitude` NULL), alors qu'une adresse normale ("7 chemin des closeaux") géocodait bien.
+- **Cause racine** : (1) Nominatim échoue sur les abréviations ("Av.", "Gén") ; (2) le géocodage client est fire-and-forget — si Nominatim échoue, la demande est créée sans coords ; (3) `AssignerRdvDialog` proposait un géocodage **optionnel** (badge + bouton), facile à zapper → `assigner_rdv` crée l'intervention avec coords NULL → absente de la carte.
+- **Fix triple** :
+  1. **Edge function `geocode-address` v3** : normalisation des abréviations FR courantes (`Av.→Avenue`, `Gén→Général`, `Bd→Boulevard`, etc.) + cascade de tentatives (adresse exacte → normalisée → `code_postal ville, France` en fallback ville). Garantit au moins un point ville.
+  2. **`AssignerRdvDialog`** : géocodage **automatique** dans `handleConfirm` si la demande n'a pas de coords (best-effort, silencieux, n'échoue pas l'assignation). Helper `ensureGeocoded({silent})` partagé avec le bouton manuel.
+  3. **`ensureGeocoded`** propage aussi les coords aux `interventions` déjà créées depuis la demande (`UPDATE ... WHERE demande_rdv_id`), pas seulement à `demandes_rdv` — sinon un RDV déjà confirmé reste sans GPS.
+- **Règle** : tout point affiché sur une carte doit avoir un fallback de géocodage (au pire le centre-ville). Ne jamais laisser le géocodage comme une étape optionnelle si une fonctionnalité aval (carte des tournées) en dépend — le rendre automatique au moment où les coords deviennent nécessaires.
+
+## Intervention annulée encore "réalisable" côté opérateur — guard UI manquant (session 29)
+
+- **Symptôme** : un RDV annulé restait ouvrable côté terrain ; l'opérateur voyait le stepper (pré-contrôle/photos/signature) et tentait des actions. Les photos échouaient silencieusement.
+- **Cause** : `terrain.intervention.$id.tsx` ne gérait spécifiquement que `planifiee` (vue "prendre en charge") puis affichait le stepper pour tous les autres statuts, **y compris `annulee`**. Les RLS Storage/`intervention_photos` exigent `statut='en_cours'` → les uploads échouaient, d'où "ça ne fonctionne pas" mais sans message clair.
+- **Fix** : guard explicite — si `statut === 'annulee'`, afficher un écran "Intervention annulée / aucune action possible" + retour planning, avant tout rendu du stepper. Cohérent avec les RLS (défense en profondeur : l'UI ne doit pas proposer ce que la DB refuse).
+- **Règle** : quand une RLS bloque une opération sur certains statuts, l'UI doit refléter ce blocage par un écran dédié — ne jamais afficher un formulaire dont chaque action échouera au niveau base.
+
+## Photo terrain : `capture="environment"` empêche la photothèque (session 29)
+
+- **Symptôme** : l'opérateur ne pouvait QUE prendre une photo sur le moment (caméra forcée), impossible de choisir une image existante — bloquant pour les photos "après" prises plus tôt ou pour reprendre une photo ratée.
+- **Cause** : `<input type="file" accept="image/*" capture="environment">` dans `PhotoSlot.tsx` — l'attribut `capture` force l'ouverture directe de l'appareil photo arrière sur mobile, sans proposer la galerie.
+- **Fix** : retirer `capture`. Avec seulement `accept="image/*"`, le sélecteur natif mobile propose un choix : "Prendre une photo" OU "Photothèque" OU "Choisir un fichier".
+- **Règle** : n'utiliser `capture` que si la prise live est la SEULE option voulue. Dès qu'on veut laisser le choix caméra/galerie, ne pas mettre `capture` — le picker natif gère le choix.
+
 ## Leaflet z-index dans un Radix Dialog — isolation CSS (session 29)
 
 - **Symptôme** : en ouvrant `AssignerRdvDialog`, la carte Leaflet (tiles, markers, contrôles) restait visible par-dessus le contenu du dialog. La `DialogOverlay` (fond noir semi-transparent) était bien rendue, mais les éléments Leaflet "transperçaient".
