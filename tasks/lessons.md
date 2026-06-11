@@ -1,5 +1,12 @@
 # Lessons Learned — IZOX
 
+## Pattern `*.client.*` interdit par le plugin SSR TanStack Start (session 31)
+
+- **Symptôme** : build serveur échoue avec `[import-protection] Import denied in server environment — Denied by file pattern: **/*.client.*`. Le fichier `terrain.client.$id.tsx` est refusé à l'import depuis `routeTree.gen.ts` dans le bundle serveur.
+- **Cause** : TanStack Start embarque un plugin `@tanstack/start-plugin-core:import-protection` qui interdit tout fichier dont le nom correspond à `**/*.client.*` dans le bundle SSR. Le segment `.client.` au milieu du nom déclenche la protection (même convention que Next.js `.client.ts` files).
+- **Fix** : renommer le fichier route sans `.client.` dans son nom. `terrain.client.$id.tsx` → `terrain.suivi.$id.tsx` (route `/terrain/suivi/$id`). Le `createFileRoute(path)` à l'intérieur est complètement indépendant du nom de fichier — TanStack Router utilise les `.` comme séparateurs de segments de nom de fichier, mais le `path` déclaré dans le fichier peut être ce qu'on veut.
+- **Règle** : ne jamais nommer un fichier route avec `.client.` dans son nom dans un projet TanStack Start (SSR). Pour les routes, utiliser des noms descriptifs fonctionnels sans ce mot (`suivi`, `detail`, `journal`, etc.).
+
 ## `typeScope()` redéfinie localement = scope intérieur/extérieur cassé côté admin (session 30)
 
 - **Symptôme** : la fiche admin `/admin/interventions/$id` affichait les zones photo extérieures (Pare-chocs, Capot, Côtés, Toit, Coffre) ET la « Checklist extérieur » (items non cochés) sur une prestation `pack_interieur` → impression trompeuse de prestation incomplète. La fiche terrain, elle, n'affichait que l'habitacle (correct).
