@@ -2,6 +2,86 @@
 
 ---
 
+## [PLAN] Landing B2C IZOX — 4 phases
+
+> Brief complet : `tasks/brief-landing-b2c.md`
+
+### Architecture (décisions fixes)
+- Même app TanStack Start / Vercel — routes publiques `/`, `/reservation`, `/entreprises` côte à côte du CRM `/admin`, `/client`, etc.
+- `AuthProvider` au root est OK — il ne force aucun redirect, les pages publiques ignorent le contexte auth.
+- `/` cesse d'être un redirect vers `/login` — devient la landing B2C.
+- Meta `robots` de la landing = indexable (overrider le `noindex` global du root).
+- Séparation stricte tarifaire : `src/lib/pricing-b2c.ts` (TTC B2C) ≠ `src/lib/pricing.ts` (HT B2B).
+
+### Prérequis avant Phase 3 (Stripe)
+- Compte Stripe créé + clés API env Vercel (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`)
+- Variable `VITE_STRIPE_PUBLISHABLE_KEY` côté client
+
+---
+
+### Phase 1 — Routes publiques + contenu statique
+
+- [ ] `npm install framer-motion` (animations — utilisé à partir Phase 4 uniquement, l'installer tôt pour éviter un redéploiement inutile)
+- [ ] **`src/routes/index.tsx`** : remplace le redirect vers `/login` par le composant `LandingPage`
+- [ ] **`src/components/landing/PublicLayout.tsx`** : layout public (navbar vert forêt logo + CTA + lien app, footer)
+- [ ] **`src/lib/pricing-b2c.ts`** : catalogue TTC B2C (types véhicule × formule + options Puzzi/Ozone)
+- [ ] **Section Hero** : accroche circularité, double CTA, lien discret B2B, bandeau confiance
+- [ ] **Section Comment ça marche** : 3 étapes icon
+- [ ] **Section Boucle d'eau** : texte chiffré statique (animation Phase 4) — 50L / 80% / 50%
+- [ ] **Section Preuve RSE** : chiffres vrais, libellés conformes DGCCRF (voir §8 brief)
+- [ ] **Section Grille tarifaire** : matrice complète véhicule × formule + options
+- [ ] **Section Vision "demain"** : clairement labellisée "feuille de route"
+- [ ] **Section Abonnement** : module discret, économie estimée
+- [ ] **Section FAQ** : zone, paiement, annulation, produits, durée
+- [ ] **Footer** : mentions légales, CGV, RGPD, contact
+- [ ] **`src/routes/entreprises.tsx`** : route `/entreprises` — argumentaire B2B + formulaire lead (DB Phase 1)
+- [ ] **Migration Supabase** `leads_b2b` (nom, societe, taille_flotte, email, telephone, created_at, traite BOOLEAN)
+- [ ] **Edge function `create-lead-b2b`** : INSERT lead + email interne notif admin
+- [ ] SEO : meta `title`/`description`/og sans `noindex` sur les routes publiques
+
+---
+
+### Phase 2 — Tunnel `/reservation` (multi-step + créneaux)
+
+- [ ] **`src/routes/reservation.tsx`** : route publique `/reservation`
+- [ ] **Multi-step form** (8 étapes, voir §6 brief) : état local `step` + `formData`
+- [ ] **Étape 1** : code postal + gate 25km Évry-Courcouronnes (geocodage Nominatim via edge function existante ou calcul haversine JS) — capture email si hors zone
+- [ ] **Étape 1 bis** : détection flotte → proposition bascule `/entreprises` (discrète)
+- [ ] **Étapes 2–4** : véhicule / formule / options → prix TTC affiché en direct (recalcul instantané depuis `pricing-b2c.ts`)
+- [ ] **Étape 5** : calendrier créneaux temps réel — RPC `get_creneaux_disponibles` existant adapté B2C (4 créneaux fixes : 8h, 11h, 14h, 16h30 — invariant 2 slots/demi-journée partagé B2B/B2C)
+- [ ] **Étapes 6–7** : coordonnées + opt-ins RGPD séparés (réservation nécessaire ≠ prospection opt-out)
+- [ ] **Étape 8** : récap + choix acompte 30 % / intégral → Stripe (Phase 3)
+
+---
+
+### Phase 3 — Paiement Stripe + atomicité hold
+
+- [ ] **Migration Supabase** `reservations_b2c` : client_nom/email/tel, adresse_intervention, type_vehicule, formule, options JSONB, montant_ttc, montant_acompte, stripe_payment_intent_id, statut (en_hold | confirmee | annulee | expiree), slot_date, slot_heure, slot_creneau
+- [ ] **Contrainte d'unicité** `(slot_date, slot_creneau, equipe_id)` sur `reservations_b2c` UNION interventions B2B — COUNT vérifié par RPC
+- [ ] **Hold 10 min** : colonne `hold_expires_at TIMESTAMPTZ` + cron cleanup (étend `cron_maintenance_quotidienne`)
+- [ ] **RPC `reserver_slot_b2c`** : SELECT FOR UPDATE + INSERT + hold atomique
+- [ ] **Edge function `create-reservation-b2c`** : appelle `reserver_slot_b2c`, crée Stripe PaymentIntent (montant acompte ou intégral), retourne `client_secret`
+- [ ] **Stripe Elements** intégré côté client (étape 8 tunnel)
+- [ ] **Edge function `stripe-webhook`** : on `payment_intent.succeeded` → statut `confirmee` + sendEmail `reservation_b2c_confirmee`
+- [ ] **Nouveau type email** `reservation_b2c_confirmee` dans `src/lib/email.ts` + `send-email` edge function (confirmation client + résumé intervention + lien annulation)
+- [ ] **Annulation** : edge function `annuler-reservation-b2c` → statut `annulee` + Stripe refund acompte + sendEmail
+
+---
+
+### Phase 4 — Animations (après validation fonctionnelle)
+
+- [ ] **Fil de l'eau** : SVG path vertical qui relie les sections, goutte pilotée au scroll (Framer Motion `useScroll` + `useTransform`)
+- [ ] **Section Boucle d'eau** : tracé SVG animé scroll-driven, chiffres RSE qui s'allument au passage de la goutte
+- [ ] **Section Vision** : animation goutte → compost → poissons → légumes (scroll-driven)
+- [ ] **Cuve progression tunnel** : CSS pur `clip-path` lié au `step` courant — 0/8 → 8/8
+- [ ] **Boutons desktop** : remplissage eau bas→haut + effet magnétique (`useMouseMove`)
+- [ ] **Mobile-first check** : aucun hover mappé sur touch, scroll natif non perturbé
+- [ ] **`prefers-reduced-motion`** : wrapping conditionnel sur tous les composants Framer
+- [ ] **Lazy-load** : `React.lazy` + `Suspense` sur les sections d'animation (sous la ligne de flottaison)
+- [ ] **Perf** : vérifier FCP < 1,5s (aucune animation ne bloque le premier rendu)
+
+---
+
 ## Session 2026-06-11 (32) — Email "Facture disponible" + test cycle facturation
 
 ### Constat (audit facturation)
