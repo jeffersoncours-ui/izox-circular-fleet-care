@@ -1,5 +1,57 @@
 # Lessons Learned — IZOX
 
+## Géocodage Nominatim fragile sur abréviations FR + intervention sans GPS (session 29)
+
+- **Symptôme** : la carte des tournées affiche "non géolocalisé" / point absent pour les nouveaux RDV. Une demande créée avec "18 Av. du Gén Leclerc" n'avait aucune coordonnée (`latitude/longitude` NULL), alors qu'une adresse normale ("7 chemin des closeaux") géocodait bien.
+- **Cause racine** : (1) Nominatim échoue sur les abréviations ("Av.", "Gén") ; (2) le géocodage client est fire-and-forget — si Nominatim échoue, la demande est créée sans coords ; (3) `AssignerRdvDialog` proposait un géocodage **optionnel** (badge + bouton), facile à zapper → `assigner_rdv` crée l'intervention avec coords NULL → absente de la carte.
+- **Fix triple** :
+  1. **Edge function `geocode-address` v3** : normalisation des abréviations FR courantes (`Av.→Avenue`, `Gén→Général`, `Bd→Boulevard`, etc.) + cascade de tentatives (adresse exacte → normalisée → `code_postal ville, France` en fallback ville). Garantit au moins un point ville.
+  2. **`AssignerRdvDialog`** : géocodage **automatique** dans `handleConfirm` si la demande n'a pas de coords (best-effort, silencieux, n'échoue pas l'assignation). Helper `ensureGeocoded({silent})` partagé avec le bouton manuel.
+  3. **`ensureGeocoded`** propage aussi les coords aux `interventions` déjà créées depuis la demande (`UPDATE ... WHERE demande_rdv_id`), pas seulement à `demandes_rdv` — sinon un RDV déjà confirmé reste sans GPS.
+- **Règle** : tout point affiché sur une carte doit avoir un fallback de géocodage (au pire le centre-ville). Ne jamais laisser le géocodage comme une étape optionnelle si une fonctionnalité aval (carte des tournées) en dépend — le rendre automatique au moment où les coords deviennent nécessaires.
+
+## Intervention annulée encore "réalisable" côté opérateur — guard UI manquant (session 29)
+
+- **Symptôme** : un RDV annulé restait ouvrable côté terrain ; l'opérateur voyait le stepper (pré-contrôle/photos/signature) et tentait des actions. Les photos échouaient silencieusement.
+- **Cause** : `terrain.intervention.$id.tsx` ne gérait spécifiquement que `planifiee` (vue "prendre en charge") puis affichait le stepper pour tous les autres statuts, **y compris `annulee`**. Les RLS Storage/`intervention_photos` exigent `statut='en_cours'` → les uploads échouaient, d'où "ça ne fonctionne pas" mais sans message clair.
+- **Fix** : guard explicite — si `statut === 'annulee'`, afficher un écran "Intervention annulée / aucune action possible" + retour planning, avant tout rendu du stepper. Cohérent avec les RLS (défense en profondeur : l'UI ne doit pas proposer ce que la DB refuse).
+- **Règle** : quand une RLS bloque une opération sur certains statuts, l'UI doit refléter ce blocage par un écran dédié — ne jamais afficher un formulaire dont chaque action échouera au niveau base.
+
+## Photo terrain : `capture="environment"` empêche la photothèque (session 29)
+
+- **Symptôme** : l'opérateur ne pouvait QUE prendre une photo sur le moment (caméra forcée), impossible de choisir une image existante — bloquant pour les photos "après" prises plus tôt ou pour reprendre une photo ratée.
+- **Cause** : `<input type="file" accept="image/*" capture="environment">` dans `PhotoSlot.tsx` — l'attribut `capture` force l'ouverture directe de l'appareil photo arrière sur mobile, sans proposer la galerie.
+- **Fix** : retirer `capture`. Avec seulement `accept="image/*"`, le sélecteur natif mobile propose un choix : "Prendre une photo" OU "Photothèque" OU "Choisir un fichier".
+- **Règle** : n'utiliser `capture` que si la prise live est la SEULE option voulue. Dès qu'on veut laisser le choix caméra/galerie, ne pas mettre `capture` — le picker natif gère le choix.
+
+## Leaflet z-index dans un Radix Dialog — isolation CSS (session 29)
+
+- **Symptôme** : en ouvrant `AssignerRdvDialog`, la carte Leaflet (tiles, markers, contrôles) restait visible par-dessus le contenu du dialog. La `DialogOverlay` (fond noir semi-transparent) était bien rendue, mais les éléments Leaflet "transperçaient".
+- **Cause** : Leaflet impose des z-indexes élevés (markers : 600, popups : 700, contrôles : 800) via son propre CSS. La `DialogContent` Radix utilise `z-50` (Tailwind = CSS z-index: 50), insuffisant pour battre les couches Leaflet dans le même contexte d'empilement document.
+- **Fix** : `style={{ isolation: "isolate" }}` sur le container de la carte. La propriété CSS `isolation: isolate` crée un nouveau stacking context — tous les z-indexes internes à ce container (y compris ceux de Leaflet) sont confinés à l'intérieur et ne peuvent plus concurrencer des éléments extérieurs (le Dialog). Zéro changement de z-index nécessaire.
+- **Règle** : quand une bibliothèque tierce (Leaflet, D3, des drag'n'drop libs) impose des z-indexes élevés en dur, ne pas essayer de les battre en augmentant le z-index du dialog. Isoler le container de la bibliothèque avec `isolation: isolate` à la place.
+
+## Emails skippés silencieusement — email_contact null (session 29)
+
+- **Symptôme** : `email_logs` montrait `status=skipped`, `error_message="Aucun email destinataire valide"` pour `rdv_confirmee` et `rdv_modifie`. L'utilisateur n'avait reçu aucun email après assignation d'un RDV.
+- **Cause racine** : `create-client-account` insère l'entreprise avec `payload.entreprise.email_contact` qui peut être null (champ optionnel dans le formulaire admin). `send-email` résolvait alors `email ? [email] : []` → liste vide → skip. Le formulaire "Créer un compte client" ne requiert pas l'email de contact de l'entreprise (le champ existe mais n'est pas obligatoire).
+- **Fix double** : (1) `create-client-account` : `email_contact: payload.entreprise.email_contact ?? payload.user.email` — toujours avoir un destinataire en defaultant sur l'email auth du compte créé. (2) `send-email` : helper `resolveClientEmail(admin, entrepriseId, knownEmail)` — si `email_contact` est null, chercher le profil client lié (`profiles.role='client'`) et récupérer son email via `auth.admin.getUserById()`. Le fallback garantit que les emails arrivent même pour les entreprises créées avant le fix.
+- **Règle** : un champ `email_contact` optionnel sur `entreprises` rend toute la chaîne email fragile. Pour un CRM, l'email de notification doit toujours être résolvable. Soit le rendre obligatoire en DB (NOT NULL), soit implémenter systématiquement le fallback auth email. Choisir l'un ou l'autre — pas les deux à moitié.
+
+## Mutation directe de prop React — masquer un état UI post-action (session 29)
+
+- **Anti-pattern** : après géocodage d'une adresse, le code faisait `demande.latitude = data.latitude` pour masquer le badge "Adresse non géocodée". Cela mutait l'objet prop directement, ce qui ne déclenche pas de re-render React et peut causer des incohérences si le parent re-passe la prop originale.
+- **Fix** : state local `geocoded: boolean` initialisé à `false`, remis à `false` à chaque ouverture du dialog (`useEffect([open, demande])`). Après géocodage réussi : `setGeocoded(true)`. Condition : `!demande.latitude && !geocoded`. Le badge disparaît immédiatement après l'action sans muter le prop.
+- **Règle** : ne jamais muter un objet prop (même si JS le permet). Pour un état UI local (ex. "action vient d'être faite"), utiliser un `boolean` state local au composant. Pour exposer la mise à jour au parent, passer un callback (ex. `onGeocoded(lat, lng)`) dans les props.
+
+## `remise_pct` vs `taux_remise` — colonne de retour de `calculer_palier_remise` (sessions 27c/28/29)
+
+- **Symptôme** : `degeler_contrat` échoue avec `ERROR 42703: column "remise_pct" does not exist` côté front. Toast d'erreur affiché, contrat reste en `en_cours_gel`.
+- **Cause** : `_recalculer_caches_contrat` lisait `SELECT palier, remise_pct FROM calculer_palier_remise(v_nb)` mais la fonction retourne `TABLE(palier text, taux_remise numeric)`. Le nom de colonne dans le SELECT doit correspondre au nom déclaré dans le RETURNS TABLE.
+- **Correctif appliqué** : migration `20260610c_fix_recalculer_caches_contrat_taux_remise.sql` → `SELECT palier, taux_remise INTO v_palier, v_remise`. La colonne destination (`remise_pct` sur `contrats`) garde son nom, seul le alias de lecture depuis la fonction change.
+- **Historique** : même bug corrigé sur `ajouter_vehicule`, `supprimer_vehicule`, `valider_vehicule` en sessions 27c/28. `_recalculer_caches_contrat` (appelé par `degeler_contrat`) avait été oublié.
+- **Règle** : quand `calculer_palier_remise` change sa signature RETURNS TABLE, chercher TOUTES les fonctions qui l'appellent avec `grep -r "calculer_palier_remise"` et mettre à jour chaque `SELECT` en conséquence. Vérifier aussi `_recalculer_caches_contrat` qui est un helper intermédiaire appelé par plusieurs RPCs.
+
 ## Boucle infinie `useSupabaseQuery` — pattern ref pour callbacks stables (session 28)
 
 - **Symptôme** : pages `/client/flotte` et `/admin/planning` "sautent" en continu, impossible d'interagir. Réseau : des dizaines de requêtes Supabase par seconde.

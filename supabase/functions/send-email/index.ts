@@ -352,6 +352,26 @@ function buildRdvAnnuleAdminHtml(d: Record<string, unknown>): string {
   `);
 }
 
+// When entreprises.email_contact is null, fall back to the auth email of the
+// client profile linked to that entreprise. Avoids silent skips on new accounts.
+async function resolveClientEmail(
+  admin: ReturnType<typeof createClient>,
+  entrepriseId: string | null,
+  knownEmail: string | null,
+): Promise<string | null> {
+  if (knownEmail) return knownEmail;
+  if (!entrepriseId) return null;
+  const { data: profiles } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("entreprise_id", entrepriseId)
+    .eq("role", "client")
+    .limit(1);
+  if (!profiles?.length) return null;
+  const { data: authData } = await admin.auth.admin.getUserById(profiles[0].id);
+  return authData?.user?.email ?? null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -411,7 +431,8 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !demande) throw new Error("Demande gel introuvable");
-        const email = (demande.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (demande.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, demande.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = type === "gel_validee"
           ? "✓ Votre demande de gel a été validée — IZOX"
@@ -429,7 +450,8 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
-        const email = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, rdv.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = "✓ Votre rendez-vous IZOX est confirmé";
         html = buildRdvConfirmeeHtml(rdv as Record<string, unknown>);
@@ -443,7 +465,8 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
-        const email = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, rdv.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = "⏰ Horaire de votre rendez-vous IZOX modifié";
         html = buildRdvModifieHtml(rdv as Record<string, unknown>);
@@ -484,7 +507,8 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
-        const email = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, rdv.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = "Votre rendez-vous IZOX a été annulé";
         html = buildRdvAnnuleAdminHtml(rdv as Record<string, unknown>);
@@ -498,7 +522,8 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !inter) throw new Error("Intervention introuvable");
-        const email = (inter.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (inter.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, inter.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = "✓ Votre prestation IZOX est terminée";
         html = buildInterventionCloseHtml(inter as Record<string, unknown>);
