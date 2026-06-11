@@ -41,6 +41,7 @@ import { Route as AdminClientsRouteImport } from './routes/admin.clients'
 import { Route as ClientFacturesIndexRouteImport } from './routes/client.factures.index'
 import { Route as AdminPlanningIndexRouteImport } from './routes/admin.planning.index'
 import { Route as AdminInterventionsIndexRouteImport } from './routes/admin.interventions.index'
+import { Route as TerrainSuiviIdRouteImport } from './routes/terrain.suivi.$id'
 import { Route as TerrainInterventionIdRouteImport } from './routes/terrain.intervention.$id'
 import { Route as SettingsSecurity2faRouteImport } from './routes/settings.security.2fa'
 import { Route as ClientFlotteIdRouteImport } from './routes/client.flotte.$id'
@@ -212,6 +213,11 @@ const AdminInterventionsIndexRoute = AdminInterventionsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminInterventionsRoute,
 } as any)
+const TerrainSuiviIdRoute = TerrainSuiviIdRouteImport.update({
+  id: '/suivi/$id',
+  path: '/suivi/$id',
+  getParentRoute: () => TerrainRoute,
+} as any)
 const TerrainInterventionIdRoute = TerrainInterventionIdRouteImport.update({
   id: '/intervention/$id',
   path: '/intervention/$id',
@@ -303,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/client/flotte/$id': typeof ClientFlotteIdRoute
   '/settings/security/2fa': typeof SettingsSecurity2faRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
+  '/terrain/suivi/$id': typeof TerrainSuiviIdRoute
   '/admin/interventions/': typeof AdminInterventionsIndexRoute
   '/admin/planning/': typeof AdminPlanningIndexRoute
   '/client/factures/': typeof ClientFacturesIndexRoute
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   '/client/flotte/$id': typeof ClientFlotteIdRoute
   '/settings/security/2fa': typeof SettingsSecurity2faRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
+  '/terrain/suivi/$id': typeof TerrainSuiviIdRoute
   '/admin/interventions': typeof AdminInterventionsIndexRoute
   '/admin/planning': typeof AdminPlanningIndexRoute
   '/client/factures': typeof ClientFacturesIndexRoute
@@ -386,6 +394,7 @@ export interface FileRoutesById {
   '/client/flotte/$id': typeof ClientFlotteIdRoute
   '/settings/security/2fa': typeof SettingsSecurity2faRoute
   '/terrain/intervention/$id': typeof TerrainInterventionIdRoute
+  '/terrain/suivi/$id': typeof TerrainSuiviIdRoute
   '/admin/interventions/': typeof AdminInterventionsIndexRoute
   '/admin/planning/': typeof AdminPlanningIndexRoute
   '/client/factures/': typeof ClientFacturesIndexRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/client/flotte/$id'
     | '/settings/security/2fa'
     | '/terrain/intervention/$id'
+    | '/terrain/suivi/$id'
     | '/admin/interventions/'
     | '/admin/planning/'
     | '/client/factures/'
@@ -470,6 +480,7 @@ export interface FileRouteTypes {
     | '/client/flotte/$id'
     | '/settings/security/2fa'
     | '/terrain/intervention/$id'
+    | '/terrain/suivi/$id'
     | '/admin/interventions'
     | '/admin/planning'
     | '/client/factures'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/client/flotte/$id'
     | '/settings/security/2fa'
     | '/terrain/intervention/$id'
+    | '/terrain/suivi/$id'
     | '/admin/interventions/'
     | '/admin/planning/'
     | '/client/factures/'
@@ -754,6 +766,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/interventions/'
       preLoaderRoute: typeof AdminInterventionsIndexRouteImport
       parentRoute: typeof AdminInterventionsRoute
+    }
+    '/terrain/suivi/$id': {
+      id: '/terrain/suivi/$id'
+      path: '/suivi/$id'
+      fullPath: '/terrain/suivi/$id'
+      preLoaderRoute: typeof TerrainSuiviIdRouteImport
+      parentRoute: typeof TerrainRoute
     }
     '/terrain/intervention/$id': {
       id: '/terrain/intervention/$id'
@@ -1002,11 +1021,13 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 interface TerrainRouteChildren {
   TerrainIndexRoute: typeof TerrainIndexRoute
   TerrainInterventionIdRoute: typeof TerrainInterventionIdRoute
+  TerrainSuiviIdRoute: typeof TerrainSuiviIdRoute
 }
 
 const TerrainRouteChildren: TerrainRouteChildren = {
   TerrainIndexRoute: TerrainIndexRoute,
   TerrainInterventionIdRoute: TerrainInterventionIdRoute,
+  TerrainSuiviIdRoute: TerrainSuiviIdRoute,
 }
 
 const TerrainRouteWithChildren =

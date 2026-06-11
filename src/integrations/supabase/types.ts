@@ -1562,6 +1562,65 @@ export type Database = {
         }
         Relationships: []
       }
+      operateur_notes: {
+        Row: {
+          created_at: string
+          date_observation: string
+          entreprise_id: string
+          id: string
+          note: string
+          operateur_id: string
+          vehicule_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          date_observation?: string
+          entreprise_id: string
+          id?: string
+          note: string
+          operateur_id: string
+          vehicule_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          date_observation?: string
+          entreprise_id?: string
+          id?: string
+          note?: string
+          operateur_id?: string
+          vehicule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operateur_notes_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operateur_notes_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operateur_notes_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "operateur_notes_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
+            referencedRelation: "vehicules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operateur_observations: {
         Row: {
           created_at: string

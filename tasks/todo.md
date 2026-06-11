@@ -2,6 +2,26 @@
 
 ---
 
+## Session 2026-06-11 (31) — Journal multi-notes opérateur + vue admin/équipe
+
+### Décisions utilisateur
+- Note rattachée à un **client (entreprise_id)**, véhicule optionnel
+- Remplace l'UI textarea-par-intervention (table `operateur_observations` conservée, UI retirée)
+- Côté admin : onglet "Notes clients" dans `/admin/equipe` (panneau droit, à côté du chat)
+
+### Plan
+
+- [x] **DB** : migration `operateur_notes` (entreprise_id, vehicule_id nullable, operateur_id, date_observation DATE, note TEXT) + 5 RLS (opérateur CRUD own, admin/staff SELECT all)
+- [x] **Types** : régénérés (94 057 chars)
+- [x] **terrain.index.tsx** : `TabObservations` remplacée → liste cards clients cliquables (nom, nb notes, dernière date) + search. Route cible : `/terrain/suivi/$id`
+- [x] **terrain.suivi.$id.tsx** : nouvelle route (renommée depuis `terrain.client.$id` — `.client.` interdit par le plugin SSR `import-protection`) — header client, form (date picker max=today, véhicule optionnel, textarea), journal groupé par date, suppression avec confirmation
+- [x] **admin.equipe.tsx** : panneau droit → onglets "Messages" | "Notes clients" ; `NotesPanel` (lecture seule, groupé par client)
+- [x] `npm run build` → ✓ 0 erreur (client + serveur)
+- [x] Tests empiriques : INSERT note OK, 5 RLS vérifiées, données nettoyées (notes=0, entreprises_test=0)
+- [ ] Commit + push
+
+---
+
 ## Session 2026-06-11 (30) — Audit fiches admin + scope intervention + timeline prestations
 
 ### Audit (3 zones, demandé par l'utilisateur après tests manuels)

@@ -2,10 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
+  Car,
   CheckCircle2,
   Link2,
   Link2Off,
   MessageSquare,
+  NotebookPen,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -57,6 +59,18 @@ interface ProfileRow {
   nom: string | null;
 }
 
+interface NoteAdminRow {
+  id: string;
+  date_observation: string;
+  note: string;
+  vehicule_id: string | null;
+  entreprise_id: string;
+  entreprises: { nom: string } | null;
+  vehicules: { immatriculation: string } | null;
+}
+
+type EquipeRightTab = "messages" | "notes";
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function AdminEquipePage() {
@@ -75,6 +89,9 @@ function AdminEquipeInner() {
   const [unreadByUserId, setUnreadByUserId] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [selectedOpId, setSelectedOpId] = useState<string | null>(null);
+  const [equipeTab, setEquipeTab] = useState<EquipeRightTab>("messages");
+  const [notesByUserId, setNotesByUserId] = useState<Record<string, NoteAdminRow[]>>({});
+  const [loadingNotes, setLoadingNotes] = useState(false);
   const [linkDialogOpId, setLinkDialogOpId] = useState<string | null>(null);
   const [unlinkDialogOpId, setUnlinkDialogOpId] = useState<string | null>(null);
 
@@ -128,6 +145,31 @@ function AdminEquipeInner() {
   }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Charger les notes de l'opérateur sélectionné quand l'onglet Notes est actif
+  useEffect(() => {
+    if (equipeTab !== "notes" || !selectedOpId) return;
+    const op = operators.find((o) => o.id === selectedOpId);
+    if (!op?.user_id) return;
+    const userId = op.user_id;
+    if (notesByUserId[userId]) return; // déjà chargé
+    let alive = true;
+    setLoadingNotes(true);
+    (async () => {
+      const { data, error } = await supabase
+        .from("operateur_notes")
+        .select("id, date_observation, note, vehicule_id, entreprise_id, entreprises(nom), vehicules(immatriculation)")
+        .eq("operateur_id", userId)
+        .order("date_observation", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (!alive) return;
+      if (error) toast.error("Erreur chargement notes");
+      setNotesByUserId((prev) => ({ ...prev, [userId]: (data as unknown as NoteAdminRow[]) ?? [] }));
+      setLoadingNotes(false);
+    })();
+    return () => { alive = false; };
+  }, [equipeTab, selectedOpId, operators, notesByUserId]);
 
   const selectedOp = operators.find((o) => o.id === selectedOpId) ?? null;
 
@@ -285,7 +327,7 @@ function AdminEquipeInner() {
             </div>
           </div>
 
-          {/* ── Panneau droit : chat ── */}
+          {/* ── Panneau droit : chat + notes ── */}
           <div
             className={cn(
               "flex-1 flex flex-col min-h-0",
@@ -294,7 +336,7 @@ function AdminEquipeInner() {
           >
             {selectedOp?.user_id ? (
               <>
-                {/* Header chat */}
+                {/* Header opérateur */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0">
                   <button
                     type="button"
@@ -324,12 +366,50 @@ function AdminEquipeInner() {
                   </div>
                 </div>
 
-                {/* ChatWindow prend toute la hauteur restante */}
-                <ChatWindow
-                  operatorId={selectedOp.user_id}
-                  role="admin"
-                  className="flex-1 min-h-0"
-                />
+                {/* Onglets Messages / Notes */}
+                <div className="flex gap-1 px-4 py-2 border-b border-border shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setEquipeTab("messages")}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors",
+                      equipeTab === "messages"
+                        ? "bg-foreground text-background"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <MessageSquare className="h-3 w-3" />
+                    Messages
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEquipeTab("notes")}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors",
+                      equipeTab === "notes"
+                        ? "bg-foreground text-background"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <NotebookPen className="h-3 w-3" />
+                    Notes clients
+                  </button>
+                </div>
+
+                {/* Contenu onglet actif */}
+                {equipeTab === "messages" ? (
+                  <ChatWindow
+                    operatorId={selectedOp.user_id}
+                    role="admin"
+                    className="flex-1 min-h-0"
+                  />
+                ) : (
+                  <NotesPanel
+                    userId={selectedOp.user_id}
+                    notes={notesByUserId[selectedOp.user_id] ?? null}
+                    loading={loadingNotes}
+                  />
+                )}
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
@@ -338,7 +418,7 @@ function AdminEquipeInner() {
                 </div>
                 <p className="font-semibold text-foreground">Sélectionnez un opérateur</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Choisissez un opérateur dans la liste pour ouvrir le chat.
+                  Choisissez un opérateur dans la liste pour ouvrir le chat ou consulter ses notes.
                 </p>
               </div>
             )}
@@ -364,6 +444,84 @@ function AdminEquipeInner() {
           onUnlinked={handleUnlinked}
         />
       )}
+    </div>
+  );
+}
+
+// ─── Notes panel (lecture seule admin) ───────────────────────────────────────
+
+function NotesPanel({
+  userId,
+  notes,
+  loading,
+}: {
+  userId: string;
+  notes: NoteAdminRow[] | null;
+  loading: boolean;
+}) {
+  if (loading || notes === null) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (notes.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+          <NotebookPen className="h-5 w-5 text-muted-foreground/50" />
+        </div>
+        <p className="font-semibold text-foreground text-sm">Aucune note</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          L'opérateur n'a encore écrit aucune note de suivi.
+        </p>
+      </div>
+    );
+  }
+
+  // Grouper par client
+  const byClient = new Map<string, { nom: string; notes: NoteAdminRow[] }>();
+  for (const n of notes) {
+    if (!byClient.has(n.entreprise_id)) {
+      byClient.set(n.entreprise_id, { nom: n.entreprises?.nom ?? n.entreprise_id.slice(0, 8), notes: [] });
+    }
+    byClient.get(n.entreprise_id)!.notes.push(n);
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-5">
+      {Array.from(byClient.values()).map((client) => (
+        <div key={client.nom} className="space-y-2">
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+              {client.nom}
+            </p>
+            <span className="text-[10px] text-muted-foreground">
+              {client.notes.length} note{client.notes.length > 1 ? "s" : ""}
+            </span>
+          </div>
+          {client.notes.map((n) => (
+            <div key={n.id} className="rounded-xl border border-border bg-card p-3 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                  {new Date(n.date_observation + "T00:00:00").toLocaleDateString("fr-FR", {
+                    day: "numeric", month: "short", year: "numeric",
+                  })}
+                </span>
+                {n.vehicules && (
+                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Car className="h-3 w-3" />
+                    {n.vehicules.immatriculation}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{n.note}</p>
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
