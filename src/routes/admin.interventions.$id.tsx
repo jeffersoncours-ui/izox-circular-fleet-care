@@ -23,6 +23,7 @@ import {
   statutColor,
   statutLabel,
   zonesFor,
+  typeScope,
   CHECKLIST_INTERIEUR,
   CHECKLIST_EXTERIEUR,
   type Statut,
@@ -201,19 +202,17 @@ function AdminInterventionDetail() {
     );
   }
 
-  const typeScope = (t: string) => {
-    if (t === "exterieur" || t === "interieur" || t === "complet")
-      return t as "exterieur" | "interieur" | "complet";
-    // pack_* → complet par défaut pour l'affichage checklists/photos
-    return "complet" as const;
-  };
-
-  const zones = zonesFor(typeScope(data.type_prestation));
+  // typeScope() mappe les packs commerciaux vers le scope réel :
+  // pack_interieur → interieur, pack_standard/pack_vtc → complet.
+  // Indispensable pour ne pas afficher les zones/checklists extérieures
+  // sur une prestation purement intérieure.
+  const scope = typeScope(data.type_prestation);
+  const zones = zonesFor(scope);
   const photoOf = (zone: string, moment: Moment) =>
     photos.find((p) => p.zone === zone && p.moment === moment);
 
-  const showInt = typeScope(data.type_prestation) !== "exterieur";
-  const showExt = typeScope(data.type_prestation) !== "interieur";
+  const showInt = scope === "interieur" || scope === "complet";
+  const showExt = scope === "exterieur" || scope === "complet";
 
   // Le compte-rendu (contrôle, photos, checklists, notes, signature) n'a de sens
   // qu'une fois la prestation effectuée par l'opérateur. Avant (planifiee/en_cours),

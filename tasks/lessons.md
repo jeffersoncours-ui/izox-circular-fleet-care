@@ -1,5 +1,27 @@
 # Lessons Learned — IZOX
 
+## Pattern `*.client.*` interdit par le plugin SSR TanStack Start (session 31)
+
+- **Symptôme** : build serveur échoue avec `[import-protection] Import denied in server environment — Denied by file pattern: **/*.client.*`. Le fichier `terrain.client.$id.tsx` est refusé à l'import depuis `routeTree.gen.ts` dans le bundle serveur.
+- **Cause** : TanStack Start embarque un plugin `@tanstack/start-plugin-core:import-protection` qui interdit tout fichier dont le nom correspond à `**/*.client.*` dans le bundle SSR. Le segment `.client.` au milieu du nom déclenche la protection (même convention que Next.js `.client.ts` files).
+- **Fix** : renommer le fichier route sans `.client.` dans son nom. `terrain.client.$id.tsx` → `terrain.suivi.$id.tsx` (route `/terrain/suivi/$id`). Le `createFileRoute(path)` à l'intérieur est complètement indépendant du nom de fichier — TanStack Router utilise les `.` comme séparateurs de segments de nom de fichier, mais le `path` déclaré dans le fichier peut être ce qu'on veut.
+- **Règle** : ne jamais nommer un fichier route avec `.client.` dans son nom dans un projet TanStack Start (SSR). Pour les routes, utiliser des noms descriptifs fonctionnels sans ce mot (`suivi`, `detail`, `journal`, etc.).
+
+## `typeScope()` redéfinie localement = scope intérieur/extérieur cassé côté admin (session 30)
+
+- **Symptôme** : la fiche admin `/admin/interventions/$id` affichait les zones photo extérieures (Pare-chocs, Capot, Côtés, Toit, Coffre) ET la « Checklist extérieur » (items non cochés) sur une prestation `pack_interieur` → impression trompeuse de prestation incomplète. La fiche terrain, elle, n'affichait que l'habitacle (correct).
+- **Cause** : `admin.interventions.$id.tsx` **redéfinissait une `typeScope()` locale** qui renvoyait `"complet"` pour TOUS les packs (`pack_interieur` inclus), au lieu d'importer la vraie de `@/lib/interventions` (qui mappe `pack_interieur → interieur`). Du coup `showInt && showExt` étaient tous deux vrais.
+- **Fix** : importer `typeScope` depuis `@/lib/interventions`, supprimer la version locale, recalculer `scope = typeScope(type_prestation)` puis `showInt = scope==='interieur'||'complet'`, `showExt = scope==='exterieur'||'complet'`. Exactement le pattern de la fiche terrain.
+- **Règle** : ne JAMAIS redéfinir localement une fonction de mapping métier (`typeScope`, `zonesFor`, `getPackLabel`) qui existe déjà dans `src/lib/`. Une copie locale dérive et casse silencieusement. Toujours importer la source unique. Confirmé par CLAUDE.md (« ne jamais appliquer `type_prestation` à `zonesFor()`/`showInt/showExt` sans passer par `typeScope()` »).
+
+## Logger un événement métier pour une timeline = trigger DB, pas code frontend (session 30)
+
+- **Contexte** : la « Timeline des modifications » de la fiche contrat lit `admin_actions_log` filtré sur `details->>'contrat_id'`. La validation d'intervention (UPDATE `statut='validee'` côté admin) n'écrivait aucun log → invisible dans la timeline.
+- **Choix** : trigger DB `AFTER UPDATE ON interventions` (SECURITY DEFINER, search_path=public) plutôt que code frontend après l'UPDATE. Garantit le log quel que soit le chemin d'écriture (RPC future, cron, action manuelle), pas seulement le bouton admin actuel. `user_id = NEW.validated_by` (déjà posé dans le même UPDATE).
+- **Guard anti-doublon** : `IF NEW.statut='validee' AND OLD.statut IS DISTINCT FROM 'validee'` — ne logge qu'à la **transition**, pas à chaque édition ultérieure d'une intervention déjà validée. Toujours tester ce cas (UPDATE d'un autre champ sur ligne déjà validée → 0 nouveau log).
+- **contrat_id dérivé du véhicule** : `interventions` n'a pas de `contrat_id` direct → le trigger lit `vehicules.contrat_id` via `NEW.vehicule_id`. Le filtre timeline `details->>'contrat_id'` ne montre que les interventions dont le véhicule porte un contrat (acceptable). Pas besoin de régénérer les types Supabase : un trigger n'altère aucun schéma de table.
+- **Nouveau type d'action = nouveau case dans `getActionMeta()`** : sans mapping UI, l'action tombe dans le `default` (libellé brut, icône History). Ajouter le case (`intervention_validee` → icône Sparkles, « Prestation validée · {immat} · {pack} » via `getPackLabel`).
+
 ## Géocodage Nominatim fragile sur abréviations FR + intervention sans GPS (session 29)
 
 - **Symptôme** : la carte des tournées affiche "non géolocalisé" / point absent pour les nouveaux RDV. Une demande créée avec "18 Av. du Gén Leclerc" n'avait aucune coordonnée (`latitude/longitude` NULL), alors qu'une adresse normale ("7 chemin des closeaux") géocodait bien.
