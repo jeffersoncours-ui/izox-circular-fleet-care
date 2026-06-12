@@ -1,5 +1,45 @@
 # Lessons Learned — IZOX
 
+## Dark mode scope isolation — `.izox-b2c` wrapper prevents CRM bleed (session 33)
+
+- **CSS-scoped dark mode requires wrapper class** : wrapping the landing B2C pages in `<div className="izox-b2c">` ensures all CSS variables (--b2c-bg, --b2c-accent, --b2c-glow, etc.) are namespaced. Without wrapper, Tailwind utilities (`text-foreground`, `border-primary`) would redefine global tokens and bleed into the CRM.
+- **Semantic token remapping inside scope** : under `.izox-b2c`, redefine button/input colors via Tailwind utilities that reference `--color-primary` pointing to `--b2c-accent` (green). Outside the wrapper, `--color-primary` defaults to blue (CRM). Zero conflicts because CSS rules are scoped by `.izox-b2c` parent selector.
+- **Progressive enhancement : animations post-hydration** : The SSR renders static structure + dark classes before JS loads. Animations (scroll listeners, CountUp, transitions) attach via `useEffect` so they don't block FCP. Test: CPU throttle on `/` → animation jank allowed, but page readable instantly.
+- **Verify CRM isolation empirically** : fetch `/login` SSR HTML, grep for `izox-b2c` (absent ✓) and `--b2c-accent` (absent ✓). Do NOT rely on visual inspection of code — actually verify the rendered HTML contains no dark tokens outside landing pages.
+
+## SVG scroll-driven animations — `getPointAtLength` for path-traced objects (session 33)
+
+- **Path animation requires SVG path export** : `WaterLoopDiagram` exports `LOOP_PATH` (SVG path element) + `getTotalLength()` value. The controller `installWaterLoop` reads `.getTotalLength()` + calculates `strokeDashoffset` per scroll position. Pattern : `new SVGPathElement().getTotalLength()` returns pixel distance along the path (requires actual DOM access, not JSON).
+- **`getPointAtLength` for position tracking** : to move an object (droplet) along a curved path, call `path.getPointAtLength(distance)` which returns `{x, y}`. Map scroll progress [0..1] to distance [0..totalLength], then `setDropletPos(path.getPointAtLength(...))`. Critical : `getPointAtLength` is DOM-only (no SSR), so wrap in `if (typeof window !== "undefined")`.
+- **rAF throttle prevents jank on scroll** : a naive scroll listener fires 60+ times/sec. Wrap the update in `let rafId; addEventListener('scroll', () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => updatePath(...)) })`. Coalesces updates into browser paint cycles → smooth 60fps instead of stutter.
+- **SVG viewBox prevents CLS** : set `viewBox` on the SVG root so aspect ratio is preserved across responsive resizes. Without it, SVG reflows when viewport changes → Cumulative Layout Shift.
+
+## CountUp component — IntersectionObserver for lazy animation trigger (session 33)
+
+- **CountUp fires only when entering viewport** : wrap in `IntersectionObserver(threshold: 0.4)` so animation doesn't run if the counter is below-the-fold. Prevents 60+ unnecessary animations on SSR.
+- **`easeOutCubic` for natural counting feel** : linear progress (0→final in 1100ms) feels robotic. Apply easing `const progress = 1 - (1 - t)³` (cubic ease-out) so the counter slows as it approaches the final value.
+- **Respect `prefers-reduced-motion`** : if user has motion disabled in OS settings, display final value instantly (no animation loop). Idiom : `const motionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches; if (!motionOk) setCount(final); else [animate]`.
+- **Never block page load on counter animation** : the component should run the animation independently in a `useEffect` after mount. No async await, no promises. If Supabase fetch is slow (10s), the counters still animate once data arrives.
+
+## Responsive design for landing — mobile-first scroll-driven (session 33)
+
+- **No hover-dependent UX on mobile** : Tailwind `@media hover:hover` applies only to devices with a real pointer. Landing buttons use "fill water bottom→top" animation on desktop hover; on mobile, skip hover and let tap reveal the interaction via state change (pressed/active). Test on iPhone: no CSS hover effects, but tap still works.
+- **Sticky navbar clipping overflow** : `overflow-x: clip` on `.izox-b2c` wrapper prevents SVG glows and animated droplets from painting outside the viewport horizontally. Without it, hero car halo clips unpredictably. `clip` is safer than `hidden` (doesn't clip vertical overflow).
+- **Grid layouts with `clamp()` for responsive scales** : titles use `clamp(1.5rem, 6vw, 3.8rem)` (min, preferred %, max). Smoothly scales from mobile to desktop without breakpoint jank. Applies to: hero title, section headings, card borders.
+- **Mobile form inputs = full width** : buttons in `/reservation` form are `w-full` to hit 44px touch target minimum. Label text must be readable (16px+) to prevent iOS zoom-on-focus.
+
+## Design token handoff from Figma — bridging design + code (session 33)
+
+- **Color values are hex, not Figma variable names** : design handoff provides swatches with RGB hex values (e.g. #3FE08F abysse green). Code defines these as CSS custom properties (`--b2c-accent: #3FE08F`). Do NOT try to parse Figma's `{color.primary}` variable names into CSS — extract the final RGB hex value instead.
+- **Typography : font stack order matters** : brief specifies Instrument Serif (titles) + Archivo (body) + JetBrains Mono (figures/numbers). Google Fonts `<link rel="preload">` ensures fonts load before first paint. Fallback stack: `Instrument Serif, Georgia, serif` (no Google Fonts = Serif renders in Georgia).
+- **Illustration naming convention** : SVG component files are `{Concept}.tsx` (HeroCar, WaterLoopDiagram, AquaponieScene). Each exports a single `export default` functional component. The component is then imported and rendered in the page route — separates illustration code from layout.
+
+## Framerate-aware animations with prefers-reduced-motion (session 33)
+
+- **Detect motion preference on mount** : `const prefersReduced = useRef(window.matchMedia('(prefers-reduced-motion: reduce)').matches)`. Store in ref (not state) because media query doesn't change after mount — state would cause unnecessary re-renders.
+- **Different behavior for reduced motion** : if user disabled motion, either (1) display final state immediately (counters, scroll transforms), or (2) use a simpler non-animation transition (fade, text change, no rotate/translate). Pattern for scroll: `if (prefersReduced) { stateA → stateB instantly } else { animate A→B over Xms }`.
+- **Test via DevTools simulation** : Chrome DevTools → Rendering → Emulate CSS media feature "prefers-reduced-motion" to verify behavior without changing OS settings.
+
 ## Email transactionnel = 3 points à synchroniser, pas seulement le RPC (session 32)
 
 - **Une notification interne ≠ un email** : `emettre_facture` créait bien une `notifications_internes` (in-app) depuis la session 23, mais **aucun email Resend** ne partait — le client ne voyait la facture qu'en se connectant. Le réflexe « la notif est faite donc le client est prévenu » est faux : les deux canaux sont indépendants. Toujours vérifier les DEUX (table `notifications_internes` ET `email_logs` + type dans `send-email`).

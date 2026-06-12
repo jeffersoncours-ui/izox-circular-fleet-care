@@ -51,12 +51,44 @@ Le `:root` global de `styles.css` reste light, intact.
 - [x] **/reservation** : page d'attente dark-native (b2c-card, serif accent, b2c-btn) — capture email conservée
 - [x] Validation SSR : `/entreprises` + `/reservation` HTTP 200, classes b2c présentes, 0 erreur
 
-### Phase 2f (suite) — Tunnel de réservation complet ⏳ BLOQUÉ (compte Stripe requis)
+### Phase 2g — Tunnel de réservation complet ⏳ BLOQUÉ (compte Stripe requis)
 - [ ] Multi-step form (code postal/gate 25km, véhicule, formule, options, prix direct, créneau, coordonnées, paiement)
 - [ ] Cuve de progression CSS
 - [ ] Moteur de réservation temps réel (table interventions partagée B2B/B2C, invariant 2 slots/demi-journée, atomicité SELECT FOR UPDATE, hold 10 min)
 - [ ] Paiement Stripe (acompte 30 % / intégral) + webhook + emails Resend
 - [ ] **Prérequis utilisateur** : créer le compte Stripe + fournir les clés (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, VITE_STRIPE_PUBLISHABLE_KEY)
+
+### Review Phases 2a–2f (session 33) ✅ TERMINÉ
+
+**Livré — Refonte landing B2C design v2 (6 phases complètes)** :
+
+- **Phases 2a–2c : Dark foundation + Illustrations + Scroll animations** ✅
+  - Dark mode scopé `.izox-b2c` (abysse #06120C, accent #3FE08F glow). Tokens sémantiques remappés (Button/Input rendent dark automatiquement).
+  - SVG illustrations : HeroCar (R5 gravure au trait, hachures NOCTRA, 4 jets animés), WaterLoopDiagram (tuyau stadium loop-draw loop-sheen, 4 stations, goutte pilote), AquaponieScene (bassin, 3 poissons data-fish, bulles, cultures).
+  - Scroll animations : `scrollScenes.ts` avec rAF throttle, IntersectionObserver, CountUp (lazy), getPointAtLength for SVG path tracing. `prefers-reduced-motion` freeze final state.
+
+- **Phase 2d : Tweaks panel UI** ✅
+  - Float toggle bottom-right (glow) → drawer avec contrôles (accent swatches + custom, fond 4 themes, carrosserie trait/teinte, typo serif/Outfit, taille 80–125 %, glow 0–100 %, accroche 3 lignes, CTA label).
+  - localStorage persistence via `useTweaks`. Zero impact CRM (`izox-b2c` scoped).
+
+- **Phases 2e–2f : Responsive + Polish + Dark routes** ✅
+  - `overflow-x: clip` for sticky navbar coups. FCP protected (animations post-hydration). Responsive grids clamp() scales.
+  - `/` (Hero + 9 sections dark-native) + `/reservation` (dark card email capture) + `/entreprises` (B2B dark hero + Levers + LeadForm).
+
+**Validation empirique** :
+- SSR : `/` `/reservation` `/entreprises` HTTP 200, dark classes present, 0 errors.
+- CRM isolation verified : `/login` remains light, no dark classes, TweaksPanel absent.
+- Build : `tsc 0 errors`, `npm run build 0 errors`.
+
+**Commits** : 5 commits on `claude/izox-invoice-generation-5fyxk9`
+- cd918c5 facture_emise email + terrain bug fix (session 32)
+- 4b91c3e design v2 plan + brief
+- dc6006d Phase 2a dark foundation
+- 7f23c3d Phase 2b illustrations + Phase 2c scroll animations
+- 88aa6ac Phase 2d Tweaks panel
+- bcc1b49 Phase 2e responsive + Phase 2f dark routes polish
+
+**Blocked on Phase 2g** : Stripe tunnel requires user Stripe account + STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, VITE_STRIPE_PUBLISHABLE_KEY environment variables.
 
 ---
 

@@ -139,7 +139,34 @@ Logs d'envoi dans la table `email_logs` (type, target_id, email_to, status, erro
 
 Brief complet : **`tasks/brief-landing-b2c.md`** — à lire avant tout travail sur la vitrine.
 
-- Routes publiques : `/` (landing), `/reservation` (tunnel — placeholder Phase 1, vrai tunnel Phase 2), `/entreprises` (lead B2B). Composants dans `src/components/landing/`.
+### Architecture dark premium (design v2 — session 33)
+
+Le dark mode est **scopé sous `.izox-b2c`** (class sur le wrapper `PublicLayout`) — aucun effet sur le CRM (admin/client/terrain/login restent light).
+
+**Fichiers clés :**
+- `src/styles/landing-b2c.css` — tokens dark (abysse #06120C, accent #3FE08F, glow), remap sémantique CRM, thèmes t-noir/t-nuit/t-papier, classes utility (`.b2c-display`, `.b2c-accent`, `.b2c-card`, `.b2c-btn`, `.rv` reveals)
+- `src/components/landing/PublicLayout.tsx` — wrapper `.izox-b2c`, navbar dark, fil de l'eau, TweaksProvider + TweaksPanel, IntersectionObserver reveals
+- `src/components/landing/useTweaks.tsx` — contexte + localStorage, `tweaksStyle()` → CSS vars inline
+- `src/components/landing/TweaksPanel.tsx` — panneau float bottom-right (accent, fond, carrosserie, typo, glow, textes)
+- `src/components/landing/scrollScenes.ts` — rAF-throttled scroll animations : `installFilDeLeau`, `installWaterLoop` (getPointAtLength SVG), `installAquaponie` (setFish sinusoïdal)
+- `src/components/landing/CountUp.tsx` — compteur IntersectionObserver + easeOutCubic + prefers-reduced-motion
+
+**Illustrations SVG :**
+- `src/components/landing/illustrations/HeroCar.tsx` — R5 gravure au trait, hachures NOCTRA, 4 jets animés (gv-flow), brume (gv-mist), gouttes (gv-drip)
+- `src/components/landing/illustrations/WaterLoopDiagram.tsx` — tuyau stadium avec loop-draw/loop-sheen, 4 stations data-station-t, goutte pilote data-loop-drop
+- `src/components/landing/illustrations/AquaponieScene.tsx` — bassin, 3 poissons data-fish, bulles gv-bubble, cultures hors-sol
+
+**Routes publiques (3 dark-native) :**
+- `/` — Hero + HowItWorks + WaterLoop + RseProof + BeforeAfter + PricingSection + Vision + SubscriptionTeaser + Reviews + Faq + FinalCta
+- `/reservation` — page d'attente dark (email + code postal capture, `create-lead("b2c_attente")`) — tunnel multi-step Phase 2g en attente des clés Stripe
+- `/entreprises` — hero B2B + 4 Lever cards + RSE CountUp + LeadForm (`create-lead("b2b")`)
+
+**Isolation CRM garantie :** SSR de `/login` ne contient aucun sélecteur `.izox-b2c`, aucune variable `--b2c-*`, `body.b2c-active` absent. Le `PublicLayout` (wrapper `izox-b2c`) n'est rendu que sur les 3 routes publiques.
+
+**Tweaks panel :** `useTweaks` + `TweaksPanel` permettent de modifier en temps réel accent/fond/carrosserie/typo/glow/textes depuis le toggle bottom-right. Persisté localStorage. Absent du CRM.
+
+**Prochaine étape bloquée :** Phase 2g (tunnel Stripe multi-step) — prérequis utilisateur : créer compte Stripe + fournir `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `VITE_STRIPE_PUBLISHABLE_KEY`.
+
 - **`/` n'est plus un redirect vers `/login`** — la landing garde le guard auth callback (hash `#access_token`/`type=recovery` → redirect client-side `/login`, jamais server-side).
 - **Espace client** : bouton navbar → `/login` (les utilisateurs CRM passent par là).
 - **`src/lib/pricing-b2c.ts`** : tarifs TTC B2C + `CHIFFRES_EAU` (chiffres RSE réels : 50 L / 80 % / 50 %). ⚠️ Ne JAMAIS mélanger avec `pricing.ts` (B2B HT). Ne jamais modifier les chiffres RSE sans mesure étayable (DGCCRF), jamais de certification inventée, jamais de faux avis clients.
@@ -184,6 +211,7 @@ Tout est calculé **on-the-fly** depuis `interventions.statut='validee'` × coef
 - **Types Supabase** (`src/integrations/supabase/types.ts`) : régénérer via MCP `generate_typescript_types` après toute migration qui touche au schéma. Le fichier généré arrive sous forme JSON `{"types":"..."}` — extraire le contenu TS avec `python3 -c "import json; ..."`.
 - **`admin.interventions.tsx` = layout pur** : `component: () => <Outlet/>`, PAS de `beforeLoad`. Le redirect `/admin/planning` est dans `admin.interventions.index.tsx` (path exact). Un `beforeLoad` dans le parent s'applique aussi à `$id` → fiches non cliquables. Même pattern que `admin.planning.tsx` / `admin.planning.index.tsx`.
 - **Emails RDV** : types supportés dans `src/lib/email.ts` → `"rdv_confirmee"` | `"rdv_annule_client"` | `"rdv_annule_admin"` | `"rdv_modifie"`. Edge function `send-email` v9 gère tous ces types.
+- **Email `facture_emise`** : ajouté session 32. Déclenché par `handleEmettre` dans `admin.facturation.tsx` (fire-and-forget). Edge function `send-email` v18. Template : numéro FA, période, montant TTC, échéance, CTA → `/client/documents`. Hors `CLIENT_ALLOWED_TYPES` → seuls admin/staff/commercial peuvent déclencher.
 
 ## Architecture gel véhicule
 
