@@ -2,6 +2,23 @@
 
 ---
 
+## Session 2026-06-12 (34) — Corrections visuelles landing B2C (3 demandes user)
+
+### Plan (validé par l'utilisateur — pas de GSAP/Framer, archi scrollScenes existante)
+
+- [x] **1. Avant/Après** : layout 2/1/2 (Sellerie ×2 / Extérieur pleine largeur / Moquette ×2), tuiles AVANT slide-in gauche, APRÈS slide-in droite au scroll. Nouvelles classes `.rv-left`/`.rv-right` (observées par l'IO `.rv` existant), placeholder hachuré `.ba-ph` + étiquette `.ba-ph__label`, chips `ba-tag` restylées (après = vert plein). Titre « Avant. *Après.* ». Labels provisoires — à ajuster avec les vraies photos.
+- [x] **2. Boucle d'eau** : stadium → **goutte verticale** (`LOOP_PATH` réécrit, viewBox 360×420). Contour seul animé : point lumineux part du sommet et parcourt le bord au scroll (tuyau qui se remplit) — `installWaterLoop` inchangé (mêmes data-attributes). 4 dots d'étape sur le contour (t=0.01/0.3/0.5/0.7), plus de labels dans le SVG. Textes repositionnés en HTML autour de la goutte : ~50 L centré au-dessus, 80 % / 50 % en grille dessous (plus de cards). CSS : `.pipe-outer/.pipe-inner/.loop-sheen` → `.drop-track/.drop-fill`, `.loop-draw` aminci (2.6).
+- [x] **3. Aquaponie** : réécriture gravure fluo d'après l'image de référence (sans personnage) — rack vertical 2 étages, 5 plants feuillus/étage, rampes LED (`.gv-led` dasharray + pulse), cuve à poissons en bas (eau hachurée pattern, panneau de contrôle), 3 poissons `data-fish` + bulles conservés. `installAquaponie` : constantes de trajectoire recalées sur la nouvelle cuve (x[150..390], y[316..382]).
+- [x] `tsc` 0 erreur · `npm run build` ✓
+- [x] Validation SSR (dev server 127.0.0.1:3100) : `/` HTTP 200 — tous nouveaux marqueurs présents (rv-left ×2, rv-right ×3, drop-track, data-loop-draw/drop, gv-led, data-fish ×3, ba-ph__label), anciens absents (pipe-outer, loop-sheen, Étape 1, Habitacle = 0). **Isolation CRM confirmée** : `/login` sans aucun token b2c.
+- [x] Commit + push `claude/landing-page-visual-fixes-x2pj6w`
+
+### Review session 34
+
+Refonte visuelle pure — zéro logique métier touchée. Le prompt GSAP/Framer fourni par l'utilisateur a été écarté d'un commun accord (archi scrollScenes vanilla déjà en place, plus légère). Rendu final à valider sur le preview Vercel (pas d'outil de screenshot dans le container).
+
+---
+
 ## [REFONTE v2] Landing B2C dark premium — `tasks/design-brief-v2.md`
 
 ⚠️ **Le CRM B2B (admin/client/terrain/settings/login) ne change PAS visuellement.**

@@ -253,6 +253,14 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 .rv-d2 {
   transition-delay: 0.18s;
 }
+/* Variantes directionnelles (avant/après) : l'élément glisse depuis la
+   gauche ou la droite au lieu du bas. À combiner avec .rv (même observer). */
+.izox-b2c[data-anim="on"] .rv-left {
+  transform: translateX(-44px);
+}
+.izox-b2c[data-anim="on"] .rv-right {
+  transform: translateX(44px);
+}
 
 /* ============================================================
    Stepcards (section 02)
@@ -287,10 +295,35 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   border-radius: 999px;
   border: 1px solid var(--b2c-line);
   color: var(--b2c-tx-dim);
+  background: var(--b2c-bg2);
 }
 .ba-tag--after {
-  color: var(--b2c-accent);
-  border-color: var(--b2c-line-strong);
+  color: #06120c;
+  font-weight: 700;
+  background: var(--b2c-accent);
+  border-color: var(--b2c-accent);
+}
+/* Placeholder photo : hachures diagonales discrètes (en attendant les vraies
+   photos) + étiquette mono en bas de tuile. */
+.ba-ph {
+  position: relative;
+  overflow: hidden;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(63, 224, 143, 0.05) 0 16px,
+    transparent 16px 34px
+  );
+}
+.ba-ph__label {
+  font-family: var(--b2c-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--b2c-tx-dim);
+  background: rgba(6, 18, 12, 0.72);
+  border: 1px solid var(--b2c-line);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
 }
 
 /* ============================================================
@@ -495,33 +528,27 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   animation: gv-pulse 2.4s ease-in-out infinite;
 }
 
-/* ── Boucle d'eau : tuyau + stations ── */
-.pipe-outer {
+/* ── Boucle d'eau : goutte dont le contour se dessine au scroll ── */
+.drop-track {
   fill: none;
   stroke: var(--b2c-line);
-  stroke-width: 18;
+  stroke-width: 2;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.pipe-inner {
-  fill: none;
-  stroke: var(--b2c-bg);
-  stroke-width: 14.5;
-  stroke-linecap: round;
+.drop-fill {
+  fill: var(--b2c-accent);
+  opacity: 0.06;
+  stroke: none;
 }
 .loop-draw {
   fill: none;
   stroke: var(--b2c-accent);
-  stroke-width: 9.5;
+  stroke-width: 2.6;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 calc(6px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.6 * var(--b2c-glow))));
-  /* dasharray/offset posés en JS (longueur réelle du path) — Phase 2c */
-}
-.loop-sheen {
-  fill: none;
-  stroke: #ffffff;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  opacity: 0.35;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 calc(7px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.7 * var(--b2c-glow))));
+  /* dasharray/offset posés en JS (longueur réelle du path) — scrollScenes */
 }
 .station {
   opacity: 1;
@@ -555,7 +582,15 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   filter: drop-shadow(0 0 calc(9px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.9 * var(--b2c-glow))));
 }
 
-/* ── Aquaponie : poissons + bulles ── */
+/* ── Aquaponie : rampes LED + poissons + bulles ── */
+.gv-led {
+  fill: none;
+  stroke: var(--b2c-accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 12 7;
+  filter: drop-shadow(0 0 calc(5px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.7 * var(--b2c-glow))));
+}
 .fish {
   fill: none;
   stroke: var(--b2c-accent);

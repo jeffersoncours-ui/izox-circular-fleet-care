@@ -118,13 +118,14 @@ export function installAquaponie(section: HTMLElement): () => void {
   if (fishes.length === 0) return () => {};
 
   // Trajectoire de nage : oscillation horizontale + dérive verticale, déphasée
-  // par poisson. Domaine utile du bassin ≈ x[96..312], y[206..256].
+  // par poisson. Domaine utile de la cuve ≈ x[150..390], y[316..382]
+  // (géométrie AquaponieScene — rack vertical, bassin en bas).
   const setFish = (p: number) => {
     fishes.forEach((f, i) => {
       const phase = i * 2.1;
       const speed = 1 + i * 0.35;
-      const cx = 150 + Math.sin(p * Math.PI * speed + phase) * (70 - i * 12);
-      const cy = 218 + i * 14 + Math.cos(p * Math.PI * 1.4 + phase) * 12;
+      const cx = 268 + Math.sin(p * Math.PI * speed + phase) * (88 - i * 14);
+      const cy = 332 + i * 16 + Math.cos(p * Math.PI * 1.4 + phase) * 9;
       // Le poisson regarde dans le sens de sa nage (dérivée du sinus).
       const dir = Math.cos(p * Math.PI * speed + phase) >= 0 ? 1 : -1;
       f.style.transform = `translate(${cx}px, ${cy}px) scaleX(${dir})`;

@@ -8,11 +8,9 @@ import {
   CalendarCheck,
   Car,
   RefreshCw,
-  Droplets,
   Recycle,
   Sprout,
   Fish,
-  Camera,
   ChevronDown,
   Quote,
 } from "lucide-react";
@@ -66,34 +64,9 @@ export function HowItWorks() {
   );
 }
 
-/* ── 3. La boucle d'eau (signature — version statique Phase 2a) ────── */
+/* ── 3. La boucle d'eau (goutte — contour dessiné au scroll) ───────── */
 
 export function WaterLoop() {
-  const stages = [
-    {
-      icon: <Droplets className="h-5 w-5" />,
-      prefix: "~",
-      num: CHIFFRES_EAU.litresUtilises,
-      suffix: " L",
-      caption: "par véhicule, en moyenne sur nos interventions",
-      detail: `Contre ${CHIFFRES_EAU.comparaisonJetMin} à ${CHIFFRES_EAU.comparaisonJetMax} L pour un lavage au jet à domicile.`,
-    },
-    {
-      icon: <RefreshCw className="h-5 w-5" />,
-      num: CHIFFRES_EAU.pctRecupere,
-      suffix: " %",
-      caption: "de l'eau récupérée sous le véhicule",
-      detail: `Une berme étanche capte l'eau de lavage : ${CHIFFRES_EAU.litresRecuperes} L repartent avec nous au lieu de finir dans le caniveau.`,
-    },
-    {
-      icon: <Recycle className="h-5 w-5" />,
-      num: CHIFFRES_EAU.pctReinjecte,
-      suffix: " %",
-      caption: "de l'eau réinjectée dans la boucle",
-      detail: `Après filtration à notre local, ${CHIFFRES_EAU.litresReinjectes} L sont réutilisés sur les lavages suivants.`,
-    },
-  ];
-
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (ref.current) return installWaterLoop(ref.current);
@@ -112,38 +85,64 @@ export function WaterLoop() {
           subtitle="Pas de lavage « sans eau ». Une eau qui travaille, qu'on récupère et qu'on fait revivre — c'est ça, le nettoyage circulaire."
         />
 
-        {/* Diagramme — tuyau qui se remplit au scroll (Phase 2c) */}
-        <div className="rv mt-10" data-loop-section>
-          <WaterLoopDiagram className="mx-auto w-full max-w-[680px]" />
-        </div>
+        {/* Goutte — le contour se dessine au scroll, chiffres disposés autour */}
+        <div className="mt-12" data-loop-section>
+          <div className="rv mx-auto max-w-md text-center">
+            <CountUp
+              className="b2c-figure b2c-glow-text"
+              prefix="~"
+              value={CHIFFRES_EAU.litresUtilises}
+              suffix=" L"
+            />
+            <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">
+              par véhicule, en moyenne
+            </p>
+            <p className="mt-1 text-sm text-[var(--b2c-tx-dim)]">
+              vs {CHIFFRES_EAU.comparaisonJetMin}–{CHIFFRES_EAU.comparaisonJetMax} L pour un
+              lavage au jet à domicile
+            </p>
+          </div>
 
-        <div className="mt-8 grid gap-5 lg:grid-cols-3">
-          {stages.map((s, i) => (
-            <div
-              key={i}
-              className={`b2c-card rv p-6 ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--b2c-accent)] text-[#06120c]">
-                  {s.icon}
-                </div>
-                <span className="b2c-kicker">Étape {i + 1}</span>
-              </div>
+          <div className="rv rv-d1 mt-8">
+            <WaterLoopDiagram className="mx-auto w-full max-w-[400px]" />
+          </div>
+
+          <div className="mx-auto mt-10 grid max-w-3xl gap-8 sm:grid-cols-2">
+            <div className="rv">
               <CountUp
-                className="b2c-figure mt-5 block"
-                prefix={"prefix" in s ? (s.prefix as string) : ""}
-                value={s.num}
-                suffix={s.suffix}
+                className="b2c-figure b2c-glow-text"
+                value={CHIFFRES_EAU.pctRecupere}
+                suffix=" %"
               />
-              <p className="mt-1 text-sm font-semibold text-[var(--b2c-tx)]">{s.caption}</p>
-              <p className="mt-3 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.detail}</p>
+              <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">
+                récupérée sous le véhicule
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+                Une berme étanche capte l'eau de lavage : {CHIFFRES_EAU.litresRecuperes} L
+                repartent avec nous au lieu de finir dans le caniveau.
+              </p>
             </div>
-          ))}
+            <div className="rv rv-d1">
+              <CountUp
+                className="b2c-figure b2c-glow-text"
+                value={CHIFFRES_EAU.pctReinjecte}
+                suffix=" %"
+              />
+              <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">
+                réinjectée dans la boucle
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+                Après filtration à notre local, {CHIFFRES_EAU.litresReinjectes} L sont
+                réutilisés sur les lavages suivants.
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-8 text-xs text-[var(--b2c-tx-faint)]">
+            Chiffres moyens mesurés sur nos interventions. Comparaison : lavage au jet à
+            domicile ({CHIFFRES_EAU.comparaisonJetMin}–{CHIFFRES_EAU.comparaisonJetMax} L par véhicule).
+          </p>
         </div>
-        <p className="mt-6 text-xs text-[var(--b2c-tx-faint)]">
-          Chiffres moyens mesurés sur nos interventions. Comparaison : lavage au jet à
-          domicile ({CHIFFRES_EAU.comparaisonJetMin}–{CHIFFRES_EAU.comparaisonJetMax} L par véhicule).
-        </p>
       </div>
     </section>
   );
@@ -198,37 +197,60 @@ function RseStat({
 
 /* ── 5. Avant / après ─────────────────────────────────────────────── */
 
-export function BeforeAfter() {
-  // TODO : remplacer par de vraies photos (public/landing/avant-apres-*.jpg).
-  const slots = ["Habitacle", "Sièges", "Carrosserie", "Jantes"];
+// Tuile photo avant/après — placeholder hachuré en attendant les vraies
+// photos. Glisse depuis la gauche (avant) ou la droite (après) au scroll.
+function BaCard({
+  tag,
+  label,
+  dir,
+  full,
+}: {
+  tag?: "avant" | "apres";
+  label: string;
+  dir: "left" | "right";
+  full?: boolean;
+}) {
+  return (
+    <figure
+      className={`b2c-card ba-ph rv ${dir === "left" ? "rv-left" : "rv-right"} ${
+        full ? "aspect-[16/9] sm:aspect-[21/9]" : "aspect-[4/5] sm:aspect-[4/3]"
+      }`}
+    >
+      {tag && (
+        <span className={`ba-tag absolute left-3 top-3 ${tag === "apres" ? "ba-tag--after" : ""}`}>
+          {tag === "apres" ? "Après" : "Avant"}
+        </span>
+      )}
+      <figcaption className="ba-ph__label absolute bottom-3 left-3">{label}</figcaption>
+    </figure>
+  );
+}
 
+export function BeforeAfter() {
+  // TODO : remplacer par de vraies photos (public/landing/avant-apres-*.jpg)
+  // — les libellés (Sellerie / Extérieur / Moquette) seront ajustés à ce moment-là.
   return (
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
         <SectionHeading
-          kicker="La preuve par l'image"
-          title="Avant / après"
+          kicker="Le résultat"
+          title={
+            <>
+              Avant. <em className="b2c-accent">Après.</em>
+            </>
+          }
           subtitle="Le résultat parle de lui-même. Photos prises sur nos interventions, sans retouche."
         />
-        <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {slots.map((label, i) => (
-            <div
-              key={label}
-              className={`b2c-card rv flex aspect-[4/5] flex-col items-center justify-center gap-3 border-dashed p-4 text-center ${
-                i === 1 ? "rv-d1" : i >= 2 ? "rv-d2" : ""
-              }`}
-            >
-              <Camera className="h-6 w-6 text-[var(--b2c-tx-faint)]" />
-              <div>
-                <div className="flex items-center justify-center gap-1.5">
-                  <span className="ba-tag">Avant</span>
-                  <span className="ba-tag ba-tag--after">Après</span>
-                </div>
-                <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">{label}</p>
-                <p className="mt-1 text-[11px] text-[var(--b2c-tx-faint)]">Photos à venir</p>
-              </div>
-            </div>
-          ))}
+        <div className="mt-10 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <BaCard tag="avant" dir="left" label="Photo — Sellerie" />
+            <BaCard tag="apres" dir="right" label="Photo — Sellerie" />
+          </div>
+          <BaCard dir="right" label="Photo — Extérieur après intervention" full />
+          <div className="grid grid-cols-2 gap-4">
+            <BaCard tag="avant" dir="left" label="Photo — Moquette" />
+            <BaCard tag="apres" dir="right" label="Photo — Moquette" />
+          </div>
         </div>
       </div>
     </section>
