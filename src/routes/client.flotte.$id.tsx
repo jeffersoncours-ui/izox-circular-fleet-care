@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getVehiculePhotoUrl } from "@/lib/vehicule-photo";
 import { Card } from "@/components/ui/card";
@@ -54,7 +55,7 @@ interface Vehicule {
 function VehiculeDetail() {
   const { id } = useParams({ from: "/client/flotte/$id" });
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [vehicule, setVehicule] = useState<Vehicule | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,11 +73,12 @@ function VehiculeDetail() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("vehicules")
       .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id")
       .eq("id", id)
       .maybeSingle();
+    if (error) toast.error("Erreur lors du chargement du véhicule");
     const v = (data as Vehicule) ?? null;
     setVehicule(v);
     setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
@@ -143,8 +145,8 @@ function VehiculeDetail() {
   }, [id, profile?.entreprise_id]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!authLoading) load();
+  }, [load, authLoading]);
 
   const handleDelete = async () => {
     setDeleting(true);

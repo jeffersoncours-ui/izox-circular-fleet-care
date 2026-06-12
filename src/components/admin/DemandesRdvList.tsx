@@ -1,29 +1,28 @@
-import { useEffect, useState, useCallback } from "react";
-import { Loader2 } from "lucide-react";
+import { lazy, Suspense, useState, useCallback } from "react";
+import { Loader2, MapPin } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useNavigate } from "@tanstack/react-router";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { type AdminDemandeRdv } from "@/components/admin/demande-rdv-types";
 import { AssignerRdvDialog } from "@/components/admin/AssignerRdvDialog";
 import { GererRdvConfirmeDialog } from "@/components/admin/GererRdvConfirmeDialog";
 import { useAutoOpenFromSearch } from "@/hooks/useAutoOpenFromSearch";
+import { useSupabaseQuery } from "@/lib/hooks/useSupabaseQuery";
 import { Route as PlanningRoute } from "@/routes/admin.planning";
+
+// Leaflet is browser-only — lazy-import to prevent SSR issues
+const DemandesRdvMap = lazy(() =>
+  import("@/components/admin/DemandesRdvMap").then((m) => ({ default: m.DemandesRdvMap })),
+);
 
 interface Row extends AdminDemandeRdv {
   entreprises?: { nom: string } | null;
 }
 
-const STATUTS = ["en_attente", "confirmee", "refusee", "annulee_client", "annulee_admin"];
+const STATUTS = ["en_attente", "confirmee", "refusee", "annulee_client", "annulee_admin"] as const;
+
 const STATUT_LABEL: Record<string, string> = {
   en_attente: "En attente",
   confirmee: "Confirmée",
@@ -31,18 +30,27 @@ const STATUT_LABEL: Record<string, string> = {
   annulee_client: "Annulée (client)",
   annulee_admin: "Annulée (IZOX)",
 };
+
 const STATUT_COLOR: Record<string, string> = {
   en_attente: "bg-orange-50 text-orange-700 border-orange-300",
   confirmee: "bg-green-50 text-green-700 border-green-300",
   refusee: "bg-red-50 text-red-700 border-red-300",
-  annulee_client: "bg-gray-50 text-gray-700 border-gray-300",
-  annulee_admin: "bg-gray-50 text-gray-700 border-gray-300",
+  annulee_client: "bg-gray-50 text-gray-600 border-gray-300",
+  annulee_admin: "bg-gray-50 text-gray-600 border-gray-300",
 };
 
+const PILL_CONFIG = [
+  { key: "all", label: "Toutes", base: "bg-muted text-foreground", active: "bg-foreground text-background" },
+  { key: "en_attente", label: "En attente", base: "bg-orange-50 text-orange-700 border border-orange-200", active: "bg-orange-600 text-white" },
+  { key: "confirmee", label: "Confirmées", base: "bg-green-50 text-green-700 border border-green-200", active: "bg-[#1B4332] text-white" },
+  { key: "refusee", label: "Refusées", base: "bg-red-50 text-red-700 border border-red-200", active: "bg-red-600 text-white" },
+  { key: "annulee_client", label: "Ann. client", base: "bg-gray-50 text-gray-600 border border-gray-200", active: "bg-gray-500 text-white" },
+  { key: "annulee_admin", label: "Ann. IZOX", base: "bg-gray-50 text-gray-600 border border-gray-200", active: "bg-gray-500 text-white" },
+] as const;
+
 export function DemandesRdvList() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("en_attente");
+  const [filter, setFilter] = useState<string>("en_attente");
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [assigning, setAssigning] = useState<AdminDemandeRdv | null>(null);
   const [managing, setManaging] = useState<AdminDemandeRdv | null>(null);
   const navigate = useNavigate();
@@ -58,22 +66,16 @@ export function DemandesRdvList() {
     });
   }, [navigate]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from("demandes_rdv")
-      .select("*, entreprises(nom)")
-      .order("created_at", { ascending: false });
-    setRows((data ?? []) as unknown as Row[]);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data: rows, loading, refetch } = useSupabaseQuery<Row[]>(
+    async () =>
+      await supabase
+        .from("demandes_rdv")
+        .select("*, entreprises(nom)")
+        .order("created_at", { ascending: false }),
+    { defaultValue: [] }
+  );
 
   const search = PlanningRoute.useSearch();
-  // Demande en attente → dialog d'assignation
   useAutoOpenFromSearch<Row>(
     search.demande,
     rows,
@@ -81,7 +83,6 @@ export function DemandesRdvList() {
     (r) => setAssigning({ ...r, entreprise_nom: r.entreprises?.nom ?? null }),
     (r) => r.statut === "en_attente",
   );
-  // Demande confirmée (lien depuis la fiche intervention) → dialog de gestion
   useAutoOpenFromSearch<Row>(
     search.demande,
     rows,
@@ -91,100 +92,163 @@ export function DemandesRdvList() {
   );
 
   const filtered = filter === "all" ? rows : rows.filter((r) => r.statut === filter);
-  const nbEnAttente = rows.filter((r) => r.statut === "en_attente").length;
+  const counts: Record<string, number> = { all: rows.length };
+  STATUTS.forEach((s) => {
+    counts[s] = rows.filter((r) => r.statut === s).length;
+  });
+
+  const mapRows = filtered.map((r) => ({
+    ...r,
+    entreprise_nom: r.entreprises?.nom ?? null,
+  }));
 
   return (
-    <div>
-      <div className="flex items-start justify-between gap-3 mb-6 flex-wrap">
-        <p className="text-sm text-muted-foreground">
-          <strong>{nbEnAttente}</strong> demande{nbEnAttente > 1 ? "s" : ""} en attente
-        </p>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous</SelectItem>
-            {STATUTS.map((s) => (
-              <SelectItem key={s} value={s}>
-                {STATUT_LABEL[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="flex flex-col h-full">
+      {/* Filter pills */}
+      <div className="flex items-center gap-2 flex-wrap pb-4">
+        {PILL_CONFIG.map((p) => {
+          const isActive = filter === p.key;
+          const count = counts[p.key] ?? 0;
+          return (
+            <button
+              key={p.key}
+              onClick={() => setFilter(p.key)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                isActive ? p.active : p.base + " hover:opacity-80"
+              }`}
+            >
+              {p.label}
+              <span className={`text-[10px] font-mono ${isActive ? "opacity-80" : "opacity-60"}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      ) : filtered.length === 0 ? (
-        <Card className="p-12 text-center border-border/60">
-          <p className="text-muted-foreground">Aucune demande.</p>
-        </Card>
       ) : (
-        <ul className="space-y-2">
-          {filtered.map((r) => {
-            const creneaux: Array<{ date: string; plage: string }> = Array.isArray(
-              r.creneaux_preferes,
-            )
-              ? r.creneaux_preferes
-              : [];
-            return (
-              <li key={r.id}>
-                <button
-                  type="button"
-                  disabled={r.statut !== "en_attente" && r.statut !== "confirmee"}
-                  onClick={() => {
-                    const withNom = { ...r, entreprise_nom: r.entreprises?.nom ?? null };
-                    if (r.statut === "en_attente") setAssigning(withNom);
-                    else if (r.statut === "confirmee") setManaging(withNom);
-                  }}
-                  className="w-full text-left"
-                >
-                  <Card className="p-4 shadow-card hover:bg-muted/30 transition-colors disabled:hover:bg-card">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <p className="font-semibold text-sm">{r.entreprises?.nom ?? "—"}</p>
-                          <Badge variant="outline">{r.nb_vehicules_rdv} véh.</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {creneaux.length} créneau
-                          {creneaux.length > 1 ? "x" : ""} proposé
-                          {creneaux.length > 1 ? "s" : ""}
-                          {creneaux[0]?.date && (
-                            <>
-                              {" "}
-                              · 1er : {format(parseISO(creneaux[0].date), "dd/MM/yyyy")}{" "}
-                              {creneaux[0].plage}
-                            </>
-                          )}
-                        </p>
-                        {(r.ville_intervention || r.code_postal_intervention) && (
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            📍{" "}
-                            {[r.code_postal_intervention, r.ville_intervention]
-                              .filter(Boolean)
-                              .join(" ")}
-                          </p>
-                        )}
-                        {r.commentaires && (
-                          <p className="text-xs italic text-muted-foreground line-clamp-1 mt-1">
-                            {r.commentaires}
-                          </p>
-                        )}
-                      </div>
-                      <Badge variant="outline" className={STATUT_COLOR[r.statut]}>
-                        {STATUT_LABEL[r.statut] ?? r.statut}
-                      </Badge>
-                    </div>
-                  </Card>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        /* Split view: 40% list + 60% map */
+        <div className="flex overflow-hidden rounded-lg border border-border shadow-card" style={{ height: "520px" }}>
+          {/* List — 40% */}
+          <div className="flex flex-col w-[40%] flex-shrink-0 border-r border-border overflow-hidden">
+            <div className="flex-1 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-16 text-center px-6">
+                  <p className="text-sm text-muted-foreground">Aucune demande.</p>
+                </div>
+              ) : (
+                <ul>
+                  {filtered.map((r, i) => {
+                    const creneaux: Array<{ date: string; plage: string }> = Array.isArray(
+                      r.creneaux_preferes,
+                    )
+                      ? r.creneaux_preferes
+                      : [];
+                    const isActive = hoveredId === r.id;
+                    const isClickable = r.statut === "en_attente" || r.statut === "confirmee";
+                    return (
+                      <li key={r.id}>
+                        <button
+                          type="button"
+                          disabled={!isClickable}
+                          onMouseEnter={() => setHoveredId(r.id)}
+                          onMouseLeave={() => setHoveredId(null)}
+                          onClick={() => {
+                            if (!isClickable) return;
+                            const withNom = {
+                              ...r,
+                              entreprise_nom: r.entreprises?.nom ?? null,
+                            };
+                            if (r.statut === "en_attente") setAssigning(withNom);
+                            else if (r.statut === "confirmee") setManaging(withNom);
+                          }}
+                          className={`w-full text-left px-4 py-3 transition-colors border-l-[3px] ${
+                            i > 0 ? "border-t border-border" : ""
+                          } ${
+                            isActive
+                              ? "bg-primary/5 border-l-primary"
+                              : "border-l-transparent hover:bg-muted/30"
+                          } ${!isClickable ? "cursor-default" : ""}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <p className="font-semibold text-sm leading-tight">
+                                  {r.entreprises?.nom ?? "—"}
+                                </p>
+                                <Badge variant="outline" className="text-[10px] py-0">
+                                  {r.nb_vehicules_rdv} véh.
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {creneaux.length} créneau{creneaux.length > 1 ? "x" : ""} proposé
+                                {creneaux.length > 1 ? "s" : ""}
+                                {creneaux[0]?.date && (
+                                  <>
+                                    {" "}· 1er :{" "}
+                                    {format(parseISO(creneaux[0].date), "dd/MM/yyyy")}{" "}
+                                    {creneaux[0].plage}
+                                  </>
+                                )}
+                              </p>
+                              {(r.ville_intervention || r.code_postal_intervention) && (
+                                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                                  {[r.code_postal_intervention, r.ville_intervention]
+                                    .filter(Boolean)
+                                    .join(" ")}
+                                </p>
+                              )}
+                              {r.commentaires && (
+                                <p className="text-xs italic text-muted-foreground line-clamp-1 mt-1">
+                                  {r.commentaires}
+                                </p>
+                              )}
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] flex-shrink-0 ${STATUT_COLOR[r.statut] ?? ""}`}
+                            >
+                              {STATUT_LABEL[r.statut] ?? r.statut}
+                            </Badge>
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+            {/* List footer */}
+            <div className="px-4 py-2 border-t border-border bg-muted/20 flex items-center justify-between">
+              <span className="text-[10px] font-mono text-muted-foreground">
+                {filtered.length} demande{filtered.length > 1 ? "s" : ""}
+              </span>
+              {hoveredId && (
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  Survolé · voir pin carte →
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Map — 60% : isolation:isolate confine les z-indexes Leaflet (600-800) pour ne pas transpercer le Dialog (z-50) */}
+          <div className="flex-1 relative overflow-hidden" style={{ isolation: "isolate" }}>
+            <Suspense
+              fallback={
+                <div className="w-full h-full flex items-center justify-center bg-muted/10">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              }
+            >
+              <DemandesRdvMap rows={mapRows} hoveredId={hoveredId} />
+            </Suspense>
+          </div>
+        </div>
       )}
 
       <AssignerRdvDialog
@@ -199,7 +263,7 @@ export function DemandesRdvList() {
         onAssigned={() => {
           setAssigning(null);
           clearDemandeParam();
-          load();
+          refetch();
         }}
       />
 
@@ -215,7 +279,7 @@ export function DemandesRdvList() {
         onUpdated={() => {
           setManaging(null);
           clearDemandeParam();
-          load();
+          refetch();
         }}
       />
     </div>

@@ -2,11 +2,60 @@
 // Also sends a branded password-reset email via Resend automatically.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://izox.fr";
+
+// Dynamic CORS — reflect the request origin when it is a known IZOX frontend
+// (production site, or any *.vercel.app deploy: canonical app + preview URLs).
+// The static SITE_URL value broke this endpoint when the app is served from a
+// vercel.app domain: the OPTIONS preflight passed but the browser blocked the
+// POST because the allowed origin (izox.fr) didn't match. Authorization is
+// still enforced server-side via JWT + admin role, so reflecting a trusted
+// frontend origin here is safe.
+function corsFor(req: Request): Record<string, string> {
+  const requestOrigin = req.headers.get("Origin") ?? "";
+  let allow = SITE_URL;
+  try {
+    const o = new URL(requestOrigin);
+    const siteHost = new URL(SITE_URL).hostname;
+    if (o.hostname === siteHost || o.hostname.endsWith(".vercel.app")) {
+      allow = requestOrigin;
+    }
+  } catch {
+    /* malformed/absent Origin — keep SITE_URL fallback */
+  }
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
+
+function safeRedirectTo(raw: unknown): string {
+  const fallback = `${SITE_URL}/reset-password`;
+  if (!raw || typeof raw !== "string") return fallback;
+  try {
+    const parsed = new URL(raw);
+    const allowed = new Set([
+      new URL(SITE_URL).origin,
+      new URL("https://izox-circular-fleet-care.vercel.app").origin,
+    ]);
+    return allowed.has(parsed.origin) ? raw : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+// Build a reset link pointing DIRECTLY at our app with the one-time token in
+// the query string (token_hash + type). Avoids the fragile Supabase
+// action_link (/auth/v1/verify → URL hash redirect, allowlist-dependent).
+// The reset page calls supabase.auth.verifyOtp({ token_hash, type }).
+function buildRecoveryLink(baseRedirect: string, hashedToken: string): string {
+  const u = new URL(baseRedirect);
+  u.searchParams.set("token_hash", hashedToken);
+  u.searchParams.set("type", "recovery");
+  return u.toString();
+}
 
 function buildResetText(link: string): string {
   return `Bonjour,
@@ -114,6 +163,7 @@ async function sendResetEmail(
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsFor(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
@@ -170,15 +220,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    const redirectBase = safeRedirectTo(redirect_to);
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo: redirect_to || `${siteUrl}/reset-password` },
+      options: { redirectTo: redirectBase },
     });
 
     if (error) throw error;
 
-    const actionLink = data.properties?.action_link ?? null;
+    const hashedToken = data.properties?.hashed_token ?? null;
+    const actionLink = hashedToken
+      ? buildRecoveryLink(redirectBase, hashedToken)
+      : (data.properties?.action_link ?? null);
 
     // Auto-send reset email via Resend
     let emailSent = false;
@@ -202,7 +256,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      link: actionLink,
+      link: emailSent ? null : actionLink,
       email_sent: emailSent,
       email_error: emailError,
     }), { headers: jsonHeaders });

@@ -1219,115 +1219,6 @@ export type Database = {
           },
         ]
       }
-      impact_records: {
-        Row: {
-          category: string
-          coefficient_snapshot: Json
-          contrat_id: string | null
-          created_at: string
-          entreprise_id: string
-          id: string
-          intervention_id: string
-          quantity: number
-          status: string
-          unit: string
-          validated_at: string | null
-          validated_by: string | null
-        }
-        Insert: {
-          category: string
-          coefficient_snapshot: Json
-          contrat_id?: string | null
-          created_at?: string
-          entreprise_id: string
-          id?: string
-          intervention_id: string
-          quantity: number
-          status?: string
-          unit: string
-          validated_at?: string | null
-          validated_by?: string | null
-        }
-        Update: {
-          category?: string
-          coefficient_snapshot?: Json
-          contrat_id?: string | null
-          created_at?: string
-          entreprise_id?: string
-          id?: string
-          intervention_id?: string
-          quantity?: number
-          status?: string
-          unit?: string
-          validated_at?: string | null
-          validated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "impact_records_contrat_id_fkey"
-            columns: ["contrat_id"]
-            isOneToOne: false
-            referencedRelation: "contrats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "impact_records_contrat_id_fkey"
-            columns: ["contrat_id"]
-            isOneToOne: false
-            referencedRelation: "v_contrats_passages_restants"
-            referencedColumns: ["contrat_id"]
-          },
-          {
-            foreignKeyName: "impact_records_contrat_id_fkey"
-            columns: ["contrat_id"]
-            isOneToOne: false
-            referencedRelation: "v_contrats_resume"
-            referencedColumns: ["contrat_id"]
-          },
-          {
-            foreignKeyName: "impact_records_contrat_id_fkey"
-            columns: ["contrat_id"]
-            isOneToOne: false
-            referencedRelation: "v_contrats_resume"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "impact_records_contrat_id_fkey"
-            columns: ["contrat_id"]
-            isOneToOne: false
-            referencedRelation: "v_entreprises_vehicules_resume"
-            referencedColumns: ["contrat_actif_id"]
-          },
-          {
-            foreignKeyName: "impact_records_entreprise_id_fkey"
-            columns: ["entreprise_id"]
-            isOneToOne: false
-            referencedRelation: "entreprises"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "impact_records_entreprise_id_fkey"
-            columns: ["entreprise_id"]
-            isOneToOne: false
-            referencedRelation: "v_entreprises_actives"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "impact_records_entreprise_id_fkey"
-            columns: ["entreprise_id"]
-            isOneToOne: false
-            referencedRelation: "v_entreprises_vehicules_resume"
-            referencedColumns: ["entreprise_id"]
-          },
-          {
-            foreignKeyName: "impact_records_intervention_id_fkey"
-            columns: ["intervention_id"]
-            isOneToOne: false
-            referencedRelation: "interventions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       intervention_photos: {
         Row: {
           created_at: string
@@ -1570,6 +1461,45 @@ export type Database = {
         }
         Relationships: []
       }
+      leads_landing: {
+        Row: {
+          code_postal: string | null
+          created_at: string
+          email: string
+          id: string
+          nom: string | null
+          societe: string | null
+          taille_flotte: string | null
+          telephone: string | null
+          traite: boolean
+          type: string
+        }
+        Insert: {
+          code_postal?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          nom?: string | null
+          societe?: string | null
+          taille_flotte?: string | null
+          telephone?: string | null
+          traite?: boolean
+          type: string
+        }
+        Update: {
+          code_postal?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          nom?: string | null
+          societe?: string | null
+          taille_flotte?: string | null
+          telephone?: string | null
+          traite?: boolean
+          type?: string
+        }
+        Relationships: []
+      }
       notifications_internes: {
         Row: {
           action_requise: boolean
@@ -1631,6 +1561,101 @@ export type Database = {
             columns: ["source_log_id"]
             isOneToOne: false
             referencedRelation: "admin_actions_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operateur_messages: {
+        Row: {
+          client_local_id: string | null
+          content: string | null
+          conversation_operator_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          read_at_admin: string | null
+          read_at_operator: string | null
+          sender_id: string
+        }
+        Insert: {
+          client_local_id?: string | null
+          content?: string | null
+          conversation_operator_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_at_admin?: string | null
+          read_at_operator?: string | null
+          sender_id: string
+        }
+        Update: {
+          client_local_id?: string | null
+          content?: string | null
+          conversation_operator_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_at_admin?: string | null
+          read_at_operator?: string | null
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      operateur_notes: {
+        Row: {
+          created_at: string
+          date_observation: string
+          entreprise_id: string
+          id: string
+          note: string
+          operateur_id: string
+          vehicule_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          date_observation?: string
+          entreprise_id: string
+          id?: string
+          note: string
+          operateur_id: string
+          vehicule_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          date_observation?: string
+          entreprise_id?: string
+          id?: string
+          note?: string
+          operateur_id?: string
+          vehicule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operateur_notes_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operateur_notes_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_actives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operateur_notes_entreprise_id_fkey"
+            columns: ["entreprise_id"]
+            isOneToOne: false
+            referencedRelation: "v_entreprises_vehicules_resume"
+            referencedColumns: ["entreprise_id"]
+          },
+          {
+            foreignKeyName: "operateur_notes_vehicule_id_fkey"
+            columns: ["vehicule_id"]
+            isOneToOne: false
+            referencedRelation: "vehicules"
             referencedColumns: ["id"]
           },
         ]
@@ -2484,31 +2509,21 @@ export type Database = {
         Args: { p_entreprise_id: string; p_reason?: string }
         Returns: Json
       }
-      assigner_rdv:
-        | {
-            Args: {
-              p_date: string
-              p_demande_id: string
-              p_operator_id: string
-              p_time_slot: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_date: string
-              p_demande_id: string
-              p_heure?: string
-              p_operator_id: string
-              p_time_slot: string
-            }
-            Returns: Json
-          }
+      assigner_rdv: {
+        Args: {
+          p_date: string
+          p_demande_id: string
+          p_heure?: string
+          p_operator_id: string
+          p_time_slot: string
+        }
+        Returns: Json
+      }
       calculer_palier_remise: {
         Args: { p_nb_vehicules: number }
         Returns: {
           palier: string
-          remise_pct: number
+          taux_remise: number
         }[]
       }
       calculer_quota_gel_consomme: {

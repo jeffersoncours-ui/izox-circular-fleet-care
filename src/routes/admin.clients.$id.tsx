@@ -16,7 +16,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Car, Loader2, Plus, Pencil, Trash2, FileText, Info, Archive, Snowflake, Clock, KeyRound } from "lucide-react";
+import { Car, Loader2, Plus, Pencil, Trash2, FileText, Info, Archive, Snowflake, Clock, Printer, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FactureDocument } from "@/components/factures/FactureDocument";
+import {
+  type Facture,
+  type FactureLigne,
+  FACTURE_SELECT,
+  STATUT_FACTURE,
+  formatEuro,
+  formatPeriode,
+  formatDateFr,
+} from "@/lib/factures";
 import { PageHeader } from "@/components/ui/page-header";
 import {
   Accordion,
@@ -89,26 +100,27 @@ function ClientDetailPage() {
   const [billingState, setBillingState] = useState<FacturationPrealableState | null>(null);
   const [reassignOpen, setReassignOpen] = useState(false);
   const [commercialNom, setCommercialNom] = useState<string | null>(null);
-  const [resettingMdp, setResettingMdp] = useState(false);
 
   const loadVehicules = useCallback(async () => {
     setLoadingVehicules(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("vehicules")
       .select("id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, photo_path, statut, type_pack_souhaite")
       .eq("entreprise_id", id)
       .order("created_at", { ascending: false });
+    if (error) toast.error("Impossible de charger les véhicules : " + error.message);
     setVehicules((data as Vehicule[]) ?? []);
     setLoadingVehicules(false);
   }, [id]);
 
   const loadEntreprise = useCallback(async () => {
     setLoadingEntreprise(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("entreprises")
       .select("id, nom, siret, adresse, ville, code_postal, email_contact, telephone, type_client, palier_remise, commercial_id, compte_active")
       .eq("id", id)
       .maybeSingle();
+    if (error) toast.error("Impossible de charger l'entreprise : " + error.message);
     setEntreprise((data as Entreprise) ?? null);
     setLoadingEntreprise(false);
   }, [id]);
@@ -132,45 +144,17 @@ function ClientDetailPage() {
       return;
     }
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("prenom, nom")
         .eq("id", entreprise.commercial_id!)
         .maybeSingle();
+      if (error) toast.error("Impossible de charger le commercial : " + error.message);
       setCommercialNom(
         data ? `${data.prenom ?? ""} ${data.nom ?? ""}`.trim() || null : null
       );
     })();
   }, [entreprise?.commercial_id]);
-
-  const handleResetMdp = async () => {
-    setResettingMdp(true);
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("entreprise_id", id)
-        .eq("role", "client")
-        .maybeSingle();
-      if (!profile) {
-        toast.error("Aucun compte client trouvé pour cette entreprise");
-        return;
-      }
-      const { data, error } = await supabase.functions.invoke("admin-reset-password", {
-        body: { user_id: profile.id, redirect_to: `${window.location.origin}/reset-password` },
-      });
-      if (error || data?.error) throw new Error(data?.error ?? "Erreur");
-      if (data?.email_sent) {
-        toast.success("Email de réinitialisation envoyé au client");
-      } else {
-        toast.error(`Email non envoyé : ${data?.email_error ?? "raison inconnue"}`);
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur lors de la réinitialisation");
-    } finally {
-      setResettingMdp(false);
-    }
-  };
 
   const handleEdit = (v: Vehicule) => {
     setEditVehicule(v);
@@ -221,39 +205,34 @@ function ClientDetailPage() {
         crumbs={["Clients", entreprise.nom]}
         title={entreprise.nom}
         sub={`${TYPE_LABEL[entreprise.type_client] ?? entreprise.type_client}${entreprise.email_contact ? ` · ${entreprise.email_contact}` : ""}${!entreprise.compte_active ? " · Désactivé" : ""}`}
-        right={
-          <div className="flex gap-2 flex-wrap">
-            <Button size="sm" onClick={() => setAddOpen(true)}>
-              <Plus className="h-3.5 w-3.5" /> Ajouter un véhicule
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
-              <Pencil className="h-3.5 w-3.5" /> Modifier
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetMdp}
-              disabled={resettingMdp}
-              title="Envoyer un email de réinitialisation de mot de passe au client"
-            >
-              {resettingMdp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
-              <span className="hidden sm:inline">MDP</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setArchiveOpen(true)}
-              disabled={nbContratsActifs > 0}
-              title={nbContratsActifs > 0 ? "Résilier le contrat avant d'archiver" : "Masquer le client tout en conservant ses données"}
-              className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 disabled:opacity-40"
-            >
-              <Archive className="h-3.5 w-3.5" /> Archiver
-            </Button>
-          </div>
-        }
       />
 
       <div className="p-6 lg:p-8 max-w-5xl w-full mx-auto flex flex-col gap-4">
+
+      {/* Actions — mêmes bords que les cartes ci-dessous */}
+      <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-[1.6fr_1fr] gap-2 sm:flex sm:justify-end">
+          <Button size="sm" onClick={() => setAddOpen(true)}>
+            <Plus className="h-3.5 w-3.5" /> Ajouter un véhicule
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setEditEntrepriseOpen(true)}>
+            <Pencil className="h-3.5 w-3.5" /> Modifier
+          </Button>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setArchiveOpen(true)}
+          disabled={nbContratsActifs > 0}
+          title={nbContratsActifs > 0 ? "Résilier le contrat avant d'archiver" : "Masquer le client tout en conservant ses données"}
+          className="w-full sm:w-auto sm:self-end text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 disabled:opacity-40"
+        >
+          <Archive className="h-3.5 w-3.5" /> Archiver
+          {nbContratsActifs > 0 && (
+            <span className="ml-1 text-[10px] font-normal opacity-70">— contrat actif</span>
+          )}
+        </Button>
+      </div>
 
       <Card className="p-5 shadow-card border-border/60">
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -339,7 +318,7 @@ function ClientDetailPage() {
           <ContratsTab entrepriseId={id} onAddVehicule={() => setAddOpen(true)} />
         </TabsContent>
         <TabsContent value="factures" className="mt-6">
-          <ComingSoon />
+          <FacturesTab entrepriseId={id} />
         </TabsContent>
         <TabsContent value="interventions" className="mt-6">
           <ComingSoon />
@@ -843,6 +822,151 @@ function VehiculesGroupes({
         </section>
       )}
     </div>
+  );
+}
+
+// Liste des factures de l'entreprise (vue admin : tous statuts, brouillons inclus).
+// Le clic ouvre le détail imprimable dans un Dialog (même composant que le client).
+type FactureListItem = Pick<
+  Facture,
+  | "id"
+  | "numero_facture"
+  | "statut"
+  | "periode_debut"
+  | "periode_fin"
+  | "date_emission"
+  | "montant_ttc"
+>;
+
+function FacturesTab({ entrepriseId }: { entrepriseId: string }) {
+  const [factures, setFactures] = useState<FactureListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Facture | null>(null);
+  const [selectedLignes, setSelectedLignes] = useState<FactureLigne[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("factures")
+      .select("id, numero_facture, statut, periode_debut, periode_fin, date_emission, montant_ttc")
+      .eq("entreprise_id", entrepriseId)
+      .order("date_emission", { ascending: false, nullsFirst: false })
+      .order("periode_debut", { ascending: false });
+    if (error) toast.error("Impossible de charger les factures : " + error.message);
+    setFactures((data as FactureListItem[]) ?? []);
+    setLoading(false);
+  }, [entrepriseId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const openDetail = async (id: string) => {
+    setLoadingDetail(true);
+    setSelected(null);
+    const { data: f } = await supabase
+      .from("factures")
+      .select(FACTURE_SELECT)
+      .eq("id", id)
+      .maybeSingle();
+    const { data: l } = await supabase
+      .from("factures_lignes")
+      .select("id, ordre_affichage, type_ligne, libelle, quantite, prix_unitaire_ht, montant_ht, tva_taux")
+      .eq("facture_id", id)
+      .order("ordre_affichage", { ascending: true });
+    setSelected((f as unknown as Facture) ?? null);
+    setSelectedLignes((l as FactureLigne[]) ?? []);
+    setLoadingDetail(false);
+  };
+
+  return (
+    <Card className="p-6 shadow-card border-border/60">
+      <h2 className="font-semibold text-foreground mb-4">
+        Factures {!loading && `(${factures.length})`}
+      </h2>
+
+      {loading ? (
+        <div className="flex flex-col gap-2.5">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      ) : factures.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Aucune facture générée pour ce client.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-2.5">
+          {factures.map((f) => {
+            const statut = STATUT_FACTURE[f.statut];
+            return (
+              <li key={f.id}>
+                <button
+                  onClick={() => openDetail(f.id)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/20 transition-colors text-left"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm text-foreground truncate">
+                        {f.numero_facture ?? "Brouillon"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium shrink-0 ${statut.badge}`}
+                      >
+                        {statut.label}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {formatPeriode(f.periode_debut, f.periode_fin)}
+                      {f.date_emission && <> · émise le {formatDateFr(f.date_emission)}</>}
+                    </p>
+                  </div>
+                  <p className="font-mono font-semibold text-sm text-foreground tabular-nums shrink-0">
+                    {formatEuro(f.montant_ttc)}
+                  </p>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <Dialog
+        open={loadingDetail || !!selected}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSelected(null);
+            setSelectedLignes([]);
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="no-print">
+            <DialogTitle className="flex items-center justify-between gap-3 pr-6">
+              <span>{selected?.numero_facture ?? "Facture"}</span>
+              {selected && (
+                <Button variant="izox" size="sm" onClick={() => window.print()}>
+                  <Printer className="h-4 w-4" />
+                  Imprimer / PDF
+                </Button>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {loadingDetail || !selected ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <FactureDocument facture={selected} lignes={selectedLignes} />
+          )}
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 }
 

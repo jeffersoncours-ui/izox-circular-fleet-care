@@ -93,13 +93,14 @@ function AdminVehiculeDetail() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("vehicules")
       .select(
         "id, immatriculation, marque, modele, type_vehicule, annee, couleur, kilometrage, notes, statut, photo_path, type_pack_souhaite, contrat_id, entreprise_id, created_by, gel_admin_date_debut, gel_admin_date_fin, gel_admin_motif, entreprises ( id, nom ), contrats ( commercial_signataire_id )"
       )
       .eq("id", id)
       .maybeSingle();
+    if (error) toast.error("Impossible de charger le véhicule : " + error.message);
     setVehicule((data as unknown as Vehicule) ?? null);
     setPhotoUrl(await getVehiculePhotoUrl(data?.photo_path));
     setLoading(false);

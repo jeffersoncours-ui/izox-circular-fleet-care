@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -7,29 +6,32 @@ import { AlertTriangle, CalendarPlus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { lastDayOfMonth, format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useSupabaseQuery } from "@/lib/hooks/useSupabaseQuery";
+
+interface Contrat {
+  passages_reportes: number;
+}
 
 export function PassagesReportesBanner() {
   const { profile } = useAuth();
-  const [passagesReportes, setPassagesReportes] = useState<number>(0);
-  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    if (!profile?.entreprise_id) return;
-    (async () => {
-      const { data } = await supabase
+  const { data: contrat } = useSupabaseQuery<Contrat | null>(
+    async () =>
+      await supabase
         .from("contrats")
         .select("passages_reportes")
-        .eq("entreprise_id", profile.entreprise_id!)
+        .eq("entreprise_id", profile?.entreprise_id ?? "")
         .eq("statut", "actif")
         .order("created_at", { ascending: false })
         .limit(1)
-        .maybeSingle();
-      setPassagesReportes(data?.passages_reportes ?? 0);
-      setLoaded(true);
-    })();
-  }, [profile]);
+        .maybeSingle(),
+    { defaultValue: null, enabled: !!profile?.entreprise_id },
+    [profile?.entreprise_id]
+  );
 
-  if (!loaded || passagesReportes <= 0) return null;
+  const passagesReportes = contrat?.passages_reportes ?? 0;
+
+  if (passagesReportes <= 0) return null;
 
   const dateExpiration = lastDayOfMonth(new Date());
   const dateLabel = format(dateExpiration, "d MMMM yyyy", { locale: fr });

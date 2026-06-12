@@ -3,11 +3,29 @@
 // commercial_id, siret or compte_active (those stay admin-controlled).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://izox.fr";
+
+function corsFor(req: Request): Record<string, string> {
+  const requestOrigin = req.headers.get("Origin") ?? "";
+  let allow = SITE_URL;
+  try {
+    const o = new URL(requestOrigin);
+    if (
+      requestOrigin === SITE_URL ||
+      o.hostname === "izox.fr" ||
+      o.hostname === "izox-circular-fleet-care.vercel.app" ||
+      /^izox-circular-fleet-care[a-z0-9-]*\.vercel\.app$/.test(o.hostname)
+    ) {
+      allow = requestOrigin;
+    }
+  } catch { /* keep fallback */ }
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 type MaybeStr = string | null | undefined;
 const clean = (v: MaybeStr): string | null => {
@@ -29,6 +47,7 @@ interface Payload {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsFor(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
 
