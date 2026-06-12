@@ -12,6 +12,7 @@ import {
   tweaksStyle,
 } from "./useTweaks";
 import { installFilDeLeau } from "./scrollScenes";
+import { TweaksPanel } from "./TweaksPanel";
 
 function Wordmark() {
   return (
@@ -213,13 +214,16 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={rootRef}
-      className={`izox-b2c flex min-h-screen flex-col ${themeClass(tweaks.theme)}`}
+      className={`izox-b2c flex min-h-screen flex-col ${themeClass(tweaks.theme)} ${
+        tweaks.carRender === "teinte" ? "car-teinte" : ""
+      }`}
       style={tweaksStyle(tweaks)}
     >
       <FilDeLeau />
       <PublicNavbar />
       <main className="flex-1">{children}</main>
       <PublicFooter />
+      <TweaksPanel />
     </div>
   );
 }

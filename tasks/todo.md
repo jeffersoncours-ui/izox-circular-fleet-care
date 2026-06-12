@@ -32,8 +32,12 @@ Le `:root` global de `styles.css` reste light, intact.
 - [x] Hover `fillwater` desktop (`@media hover:hover` — jamais sur tactile)
 - [x] **Validation empirique** : dev server SSR → `/` HTTP 200, tous marqueurs présents (noctra, data-loop-draw, data-fish, fil-trail), 0 erreur SSR. **CRM isolé confirmé** : `/login` sans `izox-b2c` ni couleur dark, `body.b2c-active` absent du SSR (client-side only). `/entreprises` + `/reservation` rendus.
 
-### Phase 2d — Tweaks panel UI (à venir)
-- [ ] Toolbar panel : color pickers, selects, radios, sliders, text inputs + reset
+### Phase 2d — Tweaks panel UI ✅ (session 33)
+- [x] **TweaksPanel** : toggle flottant bas-droite → panneau (drawer mobile / carte desktop)
+- [x] Contrôles : swatches accent + custom color, select fond (4 thèmes), swatches carrosserie + segmented trait/teintée, segmented serif/Outfit, sliders taille titres (80–125 %) + glow (0–100 %), text inputs accroche (3 lignes) + CTA, bouton réinitialiser
+- [x] Câblage carrosserie : `--b2c-car` + classe `.car-teinte` sur wrapper → coque `[data-car-body]` reçoit fill translucide en mode teintée
+- [x] Tout persisté via `useTweaks` (localStorage), scopé `.izox-b2c`
+- [x] Validation SSR : toggle présent sur `/`, **absent sur `/login`** (CRM intact), 0 erreur
 
 ### Phase 2e — Responsive + perf (à venir)
 - [ ] Tests 390px, lazy-load animations, FCP, CLS < 0.1

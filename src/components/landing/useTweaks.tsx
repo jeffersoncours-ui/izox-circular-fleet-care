@@ -113,6 +113,7 @@ export function themeClass(theme: B2cTheme): string {
 export function tweaksStyle(t: Tweaks): React.CSSProperties {
   const vars: Record<string, string> = {
     "--b2c-accent": t.accent,
+    "--b2c-car": t.carColor,
     "--b2c-glow": String(t.glow),
     "--b2c-tscale": String(t.titleScale),
     "--primary": t.accent,

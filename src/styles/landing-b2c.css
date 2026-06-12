@@ -392,6 +392,12 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   opacity: 0.06;
   stroke: none;
 }
+/* Rendu carrosserie « teintée » (tweaks) : la coque reçoit un remplissage
+   coloré translucide. En « trait pur » (défaut), elle reste fill:none. */
+.izox-b2c.car-teinte [data-car-body] {
+  fill: var(--b2c-car, var(--b2c-accent));
+  fill-opacity: 0.16;
+}
 .gv-label {
   font-family: var(--b2c-mono);
   font-size: 9px;

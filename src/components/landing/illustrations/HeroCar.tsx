@@ -40,10 +40,11 @@ export function HeroCar({ className = "" }: { className?: string }) {
       <path className="gv-stroke gv-dim" d="M376 274 Q418 274 418 230 L418 188" />
       <path className="gv-stroke" d="M412 198 L418 186 L424 198" opacity="0.8" />
 
-      {/* Carrosserie — coque */}
+      {/* Carrosserie — coque (data-car-body : reçoit la teinte en mode « teintée ») */}
       <path
         className="gv-stroke"
-        d="M82 248 L78 214 Q74 200 84 190 L110 176 Q120 160 140 152 L150 150 L260 150 Q272 150 280 160 L320 180 L350 190 Q396 196 396 212 L392 248"
+        data-car-body
+        d="M82 248 L78 214 Q74 200 84 190 L110 176 Q120 160 140 152 L150 150 L260 150 Q272 150 280 160 L320 180 L350 190 Q396 196 396 212 L392 248 Z"
       />
       {/* Hachures NOCTRA dans la coque */}
       <rect x="70" y="148" width="332" height="104" fill="url(#noctra)" clipPath="url(#bodyClip)" />
