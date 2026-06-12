@@ -19,16 +19,18 @@ Le `:root` global de `styles.css` reste light, intact.
 - [x] **reservation/entreprises** : `bg-white` → transparent (présentables en dark ; refonte complète = Phase 2f)
 - [x] Build ✓ + tsc 0 erreur + isolation CRM vérifiée (aucun sélecteur global non scopé impactant, aucune collision de classe)
 
-### Phase 2b — Illustrations SVG au trait (à venir)
-- [ ] Hero : gravure R5 E-Tech (lance, 4 jets, ruissellement, berme, étiquettes)
-- [ ] Boucle d'eau : tuyau qui se remplit (pipe-outer/inner/draw/sheen) + 4 stations
-- [ ] Aquaponie : bassin + 3 poissons + chaîne compost→aquaponie→légumes
+### Phase 2b — Illustrations SVG au trait ✅ (session 33)
+- [x] **HeroCar** : gravure R5 hatchback au trait (hachures NOCTRA via pattern), lance + 4 jets animés (gv-flow), brume (gv-mist), ruissellement + gouttes (gv-drip), berme + tuyau retour local, étiquettes pulse
+- [x] **WaterLoopDiagram** : tuyau stadium (pipe-outer/inner/loop-draw/loop-sheen) + 4 stations (data-station-t) + goutte pilote (data-loop-drop) — LOOP_PATH exporté
+- [x] **AquaponieScene** : bassin + ligne d'eau + 3 poissons (data-fish) + bulles (gv-bubble) + cultures hors-sol + circuit court légumes
+- [x] Micro-animations CSS autonomes ajoutées (jets/brume/gouttes/pulse/bulles) + classes pipe/station/fish/chain (gated `data-anim` pour progressive enhancement)
 
-### Phase 2c — Animations scroll-driven (à venir)
-- [ ] Fil de l'eau (height + goutte via getPointAtLength)
-- [ ] Boucle remplissage (stroke-dashoffset au scroll) + compteurs + stations `.lit`
-- [ ] Poissons `setFish(p)` + micro-animations (jets, brume, gouttes, pulse)
-- [ ] Hover `fillwater` desktop
+### Phase 2c — Animations scroll-driven ✅ (session 33)
+- [x] **scrollScenes.ts** : `installFilDeLeau` (height + goutte via scroll global), `installWaterLoop` (dashoffset via getTotalLength/getPointAtLength + stations .lit + goutte sur le path), `installAquaponie` (`setFish(p)` oscillation + orientation scaleX) — tous rAF-throttlés, prefers-reduced-motion = état final figé
+- [x] Wiring : fil dans PublicLayout, boucle dans WaterLoop (ref), poissons dans Vision (ref)
+- [x] **CountUp** : compteurs (IntersectionObserver + easeOutCubic) sur figures boucle (~50 L / 80 % / 50 %) + RSE
+- [x] Hover `fillwater` desktop (`@media hover:hover` — jamais sur tactile)
+- [x] **Validation empirique** : dev server SSR → `/` HTTP 200, tous marqueurs présents (noctra, data-loop-draw, data-fish, fil-trail), 0 erreur SSR. **CRM isolé confirmé** : `/login` sans `izox-b2c` ni couleur dark, `body.b2c-active` absent du SSR (client-side only). `/entreprises` + `/reservation` rendus.
 
 ### Phase 2d — Tweaks panel UI (à venir)
 - [ ] Toolbar panel : color pickers, selects, radios, sliders, text inputs + reset

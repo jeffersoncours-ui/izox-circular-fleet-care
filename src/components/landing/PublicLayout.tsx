@@ -11,6 +11,7 @@ import {
   themeClass,
   tweaksStyle,
 } from "./useTweaks";
+import { installFilDeLeau } from "./scrollScenes";
 
 function Wordmark() {
   return (
@@ -199,7 +200,14 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
       { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
     );
     els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+
+    // Fil de l'eau — progression globale au scroll.
+    const cleanupFil = installFilDeLeau(root);
+
+    return () => {
+      io.disconnect();
+      cleanupFil();
+    };
   }, []);
 
   return (

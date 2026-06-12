@@ -2,6 +2,7 @@
 // Phase 2a : layout dark + reveals (.rv). Les illustrations SVG (boucle tuyau,
 // aquaponie) et les animations scroll-driven arrivent en Phase 2b/2c.
 
+import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   CalendarCheck,
@@ -16,6 +17,10 @@ import {
   Quote,
 } from "lucide-react";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
+import { WaterLoopDiagram } from "./illustrations/WaterLoopDiagram";
+import { AquaponieScene } from "./illustrations/AquaponieScene";
+import { installWaterLoop, installAquaponie } from "./scrollScenes";
+import { CountUp } from "./CountUp";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
 
@@ -67,27 +72,36 @@ export function WaterLoop() {
   const stages = [
     {
       icon: <Droplets className="h-5 w-5" />,
-      figure: `~${CHIFFRES_EAU.litresUtilises} L`,
+      prefix: "~",
+      num: CHIFFRES_EAU.litresUtilises,
+      suffix: " L",
       caption: "par véhicule, en moyenne sur nos interventions",
       detail: `Contre ${CHIFFRES_EAU.comparaisonJetMin} à ${CHIFFRES_EAU.comparaisonJetMax} L pour un lavage au jet à domicile.`,
     },
     {
       icon: <RefreshCw className="h-5 w-5" />,
-      figure: `${CHIFFRES_EAU.pctRecupere} %`,
+      num: CHIFFRES_EAU.pctRecupere,
+      suffix: " %",
       caption: "de l'eau récupérée sous le véhicule",
       detail: `Une berme étanche capte l'eau de lavage : ${CHIFFRES_EAU.litresRecuperes} L repartent avec nous au lieu de finir dans le caniveau.`,
     },
     {
       icon: <Recycle className="h-5 w-5" />,
-      figure: `${CHIFFRES_EAU.pctReinjecte} %`,
+      num: CHIFFRES_EAU.pctReinjecte,
+      suffix: " %",
       caption: "de l'eau réinjectée dans la boucle",
       detail: `Après filtration à notre local, ${CHIFFRES_EAU.litresReinjectes} L sont réutilisés sur les lavages suivants.`,
     },
   ];
 
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) return installWaterLoop(ref.current);
+  }, []);
+
   return (
     <section id="boucle" className="b2c-section scroll-mt-20 border-t border-[var(--b2c-line)]">
-      <div className="b2c-container">
+      <div className="b2c-container" ref={ref}>
         <SectionHeading
           kicker="Notre différence"
           title={
@@ -97,7 +111,13 @@ export function WaterLoop() {
           }
           subtitle="Pas de lavage « sans eau ». Une eau qui travaille, qu'on récupère et qu'on fait revivre — c'est ça, le nettoyage circulaire."
         />
-        <div className="mt-10 grid gap-5 lg:grid-cols-3">
+
+        {/* Diagramme — tuyau qui se remplit au scroll (Phase 2c) */}
+        <div className="rv mt-10" data-loop-section>
+          <WaterLoopDiagram className="mx-auto w-full max-w-[680px]" />
+        </div>
+
+        <div className="mt-8 grid gap-5 lg:grid-cols-3">
           {stages.map((s, i) => (
             <div
               key={i}
@@ -109,7 +129,12 @@ export function WaterLoop() {
                 </div>
                 <span className="b2c-kicker">Étape {i + 1}</span>
               </div>
-              <p className="b2c-figure mt-5">{s.figure}</p>
+              <CountUp
+                className="b2c-figure mt-5 block"
+                prefix={"prefix" in s ? (s.prefix as string) : ""}
+                value={s.num}
+                suffix={s.suffix}
+              />
               <p className="mt-1 text-sm font-semibold text-[var(--b2c-tx)]">{s.caption}</p>
               <p className="mt-3 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.detail}</p>
             </div>
@@ -134,12 +159,12 @@ export function RseProof() {
         <div className="mt-8 grid gap-10 sm:grid-cols-3">
           <RseStat figure="2 à 4×" label="moins d'eau qu'un lavage au jet à domicile" />
           <RseStat
-            figure={`${CHIFFRES_EAU.pctRecupere} %`}
+            figure={<CountUp value={CHIFFRES_EAU.pctRecupere} suffix=" %" />}
             label="de l'eau récupérée sous le véhicule, en moyenne"
             delay="rv-d1"
           />
           <RseStat
-            figure={`${CHIFFRES_EAU.pctReinjecte} %`}
+            figure={<CountUp value={CHIFFRES_EAU.pctReinjecte} suffix=" %" />}
             label="de l'eau réinjectée dans la boucle après recyclage"
             delay="rv-d2"
           />
@@ -154,7 +179,15 @@ export function RseProof() {
   );
 }
 
-function RseStat({ figure, label, delay }: { figure: string; label: string; delay?: string }) {
+function RseStat({
+  figure,
+  label,
+  delay,
+}: {
+  figure: React.ReactNode;
+  label: string;
+  delay?: string;
+}) {
   return (
     <div className={`rv ${delay ?? ""}`}>
       <p className="b2c-figure b2c-glow-text !text-[clamp(2.8rem,7vw,4rem)]">{figure}</p>
@@ -223,9 +256,14 @@ export function Vision() {
     },
   ];
 
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) return installAquaponie(ref.current);
+  }, []);
+
   return (
     <section className="b2c-section border-t border-[var(--b2c-line)]">
-      <div className="b2c-container">
+      <div className="b2c-container" ref={ref}>
         <div className="b2c-card rv p-6 sm:p-10">
           <div className="inline-flex items-center rounded-full border border-[var(--b2c-line-strong)] bg-[var(--primary-soft)] px-3 py-1">
             <span className="b2c-kicker">Notre feuille de route</span>
@@ -238,6 +276,12 @@ export function Vision() {
             nettoyage redevienne une ressource rentable — écologiquement et économiquement.
             Ce n'est pas encore en place : c'est le cap que nous nous sommes fixé.
           </p>
+
+          {/* Scène aquaponie — poissons qui nagent au scroll (Phase 2c) */}
+          <div className="rv mt-8" data-aqua-section>
+            <AquaponieScene className="mx-auto w-full max-w-[520px]" />
+          </div>
+
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {steps.map((s, i) => (
               <div key={s.title} className={`rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>

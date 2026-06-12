@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { Droplets, Leaf, ShieldCheck, ArrowDown, Building2 } from "lucide-react";
 import { ZONE_INTERVENTION } from "@/lib/pricing-b2c";
 import { useTweaks } from "./useTweaks";
+import { HeroCar } from "./illustrations/HeroCar";
 
 export function Hero() {
   const { tweaks } = useTweaks();
@@ -69,9 +70,9 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Colonne illustration — placeholder élégant (gravure R5 en Phase 2b) */}
-        <div className="rv rv-d1 relative hidden min-h-[360px] lg:block">
-          <HeroVisualPlaceholder />
+        {/* Colonne illustration — gravure R5 E-Tech au trait */}
+        <div className="rv rv-d1 relative">
+          <HeroCar className="w-full max-w-[520px] mx-auto" />
         </div>
       </div>
     </section>
@@ -83,38 +84,6 @@ function TrustItem({ icon, label }: { icon: React.ReactNode; label: string }) {
     <div className="flex items-center gap-2 text-sm font-medium text-[var(--b2c-tx)]">
       {icon}
       {label}
-    </div>
-  );
-}
-
-// Placeholder : goutte stylisée au trait + halo. Sera remplacé par la gravure
-// R5 E-Tech animée (jets, berme, ruissellement) en Phase 2b.
-function HeroVisualPlaceholder() {
-  return (
-    <div className="b2c-glow-ring absolute inset-4 grid place-items-center rounded-[20px] border border-[var(--b2c-line)] bg-[var(--b2c-surface)]">
-      <svg viewBox="0 0 200 200" className="h-48 w-48" fill="none" aria-hidden="true">
-        <defs>
-          <radialGradient id="hg" cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stopColor="#3FE08F" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#3FE08F" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle cx="100" cy="95" r="80" fill="url(#hg)" />
-        {/* Goutte au trait */}
-        <path
-          d="M100 38 C128 78 142 100 142 122 a42 42 0 0 1 -84 0 C58 100 72 78 100 38 Z"
-          stroke="#3FE08F"
-          strokeWidth="1.4"
-          opacity="0.9"
-        />
-        <path
-          d="M84 120 a16 16 0 0 0 16 16"
-          stroke="#3FE08F"
-          strokeWidth="1.4"
-          opacity="0.5"
-        />
-      </svg>
-      <span className="b2c-kicker absolute bottom-4">gravure R5 · phase 2b</span>
     </div>
   );
 }
