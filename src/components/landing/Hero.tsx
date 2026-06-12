@@ -21,9 +21,7 @@ export function Hero() {
       <div className="b2c-container relative grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
         {/* Colonne texte */}
         <div>
-          <p className="b2c-kicker rv">
-            Nettoyage circulaire · {ZONE_INTERVENTION.ville}
-          </p>
+          <p className="b2c-kicker rv">Nettoyage circulaire</p>
           <h1 className="b2c-display rv rv-d1 mt-5 text-[var(--b2c-tx)]">
             {tweaks.heroLine1}
             <br />
@@ -70,9 +68,10 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Colonne illustration — gravure R5 E-Tech au trait */}
-        <div className="rv rv-d1 relative">
-          <HeroCar className="w-full max-w-[520px] mx-auto" />
+        {/* Colonne illustration — gravure R5 E-Tech au trait.
+            -mx-5 mobile : annule le padding du container pour un rendu pleine largeur. */}
+        <div className="rv rv-d1 relative -mx-5 sm:mx-0">
+          <HeroCar className="w-full max-w-[620px] mx-auto" />
         </div>
       </div>
     </section>

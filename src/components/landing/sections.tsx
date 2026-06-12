@@ -299,9 +299,10 @@ export function Vision() {
             Ce n'est pas encore en place : c'est le cap que nous nous sommes fixé.
           </p>
 
-          {/* Scène aquaponie — poissons qui nagent au scroll (Phase 2c) */}
-          <div className="rv mt-8" data-aqua-section>
-            <AquaponieScene className="mx-auto w-full max-w-[520px]" />
+          {/* Scène aquaponie — poissons qui nagent au scroll (Phase 2c).
+              -mx-6 mobile : annule le padding de la card pour un rendu pleine largeur. */}
+          <div className="rv -mx-6 mt-8 sm:mx-0" data-aqua-section>
+            <AquaponieScene className="mx-auto w-full max-w-[480px]" />
           </div>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-3">

@@ -7,7 +7,7 @@
 export function HeroCar({ className = "" }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 460 320"
+      viewBox="56 36 404 276"
       className={className}
       fill="none"
       role="img"

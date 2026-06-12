@@ -2,6 +2,22 @@
 
 ---
 
+## Session 2026-06-12 (35) — Corrections landing B2C round 2 (5 demandes user)
+
+- [x] **1. Hero kicker** : « · Évry-Courcouronnes » retiré (reste « Nettoyage circulaire » seul). La ville reste dans le lead et le footer.
+- [x] **2. HeroCar agrandi** : viewBox resserré `0 0 460 320` → `56 36 404 276` (suppression des marges mortes = vraie cause du rendu petit), `max-w` 520→620, `-mx-5 sm:mx-0` (pleine largeur mobile, annule le padding container).
+- [x] **3. AquaponieScene agrandie** : label « rampes led » recentré au-dessus de la rampe (plus de débord droit), viewBox `0 0 520 420` → `96 0 328 420` (gain ×1.59), `max-w` 520→480 (format portrait), `-mx-6 sm:mx-0` (pleine largeur mobile dans la card). `installAquaponie` inchangé (coordonnées user units non affectées par le viewBox).
+- [x] **4. PricingSection refondue** : matrice 4 cards → **liste lignes** (véhicule + exemples à gauche, prix à droite, séparateurs) dans une card max-w-2xl centrée. Tabs mono uppercase (INTÉRIEUR / INT. + EXT. (+30 €)), section Options en liste dessous, footer note mono « TOUS PRIX TTC · ACOMPTE 30 % EN LIGNE, SOLDE SUR PLACE ». Données `pricing-b2c.ts` inchangées.
+- [x] **5. Filigrane halftone** (style hermes-agent.nousresearch.com) : image user compressée (952 K EXIF → 130 K grayscale 760px, EXIF strippé) → `public/watermark-halftone.jpg`. CSS : `.izox-b2c::before` fixed plein écran, `opacity 0.06`, `mix-blend-mode: luminosity` (prend la teinte du fond), `z-index -1` + `isolation: isolate` sur `.izox-b2c` (reste sous tout le contenu). Zéro effet CRM (CSS importé uniquement par PublicLayout).
+- [x] `tsc` 0 erreur · `npm run build` ✓ · SSR `/` : kicker sans ville, 3 viewBox neufs, note tarifs présente, `/watermark-halftone.jpg` HTTP 200 · `/login` : 0 token b2c (isolation CRM confirmée)
+- [x] Commit + push `claude/landing-page-visual-fixes-x2pj6w`
+
+### Review session 35
+
+Refonte visuelle pure, zéro logique métier. L'agrandissement des SVG passe d'abord par le resserrage des viewBox (cause racine : marges mortes), pas seulement par le `max-w`. Opacité du filigrane (0.06) ajustable facilement si trop discret/présent sur le preview Vercel.
+
+---
+
 ## Session 2026-06-12 (34) — Corrections visuelles landing B2C (3 demandes user)
 
 ### Plan (validé par l'utilisateur — pas de GSAP/Framer, archi scrollScenes existante)

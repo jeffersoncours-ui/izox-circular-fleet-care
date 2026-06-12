@@ -54,6 +54,24 @@
   /* clip (et non hidden) : coupe les débordements horizontaux des halos/glow
      sans créer de conteneur de scroll — préserve la navbar sticky. */
   overflow-x: clip;
+  /* Stacking context propre pour que le filigrane ::before (z-index -1)
+     reste au-dessus du fond mais sous tout le contenu. */
+  position: relative;
+  isolation: isolate;
+}
+
+/* ── Filigrane halftone plein écran (texture fixe sous le contenu).
+      mix-blend luminosity : la texture prend la teinte du fond (vert abysse
+      en dark, sable en t-papier). pointer-events none : purement décoratif. ── */
+.izox-b2c::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: url("/watermark-halftone.jpg") center / cover no-repeat;
+  opacity: 0.06;
+  mix-blend-mode: luminosity;
+  pointer-events: none;
 }
 
 /* Fond du body pendant que la landing est montée (évite le seam clair

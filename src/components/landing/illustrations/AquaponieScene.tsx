@@ -37,7 +37,7 @@ const PLANT_XS = [156, 208, 260, 312, 364];
 export function AquaponieScene({ className = "" }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 520 420"
+      viewBox="96 0 328 420"
       className={className}
       fill="none"
       role="img"
@@ -137,8 +137,7 @@ export function AquaponieScene({ className = "" }: { className?: string }) {
         cultures hors-sol
       </text>
       <g className="gv-pulse">
-        <line className="gv-stroke gv-faint" x1="372" y1="56" x2="428" y2="44" />
-        <text className="gv-label" x="432" y="42">
+        <text className="gv-label" x="260" y="49" textAnchor="middle">
           rampes led
         </text>
       </g>
