@@ -60,18 +60,30 @@
   isolation: isolate;
 }
 
-/* ── Filigrane halftone plein écran (texture fixe sous le contenu).
-      mix-blend luminosity : la texture prend la teinte du fond (vert abysse
-      en dark, sable en t-papier). pointer-events none : purement décoratif. ── */
+/* ── Filigrane halftone animé (texture "velours" en dérive diagonale continue).
+      La texture tile à 380px et dérive lentement en diagonal (comme les fibres
+      d'un tissu sous la lumière). mix-blend luminosity → prend la teinte du fond.
+      prefers-reduced-motion : on fige la position sans supprimer la texture. ── */
+@keyframes watermark-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 380px 380px; }
+}
+
 .izox-b2c::before {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: -380px;           /* débordement = la taille du tile, évite les bords vides */
   z-index: -1;
-  background: url("/watermark-halftone.jpg") center / cover no-repeat;
-  opacity: 0.06;
+  background: url("/watermark-halftone.jpg") 0 0 / 380px 380px repeat;
+  opacity: 0.065;
   mix-blend-mode: luminosity;
   pointer-events: none;
+  animation: watermark-drift 28s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .izox-b2c::before {
+    animation: none;
+  }
 }
 
 /* Fond du body pendant que la landing est montée (évite le seam clair

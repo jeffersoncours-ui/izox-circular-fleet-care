@@ -16,10 +16,14 @@ import { TweaksPanel } from "./TweaksPanel";
 
 function Wordmark() {
   return (
-    <span className="b2c-mono text-[15px] font-bold tracking-[0.18em] text-[var(--b2c-tx)]">
-      IZOX
-      <span className="text-[var(--b2c-accent)]">.</span>
-    </span>
+    <img
+      src="/logo-izox-brand.png"
+      alt="IZOX — Circular Fleet Care"
+      width={108}
+      height={30}
+      className="h-[30px] w-auto"
+      style={{ imageRendering: "auto" }}
+    />
   );
 }
 
