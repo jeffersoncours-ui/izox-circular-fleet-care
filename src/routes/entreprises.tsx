@@ -46,7 +46,7 @@ function EntreprisesPage() {
   return (
     <PublicLayout>
       {/* Hero B2B */}
-      <section className="bg-white py-14 sm:py-20">
+      <section className="py-14 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="max-w-3xl">
             <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-primary">
@@ -119,7 +119,7 @@ function EntreprisesPage() {
       </section>
 
       {/* Formulaire lead */}
-      <section id="contact" className="scroll-mt-20 bg-white py-16 sm:py-20">
+      <section id="contact" className="scroll-mt-20 py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-10 lg:grid-cols-2">
             <div>

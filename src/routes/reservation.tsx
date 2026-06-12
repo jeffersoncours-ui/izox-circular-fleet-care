@@ -49,7 +49,7 @@ function ReservationPage() {
 
   return (
     <PublicLayout>
-      <section className="bg-white py-16 sm:py-24">
+      <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-xl px-4 sm:px-6">
           <Link
             to="/"

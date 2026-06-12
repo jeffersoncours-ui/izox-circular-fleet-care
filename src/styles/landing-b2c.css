@@ -1,0 +1,368 @@
+/* ============================================================
+   IZOX — Landing B2C · Design v2 (dark premium)
+   tasks/design-brief-v2.md
+
+   ⚠️ TOUT est scopé sous .izox-b2c — ne JAMAIS toucher au :root
+   global de styles.css. Le CRM B2B (admin/client/terrain/settings/
+   login) reste en light mode, intact. Ce fichier n'a aucun effet
+   hors de l'arbre .izox-b2c.
+   ============================================================ */
+
+.izox-b2c {
+  /* ── Design tokens v2 ── */
+  --b2c-bg: #06120c;
+  --b2c-bg2: #0a1b12;
+  --b2c-tx: #e7e6dd;
+  --b2c-tx-dim: #8aa295;
+  --b2c-tx-faint: #52685b;
+  --b2c-accent: #3fe08f;
+  --b2c-glow: 0.75; /* 0..1 — piloté par le tweaks panel */
+  --b2c-tscale: 1.25; /* échelle titres — piloté par tweaks */
+  --b2c-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --b2c-sans: "Archivo", system-ui, -apple-system, sans-serif;
+  --b2c-mono: "JetBrains Mono", ui-monospace, monospace;
+  --b2c-line: rgba(231, 230, 221, 0.1);
+  --b2c-line-strong: rgba(63, 224, 143, 0.28);
+  --b2c-surface: rgba(231, 230, 221, 0.02);
+
+  /* ── Remap des tokens sémantiques CRM → shared Button/Input/Label
+        rendent dark UNIQUEMENT dans cet arbre (cascade CSS). ── */
+  --background: var(--b2c-bg);
+  --foreground: var(--b2c-tx);
+  --card: var(--b2c-bg2);
+  --card-foreground: var(--b2c-tx);
+  --popover: var(--b2c-bg2);
+  --popover-foreground: var(--b2c-tx);
+  --muted: #0e2417;
+  --muted-foreground: var(--b2c-tx-dim);
+  --primary: var(--b2c-accent);
+  --primary-foreground: #06120c;
+  --primary-soft: rgba(63, 224, 143, 0.12);
+  --secondary: #0e2417;
+  --secondary-foreground: var(--b2c-tx);
+  --accent: rgba(63, 224, 143, 0.14);
+  --accent-foreground: var(--b2c-accent);
+  --border: var(--b2c-line);
+  --input: rgba(231, 230, 221, 0.18);
+  --ring: var(--b2c-accent);
+
+  background-color: var(--b2c-bg);
+  color: var(--b2c-tx);
+  font-family: var(--b2c-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fond du body pendant que la landing est montée (évite le seam clair
+   en overscroll/rubber-band mobile). Retiré au démontage par PublicLayout. */
+body.b2c-active {
+  background-color: #06120c;
+}
+
+/* ── Thèmes additionnels (tweaks panel) ── */
+.izox-b2c.t-noir {
+  --b2c-bg: #0e0d0b;
+  --b2c-bg2: #16140f;
+  --background: #0e0d0b;
+  --card: #16140f;
+  --muted: #1c1a13;
+}
+.izox-b2c.t-nuit {
+  --b2c-bg: #070d17;
+  --b2c-bg2: #0c1422;
+  --background: #070d17;
+  --card: #0c1422;
+  --muted: #111c30;
+}
+.izox-b2c.t-papier {
+  --b2c-bg: #ede8dc;
+  --b2c-bg2: #f5f1e8;
+  --b2c-tx: #1a1712;
+  --b2c-tx-dim: #5a5343;
+  --b2c-tx-faint: #8a8060;
+  --b2c-line: rgba(26, 23, 18, 0.12);
+  --b2c-surface: rgba(26, 23, 18, 0.02);
+  --background: #ede8dc;
+  --foreground: #1a1712;
+  --card: #f5f1e8;
+  --card-foreground: #1a1712;
+  --muted: #e2dbc9;
+  --muted-foreground: #5a5343;
+  --border: rgba(26, 23, 18, 0.12);
+}
+.izox-b2c.t-papier ~ body,
+body.b2c-active:has(.izox-b2c.t-papier) {
+  background-color: #ede8dc;
+}
+
+/* ============================================================
+   Typographie
+   ============================================================ */
+
+.b2c-display {
+  font-family: var(--b2c-serif);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  /* clamp ×  échelle titres pilotée par tweaks */
+  font-size: calc(clamp(2.5rem, 7vw, 4.5rem) * var(--b2c-tscale));
+}
+.b2c-display--md {
+  font-family: var(--b2c-serif);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  font-size: calc(clamp(1.9rem, 4vw, 2.9rem) * var(--b2c-tscale));
+}
+/* Mot/segment accentué : italique serif en vert lumineux */
+.b2c-accent {
+  font-style: italic;
+  color: var(--b2c-accent);
+  text-shadow: 0 0 calc(28px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.55 * var(--b2c-glow)));
+}
+.b2c-kicker {
+  font-family: var(--b2c-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--b2c-accent);
+}
+.b2c-lead {
+  color: var(--b2c-tx-dim);
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  line-height: 1.65;
+}
+.b2c-mono {
+  font-family: var(--b2c-mono);
+}
+
+/* ============================================================
+   Surfaces, bordures, glow
+   ============================================================ */
+
+.b2c-card {
+  background: var(--b2c-bg2);
+  border: 1px solid var(--b2c-line);
+  border-radius: 14px;
+}
+.b2c-hairline {
+  border-color: var(--b2c-line);
+}
+.b2c-glow-ring {
+  box-shadow:
+    0 0 0 1px var(--b2c-line-strong),
+    0 0 calc(48px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.18 * var(--b2c-glow)));
+}
+.b2c-glow-text {
+  text-shadow: 0 0 calc(24px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.5 * var(--b2c-glow)));
+}
+/* Grand chiffre RSE / compteur boucle */
+.b2c-figure {
+  font-family: var(--b2c-mono);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--b2c-accent);
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+  line-height: 1;
+}
+
+/* ============================================================
+   Boutons (CTA) — vert lumineux, hover « fillwater » (desktop)
+   Le remplissage animé bas→haut est greffé en Phase 2c.
+   ============================================================ */
+
+.b2c-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--b2c-sans);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  padding: 0.85rem 1.4rem;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+  overflow: hidden;
+}
+.b2c-btn--primary {
+  background: var(--b2c-accent);
+  color: #06120c;
+  box-shadow: 0 0 calc(36px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.35 * var(--b2c-glow)));
+}
+.b2c-btn--primary:hover {
+  box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.55 * var(--b2c-glow)));
+  transform: translateY(-1px);
+}
+.b2c-btn--ghost {
+  background: transparent;
+  color: var(--b2c-tx);
+  border: 1px solid var(--b2c-line-strong);
+}
+.b2c-btn--ghost:hover {
+  background: var(--b2c-surface);
+  border-color: var(--b2c-accent);
+}
+
+/* ============================================================
+   Reveals — progressive enhancement
+   Par défaut tout est VISIBLE (si JS échoue, rien n'est caché).
+   L'état initial masqué n'est appliqué que lorsque PublicLayout
+   pose data-anim="on" (JS actif). Animation pilotée en Phase 2c.
+   ============================================================ */
+
+.izox-b2c[data-anim="on"] .rv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.izox-b2c[data-anim="on"] .rv.is-in {
+  opacity: 1;
+  transform: none;
+}
+.rv-d1 {
+  transition-delay: 0.09s;
+}
+.rv-d2 {
+  transition-delay: 0.18s;
+}
+
+/* ============================================================
+   Stepcards (section 02)
+   ============================================================ */
+
+.stepcard {
+  background: var(--b2c-bg2);
+  border: 1px solid var(--b2c-line);
+  border-radius: 14px;
+  padding: 1.6rem;
+  transition: border-color 0.3s ease;
+}
+.stepcard:hover {
+  border-color: var(--b2c-line-strong);
+}
+.stepcard__num {
+  font-family: var(--b2c-mono);
+  font-size: 12px;
+  color: var(--b2c-tx-faint);
+}
+
+/* ============================================================
+   Avant / Après (section 05)
+   ============================================================ */
+
+.ba-tag {
+  font-family: var(--b2c-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--b2c-line);
+  color: var(--b2c-tx-dim);
+}
+.ba-tag--after {
+  color: var(--b2c-accent);
+  border-color: var(--b2c-line-strong);
+}
+
+/* ============================================================
+   Hero visual — placeholder élégant (la gravure R5 arrive en 2b)
+   ============================================================ */
+
+.b2c-hero-halo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60% 50% at 70% 30%,
+      rgba(63, 224, 143, calc(0.1 * var(--b2c-glow))),
+      transparent 70%
+    );
+}
+
+/* ============================================================
+   Fil de l'eau (fixe à droite) — structure posée ici,
+   animation scroll branchée en Phase 2c.
+   ============================================================ */
+
+.fil {
+  position: fixed;
+  top: 0;
+  right: 18px;
+  bottom: 0;
+  width: 2px;
+  z-index: 30;
+  pointer-events: none;
+}
+.fil-track {
+  position: absolute;
+  inset: 0;
+  background: var(--b2c-line);
+}
+.fil-trail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to bottom, transparent, var(--b2c-accent));
+}
+.fil-drop {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--b2c-accent);
+  box-shadow: 0 0 calc(16px * var(--b2c-glow)) rgba(63, 224, 143, calc(0.9 * var(--b2c-glow)));
+}
+@media (max-width: 860px) {
+  .fil {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Section rythm
+   ============================================================ */
+
+.b2c-section {
+  position: relative;
+  padding-block: clamp(4rem, 9vw, 7rem);
+}
+.b2c-container {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+/* ============================================================
+   Accessibilité — prefers-reduced-motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .izox-b2c[data-anim="on"] .rv {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .izox-b2c *,
+  .izox-b2c *::before,
+  .izox-b2c *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

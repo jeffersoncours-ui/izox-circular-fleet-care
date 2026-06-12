@@ -11,6 +11,7 @@ import {
   SubscriptionTeaser,
   Reviews,
   Faq,
+  FinalCta,
 } from "@/components/landing/sections";
 import { PricingSection } from "@/components/landing/PricingSection";
 
@@ -72,6 +73,7 @@ function LandingPage() {
       <SubscriptionTeaser />
       <Reviews />
       <Faq />
+      <FinalCta />
     </PublicLayout>
   );
 }

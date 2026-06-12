@@ -2,6 +2,44 @@
 
 ---
 
+## [REFONTE v2] Landing B2C dark premium — `tasks/design-brief-v2.md`
+
+⚠️ **Le CRM B2B (admin/client/terrain/settings/login) ne change PAS visuellement.**
+Tout le dark mode est scopé sous `.izox-b2c` — aucun effet hors de cet arbre.
+Le `:root` global de `styles.css` reste light, intact.
+
+### Phase 2a — Fondation visuelle dark ✅ (session 33)
+- [x] **`src/styles/landing-b2c.css`** : tokens v2 (abysse `#06120C`, accent `#3FE08F`, glow, tscale) + remap des tokens sémantiques CRM scopé `.izox-b2c` (Button/Input rendent dark sans modif) + thèmes t-noir/t-nuit/t-papier + classes (`.b2c-display` serif, `.b2c-accent` italic glow, `.b2c-card`, `.b2c-btn`, `.stepcard`, `.ba-tag`, `.fil`, `.rv` reveals) + `prefers-reduced-motion`
+- [x] **Fonts** : Instrument Serif + Archivo ajoutés au lien Google Fonts root (dispo globale, usage scopé)
+- [x] **`useTweaks.tsx`** : contexte + localStorage + application CSS vars (panneau UI = Phase 2d)
+- [x] **`PublicLayout`** : wrapper `.izox-b2c` dark, navbar/footer dark, wordmark texte, fil de l'eau (structure), IntersectionObserver reveals (progressive enhancement : visible si JS off), `body.b2c-active` anti-seam overscroll
+- [x] **Hero** : accroche serif éditoriale (dernier mot italic accent), double CTA `.b2c-btn`, placeholder gravure R5 (halo + goutte SVG)
+- [x] **sections.tsx** : HowItWorks, WaterLoop, RseProof, BeforeAfter, Vision, Subscription, Reviews, FAQ, **FinalCta** (nouveau) — tous dark + reveals
+- [x] **PricingSection** : tabs formule (Intérieur / Int.+Ext.) + matrice dark + options
+- [x] **reservation/entreprises** : `bg-white` → transparent (présentables en dark ; refonte complète = Phase 2f)
+- [x] Build ✓ + tsc 0 erreur + isolation CRM vérifiée (aucun sélecteur global non scopé impactant, aucune collision de classe)
+
+### Phase 2b — Illustrations SVG au trait (à venir)
+- [ ] Hero : gravure R5 E-Tech (lance, 4 jets, ruissellement, berme, étiquettes)
+- [ ] Boucle d'eau : tuyau qui se remplit (pipe-outer/inner/draw/sheen) + 4 stations
+- [ ] Aquaponie : bassin + 3 poissons + chaîne compost→aquaponie→légumes
+
+### Phase 2c — Animations scroll-driven (à venir)
+- [ ] Fil de l'eau (height + goutte via getPointAtLength)
+- [ ] Boucle remplissage (stroke-dashoffset au scroll) + compteurs + stations `.lit`
+- [ ] Poissons `setFish(p)` + micro-animations (jets, brume, gouttes, pulse)
+- [ ] Hover `fillwater` desktop
+
+### Phase 2d — Tweaks panel UI (à venir)
+- [ ] Toolbar panel : color pickers, selects, radios, sliders, text inputs + reset
+
+### Phase 2e — Responsive + perf (à venir)
+- [ ] Tests 390px, lazy-load animations, FCP, CLS < 0.1
+
+### Phase 2f — Refonte complète /reservation (tunnel) + /entreprises (à venir)
+
+---
+
 ## [PLAN] Landing B2C IZOX — 4 phases
 
 > Brief complet : `tasks/brief-landing-b2c.md`

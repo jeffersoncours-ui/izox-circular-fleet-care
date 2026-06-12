@@ -1,6 +1,6 @@
-// Sections statiques de la landing B2C (brief §4).
-// Phase 1 : contenu SSR sans animation. Les animations scroll-driven
-// (fil de l'eau, boucle SVG) arrivent en Phase 4 par-dessus cette ossature.
+// Sections statiques de la landing B2C — design v2 dark (design-brief-v2.md §4).
+// Phase 2a : layout dark + reveals (.rv). Les illustrations SVG (boucle tuyau,
+// aquaponie) et les animations scroll-driven arrivent en Phase 2b/2c.
 
 import { Link } from "@tanstack/react-router";
 import {
@@ -15,7 +15,6 @@ import {
   ChevronDown,
   Quote,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
@@ -23,47 +22,37 @@ import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
 export function HowItWorks() {
   const steps = [
     {
-      icon: <CalendarCheck className="h-6 w-6 text-primary" />,
+      icon: <CalendarCheck className="h-6 w-6 text-[var(--b2c-accent)]" />,
       title: "Je réserve",
       text: "Choisissez votre véhicule, votre formule et votre créneau en ligne. Prix affiché en direct, sans surprise.",
     },
     {
-      icon: <Car className="h-6 w-6 text-primary" />,
+      icon: <Car className="h-6 w-6 text-[var(--b2c-accent)]" />,
       title: "On vient",
       text: "Notre équipe intervient chez vous avec tout le matériel : berme de récupération, produits bio, eau embarquée.",
     },
     {
-      icon: <RefreshCw className="h-6 w-6 text-primary" />,
+      icon: <RefreshCw className="h-6 w-6 text-[var(--b2c-accent)]" />,
       title: "L'eau repart en boucle",
       text: "L'eau utilisée est pompée, ramenée à notre local, recyclée et réutilisée sur les prochains lavages.",
     },
   ];
 
   return (
-    <section className="bg-muted/40 py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <SectionHeading
-          kicker="Simple comme bonjour"
-          title="Comment ça marche"
-        />
-        <div className="mt-10 grid gap-6 sm:grid-cols-3">
+    <section className="b2c-section border-t border-[var(--b2c-line)]">
+      <div className="b2c-container">
+        <SectionHeading kicker="Simple comme bonjour" title="Comment ça marche" />
+        <div className="mt-10 grid gap-5 sm:grid-cols-3">
           {steps.map((s, i) => (
-            <div
-              key={s.title}
-              className="rounded-lg border border-border bg-card p-6 shadow-card"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-md bg-primary-soft">
+            <div key={s.title} className={`stepcard rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
+              <div className="flex items-center justify-between">
+                <div className="grid h-11 w-11 place-items-center rounded-md bg-[var(--primary-soft)]">
                   {s.icon}
                 </div>
-                <span className="font-mono text-xs font-bold text-muted-foreground">
-                  0{i + 1}
-                </span>
+                <span className="stepcard__num">0{i + 1}</span>
               </div>
-              <h3 className="mt-4 font-display text-lg font-bold tracking-tight text-foreground">
-                {s.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
+              <h3 className="b2c-display--md mt-4 !text-[1.5rem] text-[var(--b2c-tx)]">{s.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
             </div>
           ))}
         </div>
@@ -72,27 +61,24 @@ export function HowItWorks() {
   );
 }
 
-/* ── 3. La boucle d'eau (section signature — version statique Phase 1) ── */
+/* ── 3. La boucle d'eau (signature — version statique Phase 2a) ────── */
 
 export function WaterLoop() {
   const stages = [
     {
       icon: <Droplets className="h-5 w-5" />,
-      title: "Lavage",
       figure: `~${CHIFFRES_EAU.litresUtilises} L`,
       caption: "par véhicule, en moyenne sur nos interventions",
       detail: `Contre ${CHIFFRES_EAU.comparaisonJetMin} à ${CHIFFRES_EAU.comparaisonJetMax} L pour un lavage au jet à domicile.`,
     },
     {
       icon: <RefreshCw className="h-5 w-5" />,
-      title: "Berme & pompage",
       figure: `${CHIFFRES_EAU.pctRecupere} %`,
       caption: "de l'eau récupérée sous le véhicule",
       detail: `Une berme étanche capte l'eau de lavage : ${CHIFFRES_EAU.litresRecuperes} L repartent avec nous au lieu de finir dans le caniveau.`,
     },
     {
       icon: <Recycle className="h-5 w-5" />,
-      title: "Recyclage",
       figure: `${CHIFFRES_EAU.pctReinjecte} %`,
       caption: "de l'eau réinjectée dans la boucle",
       detail: `Après filtration à notre local, ${CHIFFRES_EAU.litresReinjectes} L sont réutilisés sur les lavages suivants.`,
@@ -100,40 +86,38 @@ export function WaterLoop() {
   ];
 
   return (
-    <section id="boucle" className="scroll-mt-20 bg-white py-16 sm:py-24">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section id="boucle" className="b2c-section scroll-mt-20 border-t border-[var(--b2c-line)]">
+      <div className="b2c-container">
         <SectionHeading
           kicker="Notre différence"
-          title="La boucle d'eau"
+          title={
+            <>
+              La boucle <em className="b2c-accent">d'eau</em>
+            </>
+          }
           subtitle="Pas de lavage « sans eau ». Une eau qui travaille, qu'on récupère et qu'on fait revivre — c'est ça, le nettoyage circulaire."
         />
-        <div className="mt-10 grid gap-6 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 lg:grid-cols-3">
           {stages.map((s, i) => (
             <div
-              key={s.title}
-              className="relative rounded-lg border border-border bg-card p-6 shadow-card"
+              key={i}
+              className={`b2c-card rv p-6 ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}
             >
               <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--b2c-accent)] text-[#06120c]">
                   {s.icon}
                 </div>
-                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Étape {i + 1}
-                </span>
+                <span className="b2c-kicker">Étape {i + 1}</span>
               </div>
-              <p className="mt-5 font-mono text-4xl font-bold tracking-tight text-primary">
-                {s.figure}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{s.caption}</p>
-              <h3 className="sr-only">{s.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{s.detail}</p>
+              <p className="b2c-figure mt-5">{s.figure}</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--b2c-tx)]">{s.caption}</p>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.detail}</p>
             </div>
           ))}
         </div>
-        <p className="mt-6 text-xs text-muted-foreground">
+        <p className="mt-6 text-xs text-[var(--b2c-tx-faint)]">
           Chiffres moyens mesurés sur nos interventions. Comparaison : lavage au jet à
-          domicile ({CHIFFRES_EAU.comparaisonJetMin}–{CHIFFRES_EAU.comparaisonJetMax} L
-          par véhicule).
+          domicile ({CHIFFRES_EAU.comparaisonJetMin}–{CHIFFRES_EAU.comparaisonJetMax} L par véhicule).
         </p>
       </div>
     </section>
@@ -144,42 +128,37 @@ export function WaterLoop() {
 
 export function RseProof() {
   return (
-    <section className="bg-primary py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-primary-foreground/70">
-          Des chiffres réels, pas des promesses
-        </p>
-        <div className="mt-8 grid gap-8 sm:grid-cols-3">
-          <RseStat
-            figure="2 à 4×"
-            label="moins d'eau qu'un lavage au jet à domicile"
-          />
+    <section className="b2c-section border-t border-[var(--b2c-line)]">
+      <div className="b2c-container">
+        <p className="b2c-kicker rv">Des chiffres réels, pas des promesses</p>
+        <div className="mt-8 grid gap-10 sm:grid-cols-3">
+          <RseStat figure="2 à 4×" label="moins d'eau qu'un lavage au jet à domicile" />
           <RseStat
             figure={`${CHIFFRES_EAU.pctRecupere} %`}
             label="de l'eau récupérée sous le véhicule, en moyenne"
+            delay="rv-d1"
           />
           <RseStat
             figure={`${CHIFFRES_EAU.pctReinjecte} %`}
             label="de l'eau réinjectée dans la boucle après recyclage"
+            delay="rv-d2"
           />
         </div>
-        <p className="mt-8 max-w-2xl text-sm leading-relaxed text-primary-foreground/80">
-          Une démarche éco-responsable mesurée sur le terrain : produits bio, eau
-          recyclée, zéro rejet au caniveau. Chaque chiffre correspond à des relevés
-          réels effectués lors de nos interventions.
+        <p className="rv mt-8 max-w-2xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+          Une démarche éco-responsable mesurée sur le terrain : produits bio, eau recyclée,
+          zéro rejet au caniveau. Chaque chiffre correspond à des relevés réels effectués
+          lors de nos interventions.
         </p>
       </div>
     </section>
   );
 }
 
-function RseStat({ figure, label }: { figure: string; label: string }) {
+function RseStat({ figure, label, delay }: { figure: string; label: string; delay?: string }) {
   return (
-    <div>
-      <p className="font-mono text-4xl font-bold tracking-tight text-primary-foreground sm:text-5xl">
-        {figure}
-      </p>
-      <p className="mt-2 text-sm leading-relaxed text-primary-foreground/80">{label}</p>
+    <div className={`rv ${delay ?? ""}`}>
+      <p className="b2c-figure b2c-glow-text !text-[clamp(2.8rem,7vw,4rem)]">{figure}</p>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{label}</p>
     </div>
   );
 }
@@ -187,30 +166,33 @@ function RseStat({ figure, label }: { figure: string; label: string }) {
 /* ── 5. Avant / après ─────────────────────────────────────────────── */
 
 export function BeforeAfter() {
-  // TODO : remplacer les placeholders par de vraies photos avant/après
-  // (public/landing/avant-apres-*.jpg) dès les premières interventions B2C.
+  // TODO : remplacer par de vraies photos (public/landing/avant-apres-*.jpg).
   const slots = ["Habitacle", "Sièges", "Carrosserie", "Jantes"];
 
   return (
-    <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className="b2c-section border-t border-[var(--b2c-line)]">
+      <div className="b2c-container">
         <SectionHeading
           kicker="La preuve par l'image"
           title="Avant / après"
           subtitle="Le résultat parle de lui-même. Photos prises sur nos interventions, sans retouche."
         />
         <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {slots.map((label) => (
+          {slots.map((label, i) => (
             <div
               key={label}
-              className="flex aspect-[4/5] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/40 p-4 text-center"
+              className={`b2c-card rv flex aspect-[4/5] flex-col items-center justify-center gap-3 border-dashed p-4 text-center ${
+                i === 1 ? "rv-d1" : i >= 2 ? "rv-d2" : ""
+              }`}
             >
-              <Camera className="h-6 w-6 text-muted-foreground/60" />
+              <Camera className="h-6 w-6 text-[var(--b2c-tx-faint)]" />
               <div>
-                <p className="text-sm font-semibold text-foreground">{label}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Photos à venir — premières interventions en cours
-                </p>
+                <div className="flex items-center justify-center gap-1.5">
+                  <span className="ba-tag">Avant</span>
+                  <span className="ba-tag ba-tag--after">Après</span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">{label}</p>
+                <p className="mt-1 text-[11px] text-[var(--b2c-tx-faint)]">Photos à venir</p>
               </div>
             </div>
           ))}
@@ -225,53 +207,55 @@ export function BeforeAfter() {
 export function Vision() {
   const steps = [
     {
-      icon: <Recycle className="h-5 w-5 text-primary" />,
+      icon: <Recycle className="h-5 w-5 text-[var(--b2c-accent)]" />,
       title: "Compost",
       text: "Les boues organiques issues de la filtration sont valorisées en compost au lieu d'être jetées.",
     },
     {
-      icon: <Fish className="h-5 w-5 text-primary" />,
+      icon: <Fish className="h-5 w-5 text-[var(--b2c-accent)]" />,
       title: "Aquaponie",
       text: "Le compost nourrit un bassin aquaponique : les poissons fertilisent l'eau qui alimente les cultures.",
     },
     {
-      icon: <Sprout className="h-5 w-5 text-primary" />,
+      icon: <Sprout className="h-5 w-5 text-[var(--b2c-accent)]" />,
       title: "Légumes locaux",
       text: "Les légumes produits sont revendus en circuit court — chaque lavage finance un peu de production locale.",
     },
   ];
 
   return (
-    <section className="bg-muted/40 py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="rounded-lg border border-border bg-card p-6 shadow-card sm:p-10">
-          <div className="inline-flex items-center rounded-full border border-primary/30 bg-primary-soft px-3 py-1">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-primary">
-              Notre feuille de route
-            </span>
+    <section className="b2c-section border-t border-[var(--b2c-line)]">
+      <div className="b2c-container">
+        <div className="b2c-card rv p-6 sm:p-10">
+          <div className="inline-flex items-center rounded-full border border-[var(--b2c-line-strong)] bg-[var(--primary-soft)] px-3 py-1">
+            <span className="b2c-kicker">Notre feuille de route</span>
           </div>
-          <h2 className="mt-4 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Et demain, l'eau fait pousser des légumes
+          <h2 className="b2c-display--md mt-4 text-[var(--b2c-tx)]">
+            Et demain, l'eau fait pousser des <em className="b2c-accent">légumes</em>
           </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            La boucle ne s'arrête pas au lavage. Notre objectif : que chaque sous-produit
-            du nettoyage redevienne une ressource rentable — écologiquement et
-            économiquement. Ce n'est pas encore en place : c'est le cap que nous nous
-            sommes fixé.
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+            La boucle ne s'arrête pas au lavage. Notre objectif : que chaque sous-produit du
+            nettoyage redevienne une ressource rentable — écologiquement et économiquement.
+            Ce n'est pas encore en place : c'est le cap que nous nous sommes fixé.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            {steps.map((s) => (
-              <div key={s.title}>
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary-soft">
+            {steps.map((s, i) => (
+              <div key={s.title} className={`rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
+                <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--primary-soft)]">
                   {s.icon}
                 </div>
-                <h3 className="mt-3 font-display text-base font-bold tracking-tight text-foreground">
+                <h3 className="mt-3 font-[var(--b2c-sans)] text-base font-bold text-[var(--b2c-tx)]">
                   {s.title}
                 </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
               </div>
             ))}
           </div>
+          <p className="mt-8 max-w-2xl border-t border-[var(--b2c-line)] pt-6 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+            Une <span className="font-semibold text-[var(--b2c-tx)]">rentabilité écologique</span> :
+            chaque litre économisé et chaque résidu valorisé réduit nos coûts d'exploitation —
+            et donc vos prix, durablement.
+          </p>
         </div>
       </div>
     </section>
@@ -282,23 +266,24 @@ export function Vision() {
 
 export function SubscriptionTeaser() {
   return (
-    <section className="bg-white py-12 sm:py-14">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex flex-col items-start justify-between gap-5 rounded-lg border border-border bg-muted/40 p-6 sm:flex-row sm:items-center sm:p-8">
+    <section className="b2c-section !py-12 border-t border-[var(--b2c-line)]">
+      <div className="b2c-container">
+        <div className="b2c-card rv flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center sm:p-8">
           <div>
-            <h2 className="font-display text-lg font-bold tracking-tight text-foreground">
-              Vous reviendrez ? L'abonnement vous fait économiser.
+            <h2 className="font-[var(--b2c-sans)] text-lg font-bold text-[var(--b2c-tx)]">
+              Vous reviendrez ? L'abonnement vous fait économiser jusqu'à −15 %.
             </h2>
-            <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
-              Pour un véhicule entretenu régulièrement, nos formules d'abonnement
-              reviennent moins cher que des passages ponctuels. Parlez-en avec nous
-              après votre premier nettoyage — sans engagement.
+            <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+              Pour un véhicule entretenu régulièrement, nos formules 2 ou 4 passages par mois
+              reviennent moins cher que des passages ponctuels. Parlez-en avec nous après votre
+              premier nettoyage — sans engagement.
             </p>
           </div>
-          <a href="mailto:contact@izox.fr?subject=Abonnement%20IZOX" className="shrink-0">
-            <Button variant="outline" size="sm">
-              En savoir plus
-            </Button>
+          <a
+            href="mailto:contact@izox.fr?subject=Abonnement%20IZOX"
+            className="b2c-btn b2c-btn--ghost shrink-0"
+          >
+            En savoir plus
           </a>
         </div>
       </div>
@@ -309,25 +294,22 @@ export function SubscriptionTeaser() {
 /* ── 9. Avis clients ──────────────────────────────────────────────── */
 
 export function Reviews() {
-  // Lancement : aucun avis publié tant qu'il n'y a pas de vrais avis vérifiables
-  // (publier de faux avis = pratique commerciale trompeuse, art. L121-2 C. conso).
+  // Aucun faux avis (L121-2 C. conso) — empty-state honnête tant qu'il n'y en a pas.
   return (
-    <section className="bg-muted/40 py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className="b2c-section border-t border-[var(--b2c-line)]">
+      <div className="b2c-container">
         <SectionHeading kicker="Ils nous font confiance" title="Avis clients" />
-        <div className="mt-10 rounded-lg border border-dashed border-border bg-card p-8 text-center">
-          <Quote className="mx-auto h-6 w-6 text-muted-foreground/50" />
-          <p className="mt-3 text-sm font-semibold text-foreground">
+        <div className="b2c-card rv mt-10 border-dashed p-8 text-center">
+          <Quote className="mx-auto h-6 w-6 text-[var(--b2c-tx-faint)]" />
+          <p className="mt-3 text-sm font-semibold text-[var(--b2c-tx)]">
             Tout juste lancés — vos avis apparaîtront ici.
           </p>
-          <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">
-            Nous publions uniquement des avis réels de clients ayant réservé une
-            intervention. Soyez parmi les premiers !
+          <p className="mx-auto mt-1.5 max-w-md text-sm text-[var(--b2c-tx-dim)]">
+            Nous publions uniquement des avis réels de clients ayant réservé une intervention.
+            Soyez parmi les premiers !
           </p>
-          <Link to="/reservation" className="mt-5 inline-block">
-            <Button variant="izox" size="sm">
-              Réserver mon nettoyage
-            </Button>
+          <Link to="/reservation" className="b2c-btn b2c-btn--primary mt-5">
+            Réserver mon nettoyage
           </Link>
         </div>
       </div>
@@ -366,19 +348,42 @@ const FAQ_ITEMS = [
 
 export function Faq() {
   return (
-    <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+    <section className="b2c-section border-t border-[var(--b2c-line)]">
+      <div className="b2c-container max-w-3xl">
         <SectionHeading kicker="Questions fréquentes" title="FAQ" />
-        <div className="mt-8 divide-y divide-border rounded-lg border border-border bg-card shadow-card">
+        <div className="b2c-card rv mt-8 divide-y divide-[var(--b2c-line)]">
           {FAQ_ITEMS.map((item) => (
             <details key={item.q} className="group px-5 py-4">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-[var(--b2c-tx)] [&::-webkit-details-marker]:hidden">
                 {item.q}
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-[var(--b2c-tx-dim)] transition-transform group-open:rotate-180" />
               </summary>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.a}</p>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{item.a}</p>
             </details>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── 11. CTA final ────────────────────────────────────────────────── */
+
+export function FinalCta() {
+  return (
+    <section className="b2c-section border-t border-[var(--b2c-line)]">
+      <div className="b2c-container text-center">
+        <h2 className="b2c-display--md rv text-[var(--b2c-tx)]">
+          À votre tour de <em className="b2c-accent">fermer la boucle</em>
+        </h2>
+        <p className="b2c-lead rv rv-d1 mx-auto mt-4 max-w-md">
+          Un véhicule propre, une eau qui revit, un geste pour la planète. Réservez en quelques
+          clics.
+        </p>
+        <div className="rv rv-d2 mt-7 flex justify-center">
+          <Link to="/reservation" className="b2c-btn b2c-btn--primary">
+            Réserver mon nettoyage
+          </Link>
         </div>
       </div>
     </section>
@@ -393,22 +398,14 @@ export function SectionHeading({
   subtitle,
 }: {
   kicker: string;
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
 }) {
   return (
     <div className="max-w-2xl">
-      <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-primary">
-        {kicker}
-      </p>
-      <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-        {title}
-      </h2>
-      {subtitle && (
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-          {subtitle}
-        </p>
-      )}
+      <p className="b2c-kicker rv">{kicker}</p>
+      <h2 className="b2c-display--md rv rv-d1 mt-2 text-[var(--b2c-tx)]">{title}</h2>
+      {subtitle && <p className="b2c-lead rv rv-d2 mt-3">{subtitle}</p>}
     </div>
   );
 }
