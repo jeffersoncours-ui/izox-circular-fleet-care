@@ -9,7 +9,7 @@ export type TitleFont = "serif" | "outfit";
 export type CarRender = "trait" | "teinte";
 
 export interface Tweaks {
-  accent: string; // #3FE08F par défaut
+  accent: string; // #3FD8FF par défaut
   theme: B2cTheme;
   carColor: string;
   carRender: CarRender;
@@ -23,9 +23,9 @@ export interface Tweaks {
 }
 
 export const DEFAULT_TWEAKS: Tweaks = {
-  accent: "#3FE08F",
+  accent: "#3FD8FF",
   theme: "abysse",
-  carColor: "#3FE08F",
+  carColor: "#3FD8FF",
   carRender: "trait",
   titleFont: "serif",
   titleScale: 1.25,

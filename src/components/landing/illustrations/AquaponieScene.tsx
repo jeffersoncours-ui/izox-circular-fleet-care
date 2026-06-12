@@ -45,8 +45,8 @@ export function AquaponieScene({ className = "" }: { className?: string }) {
     >
       <defs>
         <radialGradient id="aquaGlow" cx="50%" cy="55%" r="60%">
-          <stop offset="0%" stopColor="#3FE08F" stopOpacity="0.12" />
-          <stop offset="100%" stopColor="#3FE08F" stopOpacity="0" />
+          <stop offset="0%" stopColor="#3FD8FF" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="#3FD8FF" stopOpacity="0" />
         </radialGradient>
         {/* Hachures gravure dans l'eau du bassin */}
         <pattern
@@ -56,7 +56,7 @@ export function AquaponieScene({ className = "" }: { className?: string }) {
           patternUnits="userSpaceOnUse"
           patternTransform="rotate(28)"
         >
-          <line x1="0" y1="0" x2="0" y2="7" stroke="#3FE08F" strokeWidth="0.5" opacity="0.16" />
+          <line x1="0" y1="0" x2="0" y2="7" stroke="#3FD8FF" strokeWidth="0.5" opacity="0.16" />
         </pattern>
         <clipPath id="tankClip">
           <path d="M146 310 L146 378 Q146 386 154 386 L386 386 Q394 386 394 378 L394 310 Z" />

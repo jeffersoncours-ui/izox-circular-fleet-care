@@ -11,8 +11,8 @@ import {
   type TitleFont,
 } from "./useTweaks";
 
-const ACCENTS = ["#3FE08F", "#5BC8E8", "#A8C4B4", "#E8C268"];
-const CAR_COLORS = ["#3FE08F", "#5BC8E8", "#E8C268", "#9AA3AD"];
+const ACCENTS = ["#3FD8FF", "#5BC8E8", "#A8C4B4", "#E8C268"];
+const CAR_COLORS = ["#3FD8FF", "#5BC8E8", "#E8C268", "#9AA3AD"];
 const THEMES: { id: B2cTheme; label: string }[] = [
   { id: "abysse", label: "Abysse vert" },
   { id: "noir", label: "Noir profond" },

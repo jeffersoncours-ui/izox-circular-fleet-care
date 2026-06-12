@@ -16,11 +16,11 @@ export function HeroCar({ className = "" }: { className?: string }) {
       <defs>
         {/* Hachures NOCTRA — remplissage diagonal très discret de la carrosserie */}
         <pattern id="noctra" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
-          <line x1="0" y1="0" x2="0" y2="7" stroke="#3FE08F" strokeWidth="0.5" opacity="0.18" />
+          <line x1="0" y1="0" x2="0" y2="7" stroke="#3FD8FF" strokeWidth="0.5" opacity="0.18" />
         </pattern>
         <radialGradient id="heroGlow" cx="62%" cy="34%" r="60%">
-          <stop offset="0%" stopColor="#3FE08F" stopOpacity="0.16" />
-          <stop offset="100%" stopColor="#3FE08F" stopOpacity="0" />
+          <stop offset="0%" stopColor="#3FD8FF" stopOpacity="0.16" />
+          <stop offset="100%" stopColor="#3FD8FF" stopOpacity="0" />
         </radialGradient>
         <clipPath id="bodyClip">
           <path d="M82 248 L78 214 Q74 200 84 190 L110 176 Q120 160 140 152 L150 150 L260 150 Q272 150 280 160 L320 180 L350 190 Q396 196 396 212 L392 248 Z" />
@@ -31,7 +31,7 @@ export function HeroCar({ className = "" }: { className?: string }) {
       <rect x="0" y="0" width="460" height="320" fill="url(#heroGlow)" />
 
       {/* Ombre portée douce */}
-      <ellipse cx="236" cy="258" rx="170" ry="12" fill="#3FE08F" opacity="0.05" />
+      <ellipse cx="236" cy="258" rx="170" ry="12" fill="#3FD8FF" opacity="0.05" />
 
       {/* Berme de récupération (tray sous le véhicule) */}
       <path className="gv-stroke gv-dim" d="M96 262 L376 262 L360 286 L112 286 Z" />

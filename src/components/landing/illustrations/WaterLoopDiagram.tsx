@@ -32,8 +32,8 @@ export function WaterLoopDiagram({ className = "" }: { className?: string }) {
     >
       <defs>
         <radialGradient id="loopGlow" cx="50%" cy="58%" r="55%">
-          <stop offset="0%" stopColor="#3FE08F" stopOpacity="0.1" />
-          <stop offset="100%" stopColor="#3FE08F" stopOpacity="0" />
+          <stop offset="0%" stopColor="#3FD8FF" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#3FD8FF" stopOpacity="0" />
         </radialGradient>
       </defs>
       <rect x="20" y="20" width="320" height="390" fill="url(#loopGlow)" />
