@@ -264,6 +264,18 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   }
 }
 
+/* Bouton jaune — CTA secondaire (professionnel / abonnement) */
+.b2c-btn--yellow {
+  background: #ffe500;
+  color: #06120c;
+  font-weight: 700;
+  box-shadow: 0 0 calc(36px * var(--b2c-glow)) rgba(255, 229, 0, calc(0.28 * var(--b2c-glow)));
+}
+.b2c-btn--yellow:hover {
+  box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(255, 229, 0, calc(0.45 * var(--b2c-glow)));
+  transform: translateY(-1px);
+}
+
 /* ============================================================
    Reveals — progressive enhancement
    Par défaut tout est VISIBLE (si JS échoue, rien n'est caché).

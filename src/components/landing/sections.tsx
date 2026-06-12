@@ -103,8 +103,23 @@ export function WaterLoop() {
             </p>
           </div>
 
+          {/* Goutte + légendes courtes aux 4 stations */}
           <div className="rv rv-d1 mt-8">
-            <WaterLoopDiagram className="mx-auto w-full max-w-[400px]" />
+            <p className="b2c-mono mb-3 text-center text-[10px] uppercase tracking-[0.14em] text-[var(--b2c-tx-dim)]">
+              Pression optimisée — la saleté avec un minimum de volume
+            </p>
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-3 sm:gap-x-6">
+              <p className="text-right text-[11px] leading-snug text-[var(--b2c-tx-dim)]">
+                Capte 100&nbsp;% des eaux de lavage, rien dans le caniveau
+              </p>
+              <WaterLoopDiagram className="w-full max-w-[220px] sm:max-w-[260px]" />
+              <p className="text-[11px] leading-snug text-[var(--b2c-tx-dim)]">
+                Ratio d'eau réinjectée pour le futur
+              </p>
+            </div>
+            <p className="b2c-mono mt-3 text-center text-[10px] uppercase tracking-[0.14em] text-[var(--b2c-tx-dim)]">
+              Traitement des hydrocarbures et métaux lourds, maîtrise du déchet
+            </p>
           </div>
 
           <div className="mx-auto mt-10 grid max-w-3xl gap-8 sm:grid-cols-2">

@@ -59,7 +59,7 @@ export function AquaponieScene({ className = "" }: { className?: string }) {
           <line x1="0" y1="0" x2="0" y2="7" stroke="#3FD8FF" strokeWidth="0.5" opacity="0.16" />
         </pattern>
         <clipPath id="tankClip">
-          <path d="M146 310 L146 378 Q146 386 154 386 L386 386 Q394 386 394 378 L394 310 Z" />
+          <path d="M146 310 L146 378 Q146 386 154 386 L366 386 Q374 386 374 378 L374 310 Z" />
         </clipPath>
       </defs>
       <rect x="0" y="0" width="520" height="420" fill="url(#aquaGlow)" />
@@ -106,20 +106,20 @@ export function AquaponieScene({ className = "" }: { className?: string }) {
       <line className="gv-stroke" x1="120" y1="265" x2="400" y2="265" />
       <line className="gv-stroke gv-dim" x1="120" y1="271" x2="400" y2="271" opacity="0.5" />
 
-      {/* Bassin — cuve, rebord, eau hachurée, ligne d'eau */}
+      {/* Bassin — cuve centrée entre les rails (marge 20px de chaque côté) */}
       <path
         className="gv-stroke"
-        d="M140 300 L140 378 Q140 392 154 392 L386 392 Q400 392 400 378 L400 300"
+        d="M140 300 L140 378 Q140 392 154 392 L366 392 Q380 392 380 378 L380 300"
       />
-      <line className="gv-stroke" x1="132" y1="300" x2="408" y2="300" />
-      <rect x="146" y="312" width="248" height="74" fill="url(#aquaHatch)" clipPath="url(#tankClip)" />
-      <path className="gv-stroke" d="M146 312 Q 200 306 260 312 T 394 312" style={{ opacity: 0.9 }} />
-      <path className="gv-stroke gv-dim" d="M146 320 Q 210 316 270 320 T 394 320" />
+      <line className="gv-stroke" x1="132" y1="300" x2="388" y2="300" />
+      <rect x="146" y="312" width="228" height="74" fill="url(#aquaHatch)" clipPath="url(#tankClip)" />
+      <path className="gv-stroke" d="M146 312 Q 200 306 260 312 T 374 312" style={{ opacity: 0.9 }} />
+      <path className="gv-stroke gv-dim" d="M146 320 Q 210 316 270 320 T 374 320" />
 
       {/* Panneau de contrôle de la cuve */}
-      <rect className="gv-stroke gv-dim" x="332" y="330" width="50" height="44" rx="6" />
+      <rect className="gv-stroke gv-dim" x="326" y="330" width="44" height="44" rx="6" />
       {[340, 348, 356, 364].map((y) => (
-        <line key={y} className="gv-stroke gv-faint" x1="340" y1={y} x2="374" y2={y} />
+        <line key={y} className="gv-stroke gv-faint" x1="334" y1={y} x2="362" y2={y} />
       ))}
 
       {/* Poissons + bulles (clippés dans la cuve) */}

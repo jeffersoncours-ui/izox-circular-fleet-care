@@ -3,7 +3,7 @@
 // L'illustration gravure R5 E-Tech arrive en Phase 2b (placeholder halo ici).
 
 import { Link } from "@tanstack/react-router";
-import { Droplets, Leaf, ShieldCheck, ArrowDown, Building2 } from "lucide-react";
+import { Droplets, Leaf, ShieldCheck, ArrowDown } from "lucide-react";
 import { ZONE_INTERVENTION } from "@/lib/pricing-b2c";
 import { useTweaks } from "./useTweaks";
 import { HeroCar } from "./illustrations/HeroCar";
@@ -48,10 +48,9 @@ export function Hero() {
 
           <Link
             to="/entreprises"
-            className="rv mt-5 inline-flex items-center gap-1.5 text-sm text-[var(--b2c-tx-dim)] underline-offset-4 transition-colors hover:text-[var(--b2c-tx)] hover:underline"
+            className="rv b2c-btn b2c-btn--yellow mt-2 w-full sm:w-auto"
           >
-            <Building2 className="h-3.5 w-3.5" />
-            Je gère une flotte de véhicules
+            Professionnel ou souhaitant un abonnement
           </Link>
 
           {/* Bandeau confiance */}

@@ -65,12 +65,13 @@ export function installFilDeLeau(root: HTMLElement): () => void {
   };
 }
 
-/* ── 2. Boucle d'eau (tuyau qui se remplit + stations + goutte) ── */
+/* ── 2. Boucle d'eau (tuyau qui se remplit + eau montante + stations + goutte) ── */
 export function installWaterLoop(section: HTMLElement): () => void {
   const draw = section.querySelector<SVGPathElement>("[data-loop-draw]");
   const sheen = section.querySelector<SVGPathElement>("[data-loop-sheen]");
   const drop = section.querySelector<SVGCircleElement>("[data-loop-drop]");
   const stations = Array.from(section.querySelectorAll<SVGGElement>("[data-station]"));
+  const waterRect = section.querySelector<SVGRectElement>("[data-water-rect]");
   if (!draw) return () => {};
 
   const len = draw.getTotalLength();
@@ -90,6 +91,12 @@ export function installWaterLoop(section: HTMLElement): () => void {
     for (const st of stations) {
       const t = parseFloat(st.getAttribute("data-station-t") ?? "1");
       st.classList.toggle("lit", fill >= t);
+    }
+    // Eau montante : le clipRect monte de y=388 (vide) vers y=26 (plein).
+    if (waterRect) {
+      const top = 26, bot = 388, h = bot - top;
+      waterRect.setAttribute("y", String(bot - h * fill));
+      waterRect.setAttribute("height", String(Math.max(0, h * fill)));
     }
   };
 

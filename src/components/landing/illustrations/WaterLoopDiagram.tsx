@@ -1,10 +1,8 @@
-// Boucle d'eau — goutte dont le CONTOUR se dessine au scroll : un point
-// lumineux part du sommet et parcourt le bord (descente gauche → fond →
-// remontée droite), comme un tuyau qui se remplit. Le remplissage et la
-// position du point sont pilotés par installWaterLoop (scrollScenes) via
-// les data-attributes [data-loop-draw] / [data-loop-drop] / [data-station].
-// Les chiffres (~50 L / 80 % / 50 %) sont rendus en HTML autour du SVG
-// (sections.tsx) — ici uniquement la goutte + les points d'étape.
+// Boucle d'eau — goutte dont le CONTOUR se dessine au scroll + intérieur qui
+// se remplit comme un verre d'eau (bas→haut). Le remplissage est piloté par
+// installWaterLoop via [data-water-rect] (clipPath dynamique) et [data-loop-draw]
+// (stroke-dashoffset). Les chiffres (~50 L / 80 % / 50 %) + légendes de station
+// sont rendus en HTML autour du SVG (sections.tsx).
 
 // Tracé de la goutte : sommet (180,26) → flanc gauche → fond circulaire
 // (r=120, centre 180,268) → flanc droit → retour au sommet.
@@ -27,7 +25,7 @@ export function WaterLoopDiagram({ className = "" }: { className?: string }) {
       className={className}
       fill="none"
       role="img"
-      aria-label="Goutte d'eau dont le contour se dessine au fil du défilement : l'eau parcourt la boucle de lavage, récupération et recyclage"
+      aria-label="Goutte d'eau dont l'intérieur se remplit de bas en haut au fil du défilement : l'eau parcourt la boucle de lavage, récupération et recyclage"
       data-loop-svg
     >
       <defs>
@@ -35,12 +33,23 @@ export function WaterLoopDiagram({ className = "" }: { className?: string }) {
           <stop offset="0%" stopColor="#3FD8FF" stopOpacity="0.1" />
           <stop offset="100%" stopColor="#3FD8FF" stopOpacity="0" />
         </radialGradient>
+        {/* Clip dynamique : le rect monte de y=388 vers y=26 au scroll */}
+        <clipPath id="waterLevel">
+          <rect data-water-rect x="-20" y="388" width="400" height="0" />
+        </clipPath>
+        {/* Dégradé eau : plus opaque en bas (fond du verre), transparent en haut */}
+        <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--b2c-accent)" stopOpacity="0.07" />
+          <stop offset="100%" stopColor="var(--b2c-accent)" stopOpacity="0.28" />
+        </linearGradient>
       </defs>
       <rect x="20" y="20" width="320" height="390" fill="url(#loopGlow)" />
 
-      {/* Remplissage doux + piste du contour */}
+      {/* Contour fantôme (verre vide) + piste */}
       <path className="drop-fill" d={LOOP_PATH} />
       <path className="drop-track" d={LOOP_PATH} />
+      {/* Eau montante — remplissage bas→haut piloté par installWaterLoop */}
+      <path d={LOOP_PATH} fill="url(#waterGrad)" clipPath="url(#waterLevel)" />
       {/* Contour qui se dessine (dasharray posé en JS au scroll) */}
       <path className="loop-draw" d={LOOP_PATH} data-loop-draw />
 
