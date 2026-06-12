@@ -51,6 +51,9 @@
   font-family: var(--b2c-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* clip (et non hidden) : coupe les débordements horizontaux des halos/glow
+     sans créer de conteneur de scroll — préserve la navbar sticky. */
+  overflow-x: clip;
 }
 
 /* Fond du body pendant que la landing est montée (évite le seam clair

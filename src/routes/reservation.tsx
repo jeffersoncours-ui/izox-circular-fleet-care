@@ -1,12 +1,12 @@
-// Tunnel de réservation B2C — Phase 2 du plan (tasks/brief-landing-b2c.md §6).
-// Phase 1 : page d'attente avec capture email (zéro lead perdu) pour que le
-// CTA "Réserver" de la landing ne mène jamais à un 404.
+// Tunnel de réservation B2C — design v2 dark-native.
+// Phase 2 actuelle : page d'attente avec capture email (zéro lead perdu) — le
+// CTA "Réserver" de la landing ne mène jamais à un 404. Le tunnel multi-step +
+// paiement Stripe sera implémenté quand le compte Stripe sera configuré.
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { CalendarClock, Loader2, MailCheck, ArrowLeft } from "lucide-react";
 import { PublicLayout } from "@/components/landing/PublicLayout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,42 +49,42 @@ function ReservationPage() {
 
   return (
     <PublicLayout>
-      <section className="py-16 sm:py-24">
-        <div className="mx-auto max-w-xl px-4 sm:px-6">
+      <section className="b2c-section">
+        <div className="b2c-container max-w-xl">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--b2c-tx-dim)] hover:text-[var(--b2c-tx)]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Retour à l'accueil
           </Link>
 
-          <div className="mt-8 rounded-lg border border-border bg-card p-8 text-center shadow-card">
+          <div className="b2c-card mt-8 p-8 text-center">
             {sent ? (
               <>
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-soft">
-                  <MailCheck className="h-6 w-6 text-success" />
+                <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[var(--primary-soft)]">
+                  <MailCheck className="h-6 w-6 text-[var(--b2c-accent)]" />
                 </div>
-                <h1 className="mt-4 font-display text-xl font-bold tracking-tight text-foreground">
-                  C'est noté !
+                <h1 className="b2c-display--md mt-4 !text-[1.7rem] text-[var(--b2c-tx)]">
+                  C'est <em className="b2c-accent">noté</em> !
                 </h1>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Vous serez parmi les premiers prévenus dès l'ouverture des réservations
-                  en ligne. À très vite.
+                <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+                  Vous serez parmi les premiers prévenus dès l'ouverture des réservations en
+                  ligne. À très vite.
                 </p>
               </>
             ) : (
               <>
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft">
-                  <CalendarClock className="h-6 w-6 text-primary" />
+                <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[var(--primary-soft)]">
+                  <CalendarClock className="h-6 w-6 text-[var(--b2c-accent)]" />
                 </div>
-                <h1 className="mt-4 font-display text-xl font-bold tracking-tight text-foreground">
-                  Les réservations en ligne ouvrent très bientôt
+                <h1 className="b2c-display--md mt-4 !text-[1.7rem] text-[var(--b2c-tx)]">
+                  Les réservations en ligne ouvrent <em className="b2c-accent">très bientôt</em>
                 </h1>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Le tunnel de réservation avec paiement sécurisé est en cours de
-                  finalisation. Laissez-nous votre email : on vous prévient dès
-                  l'ouverture — et vous passerez en priorité.
+                <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+                  Le tunnel de réservation avec paiement sécurisé est en cours de finalisation.
+                  Laissez-nous votre email : on vous prévient dès l'ouverture — et vous passerez
+                  en priorité.
                 </p>
 
                 <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-left">
@@ -110,13 +110,13 @@ function ReservationPage() {
                       onChange={(e) => setCodePostal(e.target.value.replace(/\D/g, ""))}
                     />
                   </div>
-                  <Button type="submit" variant="izox" className="w-full" disabled={sending}>
+                  <button type="submit" className="b2c-btn b2c-btn--primary w-full" disabled={sending}>
                     {sending && <Loader2 className="h-4 w-4 animate-spin" />}
                     Me prévenir de l'ouverture
-                  </Button>
-                  <p className="text-[11px] leading-relaxed text-muted-foreground">
-                    Votre email sert uniquement à vous prévenir de l'ouverture des
-                    réservations. Pas de newsletter, pas de revente.
+                  </button>
+                  <p className="text-[11px] leading-relaxed text-[var(--b2c-tx-faint)]">
+                    Votre email sert uniquement à vous prévenir de l'ouverture des réservations.
+                    Pas de newsletter, pas de revente.
                   </p>
                 </form>
               </>

@@ -39,10 +39,24 @@ Le `:root` global de `styles.css` reste light, intact.
 - [x] Tout persisté via `useTweaks` (localStorage), scopé `.izox-b2c`
 - [x] Validation SSR : toggle présent sur `/`, **absent sur `/login`** (CRM intact), 0 erreur
 
-### Phase 2e — Responsive + perf (à venir)
-- [ ] Tests 390px, lazy-load animations, FCP, CLS < 0.1
+### Phase 2e — Responsive + perf ✅ (session 33)
+- [x] `overflow-x: clip` sur `.izox-b2c` (coupe les halos sans casser la navbar sticky)
+- [x] Layout déjà responsive : clamp() sur titres/sections, grids `sm:`/`lg:`, fil masqué <860px, illustrations SVG viewBox (height auto → 0 CLS)
+- [x] FCP protégé : contenu SSR, animations en useEffect post-hydratation (jamais bloquantes)
+- [x] Scroll listeners rAF-throttlés + passive ; CountUp via IntersectionObserver
+- [x] prefers-reduced-motion : état final figé partout (déjà en place)
 
-### Phase 2f — Refonte complète /reservation (tunnel) + /entreprises (à venir)
+### Phase 2f — /entreprises + /reservation dark-native ✅ (session 33)
+- [x] **/entreprises** : réécrit dark-native (b2c-display serif + accent, b2c-kicker, b2c-card, b2c-btn glow, CountUp sur stats RSE, reveals)
+- [x] **/reservation** : page d'attente dark-native (b2c-card, serif accent, b2c-btn) — capture email conservée
+- [x] Validation SSR : `/entreprises` + `/reservation` HTTP 200, classes b2c présentes, 0 erreur
+
+### Phase 2f (suite) — Tunnel de réservation complet ⏳ BLOQUÉ (compte Stripe requis)
+- [ ] Multi-step form (code postal/gate 25km, véhicule, formule, options, prix direct, créneau, coordonnées, paiement)
+- [ ] Cuve de progression CSS
+- [ ] Moteur de réservation temps réel (table interventions partagée B2B/B2C, invariant 2 slots/demi-journée, atomicité SELECT FOR UPDATE, hold 10 min)
+- [ ] Paiement Stripe (acompte 30 % / intégral) + webhook + emails Resend
+- [ ] **Prérequis utilisateur** : créer le compte Stripe + fournir les clés (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, VITE_STRIPE_PUBLISHABLE_KEY)
 
 ---
 

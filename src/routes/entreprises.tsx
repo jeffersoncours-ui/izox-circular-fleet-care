@@ -1,5 +1,5 @@
-// Route B2B publique — argumentaire flotte + capture de lead (brief §10).
-// Pas de réservation en ligne ici : lead → rappel commercial.
+// Route B2B publique — design v2 dark-native. Argumentaire flotte + capture de
+// lead (brief §10). Pas de réservation en ligne ici : lead → rappel commercial.
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
@@ -14,12 +14,12 @@ import {
 } from "lucide-react";
 import { PublicLayout } from "@/components/landing/PublicLayout";
 import { SectionHeading } from "@/components/landing/sections";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
+import { CountUp } from "@/components/landing/CountUp";
 
 export const Route = createFileRoute("/entreprises")({
   head: () => ({
@@ -46,56 +46,54 @@ function EntreprisesPage() {
   return (
     <PublicLayout>
       {/* Hero B2B */}
-      <section className="py-14 sm:py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <section className="b2c-section">
+        <div className="b2c-container">
           <div className="max-w-3xl">
-            <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-primary">
-              IZOX Entreprises · Flottes & professionnels
-            </p>
-            <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
-              Une flotte propre, un budget maîtrisé,
-              <br className="hidden sm:block" />
-              <span className="text-primary"> un impact mesuré.</span>
+            <p className="b2c-kicker rv">IZOX Entreprises · Flottes &amp; professionnels</p>
+            <h1 className="b2c-display rv rv-d1 mt-5 !text-[clamp(2.2rem,6vw,3.8rem)] text-[var(--b2c-tx)]">
+              Une flotte propre, un budget maîtrisé,{" "}
+              <em className="b2c-accent">un impact mesuré.</em>
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
-              Nous entretenons vos véhicules directement sur votre site, avec une eau
-              recyclée en circuit fermé et un reporting RSE chiffré que vous pouvez
-              présenter à vos clients et partenaires.
+            <p className="b2c-lead rv rv-d2 mt-5 max-w-xl">
+              Nous entretenons vos véhicules directement sur votre site, avec une eau recyclée
+              en circuit fermé et un reporting RSE chiffré que vous pouvez présenter à vos
+              clients et partenaires.
             </p>
-            <a href="#contact" className="mt-8 inline-block">
-              <Button variant="izox" size="lg">
-                Être rappelé par un conseiller
-              </Button>
+            <a href="#contact" className="b2c-btn b2c-btn--primary rv mt-8">
+              Être rappelé par un conseiller
             </a>
           </div>
         </div>
       </section>
 
       {/* Leviers B2B */}
-      <section className="bg-muted/40 py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <section className="b2c-section border-t border-[var(--b2c-line)]">
+        <div className="b2c-container">
           <SectionHeading
             kicker="Pourquoi externaliser chez IZOX"
             title="Pensé pour les gestionnaires de flotte"
           />
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <Lever
-              icon={<TrendingDown className="h-5 w-5 text-primary" />}
+              icon={<TrendingDown className="h-5 w-5 text-[var(--b2c-accent)]" />}
               title="Coûts dégressifs"
               text="Paliers de remise selon la taille de votre flotte : plus vous avez de véhicules, plus le prix unitaire baisse."
             />
             <Lever
-              icon={<CalendarCheck className="h-5 w-5 text-primary" />}
+              delay="rv-d1"
+              icon={<CalendarCheck className="h-5 w-5 text-[var(--b2c-accent)]" />}
               title="Fiabilité opérationnelle"
               text="Passages planifiés à l'avance, intervention sur votre site, suivi de chaque véhicule dans votre espace client."
             />
             <Lever
-              icon={<BarChart3 className="h-5 w-5 text-primary" />}
+              delay="rv-d1"
+              icon={<BarChart3 className="h-5 w-5 text-[var(--b2c-accent)]" />}
               title="Reporting RSE"
               text="Eau économisée, pollution évitée, CO₂ : un tableau de bord d'impact exportable pour votre communication."
             />
             <Lever
-              icon={<FileCheck className="h-5 w-5 text-primary" />}
+              delay="rv-d2"
+              icon={<FileCheck className="h-5 w-5 text-[var(--b2c-accent)]" />}
               title="Traçabilité complète"
               text="Photos avant/après, checklists signées, factures détaillées : chaque intervention est documentée."
             />
@@ -103,24 +101,29 @@ function EntreprisesPage() {
         </div>
       </section>
 
-      {/* Preuve RSE réutilisée */}
-      <section className="bg-primary py-14 sm:py-16">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid gap-8 sm:grid-cols-3">
+      {/* Preuve RSE */}
+      <section className="b2c-section border-t border-[var(--b2c-line)]">
+        <div className="b2c-container">
+          <p className="b2c-kicker rv">Des chiffres réels, repris dans votre bilan RSE</p>
+          <div className="mt-8 grid gap-10 sm:grid-cols-3">
             <B2bStat figure="2 à 4×" label="moins d'eau qu'un lavage au jet (en moyenne, sur nos interventions)" />
-            <B2bStat figure={`${CHIFFRES_EAU.pctRecupere} %`} label="de l'eau récupérée sous le véhicule" />
-            <B2bStat figure={`${CHIFFRES_EAU.pctReinjecte} %`} label="réinjectée dans la boucle après recyclage" />
+            <B2bStat
+              figure={<CountUp value={CHIFFRES_EAU.pctRecupere} suffix=" %" />}
+              label="de l'eau récupérée sous le véhicule"
+              delay="rv-d1"
+            />
+            <B2bStat
+              figure={<CountUp value={CHIFFRES_EAU.pctReinjecte} suffix=" %" />}
+              label="réinjectée dans la boucle après recyclage"
+              delay="rv-d2"
+            />
           </div>
-          <p className="mt-6 text-sm text-primary-foreground/80">
-            Des chiffres mesurés sur le terrain — que votre entreprise peut reprendre
-            dans son propre bilan RSE, preuves à l'appui.
-          </p>
         </div>
       </section>
 
       {/* Formulaire lead */}
-      <section id="contact" className="scroll-mt-20 py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <section id="contact" className="b2c-section scroll-mt-20 border-t border-[var(--b2c-line)]">
+        <div className="b2c-container">
           <div className="grid gap-10 lg:grid-cols-2">
             <div>
               <SectionHeading
@@ -128,15 +131,15 @@ function EntreprisesPage() {
                 title="Demandez votre étude personnalisée"
                 subtitle="Laissez-nous vos coordonnées : un conseiller vous rappelle sous 48 h ouvrées avec une proposition adaptée à votre flotte, et vous envoie notre plaquette commerciale."
               />
-              <ul className="mt-6 space-y-3">
+              <ul className="rv mt-6 space-y-3">
                 {[
                   "Abonnements 2 ou 4 passages par mois et par véhicule",
                   "Remises par paliers selon la taille de la flotte",
                   "Intervention sur votre site, sans immobiliser vos équipes",
                   "Espace client en ligne : planning, factures, impact RSE",
                 ].map((t) => (
-                  <li key={t} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <li key={t} className="flex items-start gap-2.5 text-sm text-[var(--b2c-tx-dim)]">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--b2c-accent)]" />
                     {t}
                   </li>
                 ))}
@@ -150,27 +153,43 @@ function EntreprisesPage() {
   );
 }
 
-function Lever({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
+function Lever({
+  icon,
+  title,
+  text,
+  delay,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+  delay?: string;
+}) {
   return (
-    <div className="rounded-lg border border-border bg-card p-5 shadow-card">
-      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary-soft">
+    <div className={`b2c-card rv ${delay ?? ""} p-5`}>
+      <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--primary-soft)]">
         {icon}
       </div>
-      <h3 className="mt-3 font-display text-base font-bold tracking-tight text-foreground">
+      <h3 className="mt-3 font-[var(--b2c-sans)] text-base font-bold text-[var(--b2c-tx)]">
         {title}
       </h3>
-      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{text}</p>
+      <p className="mt-1.5 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{text}</p>
     </div>
   );
 }
 
-function B2bStat({ figure, label }: { figure: string; label: string }) {
+function B2bStat({
+  figure,
+  label,
+  delay,
+}: {
+  figure: React.ReactNode;
+  label: string;
+  delay?: string;
+}) {
   return (
-    <div>
-      <p className="font-mono text-3xl font-bold tracking-tight text-primary-foreground sm:text-4xl">
-        {figure}
-      </p>
-      <p className="mt-2 text-sm leading-relaxed text-primary-foreground/80">{label}</p>
+    <div className={`rv ${delay ?? ""}`}>
+      <p className="b2c-figure b2c-glow-text !text-[clamp(2.4rem,6vw,3.4rem)]">{figure}</p>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{label}</p>
     </div>
   );
 }
@@ -186,8 +205,10 @@ function LeadForm() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set =
+    (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -205,29 +226,26 @@ function LeadForm() {
 
   if (sent) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-card p-10 text-center shadow-card">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success-soft">
-          <CheckCircle2 className="h-6 w-6 text-success" />
+      <div className="b2c-card flex flex-col items-center justify-center p-10 text-center">
+        <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--primary-soft)]">
+          <CheckCircle2 className="h-6 w-6 text-[var(--b2c-accent)]" />
         </div>
-        <h3 className="mt-4 font-display text-lg font-bold tracking-tight text-foreground">
+        <h3 className="mt-4 font-[var(--b2c-sans)] text-lg font-bold text-[var(--b2c-tx)]">
           Demande bien reçue
         </h3>
-        <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-          Un conseiller IZOX vous rappelle sous 48 h ouvrées avec une proposition
-          adaptée à votre flotte. Merci de votre confiance.
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+          Un conseiller IZOX vous rappelle sous 48 h ouvrées avec une proposition adaptée à
+          votre flotte. Merci de votre confiance.
         </p>
       </div>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-card sm:p-8"
-    >
+    <form onSubmit={handleSubmit} className="b2c-card rv space-y-4 p-6 sm:p-8">
       <div className="flex items-center gap-2">
-        <Building2 className="h-4 w-4 text-primary" />
-        <p className="font-display text-base font-bold tracking-tight text-foreground">
+        <Building2 className="h-4 w-4 text-[var(--b2c-accent)]" />
+        <p className="font-[var(--b2c-sans)] text-base font-bold text-[var(--b2c-tx)]">
           Votre flotte
         </p>
       </div>
@@ -238,7 +256,13 @@ function LeadForm() {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="societe">Société</Label>
-          <Input id="societe" required value={form.societe} onChange={set("societe")} placeholder="Transports Dupont" />
+          <Input
+            id="societe"
+            required
+            value={form.societe}
+            onChange={set("societe")}
+            placeholder="Transports Dupont"
+          />
         </div>
       </div>
       <div className="space-y-1.5">
@@ -247,7 +271,7 @@ function LeadForm() {
           id="taille"
           value={form.taille_flotte}
           onChange={set("taille_flotte")}
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="flex h-9 w-full rounded-md border border-[var(--b2c-line)] bg-[var(--b2c-bg)] px-3 py-1 text-sm text-[var(--b2c-tx)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--b2c-accent)]"
         >
           {TAILLES_FLOTTE.map((t) => (
             <option key={t} value={t}>
@@ -280,13 +304,13 @@ function LeadForm() {
           />
         </div>
       </div>
-      <Button type="submit" variant="izox" className="w-full" disabled={sending}>
+      <button type="submit" className="b2c-btn b2c-btn--primary w-full" disabled={sending}>
         {sending && <Loader2 className="h-4 w-4 animate-spin" />}
         Être rappelé par un conseiller
-      </Button>
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
-        Vos coordonnées sont utilisées uniquement pour vous recontacter au sujet de
-        votre demande. Aucune prospection sans votre accord.
+      </button>
+      <p className="text-[11px] leading-relaxed text-[var(--b2c-tx-faint)]">
+        Vos coordonnées sont utilisées uniquement pour vous recontacter au sujet de votre
+        demande. Aucune prospection sans votre accord.
       </p>
     </form>
   );
