@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
 import { WaterLoopDiagram } from "./illustrations/WaterLoopDiagram";
-import { AquaponieScene } from "./illustrations/AquaponieScene";
-import { installWaterLoop, installAquaponie } from "./scrollScenes";
+import { AquaponieVideo } from "./illustrations/AquaponieVideo";
+import { installWaterLoop } from "./scrollScenes";
 import { CountUp } from "./CountUp";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
@@ -293,14 +293,9 @@ export function Vision() {
     },
   ];
 
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (ref.current) return installAquaponie(ref.current);
-  }, []);
-
   return (
     <section className="b2c-section border-t border-[var(--b2c-line)]">
-      <div className="b2c-container" ref={ref}>
+      <div className="b2c-container">
         <div className="b2c-card rv p-6 sm:p-10">
           <div className="inline-flex items-center rounded-full border border-[var(--b2c-line-strong)] bg-[var(--primary-soft)] px-3 py-1">
             <span className="b2c-kicker">Notre feuille de route</span>
@@ -314,10 +309,10 @@ export function Vision() {
             Ce n'est pas encore en place : c'est le cap que nous nous sommes fixé.
           </p>
 
-          {/* Scène aquaponie — poissons qui nagent au scroll (Phase 2c).
+          {/* Vidéo aquaponie — bassin avec plantes et poissons sur fond noir éliminé par Canvas chroma-key.
               -mx-6 mobile : annule le padding de la card pour un rendu pleine largeur. */}
-          <div className="rv -mx-6 mt-8 sm:mx-0" data-aqua-section>
-            <AquaponieScene className="mx-auto w-full max-w-[480px]" />
+          <div className="rv -mx-6 mt-8 sm:mx-0">
+            <AquaponieVideo className="mx-auto w-full max-w-[480px]" />
           </div>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
