@@ -2,6 +2,28 @@
 
 ---
 
+## Session 2026-06-13 (38) — Hero R5 vidéo : Canvas chroma-key + trim artefact final
+
+Demande utilisateur : remplacer l'illustration statique (masque luminance PNG) par une **vidéo animée** (R5 E-Tech nettoyée par l'utilisateur), avec chroma-key Canvas pour éliminer le fond noir complètement (garantir la transparence sur tous les navigateurs). Dernier artefact : boîte noire visible en fin du clip (drawbox pour masquer l'étoile) — réduire la vidéo pour l'éviter.
+
+- [x] **Analyse approche A/B** : mix-blend-mode CSS insuffisant (fond noir reste visible malgré screen/lighten). Solution = Canvas chroma-key propre.
+- [x] **HeroCar.tsx refonte** : `<canvas>` visible + `<video>` cachée hors-écran. Chaque frame vidéo traitée en temps réel : `getImageData` → alpha keying basé sur `max(r,g,b)` (seuils LO=18 transparent, HI=64 opaque, dégradé lissé entre) → `putImageData`. Traitement sous-échantillonné 676×370 pour perf mobile. `requestVideoFrameCallback` avec fallback rAF. `prefers-reduced-motion` → frame figée à t=1.0s (voiture visible).
+- [x] **Erreur 1 — flash noir au démarrage** : poster initial était noir. Fix : utiliser frame à t=1s avec voiture visible (58 KB JPG → retirer du commit final).
+- [x] **Erreur 2 — fond noir persistant** : mix-blend-mode CSS imprévisible. Fix : Canvas chroma-key garantit 100% transparence du fond (49% des pixels alpha 0) + filigrane passe intégralement derrière.
+- [x] **Erreur 3 — artefact noir en fin (drawbox étoile)** : visible sur "RETOUR LOCAL". Fix : réduire vidéo de 4.04s → 3.5s (ffmpeg -t 3.5, re-encode H.264 web-optimisé). Artefact final supprimé, voiture + jet d'eau + boucle conservés.
+- [x] `npm run build` ✓ · tsc 0 erreur · 3 commits pushés sur `claude/izox-review-plan-b0b2ul` · Merge main imminent
+
+### Review session 38
+
+**Livré — Hero R5 vidéo avec Canvas chroma-key** :
+- **Canvas API chroma-key** : approche robuste indépendante du navigateur (pas mix-blend-mode). Alg luminance : max(r,g,b) ≤ 18 → transparent, ≥ 64 → opaque, dégradé lissé entre (49% des pixels alpha 0). Prefers-reduced-motion = frame t=1s figée.
+- **Optimisation perf** : sous-échantillonnage 676×370, traitement canvas redimensionné en CSS 100%, `willReadFrequently: true` pour hint browser.
+- **Trim vidéo** : ffmpeg -t 3.5 appliquée localement (env cloud), boîte noire drawbox (x=960:50×50 y=495) éliminée de la fin du clip. Durée finale 3.5s, voiture animée + water loop intact.
+- **Assets** : ancien poster noir + masque PNG supprimés. Source unique = `public/hero-car-r5.mp4` 876 KB (trimée).
+- **Validation** : SSR build 0 erreur. Isolation CRM confirmée (aucun Canvas/chroma dans `/login`). Render Canvas = client-side JS (pas SSR blocking).
+
+---
+
 ## Session 2026-06-13 (37) — Hero R5 : masque luminance + couleur TweakPanel
 
 Demande utilisateur : remplacer l'illustration SVG gravure (jugée trop simpliste)
