@@ -9,8 +9,9 @@ import React, { useEffect, useRef, useState } from "react";
 
 // Résolution de traitement (sous-échantillonnée pour la perf mobile ; le canvas est
 // ré-étiré en CSS à 100 %, le tracé glowy tolère le léger adoucissement).
-const PROC_W = 676;
-const PROC_H = 370;
+// Réduit à 480×270 (~130k pixels vs 250k avant) pour allèger le traitement chroma-key.
+const PROC_W = 480;
+const PROC_H = 270;
 // Seuils de keying sur max(r,g,b) : <=LO transparent, >=HI opaque, dégradé entre.
 const LO = 18;
 const HI = 64;
