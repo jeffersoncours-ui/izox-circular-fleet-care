@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
@@ -22,61 +23,107 @@ type PageState = "loading" | "ready" | "error";
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
+  // Capture URL params synchronously at init, before Supabase / the router
+  // can clean them via history.replaceState.
+  const [initialUrl] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    return {
+      error: params.get("error"),
+      errorDescription: params.get("error_description"),
+      // New robust flow: token_hash + type in the query string.
+      tokenHash: params.get("token_hash"),
+      type: params.get("type"),
+      // Legacy implicit flow (in-flight emails): code in query / token in hash.
+      hasCode: !!params.get("code"),
+      hasHashToken: hash.includes("access_token") || hash.includes("type=recovery"),
+    };
+  });
   const [pageState, setPageState] = useState<PageState>("loading");
   const [errorMessage, setErrorMessage] = useState("Lien invalide ou expiré.");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [saving, setSaving] = useState(false);
+  // Guard so verifyOtp runs only once (StrictMode double-mount, refresh).
+  const verifyStarted = useRef(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const hash = window.location.hash;
+    let active = true;
+    const { error, errorDescription, tokenHash, type, hasCode, hasHashToken } = initialUrl;
 
-    // Supabase redirects with ?error=access_denied when the token is expired
-    if (params.get("error")) {
-      const desc = params.get("error_description") ?? "Lien invalide ou expiré";
-      setErrorMessage(desc.replace(/\+/g, " "));
+    // Supabase redirects with ?error=access_denied when the token is expired.
+    if (error) {
+      const desc = (errorDescription ?? "Lien invalide ou expiré").replace(/\+/g, " ");
+      setErrorMessage(desc);
       setPageState("error");
       return;
     }
 
-    const hasCode = !!params.get("code");
-    const hasToken = hash.includes("access_token");
-
-    // No recovery data in URL — this page should not be accessed directly
-    if (!hasCode && !hasToken) {
-      navigate({ to: "/login" });
-      return;
+    // --- Primary path: token_hash in the query string → verifyOtp ---
+    // This goes directly to our app (no Supabase /verify redirect, no URL hash),
+    // so it survives SSR and any server-side redirect. Independent of the
+    // Supabase redirect allowlist.
+    if (tokenHash) {
+      if (verifyStarted.current) return;
+      verifyStarted.current = true;
+      supabase.auth
+        .verifyOtp({ token_hash: tokenHash, type: (type as EmailOtpType) || "recovery" })
+        .then(({ error: verifyErr }) => {
+          if (!active) return;
+          if (verifyErr) {
+            setErrorMessage("Ce lien est invalide ou a déjà été utilisé. Veuillez en redemander un.");
+            setPageState("error");
+          } else {
+            // Strip the token from the URL so a refresh doesn't retry a
+            // now-consumed one-time token.
+            window.history.replaceState({}, "", window.location.pathname);
+            setPageState("ready");
+          }
+        });
+      return () => {
+        active = false;
+      };
     }
 
-    // Supabase-js exchanges the code/token automatically; wait for the event.
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
-        setPageState("ready");
-      }
-    });
-
-    // Fallback: if the session is already established by the time this runs
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setPageState("ready");
-    });
-
-    // Safety net: if nothing fires within 8s, show an error
-    const timer = setTimeout(() => {
-      setPageState((prev) => {
-        if (prev === "loading") {
-          setErrorMessage("Impossible de valider le lien. Veuillez en redemander un.");
-          return "error";
+    // --- Legacy path: implicit-flow hash / PKCE code (in-flight emails) ---
+    if (hasCode || hasHashToken) {
+      const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+          setPageState("ready");
         }
-        return prev;
       });
-    }, 8000);
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (active && session) setPageState("ready");
+      });
+      const timer = setTimeout(() => {
+        setPageState((prev) => {
+          if (prev === "loading") {
+            setErrorMessage("Impossible de valider le lien. Veuillez en redemander un.");
+            return "error";
+          }
+          return prev;
+        });
+      }, 8000);
+      return () => {
+        active = false;
+        sub.subscription.unsubscribe();
+        clearTimeout(timer);
+      };
+    }
+
+    // --- No token in URL: maybe the session is already established ---
+    // (e.g. user refreshed after verifyOtp cleaned the URL). Otherwise this
+    // page was reached directly → send back to login.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      if (session) setPageState("ready");
+      else navigate({ to: "/login" });
+    });
 
     return () => {
-      sub.subscription.unsubscribe();
-      clearTimeout(timer);
+      active = false;
     };
-  }, [navigate]);
+  }, [navigate, initialUrl]);
 
   const handleSetPassword = async (e: FormEvent) => {
     e.preventDefault();
@@ -90,11 +137,14 @@ function ResetPasswordPage() {
     }
     setSaving(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast.error("Erreur : " + error.message);
     } else {
-      toast.success("Mot de passe défini avec succès — bienvenue !");
+      // Destroy the recovery session — user must authenticate explicitly.
+      await supabase.auth.signOut();
+      setSaving(false);
+      toast.success("Mot de passe défini. Connectez-vous pour accéder à votre espace.");
       navigate({ to: "/login" });
     }
   };

@@ -239,3 +239,38 @@
   .animate-shake      { animation: shake 0.4s ease; }
   .animate-pulse-dot  { animation: pulseDot 1.2s ease-in-out infinite; }
 }
+
+/* ============================================
+   Impression facture — n'imprimer que .facture-print-root
+   (page client /client/factures/$id + dialog admin)
+   ============================================ */
+@media print {
+  body * { visibility: hidden; }
+  .facture-print-root,
+  .facture-print-root * { visibility: visible; }
+  .facture-print-root {
+    /* position:fixed breaks out of DialogContent overflow-y:auto clipping */
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    /* Re-scope light-mode variables: overrides .dark on <html>/<body> */
+    color-scheme: light;
+    --foreground: #111827;
+    --card: #ffffff;
+    --card-foreground: #111827;
+    --muted: #F3F4F6;
+    --muted-foreground: #6B7280;
+    --primary: #1B4332;
+    --primary-soft: #E7EFEA;
+    --border: #E5E7EB;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+  }
+  .no-print { display: none !important; }
+}

@@ -3,11 +3,54 @@
 // Sends a branded welcome email via Resend with a "set password" link.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://izox.fr";
+
+function corsFor(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? SITE_URL;
+  let allowed = SITE_URL;
+  try {
+    const u = new URL(origin);
+    const siteHost = new URL(SITE_URL).hostname;
+    if (u.hostname === siteHost || u.hostname.endsWith(".vercel.app")) {
+      allowed = origin;
+    }
+  } catch { /* ignore */ }
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+function safeRedirectTo(raw: unknown): string {
+  const fallback = `${SITE_URL}/reset-password`;
+  if (!raw || typeof raw !== "string") return fallback;
+  try {
+    const parsed = new URL(raw);
+    const siteHost = new URL(SITE_URL).hostname;
+    if (parsed.hostname === siteHost || parsed.hostname.endsWith(".vercel.app")) {
+      return raw;
+    }
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+// Build a "set password" link that points DIRECTLY at our app with the
+// one-time token in the query string (token_hash + type), instead of the
+// Supabase action_link which goes through /auth/v1/verify and redirects with
+// a URL hash (#access_token=...). The hash is client-only and is silently
+// dropped by any server-side redirect, and depends on the Supabase redirect
+// allowlist. The query-string form survives SSR and redirects, and the page
+// calls supabase.auth.verifyOtp({ token_hash, type }) to establish the session.
+function buildRecoveryLink(baseRedirect: string, hashedToken: string): string {
+  const u = new URL(baseRedirect);
+  u.searchParams.set("token_hash", hashedToken);
+  u.searchParams.set("type", "recovery");
+  return u.toString();
+}
 
 interface Payload {
   entreprise: {
@@ -30,6 +73,15 @@ interface Payload {
   // link always points at the origin the app is actually served from
   // (Vercel today, izox.fr after migration). Falls back to SITE_URL.
   redirect_to?: string;
+}
+
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
 }
 
 function buildWelcomeText(prenom: string, link: string): string {
@@ -73,7 +125,7 @@ function buildWelcomeHtml(prenom: string, link: string): string {
           <tr>
             <td style="padding:36px">
               <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Bienvenue chez IZOX ✓</h2>
-              <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${prenom},</p>
+              <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${esc(prenom)},</p>
               <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6">
                 Votre compte IZOX vient d'être créé. Cliquez sur le bouton ci-dessous pour
                 <strong style="color:#1B4332">définir votre mot de passe</strong> et accéder à votre espace client.
@@ -140,9 +192,10 @@ async function sendWelcomeEmail(
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const cors = corsFor(req);
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
-  const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
+  const jsonHeaders = { ...cors, "Content-Type": "application/json" };
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -185,10 +238,14 @@ Deno.serve(async (req) => {
 
     const payload: Payload = await req.json();
 
-    // 1. Create entreprise
+    // 1. Create entreprise — default email_contact to the user's email so
+    //    transactional emails (RDV, interventions) always have a recipient.
     const { data: entreprise, error: entErr } = await admin
       .from("entreprises")
-      .insert(payload.entreprise)
+      .insert({
+        ...payload.entreprise,
+        email_contact: payload.entreprise.email_contact ?? payload.user.email,
+      })
       .select("id")
       .single();
     if (entErr) throw new Error(`Entreprise: ${entErr.message}`);
@@ -235,12 +292,16 @@ Deno.serve(async (req) => {
     // 5. Generate a "set password" recovery link (non-fatal if it fails)
     let inviteLink: string | null = null;
     try {
+      const redirectBase = safeRedirectTo(payload.redirect_to);
       const { data: linkData } = await admin.auth.admin.generateLink({
         type: "recovery",
         email: payload.user.email,
-        options: { redirectTo: payload.redirect_to || `${siteUrl}/reset-password` },
+        options: { redirectTo: redirectBase },
       });
-      inviteLink = linkData?.properties?.action_link ?? null;
+      const hashedToken = linkData?.properties?.hashed_token ?? null;
+      inviteLink = hashedToken
+        ? buildRecoveryLink(redirectBase, hashedToken)
+        : (linkData?.properties?.action_link ?? null);
     } catch {
       // Account was created — link generation failure is non-fatal
     }

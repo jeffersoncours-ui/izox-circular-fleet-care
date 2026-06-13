@@ -1,15 +1,15 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
-import { Home, Car, ClipboardList, Receipt, FolderOpen, LogOut } from "lucide-react";
+import { Home, Car, ClipboardList, FolderOpen, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/admin/NotificationCenter";
 
+// Les factures sont regroupées sous "Documents" (sous-onglet Factures).
 const TABS = [
   { to: "/client", label: "Accueil", icon: Home, exact: true },
   { to: "/client/flotte", label: "Ma flotte", icon: Car },
   { to: "/client/prestations", label: "Prestations", icon: ClipboardList },
-  { to: "/client/factures", label: "Factures", icon: Receipt },
   { to: "/client/documents", label: "Documents", icon: FolderOpen },
 ];
 
@@ -50,7 +50,7 @@ export function ClientBottomNav() {
   const location = useLocation();
   return (
     <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border">
-      <ul className="grid grid-cols-5 max-w-3xl mx-auto" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <ul className="grid grid-cols-4 max-w-3xl mx-auto" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         {TABS.map((tab) => {
           const active = tab.exact
             ? location.pathname === tab.to
@@ -90,3 +90,4 @@ export function ClientDocsLink() {
     </Link>
   );
 }
+

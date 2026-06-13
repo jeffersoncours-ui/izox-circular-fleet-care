@@ -1,10 +1,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+// Restrict CORS to the configured frontend origin — never expose to arbitrary origins.
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://izox.fr";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": SITE_URL,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+// HTML-escape all user-controlled strings before injecting into email templates.
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
 
 type EmailType =
   | "gel_validee"
@@ -14,7 +26,8 @@ type EmailType =
   | "rappel_24h"
   | "staff_notification"
   | "rdv_annule_client"
-  | "rdv_annule_admin";
+  | "rdv_annule_admin"
+  | "facture_emise";
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00");
@@ -75,10 +88,10 @@ function wrapHtml(title: string, content: string): string {
 
 function buildGelValideeHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
   const dateDebut = formatDate(d.date_debut as string);
   const dateFin = formatDate(d.date_fin_prevue as string);
-  const type = d.type_demande === "contrat" ? "Contrat complet" : "Véhicules spécifiques";
+  const type = esc(d.type_demande === "contrat" ? "Contrat complet" : "Véhicules spécifiques");
   return wrapHtml("Demande de gel validée", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Votre demande de gel a été validée ✓</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
@@ -106,7 +119,7 @@ function buildGelValideeHtml(d: Record<string, unknown>): string {
 
 function buildRdvConfirmeeHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
   const dateConf = d.date_confirmee ? formatDate(d.date_confirmee as string) : "Date à préciser";
   const nbVeh = d.nb_vehicules_rdv ?? 1;
   return wrapHtml("RDV confirmé", `
@@ -137,16 +150,16 @@ function buildRdvConfirmeeHtml(d: Record<string, unknown>): string {
 function buildInterventionCloseHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
   const veh = d.vehicules as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
-  const immat = veh?.immatriculation ?? "—";
-  const marque = [veh?.marque, veh?.modele].filter(Boolean).join(" ") || "—";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
+  const immat = esc(veh?.immatriculation ?? "—");
+  const marque = esc([veh?.marque, veh?.modele].filter(Boolean).join(" ") || "—");
   const dateInter = d.date_intervention ? formatDate(d.date_intervention as string) : "—";
   const prestationLabels: Record<string, string> = {
     interieur: "Nettoyage Intérieur",
     standard: "Nettoyage Standard",
     vtc: "Nettoyage VTC Premium",
   };
-  const type = prestationLabels[d.type_prestation as string] ?? d.type_prestation as string ?? "Prestation";
+  const type = esc(prestationLabels[d.type_prestation as string] ?? d.type_prestation as string ?? "Prestation");
   return wrapHtml("Prestation terminée", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Votre prestation est terminée ✓</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
@@ -176,7 +189,7 @@ function buildInterventionCloseHtml(d: Record<string, unknown>): string {
 
 function buildRappel24hHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
   const dateDebut = formatDate(d.date_debut as string);
   const dateFin = formatDate(d.date_fin_prevue as string);
   return wrapHtml("Rappel gel demain", `
@@ -205,11 +218,11 @@ function buildRappel24hHtml(d: Record<string, unknown>): string {
 
 function buildStaffNotificationHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "—";
+  const nom = esc(ent?.nom ?? "—");
   const dateDebut = formatDate(d.date_debut as string);
   const dateFin = formatDate(d.date_fin_prevue as string);
-  const type = d.type_demande === "contrat" ? "Contrat complet" : "Véhicules spécifiques";
-  const motif = d.motif as string ?? "—";
+  const type = esc(d.type_demande === "contrat" ? "Contrat complet" : "Véhicules spécifiques");
+  const motif = esc((d.motif as string) ?? "—");
   return wrapHtml("Nouvelle demande de gel", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">⚡ Nouvelle demande de gel à traiter</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Notification équipe IZOX</p>
@@ -239,15 +252,15 @@ function buildStaffNotificationHtml(d: Record<string, unknown>): string {
 
 function buildRdvModifieHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
   const dateLabel = d.assigned_date ? formatDate(d.assigned_date as string) : "Date à préciser";
   const slotLabels: Record<string, string> = {
     morning: "Matin (08h – 12h)",
     afternoon: "Après-midi (14h – 18h)",
   };
-  const slot = slotLabels[d.assigned_time_slot as string] ?? (d.assigned_time_slot as string) ?? "—";
+  const slot = esc(slotLabels[d.assigned_time_slot as string] ?? (d.assigned_time_slot as string) ?? "—");
   const heure = d.assigned_heure
-    ? "à " + String(d.assigned_heure).slice(0, 5).replace(":", "h")
+    ? "à " + esc(String(d.assigned_heure).slice(0, 5).replace(":", "h"))
     : "";
   return wrapHtml("Horaire de votre RDV modifié", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">L'horaire de votre rendez-vous a été modifié</h2>
@@ -287,8 +300,8 @@ function rdvDateLabel(d: Record<string, unknown>): string {
 // Annulation par le CLIENT → notifie l'équipe IZOX
 function buildRdvAnnuleClientHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "—";
-  const motif = (d.annulation_motif as string) ?? "—";
+  const nom = esc(ent?.nom ?? "—");
+  const motif = esc((d.annulation_motif as string) ?? "—");
   return wrapHtml("RDV annulé par le client", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">⚠ Un client a annulé un rendez-vous</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Notification équipe IZOX</p>
@@ -314,8 +327,8 @@ function buildRdvAnnuleClientHtml(d: Record<string, unknown>): string {
 // Annulation par l'ADMIN → notifie le client
 function buildRdvAnnuleAdminHtml(d: Record<string, unknown>): string {
   const ent = d.entreprises as Record<string, string> | null;
-  const nom = ent?.nom ?? "Votre entreprise";
-  const motif = (d.annulation_motif as string) ?? "—";
+  const nom = esc(ent?.nom ?? "Votre entreprise");
+  const motif = esc((d.annulation_motif as string) ?? "—");
   return wrapHtml("Rendez-vous annulé", `
     <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Votre rendez-vous a été annulé</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
@@ -338,6 +351,80 @@ function buildRdvAnnuleAdminHtml(d: Record<string, unknown>): string {
       Pour toute question, contactez votre équipe IZOX.
     </p>
   `);
+}
+
+function formatEuro(v: unknown): string {
+  const n = Number(v ?? 0);
+  return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+}
+
+// Facture émise → notifie le client qu'une facture est disponible dans son espace
+function buildFactureEmiseHtml(d: Record<string, unknown>): string {
+  const ent = d.entreprises as Record<string, string> | null;
+  const nom = esc(ent?.nom ?? "Votre entreprise");
+  const numero = esc((d.numero_facture as string) ?? "—");
+  const montant = formatEuro(d.montant_ttc);
+  const periode = d.periode_debut && d.periode_fin
+    ? `${formatDate(d.periode_debut as string)} → ${formatDate(d.periode_fin as string)}`
+    : "—";
+  const echeance = d.date_echeance ? formatDate(d.date_echeance as string) : "—";
+  return wrapHtml("Facture disponible", `
+    <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">Votre facture est disponible</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Bonjour ${nom},</p>
+    <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6">
+      Une nouvelle facture IZOX a été émise et est désormais
+      <strong style="color:#1B4332">disponible dans votre espace client</strong>.
+    </p>
+    <table cellpadding="12" cellspacing="0" border="0" width="100%"
+      style="background:#f0fdf4;border-radius:8px;border-left:4px solid #1B4332;margin-bottom:24px">
+      <tr>
+        <td>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Numéro de facture</p>
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827">${numero}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Période facturée</p>
+          <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827">${periode}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Montant à régler (TTC)</p>
+          <p style="margin:0 0 12px;font-size:18px;font-weight:700;color:#1B4332">${montant}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#6b7280">Date d'échéance</p>
+          <p style="margin:0;font-size:15px;font-weight:600;color:#111827">${echeance}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:13px;line-height:1.6">
+      Connectez-vous à votre espace client IZOX, rubrique « Documents », pour consulter,
+      télécharger ou imprimer votre facture.
+    </p>
+    <table cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="border-radius:8px;background:#1B4332">
+          <a href="https://izox-circular-fleet-care.vercel.app/client/documents"
+            style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">
+            Voir ma facture
+          </a>
+        </td>
+      </tr>
+    </table>
+  `);
+}
+
+// When entreprises.email_contact is null, fall back to the auth email of the
+// client profile linked to that entreprise. Avoids silent skips on new accounts.
+async function resolveClientEmail(
+  admin: ReturnType<typeof createClient>,
+  entrepriseId: string | null,
+  knownEmail: string | null,
+): Promise<string | null> {
+  if (knownEmail) return knownEmail;
+  if (!entrepriseId) return null;
+  const { data: profiles } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("entreprise_id", entrepriseId)
+    .eq("role", "client")
+    .limit(1);
+  if (!profiles?.length) return null;
+  const { data: authData } = await admin.auth.admin.getUserById(profiles[0].id);
+  return authData?.user?.email ?? null;
 }
 
 Deno.serve(async (req) => {
@@ -374,7 +461,7 @@ Deno.serve(async (req) => {
     // Role-based access control — clients can only trigger their own notification types
     const { data: callerProfile } = await admin
       .from("profiles")
-      .select("role")
+      .select("role, entreprise_id")
       .eq("id", userData.user.id)
       .maybeSingle();
     const callerRole = callerProfile?.role ?? "client";
@@ -399,7 +486,8 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !demande) throw new Error("Demande gel introuvable");
-        const email = (demande.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (demande.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, demande.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = type === "gel_validee"
           ? "✓ Votre demande de gel a été validée — IZOX"
@@ -417,7 +505,8 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
-        const email = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, rdv.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = "✓ Votre rendez-vous IZOX est confirmé";
         html = buildRdvConfirmeeHtml(rdv as Record<string, unknown>);
@@ -431,7 +520,8 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
-        const email = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, rdv.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = "⏰ Horaire de votre rendez-vous IZOX modifié";
         html = buildRdvModifieHtml(rdv as Record<string, unknown>);
@@ -445,6 +535,9 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
+        if (callerRole === "client" && rdv.entreprise_id !== callerProfile?.entreprise_id) {
+          return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+        }
 
         const { data: staffProfiles } = await admin
           .from("profiles")
@@ -469,10 +562,26 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
-        const email = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (rdv.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, rdv.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = "Votre rendez-vous IZOX a été annulé";
         html = buildRdvAnnuleAdminHtml(rdv as Record<string, unknown>);
+        break;
+      }
+
+      case "facture_emise": {
+        const { data: facture, error } = await admin
+          .from("factures")
+          .select("numero_facture, montant_ttc, periode_debut, periode_fin, date_echeance, entreprise_id, entreprises(nom, email_contact)")
+          .eq("id", target_id)
+          .single();
+        if (error || !facture) throw new Error("Facture introuvable");
+        const emailContact = (facture.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, facture.entreprise_id as string, emailContact);
+        emailTo = email ? [email] : [];
+        subject = `Votre facture IZOX ${facture.numero_facture ?? ""} est disponible`.trim();
+        html = buildFactureEmiseHtml(facture as Record<string, unknown>);
         break;
       }
 
@@ -483,7 +592,8 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !inter) throw new Error("Intervention introuvable");
-        const email = (inter.entreprises as Record<string, string> | null)?.email_contact;
+        const emailContact = (inter.entreprises as Record<string, string> | null)?.email_contact;
+        const email = await resolveClientEmail(admin, inter.entreprise_id as string, emailContact);
         emailTo = email ? [email] : [];
         subject = "✓ Votre prestation IZOX est terminée";
         html = buildInterventionCloseHtml(inter as Record<string, unknown>);
@@ -497,6 +607,9 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !demande) throw new Error("Demande gel introuvable");
+        if (callerRole === "client" && demande.entreprise_id !== callerProfile?.entreprise_id) {
+          return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+        }
 
         const { data: staffProfiles } = await admin
           .from("profiles")

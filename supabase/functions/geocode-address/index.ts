@@ -1,7 +1,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": Deno.env.get("SITE_URL") ?? "https://izox.fr",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -43,34 +43,63 @@ Deno.serve(async (req) => {
       );
     }
 
-    const query = encodeURIComponent(`${adresse}, ${code_postal} ${ville}, France`);
-    const nominatimUrl =
-      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=fr`;
+    // Étend les abréviations FR courantes : Nominatim échoue souvent sur
+    // "Av. du Gén Leclerc" mais réussit sur "Avenue du Général Leclerc".
+    const ABBREV: Record<string, string> = {
+      "av": "Avenue", "ave": "Avenue", "bd": "Boulevard", "bld": "Boulevard",
+      "bvd": "Boulevard", "boul": "Boulevard", "gén": "Général", "gen": "Général",
+      "st": "Saint", "ste": "Sainte", "pl": "Place", "imp": "Impasse",
+      "rte": "Route", "fbg": "Faubourg", "all": "Allée", "che": "Chemin",
+      "chem": "Chemin", "sq": "Square", "pass": "Passage", "qu": "Quai",
+    };
+    const normaliser = (s: string): string =>
+      s
+        .split(/\s+/)
+        .map((mot) => {
+          const clean = mot.replace(/\.$/, "").toLowerCase();
+          return ABBREV[clean] ?? mot;
+        })
+        .join(" ");
 
-    const response = await fetch(nominatimUrl, {
-      headers: {
-        // Nominatim requires a valid User-Agent identifying the application
-        "User-Agent": "IZOX-CircularFleetCare/1.0 (noreply@izox.fr)",
-        "Accept-Language": "fr",
-      },
-    });
+    const geocode = async (q: string) => {
+      const url =
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=fr`;
+      const r = await fetch(url, {
+        headers: {
+          // Nominatim requires a valid User-Agent identifying the application
+          "User-Agent": "IZOX-CircularFleetCare/1.0 (noreply@izox.fr)",
+          "Accept-Language": "fr",
+        },
+      });
+      if (!r.ok) throw new Error(`Nominatim error: ${r.status}`);
+      const results = await r.json();
+      return results && results.length > 0 ? results[0] : null;
+    };
 
-    if (!response.ok) {
-      throw new Error(`Nominatim error: ${response.status}`);
+    // Tentatives en cascade : adresse exacte → adresse normalisée →
+    // ville + code postal (point ville par défaut, mieux que rien sur la carte).
+    const adresseNorm = normaliser(adresse);
+    const tentatives = [
+      `${adresse}, ${code_postal} ${ville}, France`,
+      ...(adresseNorm !== adresse ? [`${adresseNorm}, ${code_postal} ${ville}, France`] : []),
+      `${code_postal} ${ville}, France`,
+    ];
+
+    let hit = null;
+    for (const q of tentatives) {
+      hit = await geocode(q);
+      if (hit) break;
     }
 
-    const results = await response.json();
-
-    if (!results || results.length === 0) {
+    if (!hit) {
       return new Response(
         JSON.stringify({ error: "Adresse introuvable", latitude: null, longitude: null }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const { lat, lon } = results[0];
     return new Response(
-      JSON.stringify({ latitude: parseFloat(lat), longitude: parseFloat(lon) }),
+      JSON.stringify({ latitude: parseFloat(hit.lat), longitude: parseFloat(hit.lon) }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {

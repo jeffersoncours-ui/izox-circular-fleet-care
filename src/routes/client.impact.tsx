@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Droplets, Wind, Recycle, Printer, Download, Leaf, Loader2 } from "lucide-react";
+import { Droplets, Wind, Recycle, Printer, Download, Leaf, Loader2, Zap } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
@@ -110,6 +110,7 @@ function ClientImpactPage() {
         "Eau (L)": p.water,
         "Pollution (L)": p.pollution,
         "Compost (kg)": p.circular,
+        "CO₂ (kg)": p.ghg,
       }));
   }, [summary, period]);
 
@@ -136,7 +137,7 @@ function ClientImpactPage() {
         <div className="flex items-start justify-between gap-3 print:hidden">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Eau économisée · pollution évitée · compost produit
+              Eau économisée · pollution évitée · compost · CO₂
             </p>
             <h1 className="text-[24px] font-bold tracking-tight text-foreground mt-0.5 flex items-center gap-2">
               <Leaf className="h-5 w-5 text-primary shrink-0" /> Mon Impact RSE
@@ -189,8 +190,8 @@ function ClientImpactPage() {
           <EmptyState />
         ) : (
           <>
-            {/* ── Hero cards 3 catégories principales ──────────────── */}
-            <div className="grid grid-cols-3 gap-3">
+            {/* ── Hero cards 4 catégories ──────────────────────────── */}
+            <div className="grid grid-cols-2 gap-3">
               <HeroCard
                 icon={Droplets}
                 label="Eau économisée"
@@ -215,7 +216,37 @@ function ClientImpactPage() {
                 color="#d97706"
                 fill="#fef3c7"
               />
+              <HeroCard
+                icon={Zap}
+                label="CO₂ évité"
+                value={totals.ghg}
+                unit="kg"
+                color="#7c3aed"
+                fill="#ede9fe"
+              />
             </div>
+
+            {/* ── Équivalences ─────────────────────────────────────── */}
+            {(totals.water > 0 || totals.ghg > 0) && (
+              <div className="flex gap-2 flex-wrap">
+                {totals.water > 0 && (
+                  <div className="flex-1 min-w-[120px] bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-center">
+                    <p className="text-base font-bold text-blue-700">
+                      {Math.round(totals.water / 60)}
+                    </p>
+                    <p className="text-[10px] text-blue-600 leading-tight">douches économisées</p>
+                  </div>
+                )}
+                {totals.ghg > 0 && (
+                  <div className="flex-1 min-w-[120px] bg-violet-50 border border-violet-200 rounded-xl px-3 py-2 text-center">
+                    <p className="text-base font-bold text-violet-700">
+                      {Math.round(totals.ghg / 0.12)}
+                    </p>
+                    <p className="text-[10px] text-violet-600 leading-tight">km voiture évités</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ── Graphe cumulatif ─────────────────────────────────── */}
             {chartData.length > 1 && (
@@ -233,6 +264,7 @@ function ClientImpactPage() {
                     <Area type="monotone" dataKey="Eau (L)"       stroke="#2563eb" fill="#dbeafe" strokeWidth={2} />
                     <Area type="monotone" dataKey="Pollution (L)" stroke="#059669" fill="#d1fae5" strokeWidth={2} />
                     <Area type="monotone" dataKey="Compost (kg)"  stroke="#d97706" fill="#fef3c7" strokeWidth={2} />
+                    <Area type="monotone" dataKey="CO₂ (kg)"      stroke="#7c3aed" fill="#ede9fe" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </Card>

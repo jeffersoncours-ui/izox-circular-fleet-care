@@ -388,6 +388,7 @@ export function PlanningCalendar() {
   const goToday = () => {
     setCurrentWeekStart(startOfISOWeek(new Date()));
     setSelectedDay(new Date());
+    setView("jour");
   };
 
   const daysToShow = view === "jour" ? [selectedDay] : weekDays;

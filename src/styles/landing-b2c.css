@@ -1,0 +1,718 @@
+/* ============================================================
+   IZOX — Landing B2C · Design v2 (dark premium)
+   tasks/design-brief-v2.md
+
+   ⚠️ TOUT est scopé sous .izox-b2c — ne JAMAIS toucher au :root
+   global de styles.css. Le CRM B2B (admin/client/terrain/settings/
+   login) reste en light mode, intact. Ce fichier n'a aucun effet
+   hors de l'arbre .izox-b2c.
+   ============================================================ */
+
+.izox-b2c {
+  /* ── Design tokens v2 ── */
+  --b2c-bg: #06120c;
+  --b2c-bg2: #0a1b12;
+  --b2c-tx: #e7e6dd;
+  --b2c-tx-dim: #8aa295;
+  --b2c-tx-faint: #52685b;
+  --b2c-accent: #3fd8ff;
+  --b2c-glow: 0.75; /* 0..1 — piloté par le tweaks panel */
+  --b2c-tscale: 1.25; /* échelle titres — piloté par tweaks */
+  --b2c-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --b2c-sans: "Archivo", system-ui, -apple-system, sans-serif;
+  --b2c-mono: "JetBrains Mono", ui-monospace, monospace;
+  --b2c-line: rgba(231, 230, 221, 0.1);
+  --b2c-line-strong: rgba(63, 216, 255, 0.28);
+  --b2c-surface: rgba(231, 230, 221, 0.02);
+
+  /* ── Remap des tokens sémantiques CRM → shared Button/Input/Label
+        rendent dark UNIQUEMENT dans cet arbre (cascade CSS). ── */
+  --background: var(--b2c-bg);
+  --foreground: var(--b2c-tx);
+  --card: var(--b2c-bg2);
+  --card-foreground: var(--b2c-tx);
+  --popover: var(--b2c-bg2);
+  --popover-foreground: var(--b2c-tx);
+  --muted: #0e2417;
+  --muted-foreground: var(--b2c-tx-dim);
+  --primary: var(--b2c-accent);
+  --primary-foreground: #06120c;
+  --primary-soft: rgba(63, 216, 255, 0.12);
+  --secondary: #0e2417;
+  --secondary-foreground: var(--b2c-tx);
+  --accent: rgba(63, 216, 255, 0.14);
+  --accent-foreground: var(--b2c-accent);
+  --border: var(--b2c-line);
+  --input: rgba(231, 230, 221, 0.18);
+  --ring: var(--b2c-accent);
+
+  background-color: var(--b2c-bg);
+  color: var(--b2c-tx);
+  font-family: var(--b2c-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* clip (et non hidden) : coupe les débordements horizontaux des halos/glow
+     sans créer de conteneur de scroll — préserve la navbar sticky. */
+  overflow-x: clip;
+  /* Stacking context propre pour que le filigrane ::before (z-index -1)
+     reste au-dessus du fond mais sous tout le contenu. */
+  position: relative;
+  isolation: isolate;
+}
+
+/* ── Filigrane halftone (texture "velours" — oscillation lente sans tile).
+      L'image couvre tout le viewport (130vmax × 130vmax) pour donner de la
+      marge au déplacement sans bord visible. L'oscillation triangulaire crée
+      l'effet de lumière glissant sur un tissu velouté.
+      mix-blend luminosity → prend la teinte du fond.
+      prefers-reduced-motion : position figée, texture visible. ── */
+@keyframes watermark-drift {
+  0%   { background-position: 42% 44%; }
+  33%  { background-position: 58% 50%; }
+  66%  { background-position: 50% 58%; }
+  100% { background-position: 42% 44%; }
+}
+
+.izox-b2c::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: url("/watermark-halftone.jpg") 50% 50% / 130vmax 130vmax no-repeat;
+  opacity: 0.07;
+  mix-blend-mode: luminosity;
+  pointer-events: none;
+  animation: watermark-drift 26s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .izox-b2c::before {
+    animation: none;
+    background-position: 50% 50%;
+  }
+}
+
+/* Fond du body pendant que la landing est montée (évite le seam clair
+   en overscroll/rubber-band mobile). Retiré au démontage par PublicLayout. */
+body.b2c-active {
+  background-color: #06120c;
+}
+
+/* ── Thèmes additionnels (tweaks panel) ── */
+.izox-b2c.t-noir {
+  --b2c-bg: #0e0d0b;
+  --b2c-bg2: #16140f;
+  --background: #0e0d0b;
+  --card: #16140f;
+  --muted: #1c1a13;
+}
+.izox-b2c.t-nuit {
+  --b2c-bg: #070d17;
+  --b2c-bg2: #0c1422;
+  --background: #070d17;
+  --card: #0c1422;
+  --muted: #111c30;
+}
+.izox-b2c.t-papier {
+  --b2c-bg: #ede8dc;
+  --b2c-bg2: #f5f1e8;
+  --b2c-tx: #1a1712;
+  --b2c-tx-dim: #5a5343;
+  --b2c-tx-faint: #8a8060;
+  --b2c-line: rgba(26, 23, 18, 0.12);
+  --b2c-surface: rgba(26, 23, 18, 0.02);
+  --background: #ede8dc;
+  --foreground: #1a1712;
+  --card: #f5f1e8;
+  --card-foreground: #1a1712;
+  --muted: #e2dbc9;
+  --muted-foreground: #5a5343;
+  --border: rgba(26, 23, 18, 0.12);
+}
+.izox-b2c.t-papier ~ body,
+body.b2c-active:has(.izox-b2c.t-papier) {
+  background-color: #ede8dc;
+}
+
+/* ============================================================
+   Typographie
+   ============================================================ */
+
+.b2c-display {
+  font-family: var(--b2c-serif);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  /* clamp ×  échelle titres pilotée par tweaks */
+  font-size: calc(clamp(2.5rem, 7vw, 4.5rem) * var(--b2c-tscale));
+}
+.b2c-display--md {
+  font-family: var(--b2c-serif);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  font-size: calc(clamp(1.9rem, 4vw, 2.9rem) * var(--b2c-tscale));
+}
+/* Mot/segment accentué : italique serif en vert lumineux */
+.b2c-accent {
+  font-style: italic;
+  color: var(--b2c-accent);
+  text-shadow: 0 0 calc(28px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.55 * var(--b2c-glow)));
+}
+.b2c-kicker {
+  font-family: var(--b2c-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--b2c-accent);
+}
+.b2c-lead {
+  color: var(--b2c-tx-dim);
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  line-height: 1.65;
+}
+.b2c-mono {
+  font-family: var(--b2c-mono);
+}
+
+/* ============================================================
+   Surfaces, bordures, glow
+   ============================================================ */
+
+.b2c-card {
+  background: var(--b2c-bg2);
+  border: 1px solid var(--b2c-line);
+  border-radius: 14px;
+}
+.b2c-hairline {
+  border-color: var(--b2c-line);
+}
+.b2c-glow-ring {
+  box-shadow:
+    0 0 0 1px var(--b2c-line-strong),
+    0 0 calc(48px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.18 * var(--b2c-glow)));
+}
+.b2c-glow-text {
+  text-shadow: 0 0 calc(24px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.5 * var(--b2c-glow)));
+}
+/* Grand chiffre RSE / compteur boucle */
+.b2c-figure {
+  font-family: var(--b2c-mono);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--b2c-accent);
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+  line-height: 1;
+}
+
+/* ============================================================
+   Boutons (CTA) — vert lumineux, hover « fillwater » (desktop)
+   Le remplissage animé bas→haut est greffé en Phase 2c.
+   ============================================================ */
+
+.b2c-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--b2c-sans);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  padding: 0.85rem 1.4rem;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+  overflow: hidden;
+}
+.b2c-btn--primary {
+  background: var(--b2c-accent);
+  color: #06120c;
+  box-shadow: 0 0 calc(36px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.35 * var(--b2c-glow)));
+}
+.b2c-btn--primary:hover {
+  box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.55 * var(--b2c-glow)));
+  transform: translateY(-1px);
+}
+.b2c-btn--ghost {
+  background: transparent;
+  color: var(--b2c-tx);
+  border: 1px solid var(--b2c-line-strong);
+}
+.b2c-btn--ghost:hover {
+  border-color: var(--b2c-accent);
+}
+/* Hover « fillwater » (desktop uniquement — jamais sur tactile) :
+   l'eau monte de bas en haut dans le bouton fantôme. */
+@media (hover: hover) and (pointer: fine) {
+  .b2c-btn--ghost::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 0;
+    background: var(--b2c-accent);
+    opacity: 0.16;
+    transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .b2c-btn--ghost:hover::before {
+    height: 100%;
+  }
+}
+
+/* Bouton jaune — CTA secondaire (professionnel / abonnement) */
+.b2c-btn--yellow {
+  background: #ffe500;
+  color: #06120c;
+  font-weight: 700;
+  box-shadow: 0 0 calc(36px * var(--b2c-glow)) rgba(255, 229, 0, calc(0.28 * var(--b2c-glow)));
+}
+.b2c-btn--yellow:hover {
+  box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(255, 229, 0, calc(0.45 * var(--b2c-glow)));
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   Reveals — progressive enhancement
+   Par défaut tout est VISIBLE (si JS échoue, rien n'est caché).
+   L'état initial masqué n'est appliqué que lorsque PublicLayout
+   pose data-anim="on" (JS actif). Animation pilotée en Phase 2c.
+   ============================================================ */
+
+.izox-b2c[data-anim="on"] .rv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.izox-b2c[data-anim="on"] .rv.is-in {
+  opacity: 1;
+  transform: none;
+}
+.rv-d1 {
+  transition-delay: 0.09s;
+}
+.rv-d2 {
+  transition-delay: 0.18s;
+}
+/* Variantes directionnelles (avant/après) : l'élément glisse depuis la
+   gauche ou la droite au lieu du bas. À combiner avec .rv (même observer). */
+.izox-b2c[data-anim="on"] .rv-left {
+  transform: translateX(-44px);
+}
+.izox-b2c[data-anim="on"] .rv-right {
+  transform: translateX(44px);
+}
+
+/* ============================================================
+   Stepcards (section 02)
+   ============================================================ */
+
+.stepcard {
+  background: var(--b2c-bg2);
+  border: 1px solid var(--b2c-line);
+  border-radius: 14px;
+  padding: 1.6rem;
+  transition: border-color 0.3s ease;
+}
+.stepcard:hover {
+  border-color: var(--b2c-line-strong);
+}
+.stepcard__num {
+  font-family: var(--b2c-mono);
+  font-size: 12px;
+  color: var(--b2c-tx-faint);
+}
+
+/* ============================================================
+   Avant / Après (section 05)
+   ============================================================ */
+
+.ba-tag {
+  font-family: var(--b2c-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--b2c-line);
+  color: var(--b2c-tx-dim);
+  background: var(--b2c-bg2);
+}
+.ba-tag--after {
+  color: #06120c;
+  font-weight: 700;
+  background: var(--b2c-accent);
+  border-color: var(--b2c-accent);
+}
+/* Placeholder photo : hachures diagonales discrètes (en attendant les vraies
+   photos) + étiquette mono en bas de tuile. */
+.ba-ph {
+  position: relative;
+  overflow: hidden;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(63, 216, 255, 0.05) 0 16px,
+    transparent 16px 34px
+  );
+}
+.ba-ph__label {
+  font-family: var(--b2c-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--b2c-tx-dim);
+  background: rgba(6, 18, 12, 0.72);
+  border: 1px solid var(--b2c-line);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+}
+
+/* ============================================================
+   Hero visual — placeholder élégant (la gravure R5 arrive en 2b)
+   ============================================================ */
+
+.b2c-hero-halo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60% 50% at 70% 30%,
+      rgba(63, 216, 255, calc(0.1 * var(--b2c-glow))),
+      transparent 70%
+    );
+}
+
+/* ============================================================
+   Fil de l'eau (fixe à droite) — structure posée ici,
+   animation scroll branchée en Phase 2c.
+   ============================================================ */
+
+.fil {
+  position: fixed;
+  top: 0;
+  right: 18px;
+  bottom: 0;
+  width: 2px;
+  z-index: 30;
+  pointer-events: none;
+}
+.fil-track {
+  position: absolute;
+  inset: 0;
+  background: var(--b2c-line);
+}
+.fil-trail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to bottom, transparent, var(--b2c-accent));
+}
+.fil-drop {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--b2c-accent);
+  box-shadow: 0 0 calc(16px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow)));
+}
+@media (max-width: 860px) {
+  .fil {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Section rythm
+   ============================================================ */
+
+.b2c-section {
+  position: relative;
+  padding-block: clamp(4rem, 9vw, 7rem);
+}
+.b2c-container {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+/* ============================================================
+   Illustrations au trait — micro-animations autonomes (CSS)
+   (les parties scroll-driven : fil, boucle, poissons → JS Phase 2c)
+   ============================================================ */
+
+/* Trait de base des gravures */
+.gv-stroke {
+  fill: none;
+  stroke: var(--b2c-accent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.gv-dim {
+  stroke: var(--b2c-tx-dim);
+  opacity: 0.55;
+}
+.gv-faint {
+  stroke: var(--b2c-tx-faint);
+  opacity: 0.4;
+}
+.gv-fill-soft {
+  fill: var(--b2c-accent);
+  opacity: 0.06;
+  stroke: none;
+}
+/* Rendu carrosserie « teintée » (tweaks) : la coque reçoit un remplissage
+   coloré translucide. En « trait pur » (défaut), elle reste fill:none. */
+.izox-b2c.car-teinte [data-car-body] {
+  fill: var(--b2c-car, var(--b2c-accent));
+  fill-opacity: 0.16;
+}
+.gv-label {
+  font-family: var(--b2c-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--b2c-tx-dim);
+}
+
+/* Jets haute pression — éventail de traits en écoulement */
+@keyframes gv-flow {
+  to {
+    stroke-dashoffset: -17;
+  }
+}
+.gv-jet {
+  stroke: var(--b2c-accent);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-dasharray: 2.5 6;
+  animation: gv-flow 1.4s linear infinite;
+  filter: drop-shadow(0 0 calc(3px * var(--b2c-glow)) rgba(63, 216, 255, 0.6));
+}
+.gv-jet--2 {
+  animation-duration: 1.1s;
+}
+.gv-jet--3 {
+  animation-duration: 1.7s;
+}
+.gv-jet--4 {
+  animation-duration: 1.9s;
+}
+
+/* Brume aux points d'impact */
+@keyframes gv-mist {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+.gv-mist {
+  fill: var(--b2c-accent);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gv-mist 2.8s ease-in-out infinite;
+}
+
+/* Gouttes qui chutent le long des flancs */
+@keyframes gv-drip {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+}
+.gv-drip {
+  fill: var(--b2c-accent);
+  transform-box: fill-box;
+  animation: gv-drip 2.2s ease-in infinite;
+}
+.gv-drip--2 {
+  animation-delay: 0.7s;
+}
+.gv-drip--3 {
+  animation-delay: 1.3s;
+}
+.gv-drip--4 {
+  animation-delay: 1.9s;
+}
+
+/* Badge pulse (étiquettes) */
+@keyframes gv-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.gv-pulse {
+  animation: gv-pulse 2.4s ease-in-out infinite;
+}
+
+/* ── Boucle d'eau : goutte dont le contour se dessine au scroll ── */
+.drop-track {
+  fill: none;
+  stroke: var(--b2c-line);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.drop-fill {
+  fill: var(--b2c-accent);
+  opacity: 0.06;
+  stroke: none;
+}
+.loop-draw {
+  fill: none;
+  stroke: var(--b2c-accent);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 calc(7px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))));
+  /* dasharray/offset posés en JS (longueur réelle du path) — scrollScenes */
+}
+.station {
+  opacity: 1;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+/* Dim initial uniquement si JS anime (sinon tout reste visible) */
+.izox-b2c[data-anim="on"] .station {
+  opacity: 0.35;
+}
+.izox-b2c[data-anim="on"] .station.lit,
+.station.lit {
+  opacity: 1;
+}
+.station__dot {
+  fill: var(--b2c-bg2);
+  stroke: var(--b2c-line-strong);
+  stroke-width: 1.5;
+  transition:
+    fill 0.4s ease,
+    stroke 0.4s ease;
+}
+.station.lit .station__dot {
+  fill: var(--b2c-accent);
+  stroke: var(--b2c-accent);
+  filter: drop-shadow(0 0 calc(8px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.8 * var(--b2c-glow))));
+}
+.loop-drop {
+  fill: var(--b2c-accent);
+  filter: drop-shadow(0 0 calc(9px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))));
+}
+
+/* ── Aquaponie : rampes LED + poissons + bulles ── */
+.gv-led {
+  fill: none;
+  stroke: var(--b2c-accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 12 7;
+  filter: drop-shadow(0 0 calc(5px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))));
+}
+.fish {
+  fill: none;
+  stroke: var(--b2c-accent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* translate piloté par setFish() — Phase 2c */
+}
+@keyframes gv-bubble {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  30% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-34px) scale(1);
+  }
+}
+.gv-bubble {
+  fill: none;
+  stroke: var(--b2c-accent);
+  stroke-width: 1;
+  transform-box: fill-box;
+  animation: gv-bubble 3.4s ease-in infinite;
+}
+.gv-bubble--2 {
+  animation-delay: 1.2s;
+}
+.gv-bubble--3 {
+  animation-delay: 2.3s;
+}
+
+/* Chaîne compost → aquaponie → légumes */
+.chain-item {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+.izox-b2c[data-anim="on"] .chain-item {
+  opacity: 0.4;
+}
+.izox-b2c[data-anim="on"] .chain-item.lit,
+.chain-item.lit {
+  opacity: 1;
+}
+.chain-dot {
+  fill: var(--b2c-bg2);
+  stroke: var(--b2c-line-strong);
+  stroke-width: 1.5;
+  transition:
+    fill 0.4s ease,
+    stroke 0.4s ease;
+}
+.chain-item.lit .chain-dot {
+  fill: var(--b2c-accent);
+  stroke: var(--b2c-accent);
+}
+
+/* ============================================================
+   Accessibilité — prefers-reduced-motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .izox-b2c[data-anim="on"] .rv {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .izox-b2c *,
+  .izox-b2c *::before,
+  .izox-b2c *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

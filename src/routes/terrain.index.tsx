@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   CalendarDays, ClipboardList, FileText, User,
   ChevronRight, Loader2, Car, LogOut,
-  Play, MapPin, Phone, Clock, X, Search,
+  MessageSquare, Play, MapPin, Phone, Clock, X, Search, NotebookPen,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,13 +15,13 @@ import { getPackLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 import { RoleGuard } from "@/components/RoleGuard";
+import { ChatWindow } from "@/components/messaging/ChatWindow";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/terrain/")({
   component: TerrainPage,
@@ -59,18 +59,11 @@ interface InterventionRow {
   } | null;
 }
 
-interface InterventionObs {
-  id: string;
-  date_intervention: string | null;
-  heure_intervention: string | null;
-  type_prestation: string;
-  statut: Statut;
-  vehicules: { id: string; immatriculation: string; marque: string | null; modele: string | null } | null;
-}
-
-interface EntrepriseOption {
+interface ClientCard {
   id: string;
   nom: string;
+  noteCount: number;
+  lastNoteDate: string | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -132,6 +125,7 @@ function Inner() {
   const [loadingInt, setLoadingInt] = useState(true);
   const [takingCharge, setTakingCharge] = useState<string | null>(null);
   const [selectedIntervention, setSelectedIntervention] = useState<InterventionRow | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const loadInterventions = useCallback(async () => {
     const { data, error } = await supabase
@@ -150,10 +144,22 @@ function Inner() {
 
   useEffect(() => { loadInterventions(); }, [loadInterventions]);
 
+  // Badge messages non lus dans Suivi
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from("operateur_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("conversation_operator_id", user.id)
+      .is("read_at_operator", null)
+      .neq("sender_id", user.id)
+      .then(({ count }) => setUnreadMessages(count ?? 0));
+  }, [user?.id]);
+
   const prendreEnCharge = async (interventionId: string) => {
     setTakingCharge(interventionId);
     try {
-      const { error } = await (supabase as any).rpc("prendre_en_charge_intervention", {
+      const { error } = await supabase.rpc("prendre_en_charge_intervention", {
         p_intervention_id: interventionId,
       });
       if (error) throw error;
@@ -210,7 +216,7 @@ function Inner() {
   const bottomNavItems: { tabId: Tab; icon: LucideIcon; label: string; badge?: number }[] = [
     { tabId: "planning",      icon: CalendarDays,  label: "Planning",      badge: todayPlanifiees.length || undefined },
     { tabId: "interventions", icon: ClipboardList, label: "Interventions", badge: enCours.length || undefined },
-    { tabId: "suivi",         icon: FileText,      label: "Suivi" },
+    { tabId: "suivi",         icon: FileText,      label: "Suivi", badge: unreadMessages || undefined },
     { tabId: "profil",        icon: User,          label: "Profil" },
   ];
 
@@ -232,7 +238,7 @@ function Inner() {
         <TabInterventions interventions={interventions} />
       )}
       {tab === "suivi" && (
-        <TabSuivi userId={user?.id ?? ""} />
+        <TabSuivi userId={user?.id ?? ""} onMessagesSeen={() => setUnreadMessages(0)} />
       )}
       {tab === "profil" && (
         <TabProfil profile={profile} enCoursCount={enCours.length} onLogout={handleLogout} />
@@ -692,221 +698,193 @@ function TabInterventions({ interventions }: { interventions: InterventionRow[] 
 
 // ─── Tab SUIVI ────────────────────────────────────────────────────────────────
 
-function TabSuivi({ userId }: { userId: string }) {
+type SuiviSubTab = "observations" | "messages";
+
+function TabSuivi({
+  userId,
+  onMessagesSeen,
+}: {
+  userId: string;
+  onMessagesSeen: () => void;
+}) {
+  const [subTab, setSubTab] = useState<SuiviSubTab>("observations");
+
+  const handleMessagesTab = () => {
+    setSubTab("messages");
+    // Vider le badge après un court délai (le hook markRead s'exécute dans ChatWindow)
+    setTimeout(onMessagesSeen, 1500);
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-full">
       <div className="px-4 pt-12 pb-3 border-b border-border">
         <h2 className="text-xl font-black text-foreground mb-3">Suivi</h2>
         <div className="flex gap-2">
-          <span className="px-3 py-1.5 rounded-full bg-foreground text-background text-xs font-semibold">
+          <button
+            type="button"
+            onClick={() => setSubTab("observations")}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors",
+              subTab === "observations"
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
             Observations clients
-          </span>
+          </button>
+          <button
+            type="button"
+            onClick={handleMessagesTab}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5",
+              subTab === "messages"
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <MessageSquare className="h-3 w-3" />
+            Messages IZOX
+          </button>
         </div>
       </div>
-      <TabObservations userId={userId} />
+
+      {subTab === "observations" && <TabObservations userId={userId} />}
+
+      {subTab === "messages" && userId && (
+        <div className="flex flex-col flex-1 min-h-0" style={{ height: "calc(100vh - 13rem)" }}>
+          <ChatWindow operatorId={userId} role="operator" className="h-full" />
+        </div>
+      )}
     </div>
   );
 }
 
 function TabObservations({ userId }: { userId: string }) {
-  const [entreprises, setEntreprises] = useState<EntrepriseOption[]>([]);
-  const [selectedEntId, setSelectedEntId] = useState<string>("");
-  const [searchEnt, setSearchEnt] = useState("");
-  const [interventions, setInterventions] = useState<InterventionObs[]>([]);
-  const [observations, setObservations] = useState<Record<string, string>>({});
-  const [savingObs, setSavingObs] = useState<Record<string, boolean>>({});
-  const [loadingInts, setLoadingInts] = useState(false);
+  const navigate = useNavigate();
+  const [clients, setClients] = useState<ClientCard[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!userId) return;
+    let alive = true;
     (async () => {
-      const { data } = await supabase
+      // Entreprises sur lesquelles l'opérateur a travaillé
+      const { data: intData, error } = await supabase
         .from("interventions")
         .select("entreprises(id, nom)")
         .not("statut", "in", '("annulee","planifiee")')
-        .limit(200);
-      if (!data) return;
-      const map = new Map<string, string>();
-      for (const row of data as any[]) {
-        const ent = row.entreprises;
-        if (ent?.id && ent?.nom) map.set(ent.id, ent.nom);
+        .limit(300);
+      if (error) toast.error("Erreur lors du chargement des clients");
+      if (!alive) return;
+
+      const entMap = new Map<string, string>();
+      for (const row of (intData ?? []) as any[]) {
+        const e = row.entreprises;
+        if (e?.id && e?.nom) entMap.set(e.id, e.nom);
       }
-      const list = Array.from(map.entries())
-        .map(([id, nom]) => ({ id, nom }))
-        .sort((a, b) => a.nom.localeCompare(b.nom));
-      setEntreprises(list);
+      if (entMap.size === 0) { setLoading(false); return; }
+
+      // Compter les notes et dernière date par entreprise
+      const { data: notesData } = await supabase
+        .from("operateur_notes")
+        .select("entreprise_id, date_observation")
+        .eq("operateur_id", userId)
+        .in("entreprise_id", Array.from(entMap.keys()));
+      if (!alive) return;
+
+      const countMap = new Map<string, { count: number; last: string | null }>();
+      for (const [id] of entMap) countMap.set(id, { count: 0, last: null });
+      for (const row of (notesData ?? []) as { entreprise_id: string; date_observation: string }[]) {
+        const cur = countMap.get(row.entreprise_id);
+        if (!cur) continue;
+        cur.count++;
+        if (!cur.last || row.date_observation > cur.last) cur.last = row.date_observation;
+      }
+
+      const cards: ClientCard[] = Array.from(entMap.entries())
+        .map(([id, nom]) => {
+          const stats = countMap.get(id)!;
+          return { id, nom, noteCount: stats.count, lastNoteDate: stats.last };
+        })
+        .sort((a, b) => {
+          // Clients avec notes en premier (par date décroissante), puis alphabétique
+          if (a.lastNoteDate && b.lastNoteDate) return b.lastNoteDate.localeCompare(a.lastNoteDate);
+          if (a.lastNoteDate) return -1;
+          if (b.lastNoteDate) return 1;
+          return a.nom.localeCompare(b.nom);
+        });
+
+      if (alive) { setClients(cards); setLoading(false); }
     })();
+    return () => { alive = false; };
   }, [userId]);
 
-  useEffect(() => {
-    if (!selectedEntId) { setInterventions([]); setObservations({}); return; }
-    setLoadingInts(true);
-    (async () => {
-      const { data: intData } = await supabase
-        .from("interventions")
-        .select("id, date_intervention, heure_intervention, type_prestation, statut, vehicules(id, immatriculation, marque, modele)")
-        .eq("entreprise_id", selectedEntId)
-        .in("statut", ["en_revision", "validee"])
-        .order("date_intervention", { ascending: false })
-        .limit(50);
-      const ints = (intData as unknown as InterventionObs[]) ?? [];
-      setInterventions(ints);
-
-      if (ints.length > 0) {
-        const ids = ints.map((i) => i.id);
-        const { data: obsData } = await (supabase as any)
-          .from("operateur_observations")
-          .select("intervention_id, note")
-          .in("intervention_id", ids)
-          .eq("operateur_id", userId);
-        const obsMap: Record<string, string> = {};
-        for (const row of (obsData ?? []) as any[]) {
-          obsMap[row.intervention_id] = row.note ?? "";
-        }
-        setObservations(obsMap);
-      }
-      setLoadingInts(false);
-    })();
-  }, [selectedEntId, userId]);
-
-  const saveObservation = async (interventionId: string, note: string) => {
-    setSavingObs((prev) => ({ ...prev, [interventionId]: true }));
-    try {
-      const { error } = await (supabase as any)
-        .from("operateur_observations")
-        .upsert(
-          {
-            intervention_id: interventionId,
-            operateur_id: userId,
-            note,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "intervention_id,operateur_id" }
-        );
-      if (error) throw error;
-    } catch {
-      toast.error("Impossible de sauvegarder l'observation");
-    } finally {
-      setSavingObs((prev) => ({ ...prev, [interventionId]: false }));
-    }
-  };
-
-  const grouped = useMemo(() => {
-    const map = new Map<
-      string,
-      { vehicule: InterventionObs["vehicules"]; items: InterventionObs[] }
-    >();
-    for (const i of interventions) {
-      const vehId = i.vehicules?.id ?? "unknown";
-      if (!map.has(vehId)) map.set(vehId, { vehicule: i.vehicules, items: [] });
-      map.get(vehId)!.items.push(i);
-    }
-    return Array.from(map.values());
-  }, [interventions]);
-
-  const filteredEnts = entreprises.filter((e) =>
-    e.nom.toLowerCase().includes(searchEnt.toLowerCase())
+  const filtered = useMemo(
+    () => clients.filter((c) => c.nom.toLowerCase().includes(search.toLowerCase())),
+    [clients, search]
   );
 
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
-    <div className="px-4 py-4 space-y-4">
-      {/* Sélecteur client */}
-      <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Client</p>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={searchEnt}
-            onChange={(e) => setSearchEnt(e.target.value)}
-            placeholder="Rechercher un client..."
-            className="pl-9 h-10"
-          />
-        </div>
-        <Select value={selectedEntId} onValueChange={setSelectedEntId}>
-          <SelectTrigger className="h-10">
-            <SelectValue placeholder="Sélectionner un client..." />
-          </SelectTrigger>
-          <SelectContent>
-            {filteredEnts.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-muted-foreground">Aucun client trouvé</div>
-            ) : (
-              filteredEnts.map((e) => (
-                <SelectItem key={e.id} value={e.id}>{e.nom}</SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
+    <div className="px-4 py-4 space-y-3">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher un client..."
+          className="pl-9 h-10"
+        />
       </div>
 
-      {!selectedEntId && (
+      {filtered.length === 0 && (
         <div className="flex flex-col items-center py-12 text-center">
           <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
-            <FileText className="h-5 w-5 text-muted-foreground" />
+            <NotebookPen className="h-5 w-5 text-muted-foreground" />
           </div>
           <p className="text-sm text-muted-foreground">
-            Sélectionnez un client pour consulter ses observations
+            {clients.length === 0
+              ? "Aucun client trouvé sur vos interventions."
+              : "Aucun résultat pour cette recherche."}
           </p>
         </div>
       )}
 
-      {selectedEntId && loadingInts && (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      )}
-
-      {selectedEntId && !loadingInts && grouped.length === 0 && (
-        <div className="flex flex-col items-center py-8 text-center">
-          <p className="text-sm text-muted-foreground">Aucune intervention réalisée pour ce client.</p>
-        </div>
-      )}
-
-      {grouped.map(({ vehicule, items }) => (
-        <div key={vehicule?.id ?? "unknown"} className="space-y-2">
-          <div className="flex items-center gap-2 pt-2">
-            <Car className="h-4 w-4 text-muted-foreground" />
-            <p className="font-bold text-foreground text-sm">
-              {vehicule?.immatriculation ?? "—"}
-              <span className="font-normal text-muted-foreground">
-                {" "}· {[vehicule?.marque, vehicule?.modele].filter(Boolean).join(" ")}
-              </span>
+      {filtered.map((c) => (
+        <button
+          key={c.id}
+          type="button"
+          onClick={() => navigate({ to: "/terrain/suivi/$id", params: { id: c.id } })}
+          className="w-full text-left flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-muted/30 transition-colors"
+        >
+          <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+            <Car className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-foreground truncate">{c.nom}</p>
+            <p className="text-xs text-muted-foreground">
+              {c.noteCount > 0
+                ? `${c.noteCount} note${c.noteCount > 1 ? "s" : ""} · dernière le ${formatDateFr(c.lastNoteDate!)}`
+                : "Aucune note"}
             </p>
           </div>
-          {items.map((i) => (
-            <div key={i.id} className="rounded-xl border border-border bg-card p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-foreground">
-                    {i.date_intervention ? formatDateFr(i.date_intervention) : "—"}
-                    {i.heure_intervention ? ` · ${formatHeure(i.heure_intervention)}` : ""}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                    {getPackLabel(i.type_prestation)}
-                  </p>
-                </div>
-                <Badge className={cn("text-xs", statutColor(i.statut))} variant="outline">
-                  {statutLabel(i.statut)}
-                </Badge>
-              </div>
-              <Textarea
-                value={observations[i.id] ?? ""}
-                onChange={(e) =>
-                  setObservations((prev) => ({ ...prev, [i.id]: e.target.value }))
-                }
-                onBlur={() => saveObservation(i.id, observations[i.id] ?? "")}
-                placeholder="Ajouter une observation (clés, contact, remarques...)"
-                rows={2}
-                className="text-sm resize-none"
-              />
-              {savingObs[i.id] && (
-                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Sauvegarde...
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {c.noteCount > 0 && (
+              <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                {c.noteCount > 9 ? "9+" : c.noteCount}
+              </span>
+            )}
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </button>
       ))}
     </div>
   );

@@ -315,13 +315,13 @@ function ContratsList() {
               className="pl-9 h-9 text-sm"
             />
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none flex-nowrap">
             {statutFilters.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setStatutFilter(key)}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors",
+                  "px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors whitespace-nowrap shrink-0",
                   statutFilter === key
                     ? "bg-primary text-white border-primary"
                     : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
@@ -574,39 +574,34 @@ function ContratsList() {
                     </Badge>
                   )}
                 </div>
-                <div className="flex justify-end gap-1 border-t pt-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                  >
+                <div className="flex items-center justify-end gap-2 border-t pt-3">
+                  <Button variant="outline" size="sm" asChild className="h-8 px-3 text-xs">
                     <Link to="/admin/contrats/$id" params={{ id: r.id }}>
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3.5 w-3.5 mr-1" />
+                      Voir
                     </Link>
                   </Button>
                   {r.statut === "actif" && (
-                    <Button variant="ghost" size="sm" onClick={() => openGel(r)}>
-                      <Pause className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs" onClick={() => openGel(r)}>
+                      <Pause className="h-3.5 w-3.5 mr-1" />
+                      Geler
                     </Button>
                   )}
                   {r.statut === "en_cours_gel" && (
-                    <Button variant="ghost" size="sm" onClick={() => openReactivate(r)}>
-                      <Sun className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {r.statut !== "actif" && r.statut !== "en_cours_gel" && (
-                    <Button variant="ghost" size="sm" disabled>
-                      <Pause className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs" onClick={() => openReactivate(r)}>
+                      <Sun className="h-3.5 w-3.5 mr-1" />
+                      Réactiver
                     </Button>
                   )}
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="text-destructive"
+                    className="h-8 px-3 text-xs text-destructive border-destructive/30 hover:bg-destructive/5"
                     onClick={() => openResil(r)}
                     disabled={r.statut === "resilie"}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5 mr-1" />
+                    Résilier
                   </Button>
                 </div>
               </Card>

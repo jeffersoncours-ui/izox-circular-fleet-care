@@ -1,21 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Card } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
+// Layout pur : la fiche détail /client/factures/$id rend ici via <Outlet/>.
+// La redirection de /client/factures (path exact) vers /client/documents est
+// portée par client.factures.index.tsx — la mettre ici casserait le détail
+// car le beforeLoad du parent s'exécute aussi pour les routes enfants.
 export const Route = createFileRoute("/client/factures")({
-  component: () => (
-    <div className="px-4 py-5 max-w-2xl mx-auto pb-24 flex flex-col gap-4">
-      <header>
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Historique</p>
-        <h1 className="text-[24px] font-bold tracking-tight text-foreground mt-0.5">Mes factures</h1>
-      </header>
-      <Card className="p-10 text-center shadow-card border-border/60">
-        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center mx-auto mb-3">
-          <FileText className="h-5 w-5 text-muted-foreground/60" />
-        </div>
-        <p className="text-sm font-medium text-foreground">Aucune facture disponible</p>
-        <p className="text-xs text-muted-foreground mt-1">Les factures de votre contrat apparaîtront ici.</p>
-      </Card>
-    </div>
-  ),
+  component: () => <Outlet />,
 });

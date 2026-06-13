@@ -34,6 +34,17 @@ export const Route = createRootRoute({
       { title: "IZOX — Nettoyage circulaire" },
       { name: "description", content: "Plateforme B2B IZOX — gestion des prestations de nettoyage circulaire pour flottes professionnelles." },
       { name: "author", content: "IZOX" },
+      // Bloquer l'indexation par tous les moteurs et crawlers IA
+      { name: "robots",          content: "noindex, nofollow, noarchive, nosnippet, noimageindex" },
+      { name: "googlebot",       content: "noindex, nofollow" },
+      { name: "bingbot",         content: "noindex, nofollow" },
+      // Bloquer spécifiquement les crawlers IA
+      { name: "GPTBot",          content: "noindex" },
+      { name: "anthropic-ai",    content: "noindex" },
+      { name: "ClaudeBot",       content: "noindex" },
+      { name: "Google-Extended", content: "noindex" },
+      { name: "CCBot",           content: "noindex" },
+      // Pas d'Open Graph indexable
       { property: "og:title", content: "IZOX — Nettoyage circulaire" },
       { property: "og:description", content: "Plateforme B2B IZOX — gestion des prestations de nettoyage circulaire pour flottes professionnelles." },
       { property: "og:type", content: "website" },
@@ -46,7 +57,7 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Instrument+Serif:ital@0;1&family=Archivo:wght@400;500;600;700&display=swap",
       },
     ],
   }),

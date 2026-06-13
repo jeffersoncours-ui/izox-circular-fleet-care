@@ -58,10 +58,11 @@ export function GererDemandeGelDialog({
       return;
     }
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("vehicules")
         .select("immatriculation")
         .in("id", demande.vehicule_ids ?? []);
+      if (error) toast.error("Impossible de charger les véhicules : " + error.message);
       setVehiculeImmats((data ?? []).map((v: any) => v.immatriculation));
     })();
   }, [demande]);

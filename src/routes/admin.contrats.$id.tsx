@@ -56,8 +56,21 @@ import {
   CalendarClock,
   Receipt,
   Activity,
+  Printer,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 
+import { FactureDocument } from "@/components/factures/FactureDocument";
+import {
+  type Facture,
+  type FactureLigne,
+  FACTURE_SELECT,
+  STATUT_FACTURE,
+  formatEuro,
+  formatPeriode,
+  formatDateFr,
+} from "@/lib/factures";
 
 import { ResiliationContratDialog } from "@/components/admin/ResiliationContratDialog";
 import { GelContratDialog } from "@/components/admin/GelContratDialog";
@@ -168,6 +181,149 @@ const ROLE_LABEL: Record<string, string> = {
   operateur: "opérateur",
   client: "client",
 };
+
+type FactureListItem = Pick<
+  Facture,
+  | "id"
+  | "numero_facture"
+  | "statut"
+  | "periode_debut"
+  | "periode_fin"
+  | "date_emission"
+  | "montant_ttc"
+>;
+
+function FacturesTab({ contratId }: { contratId: string }) {
+  const [factures, setFactures] = useState<FactureListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Facture | null>(null);
+  const [selectedLignes, setSelectedLignes] = useState<FactureLigne[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("factures")
+      .select("id, numero_facture, statut, periode_debut, periode_fin, date_emission, montant_ttc")
+      .eq("contrat_id", contratId)
+      .order("date_emission", { ascending: false, nullsFirst: false })
+      .order("periode_debut", { ascending: false });
+    if (error) toast.error("Impossible de charger les factures : " + error.message);
+    setFactures((data as FactureListItem[]) ?? []);
+    setLoading(false);
+  }, [contratId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const openDetail = async (id: string) => {
+    setLoadingDetail(true);
+    setSelected(null);
+    const { data: f } = await supabase
+      .from("factures")
+      .select(FACTURE_SELECT)
+      .eq("id", id)
+      .maybeSingle();
+    const { data: l } = await supabase
+      .from("factures_lignes")
+      .select("id, ordre_affichage, type_ligne, libelle, quantite, prix_unitaire_ht, montant_ht, tva_taux")
+      .eq("facture_id", id)
+      .order("ordre_affichage", { ascending: true });
+    setSelected((f as unknown as Facture) ?? null);
+    setSelectedLignes((l as FactureLigne[]) ?? []);
+    setLoadingDetail(false);
+  };
+
+  return (
+    <Card className="p-6 shadow-card border-border/60">
+      <h2 className="font-semibold text-foreground mb-4">
+        Factures {!loading && `(${factures.length})`}
+      </h2>
+
+      {loading ? (
+        <div className="flex flex-col gap-2.5">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      ) : factures.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Aucune facture générée pour ce contrat.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-2.5">
+          {factures.map((f) => {
+            const statut = STATUT_FACTURE[f.statut];
+            return (
+              <li key={f.id}>
+                <button
+                  onClick={() => openDetail(f.id)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/20 transition-colors text-left"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm text-foreground truncate">
+                        {f.numero_facture ?? "Brouillon"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium shrink-0 ${statut.badge}`}
+                      >
+                        {statut.label}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {formatPeriode(f.periode_debut, f.periode_fin)}
+                      {f.date_emission && <> · émise le {formatDateFr(f.date_emission)}</>}
+                    </p>
+                  </div>
+                  <p className="font-mono font-semibold text-sm text-foreground tabular-nums shrink-0">
+                    {formatEuro(f.montant_ttc)}
+                  </p>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <Dialog
+        open={loadingDetail || !!selected}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSelected(null);
+            setSelectedLignes([]);
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="no-print">
+            <DialogTitle className="flex items-center justify-between gap-3 pr-6">
+              <span>{selected?.numero_facture ?? "Facture"}</span>
+              {selected && (
+                <Button variant="izox" size="sm" onClick={() => window.print()}>
+                  <Printer className="h-4 w-4" />
+                  Imprimer / PDF
+                </Button>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {loadingDetail || !selected ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <FactureDocument facture={selected} lignes={selectedLignes} />
+          )}
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
 
 function ContratDetailPage() {
   const { id } = useParams({ from: "/admin/contrats/$id" });
@@ -699,10 +855,7 @@ function ContratDetailPage() {
 
         {/* FACTURES */}
         <TabsContent value="factures" className="mt-6">
-          <Card className="p-12 text-center shadow-card border-border/60">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">Bientôt disponible</p>
-          </Card>
+          <FacturesTab contratId={id} />
         </TabsContent>
         </Tabs>
       </div>
@@ -1012,6 +1165,23 @@ function getActionMeta(
         subtitle: dateRes ? `Effective le ${dateRes}` : "Contrat clôturé",
         note: d.motif ? `Motif : ${d.motif}` : undefined,
         colorClass: "bg-muted text-muted-foreground border border-border",
+      };
+    }
+    case "intervention_validee": {
+      const dateInt = safeFormat(d.date_intervention, "d MMMM yyyy");
+      const pack = d.type_prestation ? getPackLabel(d.type_prestation) : null;
+      const immat = d.immatriculation ?? null;
+      return {
+        icon: Sparkles,
+        title: "Prestation validée",
+        subtitle:
+          immat && pack
+            ? `${immat} · ${pack}`
+            : immat
+            ? immat
+            : pack ?? "Intervention validée",
+        note: dateInt ? `Réalisée le ${dateInt}` : undefined,
+        colorClass: "bg-primary/10 text-primary border border-primary/20",
       };
     }
     case "cloture_mensuelle":

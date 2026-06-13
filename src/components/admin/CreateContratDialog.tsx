@@ -240,12 +240,13 @@ export function CreateContratDialog({ open, onOpenChange, onCreated, contrat }: 
   const generateNumeroContrat = async (debut: Date) => {
     const ym = format(debut, "yyyyMM");
     const prefix = `CT-${ym}-`;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("contrats")
       .select("numero_contrat")
       .like("numero_contrat", `${prefix}%`)
       .order("numero_contrat", { ascending: false })
       .limit(1);
+    if (error) toast.error("Impossible de charger les contrats : " + error.message);
     let next = 1;
     if (data && data.length > 0 && data[0].numero_contrat) {
       const last = data[0].numero_contrat as string;

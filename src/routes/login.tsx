@@ -8,7 +8,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, KeyRound, ArrowLeft, Mail } from "lucide-react";
+import { Loader2, KeyRound, ArrowLeft, Mail, CornerDownLeft } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -91,23 +91,37 @@ function LoginPage() {
     }
     setSaving(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast.error("Erreur : " + error.message);
     } else {
-      toast.success("Mot de passe défini avec succès — bienvenue !");
+      // Destroy the recovery session — user must re-authenticate explicitly.
+      await supabase.auth.signOut();
       clearRecovery();
-      // The redirect effect will fire automatically once isRecovery is false
+      setSaving(false);
+      toast.success("Mot de passe défini. Connectez-vous pour accéder à votre espace.");
     }
   };
 
   const brandHeader = (
-    <div className="bg-primary py-12 sm:py-16 flex items-center justify-center px-4">
-      <img
-        src="/logo-izox.png"
-        alt="IZOX — Nettoyage circulaire"
-        className="h-16 sm:h-20 w-auto object-contain"
-      />
+    <div className="bg-background pt-8 pb-4 sm:pt-10 sm:pb-5 px-6">
+      <div className="max-w-md mx-auto w-full flex flex-col gap-4">
+        <img
+          src="/logo-izox.png"
+          alt="IZOX — Nettoyage circulaire"
+          className="h-[72px] sm:h-24 w-auto object-contain mx-auto"
+        />
+        <div className="w-full text-left">
+          <h2 className="text-[28px] sm:text-[32px] font-bold tracking-tight text-foreground leading-[1.1]">
+            Une flotte propre,<br />sans friction.
+            <CornerDownLeft className="inline-block h-5 w-5 sm:h-6 sm:w-6 ml-2 text-primary align-baseline" />
+          </h2>
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+            Lavage premium pour vos véhicules pros.
+            Programmez, gelez, suivez — depuis votre poche.
+          </p>
+        </div>
+      </div>
     </div>
   );
 
@@ -122,7 +136,7 @@ function LoginPage() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         {brandHeader}
-        <div className="flex-1 flex items-start sm:items-center justify-center px-4 py-8 sm:py-12">
+        <div className="flex-1 flex items-start sm:items-center justify-center px-4 py-4 sm:py-8">
           <Card className="w-full max-w-md p-6 sm:p-8 shadow-strong border-border/60">
             {forgotSent ? (
               <div className="text-center py-4">
@@ -185,7 +199,7 @@ function LoginPage() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         {brandHeader}
-        <div className="flex-1 flex items-start sm:items-center justify-center px-4 py-8 sm:py-12">
+        <div className="flex-1 flex items-start sm:items-center justify-center px-4 py-4 sm:py-8">
           <Card className="w-full max-w-md p-6 sm:p-8 shadow-strong border-border/60">
             <div className="flex items-center gap-3 mb-6">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -244,7 +258,7 @@ function LoginPage() {
     <div className="min-h-screen flex flex-col bg-background">
       {brandHeader}
 
-      <div className="flex-1 flex items-start sm:items-center justify-center px-4 py-8 sm:py-12">
+      <div className="flex-1 flex items-start sm:items-center justify-center px-4 py-4 sm:py-8">
         <Card className="w-full max-w-md p-6 sm:p-8 shadow-strong border-border/60">
           <div className="mb-6">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Bienvenue</h1>

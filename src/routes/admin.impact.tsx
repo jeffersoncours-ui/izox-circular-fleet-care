@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Edit2, Loader2, CheckCircle2 } from "lucide-react";
+import { Edit2, Loader2, CheckCircle2, Leaf } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -9,12 +9,17 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { useAuth } from "@/lib/auth-context";
 import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
+import {
   fetchImpactCoefficients,
   fetchEstimatedRecords,
+  fetchGlobalImpactSummary,
   validateRecordsByIntervention,
   CATEGORY_META,
   type ImpactCoefficient,
   type ImpactRecord,
+  type GlobalImpactSummary,
 } from "@/lib/impact";
 import { ImpactCoefficientDialog } from "@/components/admin/ImpactCoefficientDialog";
 import { format, parseISO } from "date-fns";
@@ -23,6 +28,12 @@ import { fr } from "date-fns/locale";
 export const Route = createFileRoute("/admin/impact")({
   component: AdminImpactPage,
 });
+
+function formatMonth(yyyyMM: string) {
+  const [y, m] = yyyyMM.split("-");
+  const d = new Date(Number(y), Number(m) - 1, 1);
+  return format(d, "MMM yy", { locale: fr });
+}
 
 function AdminImpactPage() {
   return (
@@ -34,11 +45,15 @@ function AdminImpactPage() {
       />
 
       <div className="p-6 lg:p-8 max-w-5xl w-full mx-auto flex flex-col gap-5">
-        <Tabs defaultValue="coefficients" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-sm">
+        <Tabs defaultValue="global" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
+            <TabsTrigger value="global">Vue globale</TabsTrigger>
             <TabsTrigger value="coefficients">Coefficients</TabsTrigger>
             <TabsTrigger value="validation">File de validation</TabsTrigger>
           </TabsList>
+          <TabsContent value="global" className="mt-6">
+            <GlobalTab />
+          </TabsContent>
           <TabsContent value="coefficients" className="mt-6">
             <CoefficientsTab />
           </TabsContent>
@@ -48,6 +63,124 @@ function AdminImpactPage() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+// ─── Onglet Vue globale ────────────────────────────────────────────────────
+
+function GlobalTab() {
+  const [summary, setSummary] = useState<GlobalImpactSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try { setSummary(await fetchGlobalImpactSummary()); }
+      catch (e: unknown) { toast.error((e as Error).message); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center mt-10">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!summary || summary.totalInterventions === 0) {
+    return (
+      <Card className="p-12 text-center border-border/60">
+        <Leaf className="h-10 w-10 mx-auto text-primary mb-3" />
+        <p className="font-medium">Aucune intervention validée</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Les données d'impact apparaîtront ici dès la première validation.
+        </p>
+      </Card>
+    );
+  }
+
+  const waterDisplay = summary.totals.water >= 1000
+    ? `${(summary.totals.water / 1000).toFixed(1)}k`
+    : String(summary.totals.water);
+
+  return (
+    <div className="space-y-5">
+      {/* KPI tiles */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard label="Interventions validées" value={String(summary.totalInterventions)} unit="" color="#1B4332" />
+        <KpiCard label="Eau économisée" value={waterDisplay} unit="L" color="#2563eb" />
+        <KpiCard label="CO₂ évité" value={summary.totals.ghg.toFixed(1)} unit="kg" color="#7c3aed" />
+        <KpiCard label="Clients actifs" value={String(summary.activeClients)} unit="" color="#059669" />
+      </div>
+
+      {/* Monthly bar chart */}
+      {summary.timeline.length > 0 && (
+        <Card className="p-4 border-border/60">
+          <p className="text-xs font-medium text-muted-foreground mb-4">
+            Interventions validées par mois
+          </p>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart
+              data={summary.timeline.map((t) => ({ ...t, month: formatMonth(t.month) }))}
+              margin={{ top: 4, right: 4, bottom: 0, left: -20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+              <Tooltip
+                contentStyle={{ fontSize: 11 }}
+                formatter={(v: number) => [v, "Interventions"]}
+              />
+              <Bar dataKey="interventions" fill="#1B4332" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
+
+      {/* By client — horizontal bar chart */}
+      {summary.byClient.length > 0 && (
+        <Card className="p-4 border-border/60">
+          <p className="text-xs font-medium text-muted-foreground mb-4">
+            Eau économisée par client (L)
+          </p>
+          <ResponsiveContainer
+            width="100%"
+            height={Math.max(summary.byClient.length * 38 + 20, 120)}
+          >
+            <BarChart
+              data={summary.byClient}
+              layout="vertical"
+              margin={{ top: 4, right: 16, bottom: 0, left: 80 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 10 }} />
+              <YAxis type="category" dataKey="nom" tick={{ fontSize: 10 }} width={80} />
+              <Tooltip
+                contentStyle={{ fontSize: 11 }}
+                formatter={(v: number) => [`${v} L`, "Eau économisée"]}
+              />
+              <Bar dataKey="water" fill="#2563eb" radius={[0, 3, 3, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function KpiCard({ label, value, unit, color }: {
+  label: string; value: string; unit: string; color: string;
+}) {
+  return (
+    <Card className="p-4 border-border/60">
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className="text-2xl font-bold" style={{ color }}>
+        {value}
+        {unit && <span className="text-sm font-normal ml-1 text-muted-foreground">{unit}</span>}
+      </p>
+    </Card>
   );
 }
 
