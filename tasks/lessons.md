@@ -1,5 +1,24 @@
 # Lessons Learned — IZOX
 
+## SVG viewBox cropping — resserrer la viewBox pour agrandir visuellement (sessions 34-36)
+
+- **La vraie cause d'un SVG « trop petit »** n'est presque jamais le `max-w` CSS : c'est les marges mortes dans le `viewBox`. Un SVG `viewBox="0 0 460 320"` dont le dessin commence à (56,36) et finit à (460,296) affiche 72px de vide en haut+bas. Solution : `viewBox="56 36 404 276"` → le même code CSS `max-w-[620px]` produit un rendu ×1,5 plus grand. Toujours analyser les coordonnées des éléments extrêmes avant de toucher au CSS.
+- **Repositionner les éléments débordants avant de cropper** : le label SVG « rampes led » de AquaponieScene débordait à droite (x=432, hors d'un crop à x+328=424). Il a fallu d'abord le recentrer (x=260) PUIS resserrer la viewBox. Ordre : identifier les outliers → les corriger → recalculer les bornes du crop.
+- **`clipPath` + `data-*` attrs = pont SVG↔JS propre** : pour animer un élément SVG depuis JS (ex. eau qui monte), ajouter un `<rect data-water-rect>` dans un `<clipPath>` et le requêter via `section.querySelector('[data-water-rect]')`. Le clipPath contrôle la visibilité ; JS ne touche qu'aux attributs `y`/`height`. Zéro état React, zéro re-render.
+- **linearGradient vertical pour effet eau dans un verre** : `x1="0" y1="0" x2="0" y2="1"` avec `stopOpacity` 0.07 en haut → 0.28 en bas mime la refraction d'un liquide (plus dense/opaque au fond). Le fill clippé donne l'illusion d'eau transparente.
+
+## Extraction de logo sur fond opaque — PIL luminance masking (session 36)
+
+- **PNG RGBA ≠ fond transparent** : un fichier `.png` avec mode `RGBA` peut avoir `alpha=255` partout (fond opaque). Toujours vérifier `img.getpixel((0,0))[3]` avant d'assumer la transparence. Si alpha=255 sur les coins : le fond est opaque.
+- **Masque luminance pour séparer texte blanc / fond sombre** : `L = img.convert('L'); L_mask = L.point(lambda p: 0 if p < 110 else min(255, (p-110)*255//90))`. Pixels sombres (fond vert) → alpha=0 ; pixels clairs (texte blanc) → alpha=255. Résultat : image blanche fond transparent utilisable sur n'importe quel fond sombre.
+- **Compression PIL pour assets web** : thumbnail + quality=42 + optimize=True réduit 952 KB → 130 KB (×7.3) sans perte perceptible. Pour les assets visuellement complexes (halftones, photos), passer d'abord en niveaux de gris (`.convert('L')`) avant compression JPEG = gains supplémentaires car canal unique.
+
+## Watermark JPEG en tile — éviter les bandes (session 36)
+
+- **Cause systématique des bandes en tile** : edge pixels d'une photo JPEG en near-black (luminosité 5/255 sur la ligne 0). En tile avec `background-repeat: repeat`, cette ligne noire apparaît toutes les `background-size` px. Solution : ne jamais tiler une photo JPEG non créée pour le tile. Utiliser `cover + no-repeat` à la place.
+- **Effet velours sans tile** : `background-size: 130vmax 130vmax; background-repeat: no-repeat` + oscillation CSS `@keyframes` en 3 points (triangulaire, pas linéaire) crée un drift organique. Le mouvement triangulaire (A→B→C→A) semble moins mécanique qu'un A→B linéaire.
+- **`inset: -380px` est dangereux** : dépasser les bords du viewport avec un pseudo-élément `::before` pour compenser les bords du tile crée des artefacts sur certains navigateurs mobiles (scroll horizontal). Préférer `inset: 0` avec une image plus grande que le viewport (`130vmax`).
+
 ## Dark mode scope isolation — `.izox-b2c` wrapper prevents CRM bleed (session 33)
 
 - **CSS-scoped dark mode requires wrapper class** : wrapping the landing B2C pages in `<div className="izox-b2c">` ensures all CSS variables (--b2c-bg, --b2c-accent, --b2c-glow, etc.) are namespaced. Without wrapper, Tailwind utilities (`text-foreground`, `border-primary`) would redefine global tokens and bleed into the CRM.

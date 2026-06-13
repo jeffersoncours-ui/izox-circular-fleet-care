@@ -2,6 +2,23 @@
 
 ---
 
+## Session 2026-06-13 (36) — Finitions landing B2C (round 3)
+
+- [x] **Logo IZOX réel** : image marque (900×245 RGBA, fond vert opaque → traitement PIL luminance → PNG blanc fond transparent 300×82). `Wordmark` texte → `<img src="/logo-izox-brand.png">` dans `PublicLayout`. CRM (AdminSidebar, ClientNav) inchangé = `logo-izox.png` conservé.
+- [x] **Filigrane velours animé** : tile → `cover 130vmax` sans répétition + oscillation triangulaire (42%→58%→50%→42%, 26s ease-in-out) = dérive organique style velours, zéro bande JPEG.
+- [x] **Accent bleu fluo** : `#3FE08F` (vert) → `#3FD8FF` (bleu clair fluo) — CSS var + tous `rgba(63,224,143,…)` → `rgba(63,216,255,…)` + SVG hardcoded + useTweaks + TweaksPanel.
+- [x] **Goutte eau montante** : `installWaterLoop` + `WaterLoopDiagram` — ajout `clipPath#waterLevel` avec `<rect data-water-rect>` animé en JS (bas→haut au scroll) + `linearGradient#waterGrad` (opaque bas, transparent haut). Effet verre d'eau.
+- [x] **Légendes stations** : grille 3 colonnes autour de la goutte (top/bottom `b2c-mono uppercase`, left/right idem). Stats existantes (50L / 80% / 50%) conservées.
+- [x] **Bassin aquaponie centré** : mur droit x=400→380 (marge symétrique 20px). ClipPath, hachures, lignes d'eau, panneau de contrôle mis à jour.
+- [x] **Bouton hero** : « Envie d'un abonnement ou société ? » — `b2c-btn--primary` (accent fluo, modifiable en live via TweaksPanel). Pleine largeur mobile.
+- [x] `npm run build` ✓ · Purge DB ✓ · Merge → `main` ✓
+
+### Review session 36
+
+Finitions visuelles pures. Leçons clés : traitement PIL luminance pour extraire un logo sur fond opaque ; bande noire JPEG en tile = bord near-black → corriger en cover+oscillation ; SVG clipPath avec rect animé = meilleure approche pour fill d'une forme custom.
+
+---
+
 ## Session 2026-06-12 (35) — Corrections landing B2C round 2 (5 demandes user)
 
 - [x] **1. Hero kicker** : « · Évry-Courcouronnes » retiré (reste « Nettoyage circulaire » seul). La ville reste dans le lead et le footer.
