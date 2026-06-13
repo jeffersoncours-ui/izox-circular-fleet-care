@@ -48,9 +48,9 @@ export function Hero() {
 
           <Link
             to="/entreprises"
-            className="rv b2c-btn b2c-btn--yellow mt-2 w-full sm:w-auto"
+            className="rv b2c-btn b2c-btn--primary mt-2 w-full sm:w-auto"
           >
-            Professionnel ou souhaitant un abonnement
+            Envie d'un abonnement ou société&nbsp;?
           </Link>
 
           {/* Bandeau confiance */}
