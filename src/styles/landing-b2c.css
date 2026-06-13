@@ -575,15 +575,6 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   animation: gv-pulse 2.4s ease-in-out infinite;
 }
 
-/* ── Blueprint scan line (HeroCar overlay) ── */
-@keyframes bp-scan {
-  0%   { transform: translateY(-80px); }
-  100% { transform: translateY(752px); }
-}
-.bp-scan {
-  animation: bp-scan 6s linear infinite;
-}
-
 /* ── Boucle d'eau : goutte dont le contour se dessine au scroll ── */
 .drop-track {
   fill: none;
