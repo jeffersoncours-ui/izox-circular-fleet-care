@@ -2,6 +2,29 @@
 
 ---
 
+## Session 2026-06-13 (37) — Hero R5 : masque luminance + couleur TweakPanel
+
+Demande utilisateur : remplacer l'illustration SVG gravure (jugée trop simpliste)
+par une **image blueprint R5 E-Tech fournie**, détourée pour se superposer au
+filigrane de la page, avec couleur **adaptable via TweakPanel** (bleu fluo).
+
+- [x] **Détourage** : image source fond noir (`max(r,g,b)` aux coins ≈ 0-9) → masque grayscale (noir=transparent, blanc=tracé) via PIL `max(r,g,b)` + étirement de contraste (threshold 10). Conserve voiture + jet + berme + textes intégrés à l'image.
+- [x] **Couleur adaptable** : abandon de `<image>` SVG → `div` avec `mask-image`/`mask-mode:luminance` + `background:var(--b2c-accent)`. La couleur suit le TweakPanel en temps réel, **zéro JS**. Webkit prefix sur `-mask-image/-size/-repeat/-position` (Safari/Chrome).
+- [x] **Itérations utilisateur** :
+  - Retrait textes/jets animés/scan line (rounds intermédiaires) → finalement tout intégré dans l'image fournie
+  - Étoile bas-droite **exclue** du masque (zone y>670, x>1180 mise à 0 avant crop)
+  - Crop au contenu (bbox) + fade bords (8% G/D, 5-6% H/B) pour des bords propres
+  - Bleed mobile calibré `-mx-5` (annule exactement le padding container 1.25rem) → image pile largeur viewport, "RETOUR LOCAL" / "BERME DE RÉCUPÉRATION" complets, pas de coupe
+- [x] Image finale `public/hero-car-r5.png` : 1100×576, grayscale, ~255 Ko
+- [x] `npm run build` ✓ · tsc 0 erreur
+- [x] CLAUDE.md + lessons.md mis à jour · merge → `main`
+
+### Review session 37
+
+Changement purement visuel (hero landing). Technique clé : **mask-image + background var()** = recoloration d'une image monochrome pilotée par CSS var (TweakPanel), sans dupliquer l'asset par couleur ni toucher au JS. Le détourage par masque de luminance (`max(r,g,b)` + étirement) préserve toute la profondeur du tracé. Aucune donnée de test DB créée (frontend only).
+
+---
+
 ## Session 2026-06-13 (36) — Finitions landing B2C (round 3)
 
 - [x] **Logo IZOX réel** : image marque (900×245 RGBA, fond vert opaque → traitement PIL luminance → PNG blanc fond transparent 300×82). `Wordmark` texte → `<img src="/logo-izox-brand.png">` dans `PublicLayout`. CRM (AdminSidebar, ClientNav) inchangé = `logo-izox.png` conservé.

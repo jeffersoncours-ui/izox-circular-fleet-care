@@ -152,7 +152,7 @@ Le dark mode est **scopé sous `.izox-b2c`** (class sur le wrapper `PublicLayout
 - `src/components/landing/CountUp.tsx` — compteur IntersectionObserver + easeOutCubic + prefers-reduced-motion
 
 **Illustrations SVG :**
-- `src/components/landing/illustrations/HeroCar.tsx` — R5 gravure au trait, hachures NOCTRA, 4 jets animés (gv-flow), brume (gv-mist), gouttes (gv-drip)
+- `src/components/landing/illustrations/HeroCar.tsx` — masque de luminance R5 E-Tech (image `public/hero-car-r5.png`, fond noir détouré → blanc=tracé). Rendu via `div` + `mask-image`/`mask-mode:luminance` + `background:var(--b2c-accent)` → la couleur suit le TweakPanel en temps réel, zéro animation. Pour changer l'illustration : convertir la source en masque grayscale (`max(r,g,b)` + étirement contraste) via PIL, voir `tasks/lessons.md` (session 37)
 - `src/components/landing/illustrations/WaterLoopDiagram.tsx` — tuyau stadium avec loop-draw/loop-sheen, 4 stations data-station-t, goutte pilote data-loop-drop
 - `src/components/landing/illustrations/AquaponieScene.tsx` — bassin, 3 poissons data-fish, bulles gv-bubble, cultures hors-sol
 
