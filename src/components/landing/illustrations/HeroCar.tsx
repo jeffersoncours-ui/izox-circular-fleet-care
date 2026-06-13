@@ -1,28 +1,57 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-// HeroCar — masque de luminance R5 E-Tech (1100×588).
-// Technique : mask-image + mask-mode:luminance sur un div background:var(--b2c-accent).
-// La couleur suit le TweakPanel en temps réel (--b2c-accent). Zéro animation.
+// HeroCar — vidéo R5 E-Tech (1024×560, tracé vert fluo sur fond noir, watermarks
+// PixVerse retirés en postprod). mix-blend-mode:screen → le fond noir devient
+// transparent, seul le tracé vert s'affiche et se fond sur le fond sombre de la page.
+// Autoplay en boucle muet (fiable mobile, iOS inclus via playsInline).
+// prefers-reduced-motion → image poster figée (aucune animation).
 
 export function HeroCar({ className = "" }: { className?: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [reduced, setReduced] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (reduced) v.pause();
+    else v.play().catch(() => {}); // certains navigateurs exigent play() post-hydratation
+  }, [reduced]);
+
+  const sharedStyle: React.CSSProperties = {
+    aspectRatio: "1024 / 560",
+    mixBlendMode: "screen",
+  };
+
+  const label =
+    "Renault 5 E-Tech sur berme de récupération — nettoyage circulaire à eau recyclée";
+
+  if (reduced) {
+    return (
+      <img src="/hero-car-r5-poster.jpg" className={className} style={sharedStyle} alt={label} />
+    );
+  }
+
   return (
-    <div
+    <video
+      ref={videoRef}
       className={className}
-      role="img"
-      aria-label="Renault 5 E-Tech sur berme de récupération — nettoyage circulaire à eau recyclée"
-      style={{
-        aspectRatio: "1100 / 576",
-        background: "var(--b2c-accent)",
-        WebkitMaskImage: "url(/hero-car-r5.png)",
-        WebkitMaskSize: "contain",
-        WebkitMaskRepeat: "no-repeat",
-        WebkitMaskPosition: "center bottom",
-        maskImage: "url(/hero-car-r5.png)",
-        maskMode: "luminance",
-        maskSize: "contain",
-        maskRepeat: "no-repeat",
-        maskPosition: "center bottom",
-      } as React.CSSProperties}
+      style={sharedStyle}
+      src="/hero-car-r5.mp4"
+      poster="/hero-car-r5-poster.jpg"
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload="auto"
+      aria-label={label}
     />
   );
 }
