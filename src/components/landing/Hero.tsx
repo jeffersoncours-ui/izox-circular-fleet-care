@@ -69,8 +69,8 @@ export function Hero() {
 
         {/* Colonne illustration — gravure R5 E-Tech au trait.
             -mx-5 mobile : annule le padding du container pour un rendu pleine largeur. */}
-        <div className="rv rv-d1 relative -mx-5 sm:mx-0">
-          <HeroCar className="w-full max-w-[620px] mx-auto" />
+        <div className="rv rv-d1 relative -mx-8 sm:mx-0">
+          <HeroCar className="w-full max-w-[900px] mx-auto" />
         </div>
       </div>
     </section>
