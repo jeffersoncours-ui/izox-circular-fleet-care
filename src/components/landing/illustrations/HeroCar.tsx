@@ -11,7 +11,7 @@ export function HeroCar({ className = "" }: { className?: string }) {
       role="img"
       aria-label="Renault 5 E-Tech sur berme de récupération — nettoyage circulaire à eau recyclée"
       style={{
-        aspectRatio: "3 / 2",
+        aspectRatio: "1100 / 576",
         background: "var(--b2c-accent)",
         WebkitMaskImage: "url(/hero-car-r5.png)",
         WebkitMaskSize: "contain",
