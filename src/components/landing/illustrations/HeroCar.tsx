@@ -1,17 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
 
-// HeroCar — vidéo R5 E-Tech (tracé vert fluo sur fond noir) affichée DIRECTEMENT,
-// sans canvas. Le fond noir est éliminé en pur CSS via `mix-blend-mode: screen` :
-// sur la page sombre (abysse #06120C), le noir de la vidéo est neutre pour le blend
-// "screen" → il devient transparent, le tracé vert fluo reste éclatant.
+// HeroCar — vidéo R5 E-Tech affichée DIRECTEMENT, sans canvas ni blend CSS.
+// Le fond noir a été détouré et baké en TRANSPARENCE RÉELLE (canal alpha) dans le
+// fichier WebM VP9 (pix_fmt yuva420p, tag alpha_mode=1, généré via ffmpeg lumakey).
+// → fond transparent natif sur Firefox + Chrome, zéro JS de rendu, zéro flash noir.
 //
-// Pourquoi pas de canvas chroma-key : Firefox ne décode pas de façon fiable les frames
-// d'une vidéo masquée (opacity:0) pour drawImage/getImageData → canvas vide sur Firefox
-// alors que Chrome fonctionne. Le blend CSS est composité par le GPU, identique sur tous
-// les navigateurs, zéro JS de rendu.
+// Pourquoi ni canvas chroma-key ni mix-blend-mode :
+//  - canvas (drawImage/getImageData) : Firefox ne décode pas une vidéo opacity:0 → vide.
+//  - mix-blend-mode screen : le reveal (.rv) applique transform/opacity sur le parent →
+//    contexte d'empilement isolé → le blend n'a plus le fond de page derrière → noir reste.
+//  L'alpha dans le fichier est la seule approche fiable cross-navigateur.
 //
-// Double source webm/mp4 : H.264 (mp4) pas décodé par Firefox/Linux sans codec système →
-// WebM VP9 en 1ère source (Firefox/Chrome/Edge), mp4 en fallback (Safari/iOS).
+// Double source webm/mp4 : WebM VP9 alpha en 1ère source (Firefox/Chrome/Edge → transparent),
+// mp4 H.264 en fallback (Safari/iOS — fond noir, pas d'alpha VP9 ; HEVC alpha possible plus tard).
 // iOS Safari peut bloquer l'autoplay → déverrouillage au premier toucher.
 
 export function HeroCar({ className = "" }: { className?: string }) {
@@ -120,7 +121,6 @@ export function HeroCar({ className = "" }: { className?: string }) {
           width: "100%",
           height: "100%",
           objectFit: "contain",
-          mixBlendMode: "screen",
           opacity: ready ? 1 : 0,
           transition: "opacity 0.5s ease",
         }}
