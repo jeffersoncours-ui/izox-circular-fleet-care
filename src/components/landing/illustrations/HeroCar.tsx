@@ -104,8 +104,10 @@ export function HeroCar({ className = "" }: { className?: string }) {
       if (video.readyState >= 1) seek();
       else video.addEventListener("loadedmetadata", seek, { once: true });
     } else {
-      // Filet : dessine la 1ʳᵉ frame dès qu'elle est décodée (canvas jamais vide).
+      // Filets : loadeddata = données disponibles, canplay = frame décodée dans le buffer GPU.
+      // Les deux couvrent Firefox (readyState 2 ne garantit pas le buffer GPU sur FF).
       video.addEventListener("loadeddata", drawFrame, { once: true });
+      video.addEventListener("canplay", drawFrame, { once: true });
       video.play().catch(() => {});
       loop();
     }
@@ -123,18 +125,22 @@ export function HeroCar({ className = "" }: { className?: string }) {
     <div
       ref={containerRef}
       className={className}
-      style={{ aspectRatio: "1024 / 560" }}
+      style={{ aspectRatio: "1024 / 560", position: "relative" }}
       role="img"
       aria-label={label}
     >
+      {/* Canvas visible — affiche les frames chroma-keyées, posé au-dessus de la vidéo. */}
       <canvas
         ref={canvasRef}
         width={PROC_W}
         height={PROC_H}
-        style={{ display: "block", width: "100%", height: "100%" }}
+        style={{ display: "block", width: "100%", height: "100%", position: "relative", zIndex: 1 }}
       />
-      {/* Vidéo source cachée (décodée hors écran, jamais affichée directement).
-          WebM d'abord (Chrome/Firefox), mp4 en fallback (Safari/iOS). */}
+      {/* Vidéo pleine taille mais invisible (opacity: 0).
+          IMPORTANT : taille 100×100 (pas 1×1px) — Firefox n'avance pas readyState
+          au-delà de 1 pour les éléments vidéo de taille nulle ou quasi-nulle, ce qui
+          empêche drawImage de lire les frames. Pleine taille = pipeline de décodage normal.
+          WebM d'abord (Firefox/Chrome), mp4 en fallback (Safari/iOS). */}
       <video
         ref={videoRef}
         muted
@@ -143,7 +149,16 @@ export function HeroCar({ className = "" }: { className?: string }) {
         preload="auto"
         aria-hidden="true"
         tabIndex={-1}
-        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          opacity: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
       >
         <source src="/hero-car-r5.webm" type="video/webm" />
         <source src="/hero-car-r5.mp4" type="video/mp4" />
