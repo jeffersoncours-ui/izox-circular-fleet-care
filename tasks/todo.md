@@ -2,6 +2,30 @@
 
 ---
 
+## Session 2026-06-14 (39) — Firefox H.264 codec fix + WebM fallback + iOS unlock
+
+Demande utilisateur : rollback à l'état avant aquaponie vidéo, puis investiguer pourquoi la voiture reste invisible sur Firefox malgré les fixes précédents. **Root cause diagnostiqué** : Firefox sur Linux ne supporte PAS le H.264 (mp4) sans codecs système. Le navigateur traitait le fichier mp4 comme audio → icon lecteur audio visible en UI.
+
+- [x] **Rollback** : reset à b851497 (état pré-aquaponie). Restauré AquaponieScene.tsx SVG.
+- [x] **Diagnostic Firefox** : H.264 mp4 non décodable sur Firefox sans system codecs. Seul WebM VP9 fonctionne natif.
+- [x] **Solution = double source WebM/mp4** : restauré `hero-car-r5.webm` (917 KB, VP9) + refonte HeroCar.tsx.
+- [x] **HeroCar.tsx refonte complète** :
+  - Ajout `containerRef` (parent) pour iOS unlock handler
+  - Ajout `unlocked` state (re-trigger render loop)
+  - iOS unlock effect : click/touchstart → `video.play()` + `setUnlocked(!unlocked)`
+  - Remplacé `src="/hero-car-r5.mp4"` → `<source src="/hero-car-r5.webm" type="video/webm">` PUIS `<source src="/hero-car-r5.mp4" type="video/mp4">`
+  - Pur rAF loop (pas rVFC) + `drawFrame` immediate sur `loadeddata` (fallback si autoplay bloqué)
+  - Forced `muted=true`, `defaultMuted=true`, `playsInline=true` imperatifs (React ne reflète pas toujours)
+  - Deps useEffect : `[reduced, unlocked]`
+- [x] `npm run build` ✓ · Commit + push `claude/izox-review-plan-b0b2ul`
+- [ ] **À vérifier** : Firefox display voiture sur preview Vercel (WebM VP9 décod natif) + Chrome/Edge inchangé
+
+### Review session 39
+
+**Root cause Firefox finalement identifiée** : H.264 mp4 non décodable natif sans system codecs. WebM VP9 fallback restauré → expected fix Firefox + suppression audio icon.
+
+---
+
 ## Session 2026-06-13 (38) — Hero R5 vidéo : Canvas chroma-key + trim artefact final
 
 Demande utilisateur : remplacer l'illustration statique (masque luminance PNG) par une **vidéo animée** (R5 E-Tech nettoyée par l'utilisateur), avec chroma-key Canvas pour éliminer le fond noir complètement (garantir la transparence sur tous les navigateurs). Dernier artefact : boîte noire visible en fin du clip (drawbox pour masquer l'étoile) — réduire la vidéo pour l'éviter.
