@@ -5,9 +5,13 @@ import React, { useEffect, useRef, useState } from "react";
 // pixels noirs deviennent RÉELLEMENT transparents (alpha piloté par la luminance).
 // Le filigrane de la page passe derrière — aucun rectangle noir, sur tous les navigateurs.
 //
-// Double source webm/mp4 : le H.264 (mp4) n'est PAS décodé par Firefox sans codec
+// Double source webm/mp4 : le H.264 (mp4) n'est PAS décodé par Firefox sur Linux sans codec
 // système → WebM VP9 en 1ère source (Chrome/Firefox/Edge), mp4 en fallback (Safari/iOS).
-// iOS Safari bloque l'autoplay des vidéos cachées → déverrouillage au premier toucher.
+//
+// requestVideoFrameCallback (rVFC) : sur Firefox, drawImage(video) ne retourne des pixels
+// valides QUE dans un callback rVFC — c'est le seul moment où Firefox garantit que le frame
+// est dans le buffer GPU accessible à canvas. Avec rAF seul, Firefox a les données
+// (readyState≥2) mais drawImage retourne des pixels vides. Fallback rAF pour vieux navigateurs.
 
 // Résolution de traitement (sous-échantillonnée pour la perf mobile).
 const PROC_W = 480;
@@ -41,7 +45,7 @@ export function HeroCar({ className = "" }: { className?: string }) {
         video.muted = true;
         video.play().catch(() => {});
       }
-      setUnlocked((u) => !u); // re-déclenche la boucle de rendu
+      setUnlocked((u) => !u);
     };
     container.addEventListener("click", unlock, { once: true });
     container.addEventListener("touchstart", unlock, { once: true, passive: true });
@@ -65,6 +69,11 @@ export function HeroCar({ className = "" }: { className?: string }) {
 
     let stopped = false;
     let rafId = 0;
+    let vfcId = 0;
+    const vid = video as HTMLVideoElement & {
+      requestVideoFrameCallback?: (cb: () => void) => number;
+      cancelVideoFrameCallback?: (id: number) => void;
+    };
 
     const drawFrame = () => {
       if (stopped || video.readyState < 2) return;
@@ -72,21 +81,31 @@ export function HeroCar({ className = "" }: { className?: string }) {
       const img = ctx.getImageData(0, 0, PROC_W, PROC_H);
       const d = img.data;
       for (let i = 0; i < d.length; i += 4) {
-        const mx = d[i] > d[i + 1] ? (d[i] > d[i + 2] ? d[i] : d[i + 2]) : d[i + 1] > d[i + 2] ? d[i + 1] : d[i + 2];
+        const mx =
+          d[i] > d[i + 1]
+            ? d[i] > d[i + 2]
+              ? d[i]
+              : d[i + 2]
+            : d[i + 1] > d[i + 2]
+              ? d[i + 1]
+              : d[i + 2];
         d[i + 3] = mx <= LO ? 0 : mx >= HI ? 255 : ((mx - LO) * 255) / (HI - LO);
       }
       ctx.putImageData(img, 0, 0);
     };
 
-    // rAF pur (pas de requestVideoFrameCallback) : dessine la frame COURANTE en
-    // continu, que la vidéo joue ou soit en pause. Garantit que la voiture est
-    // TOUJOURS visible — animée si l'autoplay marche, figée sur la 1ʳᵉ frame
-    // sinon. rVFC ne se déclenche pas si la vidéo est en pause/cachée → canvas
-    // vide, exactement le bug rencontré. rAF est supporté partout.
+    // rVFC (requestVideoFrameCallback) : Firefox garantit que le frame est dans le
+    // buffer GPU au moment du callback → drawImage fonctionne. Fallback rAF pour
+    // les navigateurs sans rVFC.
+    // Les deux chemins appellent drawFrame() dans la même boucle.
     const loop = () => {
       if (stopped) return;
       drawFrame();
-      rafId = requestAnimationFrame(loop);
+      if (vid.requestVideoFrameCallback) {
+        vfcId = vid.requestVideoFrameCallback(loop);
+      } else {
+        rafId = requestAnimationFrame(loop);
+      }
     };
 
     if (reduced) {
@@ -104,10 +123,8 @@ export function HeroCar({ className = "" }: { className?: string }) {
       if (video.readyState >= 1) seek();
       else video.addEventListener("loadedmetadata", seek, { once: true });
     } else {
-      // Filets : loadeddata = données disponibles, canplay = frame décodée dans le buffer GPU.
-      // Les deux couvrent Firefox (readyState 2 ne garantit pas le buffer GPU sur FF).
+      // Filet : dessine immédiatement si les données sont déjà disponibles.
       video.addEventListener("loadeddata", drawFrame, { once: true });
-      video.addEventListener("canplay", drawFrame, { once: true });
       video.play().catch(() => {});
       loop();
     }
@@ -115,6 +132,7 @@ export function HeroCar({ className = "" }: { className?: string }) {
     return () => {
       stopped = true;
       if (rafId) cancelAnimationFrame(rafId);
+      if (vfcId && vid.cancelVideoFrameCallback) vid.cancelVideoFrameCallback(vfcId);
     };
   }, [reduced, unlocked]);
 
@@ -129,18 +147,16 @@ export function HeroCar({ className = "" }: { className?: string }) {
       role="img"
       aria-label={label}
     >
-      {/* Canvas visible — affiche les frames chroma-keyées, posé au-dessus de la vidéo. */}
+      {/* Canvas visible — affiche les frames chroma-keyées, au-dessus de la vidéo. */}
       <canvas
         ref={canvasRef}
         width={PROC_W}
         height={PROC_H}
         style={{ display: "block", width: "100%", height: "100%", position: "relative", zIndex: 1 }}
       />
-      {/* Vidéo pleine taille mais invisible (opacity: 0).
-          IMPORTANT : taille 100×100 (pas 1×1px) — Firefox n'avance pas readyState
-          au-delà de 1 pour les éléments vidéo de taille nulle ou quasi-nulle, ce qui
-          empêche drawImage de lire les frames. Pleine taille = pipeline de décodage normal.
-          WebM d'abord (Firefox/Chrome), mp4 en fallback (Safari/iOS). */}
+      {/* Vidéo pleine taille, invisible (opacity:0).
+          WebM d'abord (Firefox/Chrome), mp4 en fallback (Safari/iOS).
+          Taille 100%×100% : Firefox décode les frames à résolution utile pour drawImage. */}
       <video
         ref={videoRef}
         muted
