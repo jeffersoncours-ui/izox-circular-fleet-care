@@ -16,7 +16,6 @@ import {
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
 import { AquaponieImage } from "./illustrations/AquaponieImage";
 import { CountUp } from "./CountUp";
-import TextBlockAnimation from "./TextBlockAnimation";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
 
@@ -53,9 +52,7 @@ export function HowItWorks() {
                 <span className="stepcard__num">0{i + 1}</span>
               </div>
               <h3 className="b2c-display--md mt-4 !text-[1.5rem] text-[var(--b2c-tx)]">{s.title}</h3>
-              <TextBlockAnimation className="mt-2">
-                <p className="text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
-              </TextBlockAnimation>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
             </div>
           ))}
         </div>
@@ -123,12 +120,10 @@ export function WaterLoop() {
               <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">
                 récupérée sous le véhicule
               </p>
-              <TextBlockAnimation className="mt-1.5">
-                <p className="text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
-                  Une berme étanche capte l'eau de lavage : {CHIFFRES_EAU.litresRecuperes} L
-                  repartent avec nous au lieu de finir dans le caniveau.
-                </p>
-              </TextBlockAnimation>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+                Une berme étanche capte l'eau de lavage : {CHIFFRES_EAU.litresRecuperes} L
+                repartent avec nous au lieu de finir dans le caniveau.
+              </p>
             </div>
             <div className="rv rv-d1">
               <CountUp
@@ -139,12 +134,10 @@ export function WaterLoop() {
               <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">
                 réinjectée dans la boucle
               </p>
-              <TextBlockAnimation className="mt-1.5">
-                <p className="text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
-                  Après filtration à notre local, {CHIFFRES_EAU.litresReinjectes} L sont
-                  réutilisés sur les lavages suivants.
-                </p>
-              </TextBlockAnimation>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+                Après filtration à notre local, {CHIFFRES_EAU.litresReinjectes} L sont
+                réutilisés sur les lavages suivants.
+              </p>
             </div>
           </div>
 
@@ -178,13 +171,11 @@ export function RseProof() {
             delay="rv-d2"
           />
         </div>
-        <TextBlockAnimation className="rv mt-8 max-w-2xl">
-          <p className="text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
-            Une démarche éco-responsable mesurée sur le terrain : produits bio, eau recyclée,
-            zéro rejet au caniveau. Chaque chiffre correspond à des relevés réels effectués
+        <p className="rv mt-8 max-w-2xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+          Une démarche éco-responsable mesurée sur le terrain : produits bio, eau recyclée,
+          zéro rejet au caniveau. Chaque chiffre correspond à des relevés réels effectués
           lors de nos interventions.
-          </p>
-        </TextBlockAnimation>
+        </p>
       </div>
     </section>
   );
@@ -300,13 +291,11 @@ export function Vision() {
           <h2 className="b2c-display--md mt-4 text-[var(--b2c-tx)]">
             Et demain, l'eau fait pousser des <em className="b2c-accent">légumes</em>
           </h2>
-          <TextBlockAnimation className="mt-3 max-w-2xl">
-            <p className="text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
-              La boucle ne s'arrête pas au lavage. Notre objectif : que chaque sous-produit du
-              nettoyage redevienne une ressource rentable, écologiquement et économiquement.
-              Ce n'est pas encore en place : c'est le cap que nous nous sommes fixé.
-            </p>
-          </TextBlockAnimation>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+            La boucle ne s'arrête pas au lavage. Notre objectif : que chaque sous-produit du
+            nettoyage redevienne une ressource rentable, écologiquement et économiquement.
+            Ce n'est pas encore en place : c'est le cap que nous nous sommes fixé.
+          </p>
         </div>
 
         {/* Scène aquaponie — vidéo gravure détourée en alpha, posée DIRECTEMENT sur le
@@ -326,19 +315,15 @@ export function Vision() {
               <h3 className="mt-3 font-[var(--b2c-sans)] text-base font-bold text-[var(--b2c-tx)]">
                 {s.title}
               </h3>
-              <TextBlockAnimation className="mt-1.5">
-                <p className="text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
-              </TextBlockAnimation>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
             </div>
           ))}
         </div>
-        <TextBlockAnimation className="rv mt-8 max-w-2xl border-t border-[var(--b2c-line)] pt-6">
-          <p className="text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
-            Une <span className="font-semibold text-[var(--b2c-tx)]">rentabilité écologique</span> :
-            chaque litre économisé et chaque résidu valorisé réduit nos coûts d'exploitation,
-            et donc vos prix durablement.
-          </p>
-        </TextBlockAnimation>
+        <p className="rv mt-8 max-w-2xl border-t border-[var(--b2c-line)] pt-6 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+          Une <span className="font-semibold text-[var(--b2c-tx)]">rentabilité écologique</span> :
+          chaque litre économisé et chaque résidu valorisé réduit nos coûts d'exploitation,
+          et donc vos prix durablement.
+        </p>
       </div>
     </section>
   );
@@ -355,13 +340,11 @@ export function SubscriptionTeaser() {
             <h2 className="font-[var(--b2c-sans)] text-lg font-bold text-[var(--b2c-tx)]">
               Vous reviendrez ? L'abonnement vous fait économiser jusqu'à −15 %.
             </h2>
-            <TextBlockAnimation className="mt-1.5 max-w-xl">
-              <p className="text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
-                Pour un véhicule entretenu régulièrement, nos formules 2 ou 4 passages par mois
-                reviennent moins cher que des passages ponctuels. Parlez-en avec nous après votre
-                premier nettoyage, sans engagement.
-              </p>
-            </TextBlockAnimation>
+            <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+              Pour un véhicule entretenu régulièrement, nos formules 2 ou 4 passages par mois
+              reviennent moins cher que des passages ponctuels. Parlez-en avec nous après votre
+              premier nettoyage, sans engagement.
+            </p>
           </div>
           <a
             href="mailto:contact@izox.fr?subject=Abonnement%20IZOX"
@@ -460,12 +443,10 @@ export function FinalCta() {
         <h2 className="b2c-display--md rv text-[var(--b2c-tx)]">
           À votre tour de <em className="b2c-accent">fermer la boucle</em>
         </h2>
-        <TextBlockAnimation className="rv rv-d1 mx-auto mt-4 max-w-md">
-          <p className="b2c-lead">
-            Un véhicule propre, une eau qui revit, un geste pour la planète. Réservez en quelques
-            clics.
-          </p>
-        </TextBlockAnimation>
+        <p className="b2c-lead rv rv-d1 mx-auto mt-4 max-w-md">
+          Un véhicule propre, une eau qui revit, un geste pour la planète. Réservez en quelques
+          clics.
+        </p>
         <div className="rv rv-d2 mt-7 flex justify-center">
           <Link to="/reservation" className="b2c-btn b2c-btn--primary">
             Réserver mon nettoyage
