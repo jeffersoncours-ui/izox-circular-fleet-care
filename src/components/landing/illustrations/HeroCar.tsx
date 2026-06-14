@@ -1,31 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
 
-// HeroCar — vidéo R5 E-Tech (1024×560, tracé vert fluo sur fond noir).
-// Chroma-key Canvas : chaque frame de la vidéo est dessinée sur un canvas où les
-// pixels noirs deviennent RÉELLEMENT transparents (alpha piloté par la luminance).
-// Le filigrane de la page passe derrière — aucun rectangle noir, sur tous les navigateurs.
+// HeroCar — vidéo R5 E-Tech (tracé vert fluo sur fond noir) affichée DIRECTEMENT,
+// sans canvas. Le fond noir est éliminé en pur CSS via `mix-blend-mode: screen` :
+// sur la page sombre (abysse #06120C), le noir de la vidéo est neutre pour le blend
+// "screen" → il devient transparent, le tracé vert fluo reste éclatant.
 //
-// Double source webm/mp4 : le H.264 (mp4) n'est PAS décodé par Firefox sur Linux sans codec
-// système → WebM VP9 en 1ère source (Chrome/Firefox/Edge), mp4 en fallback (Safari/iOS).
+// Pourquoi pas de canvas chroma-key : Firefox ne décode pas de façon fiable les frames
+// d'une vidéo masquée (opacity:0) pour drawImage/getImageData → canvas vide sur Firefox
+// alors que Chrome fonctionne. Le blend CSS est composité par le GPU, identique sur tous
+// les navigateurs, zéro JS de rendu.
 //
-// requestVideoFrameCallback (rVFC) : sur Firefox, drawImage(video) ne retourne des pixels
-// valides QUE dans un callback rVFC — c'est le seul moment où Firefox garantit que le frame
-// est dans le buffer GPU accessible à canvas. Avec rAF seul, Firefox a les données
-// (readyState≥2) mais drawImage retourne des pixels vides. Fallback rAF pour vieux navigateurs.
-
-// Résolution de traitement (sous-échantillonnée pour la perf mobile).
-const PROC_W = 480;
-const PROC_H = 270;
-// Seuils de keying : luminance <=LO transparent, >=HI opaque, dégradé entre.
-const LO = 18;
-const HI = 64;
+// Double source webm/mp4 : H.264 (mp4) pas décodé par Firefox/Linux sans codec système →
+// WebM VP9 en 1ère source (Firefox/Chrome/Edge), mp4 en fallback (Safari/iOS).
+// iOS Safari peut bloquer l'autoplay → déverrouillage au premier toucher.
 
 export function HeroCar({ className = "" }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [reduced, setReduced] = useState(false);
-  const [unlocked, setUnlocked] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -34,6 +26,32 @@ export function HeroCar({ className = "" }: { className?: string }) {
     mq.addEventListener?.("change", onChange);
     return () => mq.removeEventListener?.("change", onChange);
   }, []);
+
+  // Lecture muette en boucle (sauf reduced-motion → frame figée à ~1 s).
+  // Forçage impératif de muted/playsInline (React ne reflète pas toujours `muted`).
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+
+    if (reduced) {
+      const seek = () => {
+        try {
+          video.pause();
+          video.currentTime = 1.0;
+        } catch {
+          /* noop */
+        }
+      };
+      if (video.readyState >= 1) seek();
+      else video.addEventListener("loadedmetadata", seek, { once: true });
+      return;
+    }
+
+    video.play().catch(() => {});
+  }, [reduced]);
 
   // iOS : si l'autoplay est bloqué, le premier toucher/click déverrouille la lecture.
   useEffect(() => {
@@ -45,7 +63,6 @@ export function HeroCar({ className = "" }: { className?: string }) {
         video.muted = true;
         video.play().catch(() => {});
       }
-      setUnlocked((u) => !u);
     };
     container.addEventListener("click", unlock, { once: true });
     container.addEventListener("touchstart", unlock, { once: true, passive: true });
@@ -55,81 +72,6 @@ export function HeroCar({ className = "" }: { className?: string }) {
     };
   }, [reduced]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    if (!canvas || !video) return;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
-
-    // Forcer muted/playsInline en impératif (React ne reflète pas toujours `muted`).
-    video.muted = true;
-    video.defaultMuted = true;
-    video.playsInline = true;
-
-    let stopped = false;
-    let rafId = 0;
-
-    const drawFrame = () => {
-      if (stopped || video.readyState < 2) return;
-      ctx.drawImage(video, 0, 0, PROC_W, PROC_H);
-      const img = ctx.getImageData(0, 0, PROC_W, PROC_H);
-      const d = img.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const mx =
-          d[i] > d[i + 1]
-            ? d[i] > d[i + 2]
-              ? d[i]
-              : d[i + 2]
-            : d[i + 1] > d[i + 2]
-              ? d[i + 1]
-              : d[i + 2];
-        d[i + 3] = mx <= LO ? 0 : mx >= HI ? 255 : ((mx - LO) * 255) / (HI - LO);
-      }
-      ctx.putImageData(img, 0, 0);
-    };
-
-    // rAF pur : requestAnimationFrame se ré-arme TOUJOURS (même si la vidéo est en
-    // pause, hors-écran ou opacity:0). On dessine la frame courante de la vidéo à
-    // chaque tour. À l'inverse, requestVideoFrameCallback ne se déclenche QUE quand
-    // une nouvelle frame est présentée au compositeur — ce qui n'arrive pas de façon
-    // fiable sur Firefox pour une vidéo opacity:0, d'où la boucle morte et le canvas
-    // vide. rAF est universel et robuste : c'est le filet contre l'hypothèse B.
-    const loop = () => {
-      if (stopped) return;
-      drawFrame();
-      rafId = requestAnimationFrame(loop);
-    };
-
-    if (reduced) {
-      // Une seule frame figée (~1 s, voiture bien visible).
-      const drawOnce = () => drawFrame();
-      video.pause();
-      video.addEventListener("seeked", drawOnce, { once: true });
-      const seek = () => {
-        try {
-          video.currentTime = 1.0;
-        } catch {
-          drawOnce();
-        }
-      };
-      if (video.readyState >= 1) seek();
-      else video.addEventListener("loadedmetadata", seek, { once: true });
-    } else {
-      // Filets : dessine dès que des données/frames sont disponibles, avant même que
-      // la boucle rAF n'ait son premier tour utile (canvas jamais vide au démarrage).
-      video.addEventListener("loadeddata", drawFrame, { once: true });
-      video.addEventListener("canplay", drawFrame, { once: true });
-      video.play().catch(() => {});
-      loop();
-    }
-
-    return () => {
-      stopped = true;
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, [reduced, unlocked]);
-
   const label =
     "Renault 5 E-Tech sur berme de récupération — nettoyage circulaire à eau recyclée";
 
@@ -137,37 +79,27 @@ export function HeroCar({ className = "" }: { className?: string }) {
     <div
       ref={containerRef}
       className={className}
-      style={{ aspectRatio: "1024 / 560", position: "relative" }}
+      style={{ aspectRatio: "1024 / 560" }}
       role="img"
       aria-label={label}
     >
-      {/* Canvas visible — affiche les frames chroma-keyées, au-dessus de la vidéo. */}
-      <canvas
-        ref={canvasRef}
-        width={PROC_W}
-        height={PROC_H}
-        style={{ display: "block", width: "100%", height: "100%", position: "relative", zIndex: 1 }}
-      />
-      {/* Vidéo pleine taille, invisible (opacity:0).
-          WebM d'abord (Firefox/Chrome), mp4 en fallback (Safari/iOS).
-          Taille 100%×100% : Firefox décode les frames à résolution utile pour drawImage. */}
+      {/* Vidéo affichée directement. mix-blend-mode: screen → le fond noir se fond
+          dans la page sombre (devient transparent), le tracé vert fluo ressort. */}
       <video
         ref={videoRef}
         muted
         loop={!reduced}
+        autoPlay={!reduced}
         playsInline
         preload="auto"
         aria-hidden="true"
         tabIndex={-1}
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
+          display: "block",
           width: "100%",
           height: "100%",
-          opacity: 0,
-          pointerEvents: "none",
-          zIndex: 0,
+          objectFit: "contain",
+          mixBlendMode: "screen",
         }}
       >
         <source src="/hero-car-r5.webm" type="video/webm" />
