@@ -123,6 +123,40 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   letter-spacing: -0.01em;
   font-size: calc(clamp(1.9rem, 4vw, 2.9rem) * var(--b2c-tscale));
 }
+/* Rendu isométrique 2D des titres (réf poster « INFINITE PROGRESS … »).
+   Projection OBLIQUE pure, SANS perspective : les lettres gardent la même
+   taille quelle que soit leur position (pas de fuite 3D). skewY = baseline
+   qui monte vers la droite, skewX = jambages penchés. L'extrusion (empilement
+   d'ombres en diagonale) donne le relief « bloc 3D » des lettres.
+   La police passe en sans bold condensé pour coller au rendu de la réf. */
+.izox-b2c .b2c-iso {
+  display: inline-block;
+  font-family: var(--b2c-sans);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  transform: skewY(-22deg) skewX(-8deg) scaleY(1.12);
+  transform-origin: center;
+  text-shadow:
+    -1px 1px 0 var(--iso-shade),
+    -2px 2px 0 var(--iso-shade),
+    -3px 3px 0 var(--iso-shade),
+    -4px 4px 0 var(--iso-shade),
+    -5px 5px 0 var(--iso-shade),
+    -6px 6px 0 var(--iso-shade);
+}
+.izox-b2c {
+  --iso-shade: color-mix(in srgb, var(--b2c-accent) 32%, #06120c);
+}
+@media (max-width: 640px) {
+  .izox-b2c .b2c-iso {
+    transform: skewY(-16deg) skewX(-6deg) scaleY(1.08);
+    text-shadow:
+      -1px 1px 0 var(--iso-shade),
+      -2px 2px 0 var(--iso-shade),
+      -3px 3px 0 var(--iso-shade),
+      -4px 4px 0 var(--iso-shade);
+  }
+}
 /* Mot/segment accentué : italique serif en vert lumineux */
 .b2c-accent {
   font-style: italic;
