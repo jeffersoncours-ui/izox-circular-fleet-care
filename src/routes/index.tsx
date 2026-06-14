@@ -14,7 +14,6 @@ import {
   FinalCta,
 } from "@/components/landing/sections";
 import { PricingSection } from "@/components/landing/PricingSection";
-import { LayeredText } from "@/components/landing/LayeredText";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -71,11 +70,6 @@ function LandingPage() {
       <BeforeAfter />
       <PricingSection />
       <Vision />
-      <section className="b2c-section border-t border-[var(--b2c-line)]">
-        <div className="b2c-container flex justify-center overflow-hidden py-8">
-          <LayeredText accentIndices={[4]} />
-        </div>
-      </section>
       <SubscriptionTeaser />
       <Reviews />
       <Faq />
