@@ -7,6 +7,7 @@ import { SlidersHorizontal, X, RotateCcw } from "lucide-react";
 import { useTweaks, type B2cTheme, type TitleFont } from "./useTweaks";
 
 const ACCENTS = ["#3FD8FF", "#5BC8E8", "#A8C4B4", "#E8C268"];
+const SMOKE_COLORS = ["#155e63", "#0e3a40", "#2a4d3a", "#3a2f4d", "#4d3a2a"];
 const THEMES: { id: B2cTheme; label: string }[] = [
   { id: "abysse", label: "Abysse vert" },
   { id: "noir", label: "Noir profond" },
@@ -106,6 +107,25 @@ export function TweaksPanel() {
               value={tweaks.glow}
               display={`${Math.round(tweaks.glow * 100)} %`}
               onChange={(v) => setTweaks({ glow: v })}
+            />
+          </Group>
+
+          {/* Fond animé (fumée) */}
+          <Group label="Fond animé — teinte">
+            <Swatches
+              value={tweaks.smokeColor}
+              options={SMOKE_COLORS}
+              onPick={(c) => setTweaks({ smokeColor: c })}
+            />
+            <Range
+              className="mt-3"
+              label="Intensité du fond"
+              min={0}
+              max={0.6}
+              step={0.01}
+              value={tweaks.smokeIntensity}
+              display={`${Math.round(tweaks.smokeIntensity * 100)} %`}
+              onChange={(v) => setTweaks({ smokeIntensity: v })}
             />
           </Group>
 

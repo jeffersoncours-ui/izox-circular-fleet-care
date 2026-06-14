@@ -54,41 +54,12 @@
   /* clip (et non hidden) : coupe les débordements horizontaux des halos/glow
      sans créer de conteneur de scroll — préserve la navbar sticky. */
   overflow-x: clip;
-  /* Stacking context propre pour que le filigrane ::before (z-index -1)
-     reste au-dessus du fond mais sous tout le contenu. */
+  /* Stacking context propre pour que le fond animé <SmokeBackground/>
+     (canvas z-index -2) reste au-dessus du fond mais sous tout le contenu.
+     Le filigrane halftone est désormais FUSIONNÉ dans ce canvas (shader),
+     il n'y a plus de pseudo-élément ::before. */
   position: relative;
   isolation: isolate;
-}
-
-/* ── Filigrane halftone (texture "velours" — oscillation lente sans tile).
-      L'image couvre tout le viewport (130vmax × 130vmax) pour donner de la
-      marge au déplacement sans bord visible. L'oscillation triangulaire crée
-      l'effet de lumière glissant sur un tissu velouté.
-      mix-blend luminosity → prend la teinte du fond.
-      prefers-reduced-motion : position figée, texture visible. ── */
-@keyframes watermark-drift {
-  0%   { background-position: 42% 44%; }
-  33%  { background-position: 58% 50%; }
-  66%  { background-position: 50% 58%; }
-  100% { background-position: 42% 44%; }
-}
-
-.izox-b2c::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background: url("/watermark-halftone.jpg") 50% 50% / 130vmax 130vmax no-repeat;
-  opacity: 0.07;
-  mix-blend-mode: luminosity;
-  pointer-events: none;
-  animation: watermark-drift 26s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .izox-b2c::before {
-    animation: none;
-    background-position: 50% 50%;
-  }
 }
 
 /* Fond du body pendant que la landing est montée (évite le seam clair

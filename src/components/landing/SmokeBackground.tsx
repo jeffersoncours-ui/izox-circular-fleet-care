@@ -1,15 +1,23 @@
-// Fond animé "fumée" WebGL (shader fbm) — arrière-plan de la landing B2C.
-// Posé DERRIÈRE le filigrane (z-index -2 < filigrane -1) dans le contexte
-// isolé .izox-b2c. Aucun effet hors de la landing.
+// Fond animé "fumée + filigrane" WebGL — UNIQUE arrière-plan de la landing B2C.
+// Fusionne le shader fbm (fumée) ET le filigrane halftone (échantillonné comme
+// texture dans le shader) en un seul canvas. Remplace l'ancien duo
+// canvas-fumée + pseudo-élément CSS ::before. Posé en z-index -2 dans le
+// contexte isolé .izox-b2c → derrière tout le contenu, aucun effet hors landing.
 //
-// Version adaptée + sécurisée (session 42) :
+// Sécurité + perf (session 42) :
 //   - Fallback : si WebGL2 indisponible → ne rend rien (pas de crash, fond abysse conservé).
-//   - prefers-reduced-motion → une seule frame figée, aucune boucle rAF (accessibilité).
-//   - visibilitychange → boucle mise en pause quand l'onglet est caché (batterie mobile).
-//   - DPR plafonné à 1.5 → limite le nombre de fragments sur écrans haute densité (perf/batterie).
-//   - Couleur sombre teintée accent + opacité CSS faible → texture subtile, ne délave pas le texte.
+//   - prefers-reduced-motion → une frame figée, aucune boucle rAF.
+//   - visibilitychange → boucle en pause quand l'onglet est caché (batterie).
+//   - Rendu à résolution réduite (DPR plafonné 1.5 × RENDER_SCALE) → ~3-4× moins de fragments.
+//   - Cap à 30 fps → la fumée est lente, 30 fps suffit et divise le coût GPU par 2.
+//   - Couleur + intensité pilotées par le TweaksPanel (smokeColor / smokeIntensity).
 
 import { useEffect, useRef } from "react";
+import { useTweaks } from "./useTweaks";
+
+const RENDER_SCALE = 0.6; // résolution interne du canvas (étiré en CSS) — fumée floue, invisible à l'œil
+const FRAME_MS = 1000 / 30; // cap 30 fps
+const FILIGRANE_STRENGTH = 0.12; // dosage du grain halftone fusionné
 
 const fragmentShaderSource = `#version 300 es
 precision highp float;
@@ -17,6 +25,8 @@ out vec4 O;
 uniform float time;
 uniform vec2 resolution;
 uniform vec3 u_color;
+uniform sampler2D u_tex;
+uniform float u_fili;
 
 #define FC gl_FragCoord.xy
 #define R resolution
@@ -41,6 +51,14 @@ void main(){
 
   col=mix(col, u_color, dot(col,vec3(.21,.71,.07)));
   col=mix(vec3(.08),col,min(time*.1,1.));
+
+  // ── Filigrane halftone fusionné : texture échantillonnée + dérive lente.
+  vec2 tuv = FC / R;
+  vec2 aspect = vec2(R.x / R.y, 1.0);
+  vec2 drift = vec2(sin(T * 0.02) * 0.03, cos(T * 0.015) * 0.03);
+  float grain = texture(u_tex, tuv * aspect * 2.0 + drift).r;
+  col = mix(col, col * mix(0.55, 1.15, grain), u_fili);
+
   O=vec4(clamp(col,.08,1.),1);
 }`;
 
@@ -56,9 +74,13 @@ class Renderer {
   private vs: WebGLShader | null = null;
   private fs: WebGLShader | null = null;
   private buffer: WebGLBuffer | null = null;
+  private tex: WebGLTexture | null = null;
+  private img: HTMLImageElement | null = null;
   private uResolution: WebGLUniformLocation | null = null;
   private uTime: WebGLUniformLocation | null = null;
   private uColor: WebGLUniformLocation | null = null;
+  private uTex: WebGLUniformLocation | null = null;
+  private uFili: WebGLUniformLocation | null = null;
   private color: [number, number, number] = [0.5, 0.5, 0.5];
 
   constructor(canvas: HTMLCanvasElement, gl: WebGL2RenderingContext) {
@@ -66,7 +88,7 @@ class Renderer {
     this.gl = gl;
   }
 
-  /** Compile + link. Retourne false en cas d'échec (l'appelant abandonne proprement). */
+  /** Compile + link + texture. Retourne false en cas d'échec (abandon propre). */
   setup(): boolean {
     const gl = this.gl;
     const vs = gl.createShader(gl.VERTEX_SHADER);
@@ -103,28 +125,61 @@ class Renderer {
     this.uResolution = gl.getUniformLocation(program, "resolution");
     this.uTime = gl.getUniformLocation(program, "time");
     this.uColor = gl.getUniformLocation(program, "u_color");
+    this.uTex = gl.getUniformLocation(program, "u_tex");
+    this.uFili = gl.getUniformLocation(program, "u_fili");
+
+    // Texture halftone : 1×1 noir en attendant le chargement (évite tout pixel indéfini).
+    this.tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+      new Uint8Array([0, 0, 0, 255]),
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     return true;
+  }
+
+  /** Charge l'image halftone dans la texture (NPOT REPEAT OK en WebGL2). */
+  loadTexture(url: string, onLoaded?: () => void) {
+    const gl = this.gl;
+    const img = new Image();
+    this.img = img;
+    img.onload = () => {
+      if (!this.tex) return;
+      gl.bindTexture(gl.TEXTURE_2D, this.tex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      onLoaded?.();
+    };
+    img.src = url;
   }
 
   updateColor(c: [number, number, number]) {
     this.color = c;
   }
 
-  /** DPR plafonné à 1.5 : sur un écran 3x, full DPR = 9× les fragments → trop coûteux. */
   updateScale() {
     const dpr = Math.min(1.5, Math.max(1, window.devicePixelRatio || 1));
-    this.canvas.width = Math.floor(window.innerWidth * dpr);
-    this.canvas.height = Math.floor(window.innerHeight * dpr);
+    const px = dpr * RENDER_SCALE;
+    this.canvas.width = Math.floor(window.innerWidth * px);
+    this.canvas.height = Math.floor(window.innerHeight * px);
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
   }
 
   render(now = 0) {
-    const { gl, program, buffer, canvas } = this;
+    const { gl, program, buffer, canvas, tex } = this;
     if (!program || !gl.isProgram(program)) return;
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(program);
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.uniform1i(this.uTex, 0);
+    gl.uniform1f(this.uFili, FILIGRANE_STRENGTH);
     gl.uniform2f(this.uResolution, canvas.width, canvas.height);
     gl.uniform1f(this.uTime, now * 1e-3);
     gl.uniform3fv(this.uColor, this.color);
@@ -132,8 +187,10 @@ class Renderer {
   }
 
   dispose() {
-    const { gl, program, vs, fs, buffer } = this;
+    const { gl, program, vs, fs, buffer, tex, img } = this;
+    if (img) img.onload = null;
     if (buffer) gl.deleteBuffer(buffer);
+    if (tex) gl.deleteTexture(tex);
     if (program) {
       if (vs) {
         gl.detachShader(program, vs);
@@ -160,47 +217,41 @@ function hexToRgb(hex: string): [number, number, number] | null {
     : null;
 }
 
-interface SmokeBackgroundProps {
-  /** Teinte des volutes claires. Sombre par défaut pour rester subtil sur l'abysse. */
-  smokeColor?: string;
-  /** Opacité CSS du canvas (0..1) — faible = texture discrète, contraste texte préservé. */
-  opacity?: number;
-}
-
-export function SmokeBackground({
-  smokeColor = "#155e63",
-  opacity = 0.32,
-}: SmokeBackgroundProps) {
+export function SmokeBackground() {
+  const { tweaks } = useTweaks();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<Renderer | null>(null);
+  // L'intensité pilote l'opacité CSS ET coupe le rendu GPU quand elle est nulle.
+  const intensityRef = useRef(tweaks.smokeIntensity);
+  intensityRef.current = tweaks.smokeIntensity;
 
+  // Setup unique au montage (pas de re-création du contexte sur changement de couleur/intensité).
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Fallback : pas de WebGL2 → on n'affiche rien (le fond abysse reste).
     const gl = canvas.getContext("webgl2");
-    if (!gl) return;
+    if (!gl) return; // pas de WebGL2 → fond abysse conservé, aucun crash
 
     const renderer = new Renderer(canvas, gl);
-    if (!renderer.setup()) return; // shader KO → abandon silencieux
+    if (!renderer.setup()) return;
     rendererRef.current = renderer;
-
-    const initial = hexToRgb(smokeColor);
-    if (initial) renderer.updateColor(initial);
 
     const reduced =
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
+    renderer.loadTexture("/watermark-halftone.jpg", () => {
+      if (reduced) renderer.render(5000); // repeindre la frame figée une fois la texture prête
+    });
+
     const handleResize = () => {
       renderer.updateScale();
-      // Repeindre immédiatement après resize (utile en mode figé).
       if (reduced) renderer.render(5000);
     };
     renderer.updateScale();
     window.addEventListener("resize", handleResize);
 
-    // prefers-reduced-motion : une seule frame (fondu d'apparition terminé), aucune boucle.
+    // prefers-reduced-motion : une seule frame, aucune boucle.
     if (reduced) {
       renderer.render(5000);
       return () => {
@@ -212,20 +263,25 @@ export function SmokeBackground({
 
     let animationFrameId = 0;
     let running = true;
+    let last = 0;
     const loop = (now: number) => {
       if (!running) return;
-      renderer.render(now);
       animationFrameId = requestAnimationFrame(loop);
+      // Cap 30 fps + skip du rendu GPU quand l'intensité est nulle (fond masqué).
+      if (now - last < FRAME_MS) return;
+      last = now;
+      if (intensityRef.current <= 0.001) return;
+      renderer.render(now);
     };
     animationFrameId = requestAnimationFrame(loop);
 
-    // Batterie : pause quand l'onglet est masqué, reprise au retour.
     const handleVisibility = () => {
       if (document.hidden) {
         running = false;
         cancelAnimationFrame(animationFrameId);
       } else if (!running) {
         running = true;
+        last = 0;
         animationFrameId = requestAnimationFrame(loop);
       }
     };
@@ -239,20 +295,20 @@ export function SmokeBackground({
       renderer.dispose();
       rendererRef.current = null;
     };
-  }, [smokeColor]);
+  }, []);
 
-  // Met à jour la couleur sans recréer le contexte si la prop change.
+  // Couleur pilotée par le TweaksPanel (sans recréer le contexte).
   useEffect(() => {
-    const rgb = hexToRgb(smokeColor);
+    const rgb = hexToRgb(tweaks.smokeColor);
     if (rgb) rendererRef.current?.updateColor(rgb);
-  }, [smokeColor]);
+  }, [tweaks.smokeColor]);
 
   return (
     <canvas
       ref={canvasRef}
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 block h-full w-full"
-      style={{ zIndex: -2, opacity }}
+      style={{ zIndex: -2, opacity: tweaks.smokeIntensity }}
     />
   );
 }

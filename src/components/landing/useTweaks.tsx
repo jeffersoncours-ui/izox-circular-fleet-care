@@ -17,6 +17,8 @@ export interface Tweaks {
   heroLine2: string;
   heroLine3: string; // dernier mot accentué
   ctaLabel: string;
+  smokeColor: string; // teinte des volutes du fond animé
+  smokeIntensity: number; // 0 .. 0.6 — opacité du fond fumée
 }
 
 export const DEFAULT_TWEAKS: Tweaks = {
@@ -29,6 +31,8 @@ export const DEFAULT_TWEAKS: Tweaks = {
   heroLine2: "On la récupère.",
   heroLine3: "On la fait revivre.",
   ctaLabel: "Réserver mon nettoyage",
+  smokeColor: "#155e63",
+  smokeIntensity: 0.32,
 };
 
 const STORAGE_KEY = "izox_b2c_tweaks";
