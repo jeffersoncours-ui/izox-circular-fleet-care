@@ -10,6 +10,7 @@ import {
   Recycle,
   Sprout,
   Fish,
+  ChevronDown,
   Quote,
 } from "lucide-react";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
