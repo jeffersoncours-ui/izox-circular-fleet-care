@@ -2,7 +2,6 @@
 // Phase 2a : layout dark + reveals (.rv). Les illustrations SVG (boucle tuyau,
 // aquaponie) et les animations scroll-driven arrivent en Phase 2b/2c.
 
-import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   CalendarCheck,
@@ -11,13 +10,10 @@ import {
   Recycle,
   Sprout,
   Fish,
-  ChevronDown,
   Quote,
 } from "lucide-react";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
-import { WaterLoopDiagram } from "./illustrations/WaterLoopDiagram";
 import { AquaponieImage } from "./illustrations/AquaponieImage";
-import { installWaterLoop } from "./scrollScenes";
 import { CountUp } from "./CountUp";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
@@ -67,14 +63,9 @@ export function HowItWorks() {
 /* ── 3. La boucle d'eau (goutte — contour dessiné au scroll) ───────── */
 
 export function WaterLoop() {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (ref.current) return installWaterLoop(ref.current);
-  }, []);
-
   return (
     <section id="boucle" className="b2c-section scroll-mt-20 border-t border-[var(--b2c-line)]">
-      <div className="b2c-container" ref={ref}>
+      <div className="b2c-container">
         <SectionHeading
           kicker="Notre différence"
           title={
@@ -85,8 +76,8 @@ export function WaterLoop() {
           subtitle="Pas de lavage « sans eau ». Une eau qui travaille, qu'on récupère et qu'on fait revivre, c'est ça le nettoyage circulaire."
         />
 
-        {/* Goutte — le contour se dessine au scroll, chiffres disposés autour */}
-        <div className="mt-12" data-loop-section>
+        {/* Schéma traitement — image statique avec textes */}
+        <div className="mt-12">
           <div className="rv mx-auto max-w-md text-center">
             <CountUp
               className="b2c-figure b2c-glow-text"
@@ -103,22 +94,18 @@ export function WaterLoop() {
             </p>
           </div>
 
-          {/* Goutte + légendes courtes aux 4 stations */}
-          <div className="rv rv-d1 mt-8">
-            <p className="b2c-mono mb-3 text-center text-[10px] uppercase tracking-[0.14em] text-[var(--b2c-tx-dim)]">
-              Pression optimisée, la saleté avec un minimum de volume
+          {/* Image traitement + textes */}
+          <div className="rv rv-d1 mt-8 flex flex-col items-center">
+            <p className="b2c-mono mb-6 text-center text-sm font-semibold text-[var(--b2c-tx)]">
+              Recueillir la saleté avec un minimum de volume
             </p>
-            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-3 sm:gap-x-6">
-              <p className="b2c-mono text-right text-[10px] uppercase tracking-[0.14em] leading-snug text-[var(--b2c-tx-dim)]">
-                Capte 100&nbsp;% des eaux de lavage, rien dans le caniveau
-              </p>
-              <WaterLoopDiagram className="w-full max-w-[220px] sm:max-w-[260px]" />
-              <p className="b2c-mono text-[10px] uppercase tracking-[0.14em] leading-snug text-[var(--b2c-tx-dim)]">
-                Ratio d'eau réinjectée pour le futur
-              </p>
-            </div>
-            <p className="b2c-mono mt-3 text-center text-[10px] uppercase tracking-[0.14em] text-[var(--b2c-tx-dim)]">
-              Traitement des hydrocarbures et métaux lourds, maîtrise du déchet
+            <img
+              src="/boucle-traitement.png"
+              alt="Schéma de traitement des hydrocarbures et métaux lourds"
+              className="w-full max-w-[500px] mx-auto"
+            />
+            <p className="b2c-mono mt-6 text-center text-sm font-semibold text-[var(--b2c-tx)]">
+              Traitement des hydrocarbures et métaux lourds pour une maîtrise des déchets
             </p>
           </div>
 

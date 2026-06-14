@@ -65,56 +65,5 @@ export function installFilDeLeau(root: HTMLElement): () => void {
   };
 }
 
-/* ── 2. Boucle d'eau (tuyau qui se remplit + eau montante + stations + goutte) ── */
-export function installWaterLoop(section: HTMLElement): () => void {
-  const draw = section.querySelector<SVGPathElement>("[data-loop-draw]");
-  const sheen = section.querySelector<SVGPathElement>("[data-loop-sheen]");
-  const drop = section.querySelector<SVGCircleElement>("[data-loop-drop]");
-  const stations = Array.from(section.querySelectorAll<SVGGElement>("[data-station]"));
-  const waterRect = section.querySelector<SVGRectElement>("[data-water-rect]");
-  if (!draw) return () => {};
-
-  const len = draw.getTotalLength();
-  draw.style.strokeDasharray = `${len}`;
-  if (sheen) sheen.style.strokeDasharray = `${len}`;
-
-  const apply = (fill: number) => {
-    const off = len * (1 - fill);
-    draw.style.strokeDashoffset = `${off}`;
-    if (sheen) sheen.style.strokeDashoffset = `${off}`;
-    if (drop) {
-      const pt = draw.getPointAtLength(len * clamp(fill, 0.001, 0.999));
-      drop.setAttribute("cx", `${pt.x}`);
-      drop.setAttribute("cy", `${pt.y}`);
-      drop.style.opacity = fill > 0.02 && fill < 0.99 ? "1" : "0";
-    }
-    for (const st of stations) {
-      const t = parseFloat(st.getAttribute("data-station-t") ?? "1");
-      st.classList.toggle("lit", fill >= t);
-    }
-    // Eau montante : le clipRect monte de y=388 (vide) vers y=26 (plein).
-    if (waterRect) {
-      const top = 26, bot = 388, h = bot - top;
-      waterRect.setAttribute("y", String(bot - h * fill));
-      waterRect.setAttribute("height", String(Math.max(0, h * fill)));
-    }
-  };
-
-  if (prefersReduced()) {
-    apply(1);
-    if (drop) drop.style.opacity = "0";
-    return () => {};
-  }
-
-  // Le remplissage progresse pendant que la section traverse la zone centrale
-  // du viewport (p ∈ [0.12, 0.72] → fill 0→1).
-  const update = () => apply(remap(viewportProgress(section), 0.12, 0.72));
-  const onScroll = rafThrottle(update);
-  update();
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll, { passive: true });
-  return () => {
-    window.removeEventListener("scroll", onScroll);
-    window.removeEventListener("resize", onScroll);
-  };
-}
+/* ── Code mort supprimé : installWaterLoop était utilisée pour l'animation du schéma SVG de la boucle d'eau.
+   Remplacée par une image statique en session 42. ──*/
