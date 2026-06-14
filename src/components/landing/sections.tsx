@@ -289,9 +289,7 @@ export function Vision() {
             <span className="b2c-kicker">Notre feuille de route</span>
           </div>
           <h2 className="b2c-display--md mt-4 text-[var(--b2c-tx)]">
-            <span className="b2c-iso">
-              Et demain, l'eau fait pousser des <em className="b2c-accent">légumes</em>
-            </span>
+            Et demain, l'eau fait pousser des <em className="b2c-accent">légumes</em>
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
             La boucle ne s'arrête pas au lavage. Notre objectif : que chaque sous-produit du
@@ -443,9 +441,7 @@ export function FinalCta() {
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container text-center">
         <h2 className="b2c-display--md rv text-[var(--b2c-tx)]">
-          <span className="b2c-iso">
-            À votre tour de <em className="b2c-accent">fermer la boucle</em>
-          </span>
+          À votre tour de <em className="b2c-accent">fermer la boucle</em>
         </h2>
         <p className="b2c-lead rv rv-d1 mx-auto mt-4 max-w-md">
           Un véhicule propre, une eau qui revit, un geste pour la planète. Réservez en quelques
@@ -475,9 +471,7 @@ export function SectionHeading({
   return (
     <div className="max-w-2xl">
       <p className="b2c-kicker rv">{kicker}</p>
-      <h2 className="b2c-display--md rv rv-d1 mt-2 text-[var(--b2c-tx)]">
-        <span className="b2c-iso">{title}</span>
-      </h2>
+      <h2 className="b2c-display--md rv rv-d1 mt-2 text-[var(--b2c-tx)]">{title}</h2>
       {subtitle && <p className="b2c-lead rv rv-d2 mt-3">{subtitle}</p>}
     </div>
   );
