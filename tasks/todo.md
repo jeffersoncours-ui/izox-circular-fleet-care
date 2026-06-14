@@ -2,6 +2,29 @@
 
 ---
 
+## Session 2026-06-14 (42) — Landing B2C : cleanup Hero (retirer "voir comment", renommer CTA entreprises)
+
+Demandes utilisateur : (1) retirer bouton inutile "Voir comment l'eau revit" ; (2) renommer "Envie d'un abonnement ou société ?" en "Vous êtes une entreprise ?" ; (3) auditer les liens retirés.
+
+- [x] **Hero.tsx** : suppression du bouton ghost "Voir comment l'eau revit ↓" (lien vers #boucle, ancienne CTA scroll)
+- [x] **Hero.tsx** : suppression import `ArrowDown` (devenu inutilisé)
+- [x] **Hero.tsx** : renommage bouton "Envie d'un abonnement ou société ?" → "Vous êtes une entreprise ?"
+- [x] **PublicLayout.tsx** : suppression du lien navbar desktop "La boucle d'eau" (vers /#boucle)
+- [x] **PublicLayout.tsx** : suppression du lien navbar mobile "La boucle d'eau" (vers /#boucle)
+- [x] **Audit complet** : grep sur tout le codebase, aucune autre référence externe au bouton supprimé
+- [x] **Build validation** : `npm run build` 0 erreur ✓
+- [x] **Commit + push** : `72f926e` sur branche `claude/izox-corrections-nppd3e`
+
+### Review session 42
+
+**Livré — Nettoyage Hero landing :**
+- Bouton "Voir comment l'eau revit" supprimé (CTA scroll vers #boucle jugée inutile). Les utilisateurs découvrent la section Boucle d'eau en scrollant naturellement.
+- Lien navbar "La boucle d'eau" supprimé (cohérence avec le bouton retiré du Hero).
+- CTA "Envie d'un abonnement ou société ?" renommée en "Vous êtes une entreprise ?" (libellé plus clair et direct).
+- Audit : aucune autre référence orpheline identifiée.
+
+---
+
 ## Session 2026-06-14 (41) — AquaponieImage : remplacement SVG → vidéo → image statique PNG
 
 Demande utilisateur (évolution en cours de session) : remplacer le schéma SVG aquaponie par une vidéo IA gravure, puis **pivot vers image statique PNG** (plus qualitative).
