@@ -296,7 +296,7 @@ export function Vision() {
   return (
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
-        <div className="b2c-card rv p-6 sm:p-10">
+        <div className="rv">
           <div className="inline-flex items-center rounded-full border border-[var(--b2c-line-strong)] bg-[var(--primary-soft)] px-3 py-1">
             <span className="b2c-kicker">Notre feuille de route</span>
           </div>
@@ -308,32 +308,34 @@ export function Vision() {
             nettoyage redevienne une ressource rentable — écologiquement et économiquement.
             Ce n'est pas encore en place : c'est le cap que nous nous sommes fixé.
           </p>
-
-          {/* Scène aquaponie — vidéo gravure détourée en alpha (AquaponieVideo).
-              -mx-6 mobile : annule le padding de la card pour un rendu pleine largeur. */}
-          <div className="rv -mx-6 mt-8 sm:mx-0" data-aqua-section>
-            <AquaponieVideo className="mx-auto w-full max-w-[480px]" />
-          </div>
-
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            {steps.map((s, i) => (
-              <div key={s.title} className={`rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
-                <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--primary-soft)]">
-                  {s.icon}
-                </div>
-                <h3 className="mt-3 font-[var(--b2c-sans)] text-base font-bold text-[var(--b2c-tx)]">
-                  {s.title}
-                </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-8 max-w-2xl border-t border-[var(--b2c-line)] pt-6 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
-            Une <span className="font-semibold text-[var(--b2c-tx)]">rentabilité écologique</span> :
-            chaque litre économisé et chaque résidu valorisé réduit nos coûts d'exploitation —
-            et donc vos prix, durablement.
-          </p>
         </div>
+
+        {/* Scène aquaponie — vidéo gravure détourée en alpha, posée DIRECTEMENT sur le
+            filigrane de la page (plus de card opaque derrière). Bords feather (flou alpha)
+            pour s'incruster dans le filigrane. -mx-5 mobile : annule le padding du
+            container pour un rendu pleine largeur. */}
+        <div className="rv -mx-5 mt-8 sm:mx-0" data-aqua-section>
+          <AquaponieVideo className="mx-auto w-full max-w-[480px]" />
+        </div>
+
+        <div className="mt-8 grid gap-6 sm:grid-cols-3">
+          {steps.map((s, i) => (
+            <div key={s.title} className={`rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
+              <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--primary-soft)]">
+                {s.icon}
+              </div>
+              <h3 className="mt-3 font-[var(--b2c-sans)] text-base font-bold text-[var(--b2c-tx)]">
+                {s.title}
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
+            </div>
+          ))}
+        </div>
+        <p className="rv mt-8 max-w-2xl border-t border-[var(--b2c-line)] pt-6 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
+          Une <span className="font-semibold text-[var(--b2c-tx)]">rentabilité écologique</span> :
+          chaque litre économisé et chaque résidu valorisé réduit nos coûts d'exploitation —
+          et donc vos prix, durablement.
+        </p>
       </div>
     </section>
   );
