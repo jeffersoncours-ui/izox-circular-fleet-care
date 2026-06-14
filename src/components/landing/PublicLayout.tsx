@@ -206,11 +206,22 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
     );
     els.forEach((el) => io.observe(el));
 
+    // Filet anti-"reveal bloqué" : si l'IntersectionObserver ne se déclenche jamais
+    // pour un élément (cas connu Firefox : élément déjà dans le viewport au mount,
+    // combiné au rootMargin négatif → isIntersecting peut rester false), le bloc
+    // resterait à opacity:0 indéfiniment (zone vide mais dimensionnée). Ce watchdog
+    // révèle tout ce qui n'a pas encore été révélé après un court délai. Les éléments
+    // déjà révélés par l'IO ne sont pas affectés (ajouter .is-in deux fois est inerte).
+    const revealTimer = window.setTimeout(() => {
+      els.forEach((el) => el.classList.add("is-in"));
+    }, 1200);
+
     // Fil de l'eau — progression globale au scroll.
     const cleanupFil = installFilDeLeau(root);
 
     return () => {
       io.disconnect();
+      window.clearTimeout(revealTimer);
       cleanupFil();
     };
   }, []);
@@ -218,9 +229,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={rootRef}
-      className={`izox-b2c flex min-h-screen flex-col ${themeClass(tweaks.theme)} ${
-        tweaks.carRender === "teinte" ? "car-teinte" : ""
-      }`}
+      className={`izox-b2c flex min-h-screen flex-col ${themeClass(tweaks.theme)}`}
       style={tweaksStyle(tweaks)}
     >
       <FilDeLeau />
