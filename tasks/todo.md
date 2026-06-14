@@ -2,6 +2,46 @@
 
 ---
 
+## Session 2026-06-14 (43) — Fond fumée WebGL + perf vidéo + essais titres (rollbackés)
+
+### Partie 1 — Fond animé fumée WebGL (conservé)
+Demande utilisateur : ajouter un fond fumée premium (obtenu sur 21st.dev, corrigé par Gemini) sous le filigrane, sécurisé + optimisé.
+
+- [x] **SmokeBackground.tsx** : renderer WebGL2 (shader fbm + filigrane halftone fusionné en texture). Fallback si pas de WebGL2, prefers-reduced-motion = 1 frame, pause sur onglet caché, DPR plafonné 1.5 × RENDER_SCALE 0.6, cap 25 fps, skip GPU si intensité ~0.
+- [x] **useTweaks.tsx** : ajout `smokeColor` + `smokeIntensity` (defaults #155e63 / 0.32).
+- [x] **TweaksPanel.tsx** : contrôles teinte (5 presets + picker) + slider intensité.
+- [x] **landing-b2c.css** : suppression du pseudo-élément `::before` filigrane (fusionné dans le canvas) + keyframes watermark-drift.
+- [x] **Commits** : `7ce9f95`, `b3a94ca`
+
+### Partie 2 — Fluidité vidéo HeroCar (conservé)
+Demande utilisateur : la vidéo de la voiture bégaie par moments.
+
+- [x] **AlphaVideo.tsx** : `will-change: contents` + `contain: layout style paint` sur le container, `backfaceVisibility: hidden` sur la vidéo → isole les repaints du canvas fumée + reveal.
+- [x] **Hero.tsx** : `contain: layout style paint` sur la section.
+- [x] **SmokeBackground.tsx** : cap fps 30 → 25 (réduit la contention GPU avec le décodage vidéo).
+- [x] **Commits** : `9d3ed9c`, `147b6e8`
+
+### Partie 3 — Essais d'effets sur les textes/titres (TOUS ROLLBACKÉS)
+4 tentatives successives, toutes rejetées par l'utilisateur → revert propre à chaque fois.
+
+- [x] **TextBlockAnimation (GSAP SplitText)** sur les sous-textes → rejeté (lag) → revert `93414cc` + retrait deps gsap.
+- [x] **Titres isométriques v1** (perspective + rotateX) → rejeté (fuite 3D, sans rapport avec la réf) → revert `1891895`.
+- [x] **Titres isométriques v2** (skew 2D + extrusion) → rejeté → revert `54bac38`.
+- [x] **LayeredText** (empilement de mots isométrique, réf poster, statique) → rejeté → revert `d2fe962`.
+
+### Partie 4 — Vérif finale + merge main
+- [x] **Revue de bugs** (subagent) sur toute la landing : SSR guardé, cleanups complets, aucune référence cassée, assets présents. Rien de bloquant.
+- [x] **Fix défensif Hero.tsx** : fallback si `heroLine3` vidé via le panel (évite `<em>` vide).
+- [x] **Fix doc** : commentaires fps 30 → 25 dans SmokeBackground.
+- [x] **tsc + build** : 0 erreur.
+
+### Review session 43
+- **Conservé** : fond fumée WebGL (pilotable via TweaksPanel) + optimisations fluidité vidéo HeroCar.
+- **Abandonné** : tout effet visuel sur les titres/textes (4 approches testées, aucune validée). Les titres restent en serif éditorial classique avec reveals `.rv`.
+- **Leçon clé** : pour un effet visuel subjectif, livrer une version minimale testable + rollback facile (1 commit par essai) plutôt que de sur-investir. Voir lessons.md.
+
+---
+
 ## Session 2026-06-14 (42) — Landing B2C : cleanup Hero + em-dashes + copyright
 
 ### Partie 1 — Nettoyage Hero

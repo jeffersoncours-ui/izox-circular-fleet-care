@@ -9,7 +9,7 @@
 //   - prefers-reduced-motion → une frame figée, aucune boucle rAF.
 //   - visibilitychange → boucle en pause quand l'onglet est caché (batterie).
 //   - Rendu à résolution réduite (DPR plafonné 1.5 × RENDER_SCALE) → ~3-4× moins de fragments.
-//   - Cap à 30 fps → la fumée est lente, 30 fps suffit et divise le coût GPU par 2.
+//   - Cap à 25 fps → la fumée est lente, 25 fps suffit et réduit la contention GPU.
 //   - Couleur + intensité pilotées par le TweaksPanel (smokeColor / smokeIntensity).
 
 import { useEffect, useRef } from "react";
@@ -267,7 +267,7 @@ export function SmokeBackground() {
     const loop = (now: number) => {
       if (!running) return;
       animationFrameId = requestAnimationFrame(loop);
-      // Cap 30 fps + skip du rendu GPU quand l'intensité est nulle (fond masqué).
+      // Cap 25 fps + skip du rendu GPU quand l'intensité est nulle (fond masqué).
       if (now - last < FRAME_MS) return;
       last = now;
       if (intensityRef.current <= 0.001) return;

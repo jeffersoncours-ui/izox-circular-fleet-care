@@ -5,13 +5,15 @@
 import { Link } from "@tanstack/react-router";
 import { Droplets, Leaf, ShieldCheck } from "lucide-react";
 import { ZONE_INTERVENTION } from "@/lib/pricing-b2c";
-import { useTweaks } from "./useTweaks";
+import { useTweaks, DEFAULT_TWEAKS } from "./useTweaks";
 import { HeroCar } from "./illustrations/HeroCar";
 
 export function Hero() {
   const { tweaks } = useTweaks();
-  // Dernier mot de la 3e ligne accentué (italique + glow).
-  const words3 = tweaks.heroLine3.trim().split(" ");
+  // Dernier mot de la 3e ligne accentué (italique + glow). Fallback si le
+  // champ est vidé via le TweaksPanel (évite un <em> vide / 3e ligne absente).
+  const line3 = tweaks.heroLine3.trim() || DEFAULT_TWEAKS.heroLine3;
+  const words3 = line3.split(" ");
   const lastWord = words3.pop() ?? "";
   const head3 = words3.join(" ");
 

@@ -1,5 +1,17 @@
 # Lessons Learned — IZOX
 
+## Effet visuel subjectif : livrer minimal + rollback facile, ne pas sur-investir (session 43)
+
+- **4 essais d'effets sur les titres/textes, 4 rejets** : TextBlockAnimation (GSAP), titres isométriques v1 (perspective 3D), v2 (skew 2D + extrusion), LayeredText (empilement de mots). Chaque essai a été reverté immédiatement. Leçon : sur un rendu **purement esthétique** où le goût de l'utilisateur tranche, ne pas câbler l'effet dans 8 endroits d'un coup ni ajouter une grosse lib avant validation. Faire **1 commit isolé et facilement révertable** par tentative → `git revert <sha>` propre, zéro résidu.
+- **Comprendre la RÉFÉRENCE avant de coder** : l'image "INFINITE PROGRESS…" n'était pas un titre-phrase penché mais un **empilement de mots** en projection oblique. J'ai perdu 2 itérations à pencher des phrases (perspective + rotateX = fuite 3D, sans rapport) avant de réaliser que l'effet vient de l'alternance EXACTE `skew(60deg,-30deg) scaleY(0.667)` / `skew(0deg,-30deg) scaleY(1.333)` ligne par ligne. Quand l'utilisateur fournit une réf + un code source, reproduire le code source TEL QUEL d'abord, ne pas réinventer.
+- **Adapter le code "21st.dev / Next.js" à Vite/TanStack** : retirer systématiquement `"use client"`, `<style jsx>` (Next-only), les media-queries inline en objet style (invalides en React → silencieusement ignorées), et toute dep lourde (GSAP) si l'animation n'est pas requise. Remplacer le responsive par `clamp()` + unités `em`.
+- **GSAP SplitText = coûteux** : re-split du DOM + recréation d'overlays à chaque resize, combiné au canvas WebGL fumée = saturation du main thread → lag mobile. Pour un reveal léger, préférer CSS pur (clip-path animé via l'IntersectionObserver déjà en place) plutôt que GSAP.
+
+## Perf : `contain` + `will-change` pour isoler une vidéo des repaints voisins (session 43)
+
+- **`contain: layout style paint`** sur le container d'une vidéo (et sur la section parente) crée une **frontière de peinture** : les repaints du canvas WebGL d'arrière-plan et de l'animation de reveal ne se propagent plus à la vidéo → bégaiement supprimé. Combiner avec `will-change: contents` (alloue les ressources de rendu à l'avance) + `backface-visibility: hidden` (force une couche GPU).
+- **Capper le fps d'un canvas d'ambiance lent** : une fumée fbm animée est imperceptible à 25 fps vs 60. Passer le cap de 30 → 25 fps réduit la contention GPU avec le décodage vidéo simultané, sans perte visuelle.
+
 ## `npm run build` ne suffit PAS — toujours `npx tsc` avant commit (session 42)
 
 - **Symptôme** : la landing crashait en prod avec l'error boundary "Something went wrong / An unexpected error occurred". Le build Vercel passait (vert), mais la page `/` plantait au runtime.
