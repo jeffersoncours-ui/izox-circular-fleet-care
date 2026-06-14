@@ -3,7 +3,7 @@
 // L'illustration gravure R5 E-Tech arrive en Phase 2b (placeholder halo ici).
 
 import { Link } from "@tanstack/react-router";
-import { Droplets, Leaf, ShieldCheck, ArrowDown } from "lucide-react";
+import { Droplets, Leaf, ShieldCheck } from "lucide-react";
 import { ZONE_INTERVENTION } from "@/lib/pricing-b2c";
 import { useTweaks } from "./useTweaks";
 import { HeroCar } from "./illustrations/HeroCar";
@@ -40,17 +40,13 @@ export function Hero() {
             <Link to="/reservation" className="b2c-btn b2c-btn--primary">
               {tweaks.ctaLabel}
             </Link>
-            <a href="#boucle" className="b2c-btn b2c-btn--ghost">
-              Voir comment l'eau revit
-              <ArrowDown className="h-4 w-4" />
-            </a>
           </div>
 
           <Link
             to="/entreprises"
             className="rv b2c-btn b2c-btn--primary mt-2 w-full sm:w-auto"
           >
-            Envie d'un abonnement ou société&nbsp;?
+            Vous êtes une entreprise&nbsp;?
           </Link>
 
           {/* Bandeau confiance */}

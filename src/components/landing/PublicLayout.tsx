@@ -43,9 +43,6 @@ function PublicNavbar() {
           <a href="/#tarifs" className="text-sm text-[var(--b2c-tx-dim)] transition-colors hover:text-[var(--b2c-tx)]">
             Tarifs
           </a>
-          <a href="/#boucle" className="text-sm text-[var(--b2c-tx-dim)] transition-colors hover:text-[var(--b2c-tx)]">
-            La boucle d'eau
-          </a>
           <Link to="/entreprises" className="text-sm text-[var(--b2c-tx-dim)] transition-colors hover:text-[var(--b2c-tx)]">
             Entreprises
           </Link>
@@ -77,9 +74,6 @@ function PublicNavbar() {
           <div className="flex flex-col gap-3">
             <a href="/#tarifs" className="py-1.5 text-sm text-[var(--b2c-tx)]" onClick={() => setOpen(false)}>
               Tarifs
-            </a>
-            <a href="/#boucle" className="py-1.5 text-sm text-[var(--b2c-tx)]" onClick={() => setOpen(false)}>
-              La boucle d'eau
             </a>
             <Link to="/entreprises" className="py-1.5 text-sm text-[var(--b2c-tx)]" onClick={() => setOpen(false)}>
               Entreprises
