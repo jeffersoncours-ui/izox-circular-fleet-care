@@ -16,7 +16,7 @@ export function PricingSection() {
         <SectionHeading
           kicker="Transparence totale"
           title="Nos tarifs"
-          subtitle="Tous les prix sont TTC, déplacement inclus dans la zone. Le prix affiché à la réservation est le prix payé — rien de plus."
+          subtitle="Tous les prix sont TTC, déplacement inclus dans la zone. Le prix affiché à la réservation est le prix payé, rien de plus."
         />
 
         <div className="mx-auto mt-8 max-w-2xl">

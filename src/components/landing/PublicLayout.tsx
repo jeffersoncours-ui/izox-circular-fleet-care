@@ -18,7 +18,7 @@ function Wordmark() {
   return (
     <img
       src="/logo-izox-brand.png"
-      alt="IZOX — Circular Fleet Care"
+      alt="IZOX"
       width={108}
       height={30}
       className="h-[30px] w-auto"
@@ -148,7 +148,7 @@ function PublicFooter() {
           </div>
         </div>
         <p className="mt-10 text-[11px] text-[var(--b2c-tx-faint)]">
-          © {new Date().getFullYear()} IZOX — Circular Fleet Care. Tous droits réservés.
+          © {new Date().getFullYear()} IZOX. Tous droits réservés.
         </p>
       </div>
     </footer>

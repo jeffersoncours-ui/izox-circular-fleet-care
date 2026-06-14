@@ -82,7 +82,7 @@ export function WaterLoop() {
               La boucle <em className="b2c-accent">d'eau</em>
             </>
           }
-          subtitle="Pas de lavage « sans eau ». Une eau qui travaille, qu'on récupère et qu'on fait revivre — c'est ça, le nettoyage circulaire."
+          subtitle="Pas de lavage « sans eau ». Une eau qui travaille, qu'on récupère et qu'on fait revivre, c'est ça le nettoyage circulaire."
         />
 
         {/* Goutte — le contour se dessine au scroll, chiffres disposés autour */}
@@ -106,7 +106,7 @@ export function WaterLoop() {
           {/* Goutte + légendes courtes aux 4 stations */}
           <div className="rv rv-d1 mt-8">
             <p className="b2c-mono mb-3 text-center text-[10px] uppercase tracking-[0.14em] text-[var(--b2c-tx-dim)]">
-              Pression optimisée — la saleté avec un minimum de volume
+              Pression optimisée, la saleté avec un minimum de volume
             </p>
             <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-3 sm:gap-x-6">
               <p className="b2c-mono text-right text-[10px] uppercase tracking-[0.14em] leading-snug text-[var(--b2c-tx-dim)]">
@@ -289,7 +289,7 @@ export function Vision() {
     {
       icon: <Sprout className="h-5 w-5 text-[var(--b2c-accent)]" />,
       title: "Légumes locaux",
-      text: "Les légumes produits sont revendus en circuit court — chaque lavage finance un peu de production locale.",
+      text: "Les légumes produits sont revendus en circuit court, chaque lavage finance un peu de production locale.",
     },
   ];
 
@@ -305,7 +305,7 @@ export function Vision() {
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
             La boucle ne s'arrête pas au lavage. Notre objectif : que chaque sous-produit du
-            nettoyage redevienne une ressource rentable — écologiquement et économiquement.
+            nettoyage redevienne une ressource rentable, écologiquement et économiquement.
             Ce n'est pas encore en place : c'est le cap que nous nous sommes fixé.
           </p>
         </div>
@@ -333,8 +333,8 @@ export function Vision() {
         </div>
         <p className="rv mt-8 max-w-2xl border-t border-[var(--b2c-line)] pt-6 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
           Une <span className="font-semibold text-[var(--b2c-tx)]">rentabilité écologique</span> :
-          chaque litre économisé et chaque résidu valorisé réduit nos coûts d'exploitation —
-          et donc vos prix, durablement.
+          chaque litre économisé et chaque résidu valorisé réduit nos coûts d'exploitation,
+          et donc vos prix durablement.
         </p>
       </div>
     </section>
@@ -355,7 +355,7 @@ export function SubscriptionTeaser() {
             <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
               Pour un véhicule entretenu régulièrement, nos formules 2 ou 4 passages par mois
               reviennent moins cher que des passages ponctuels. Parlez-en avec nous après votre
-              premier nettoyage — sans engagement.
+              premier nettoyage, sans engagement.
             </p>
           </div>
           <a
@@ -381,7 +381,7 @@ export function Reviews() {
         <div className="b2c-card rv mt-10 border-dashed p-8 text-center">
           <Quote className="mx-auto h-6 w-6 text-[var(--b2c-tx-faint)]" />
           <p className="mt-3 text-sm font-semibold text-[var(--b2c-tx)]">
-            Tout juste lancés — vos avis apparaîtront ici.
+            Tout juste lancés, vos avis apparaîtront ici.
           </p>
           <p className="mx-auto mt-1.5 max-w-md text-sm text-[var(--b2c-tx-dim)]">
             Nous publions uniquement des avis réels de clients ayant réservé une intervention.
@@ -409,7 +409,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Puis-je annuler ma réservation ?",
-    a: "Oui. En cas d'annulation, votre acompte vous est intégralement remboursé. À noter : s'agissant d'une prestation à date fixe, le droit de rétractation de 14 jours ne s'applique pas (art. L221-28 du Code de la consommation) — c'est la politique d'annulation ci-dessus qui s'applique.",
+    a: "Oui. En cas d'annulation, votre acompte vous est intégralement remboursé. À noter : s'agissant d'une prestation à date fixe, le droit de rétractation de 14 jours ne s'applique pas (art. L221-28 du Code de la consommation), c'est la politique d'annulation ci-dessus qui s'applique.",
   },
   {
     q: "Quels produits utilisez-vous ?",
