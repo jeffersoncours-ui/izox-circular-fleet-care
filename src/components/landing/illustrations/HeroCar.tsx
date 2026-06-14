@@ -2,24 +2,26 @@ import React, { useEffect, useRef, useState } from "react";
 
 // HeroCar — vidéo R5 E-Tech (1024×560, tracé vert fluo sur fond noir).
 // Chroma-key Canvas : chaque frame de la vidéo est dessinée sur un canvas où les
-// pixels noirs deviennent RÉELLEMENT transparents (alpha piloté par la luminance,
-// dégradé doux pour conserver le glow vert). Le filigrane de la page passe donc
-// intégralement derrière — aucun rectangle noir, sur tous les navigateurs.
-// Autoplay boucle muet (iOS via playsInline). prefers-reduced-motion → 1 seule frame figée.
+// pixels noirs deviennent RÉELLEMENT transparents (alpha piloté par la luminance).
+// Le filigrane de la page passe derrière — aucun rectangle noir, sur tous les navigateurs.
+//
+// Double source webm/mp4 : le H.264 (mp4) n'est PAS décodé par Firefox sans codec
+// système → WebM VP9 en 1ère source (Chrome/Firefox/Edge), mp4 en fallback (Safari/iOS).
+// iOS Safari bloque l'autoplay des vidéos cachées → déverrouillage au premier toucher.
 
-// Résolution de traitement (sous-échantillonnée pour la perf mobile ; le canvas est
-// ré-étiré en CSS à 100 %, le tracé glowy tolère le léger adoucissement).
-// Réduit à 480×270 (~130k pixels vs 250k avant) pour allèger le traitement chroma-key.
+// Résolution de traitement (sous-échantillonnée pour la perf mobile).
 const PROC_W = 480;
 const PROC_H = 270;
-// Seuils de keying sur max(r,g,b) : <=LO transparent, >=HI opaque, dégradé entre.
+// Seuils de keying : luminance <=LO transparent, >=HI opaque, dégradé entre.
 const LO = 18;
 const HI = 64;
 
 export function HeroCar({ className = "" }: { className?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [reduced, setReduced] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -29,6 +31,26 @@ export function HeroCar({ className = "" }: { className?: string }) {
     return () => mq.removeEventListener?.("change", onChange);
   }, []);
 
+  // iOS : si l'autoplay est bloqué, le premier toucher/click déverrouille la lecture.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || reduced) return;
+    const unlock = () => {
+      const video = videoRef.current;
+      if (video) {
+        video.muted = true;
+        video.play().catch(() => {});
+      }
+      setUnlocked((u) => !u); // re-déclenche la boucle de rendu
+    };
+    container.addEventListener("click", unlock, { once: true });
+    container.addEventListener("touchstart", unlock, { once: true, passive: true });
+    return () => {
+      container.removeEventListener("click", unlock);
+      container.removeEventListener("touchstart", unlock);
+    };
+  }, [reduced]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
@@ -36,13 +58,13 @@ export function HeroCar({ className = "" }: { className?: string }) {
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
 
+    // Forcer muted/playsInline en impératif (React ne reflète pas toujours `muted`).
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+
     let stopped = false;
     let rafId = 0;
-    let vfcId = 0;
-    const vid = video as HTMLVideoElement & {
-      requestVideoFrameCallback?: (cb: () => void) => number;
-      cancelVideoFrameCallback?: (id: number) => void;
-    };
 
     const drawFrame = () => {
       if (stopped || video.readyState < 2) return;
@@ -56,21 +78,22 @@ export function HeroCar({ className = "" }: { className?: string }) {
       ctx.putImageData(img, 0, 0);
     };
 
+    // rAF pur (pas de requestVideoFrameCallback) : dessine la frame COURANTE en
+    // continu, que la vidéo joue ou soit en pause. Garantit que la voiture est
+    // TOUJOURS visible — animée si l'autoplay marche, figée sur la 1ʳᵉ frame
+    // sinon. rVFC ne se déclenche pas si la vidéo est en pause/cachée → canvas
+    // vide, exactement le bug rencontré. rAF est supporté partout.
     const loop = () => {
       if (stopped) return;
       drawFrame();
-      if (vid.requestVideoFrameCallback) vfcId = vid.requestVideoFrameCallback(loop);
-      else rafId = requestAnimationFrame(loop);
+      rafId = requestAnimationFrame(loop);
     };
 
     if (reduced) {
-      // Une seule frame figée (~1 s d'animation, voiture bien visible).
-      const drawOnce = () => {
-        drawFrame();
-      };
+      // Une seule frame figée (~1 s, voiture bien visible).
+      const drawOnce = () => drawFrame();
       video.pause();
-      const onSeeked = () => drawOnce();
-      video.addEventListener("seeked", onSeeked, { once: true });
+      video.addEventListener("seeked", drawOnce, { once: true });
       const seek = () => {
         try {
           video.currentTime = 1.0;
@@ -81,6 +104,8 @@ export function HeroCar({ className = "" }: { className?: string }) {
       if (video.readyState >= 1) seek();
       else video.addEventListener("loadedmetadata", seek, { once: true });
     } else {
+      // Filet : dessine la 1ʳᵉ frame dès qu'elle est décodée (canvas jamais vide).
+      video.addEventListener("loadeddata", drawFrame, { once: true });
       video.play().catch(() => {});
       loop();
     }
@@ -88,25 +113,30 @@ export function HeroCar({ className = "" }: { className?: string }) {
     return () => {
       stopped = true;
       if (rafId) cancelAnimationFrame(rafId);
-      if (vfcId && vid.cancelVideoFrameCallback) vid.cancelVideoFrameCallback(vfcId);
     };
-  }, [reduced]);
+  }, [reduced, unlocked]);
 
   const label =
     "Renault 5 E-Tech sur berme de récupération — nettoyage circulaire à eau recyclée";
 
   return (
-    <div className={className} style={{ aspectRatio: "1024 / 560" }} role="img" aria-label={label}>
+    <div
+      ref={containerRef}
+      className={className}
+      style={{ aspectRatio: "1024 / 560" }}
+      role="img"
+      aria-label={label}
+    >
       <canvas
         ref={canvasRef}
         width={PROC_W}
         height={PROC_H}
         style={{ display: "block", width: "100%", height: "100%" }}
       />
-      {/* Vidéo source cachée (décodée hors écran, jamais affichée directement). */}
+      {/* Vidéo source cachée (décodée hors écran, jamais affichée directement).
+          WebM d'abord (Chrome/Firefox), mp4 en fallback (Safari/iOS). */}
       <video
         ref={videoRef}
-        src="/hero-car-r5.mp4"
         muted
         loop={!reduced}
         playsInline
@@ -114,7 +144,10 @@ export function HeroCar({ className = "" }: { className?: string }) {
         aria-hidden="true"
         tabIndex={-1}
         style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-      />
+      >
+        <source src="/hero-car-r5.webm" type="video/webm" />
+        <source src="/hero-car-r5.mp4" type="video/mp4" />
+      </video>
     </div>
   );
 }
