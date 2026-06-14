@@ -2,28 +2,33 @@
 
 ---
 
-## Session 2026-06-14 (41) — AquaponieVideo : remplacement SVG par vidéo gravure
+## Session 2026-06-14 (41) — AquaponieImage : remplacement SVG → vidéo → image statique PNG
 
-Demande utilisateur : remplacer le schéma SVG aquaponie (poissons + rack) par une vidéo IA gravure (même style que la voiture R5), fond noir détouré en alpha VP9.
+Demande utilisateur (évolution en cours de session) : remplacer le schéma SVG aquaponie par une vidéo IA gravure, puis **pivot vers image statique PNG** (plus qualitative).
 
-- [x] **Inspection vidéo** : 1024×1024 · 4s · 24fps · fond noir pur (yuv420p) · style gravure fluo teal. ✓
-- [x] **Conversion WebM VP9 alpha** : ffmpeg lumakey → yuva420p · 768px · crf50 → `public/aquaponie.webm` 2,1 Mo (alpha_mode=1 vérifié)
-- [x] **MP4 fallback** : crf28 · 768px → `public/aquaponie.mp4` 1 Mo (Safari/iOS)
-- [x] **`AlphaVideo.tsx`** : composant générique partagé (logique vidéo-alpha) — HeroCar + AquaponieVideo l'utilisent, zéro duplication
-- [x] **`HeroCar.tsx`** : refactoré en mince wrapper sur `AlphaVideo` (comportement identique, -130 lignes)
-- [x] **`AquaponieVideo.tsx`** : nouveau composant (wrapper AlphaVideo, ratio 1/1)
-- [x] **`sections.tsx`** : remplace `AquaponieScene` → `AquaponieVideo`, retire wiring `installAquaponie` mort
-- [x] **`scrollScenes.ts`** : suppression `installAquaponie` (code mort — poissons SVG disparus)
+### Partie 1 — Vidéo gravure (remplacée par pivot PNG)
+- [x] **Conversion WebM VP9 alpha** : ffmpeg lumakey → yuva420p · `public/aquaponie.webm` 2,1 Mo
+- [x] **MP4 fallback** : `public/aquaponie.mp4` 1 Mo
+- [x] **`AlphaVideo.tsx`** : composant générique partagé (logique vidéo-alpha) — HeroCar l'utilise, zéro duplication
+- [x] **`HeroCar.tsx`** : refactoré en mince wrapper sur `AlphaVideo`
+- [x] **`scrollScenes.ts`** : suppression `installAquaponie` (code mort)
 - [x] **`AquaponieScene.tsx`** : supprimé
-- [x] **Validation** : tsc 0 erreur · build OK · SSR `/` HTTP 200 (aquaponie.webm×1, aquaponie.mp4×1, AquaponieScene absent) · isolation CRM `/login` (0 token aquaponie/b2c-accent) ✓
+
+### Partie 2 — Pivot image statique PNG (état final)
+- [x] **PNG source utilisateur** → `public/aquaponie-scene.png` (1,3 Mo → retravaillé 1,5 Mo RGBA)
+- [x] **Détourage fond noir en alpha réel** : ffmpeg `lumakey=threshold=0.04:tolerance=0.10:softness=0.22,gblur=sigma=1.5:steps=2:planes=8,format=rgba` → PNG RGBA sans fond carré noir
+- [x] **`AquaponieImage.tsx`** : composant simple `<img>` (pas de vidéo, pas de mask-image CSS — le PNG porte son alpha)
+- [x] **`AquaponieVideo.tsx`** : supprimé (pivot PNG), `aquaponie.webm` + `aquaponie.mp4` supprimés
+- [x] **`sections.tsx`** : import `AquaponieImage`, taille 480px → 580px → 680px
+- [x] **Validation** : tsc 0 erreur · build OK ✓
 
 ### Review session 41
 
-**Livré — AquaponieVideo (vidéo gravure) :**
-- Même pipeline que HeroCar session 40 : ffmpeg lumakey → WebM VP9 `yuva420p` alpha réel, alpha_mode=1. Fond transparent natif Firefox/Chrome/Edge, mp4 fallback Safari/iOS.
-- Factorisation architecturale : `AlphaVideo.tsx` composant générique évite la duplication ~130 lignes entre HeroCar et AquaponieVideo.
-- Suppression `AquaponieScene.tsx` + `installAquaponie` (code mort depuis remplacement).
-- Validation empirique complète : SSR correct, vidéos HTTP 200, isolation CRM confirmée.
+**Livré — AquaponieImage (PNG gravure détouré) :**
+- `AlphaVideo.tsx` générique reste en place (utilisé par HeroCar).
+- PNG fond noir → alpha réel baked via ffmpeg lumakey (même technique que les vidéos, appliquée à une image statique). CSS `mask-image` radial-gradient ne suffisait pas : il coupe les coins mais laisse les zones noires internes opaques.
+- Composant `AquaponieImage.tsx` minimaliste : `<img>` direct, alpha natif du fichier, pas de JS.
+- Nettoyage complet : vidéo aquaponie (2,1 Mo WebM + 1 Mo MP4) retirée, net -2,1 Mo d'assets.
 
 ---
 
