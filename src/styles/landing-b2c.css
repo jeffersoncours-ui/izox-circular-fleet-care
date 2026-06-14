@@ -123,6 +123,23 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   letter-spacing: -0.01em;
   font-size: calc(clamp(1.9rem, 4vw, 2.9rem) * var(--b2c-tscale));
 }
+/* Rendu isométrique des titres de section : projection oblique 3D (le titre
+   « se couche » en perspective, baseline qui monte vers la droite + léger
+   oblique des jambages). Purement géométrique — couleurs/police inchangées,
+   le mot accentué garde son italique bleu + glow. transform-origin center
+   pour fonctionner aussi bien sur titre aligné à gauche que centré. */
+.izox-b2c .b2c-iso {
+  display: inline-block;
+  transform: perspective(1100px) rotateX(20deg) rotateZ(-7deg) skewX(-6deg);
+  transform-origin: center;
+  transform-style: preserve-3d;
+  padding: 0.08em 0;
+}
+@media (max-width: 640px) {
+  .izox-b2c .b2c-iso {
+    transform: perspective(800px) rotateX(13deg) rotateZ(-5deg) skewX(-4deg);
+  }
+}
 /* Mot/segment accentué : italique serif en vert lumineux */
 .b2c-accent {
   font-style: italic;
