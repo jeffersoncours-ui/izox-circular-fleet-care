@@ -2,6 +2,36 @@
 
 ---
 
+## Session 2026-06-14 (41) — AquaponieImage : remplacement SVG → vidéo → image statique PNG
+
+Demande utilisateur (évolution en cours de session) : remplacer le schéma SVG aquaponie par une vidéo IA gravure, puis **pivot vers image statique PNG** (plus qualitative).
+
+### Partie 1 — Vidéo gravure (remplacée par pivot PNG)
+- [x] **Conversion WebM VP9 alpha** : ffmpeg lumakey → yuva420p · `public/aquaponie.webm` 2,1 Mo
+- [x] **MP4 fallback** : `public/aquaponie.mp4` 1 Mo
+- [x] **`AlphaVideo.tsx`** : composant générique partagé (logique vidéo-alpha) — HeroCar l'utilise, zéro duplication
+- [x] **`HeroCar.tsx`** : refactoré en mince wrapper sur `AlphaVideo`
+- [x] **`scrollScenes.ts`** : suppression `installAquaponie` (code mort)
+- [x] **`AquaponieScene.tsx`** : supprimé
+
+### Partie 2 — Pivot image statique PNG (état final)
+- [x] **PNG source utilisateur** → `public/aquaponie-scene.png` (1,3 Mo → retravaillé 1,5 Mo RGBA)
+- [x] **Détourage fond noir en alpha réel** : ffmpeg `lumakey=threshold=0.04:tolerance=0.10:softness=0.22,gblur=sigma=1.5:steps=2:planes=8,format=rgba` → PNG RGBA sans fond carré noir
+- [x] **`AquaponieImage.tsx`** : composant simple `<img>` (pas de vidéo, pas de mask-image CSS — le PNG porte son alpha)
+- [x] **`AquaponieVideo.tsx`** : supprimé (pivot PNG), `aquaponie.webm` + `aquaponie.mp4` supprimés
+- [x] **`sections.tsx`** : import `AquaponieImage`, taille 480px → 580px → 680px
+- [x] **Validation** : tsc 0 erreur · build OK ✓
+
+### Review session 41
+
+**Livré — AquaponieImage (PNG gravure détouré) :**
+- `AlphaVideo.tsx` générique reste en place (utilisé par HeroCar).
+- PNG fond noir → alpha réel baked via ffmpeg lumakey (même technique que les vidéos, appliquée à une image statique). CSS `mask-image` radial-gradient ne suffisait pas : il coupe les coins mais laisse les zones noires internes opaques.
+- Composant `AquaponieImage.tsx` minimaliste : `<img>` direct, alpha natif du fichier, pas de JS.
+- Nettoyage complet : vidéo aquaponie (2,1 Mo WebM + 1 Mo MP4) retirée, net -2,1 Mo d'assets.
+
+---
+
 ## Session 2026-06-14 (39) — Firefox H.264 codec fix + WebM fallback + iOS unlock
 
 Demande utilisateur : rollback à l'état avant aquaponie vidéo, puis investiguer pourquoi la voiture reste invisible sur Firefox malgré les fixes précédents. **Root cause diagnostiqué** : Firefox sur Linux ne supporte PAS le H.264 (mp4) sans codecs système. Le navigateur traitait le fichier mp4 comme audio → icon lecteur audio visible en UI.

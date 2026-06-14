@@ -118,39 +118,3 @@ export function installWaterLoop(section: HTMLElement): () => void {
     window.removeEventListener("resize", onScroll);
   };
 }
-
-/* ── 3. Aquaponie (poissons qui nagent au scroll) ── */
-export function installAquaponie(section: HTMLElement): () => void {
-  const fishes = Array.from(section.querySelectorAll<SVGGElement>("[data-fish]"));
-  if (fishes.length === 0) return () => {};
-
-  // Trajectoire de nage : oscillation horizontale + dérive verticale, déphasée
-  // par poisson. Domaine utile de la cuve ≈ x[150..390], y[316..382]
-  // (géométrie AquaponieScene — rack vertical, bassin en bas).
-  const setFish = (p: number) => {
-    fishes.forEach((f, i) => {
-      const phase = i * 2.1;
-      const speed = 1 + i * 0.35;
-      const cx = 268 + Math.sin(p * Math.PI * speed + phase) * (88 - i * 14);
-      const cy = 332 + i * 16 + Math.cos(p * Math.PI * 1.4 + phase) * 9;
-      // Le poisson regarde dans le sens de sa nage (dérivée du sinus).
-      const dir = Math.cos(p * Math.PI * speed + phase) >= 0 ? 1 : -1;
-      f.style.transform = `translate(${cx}px, ${cy}px) scaleX(${dir})`;
-    });
-  };
-
-  if (prefersReduced()) {
-    setFish(0.2);
-    return () => {};
-  }
-
-  const update = () => setFish(viewportProgress(section));
-  const onScroll = rafThrottle(update);
-  update();
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll, { passive: true });
-  return () => {
-    window.removeEventListener("scroll", onScroll);
-    window.removeEventListener("resize", onScroll);
-  };
-}
