@@ -2,26 +2,43 @@
 
 ---
 
-## Session 2026-06-14 (42) — Landing B2C : cleanup Hero (retirer "voir comment", renommer CTA entreprises)
+## Session 2026-06-14 (42) — Landing B2C : cleanup Hero + em-dashes + copyright
 
-Demandes utilisateur : (1) retirer bouton inutile "Voir comment l'eau revit" ; (2) renommer "Envie d'un abonnement ou société ?" en "Vous êtes une entreprise ?" ; (3) auditer les liens retirés.
+### Partie 1 — Nettoyage Hero
+Demandes utilisateur : (1) retirer bouton inutile "Voir comment l'eau revit" ; (2) renommer "Envie d'un abonnement ou société ?" ; (3) auditer les liens.
 
-- [x] **Hero.tsx** : suppression du bouton ghost "Voir comment l'eau revit ↓" (lien vers #boucle, ancienne CTA scroll)
-- [x] **Hero.tsx** : suppression import `ArrowDown` (devenu inutilisé)
+- [x] **Hero.tsx** : suppression du bouton ghost "Voir comment l'eau revit ↓" (lien vers #boucle)
+- [x] **Hero.tsx** : suppression import `ArrowDown` (inutilisé)
 - [x] **Hero.tsx** : renommage bouton "Envie d'un abonnement ou société ?" → "Vous êtes une entreprise ?"
-- [x] **PublicLayout.tsx** : suppression du lien navbar desktop "La boucle d'eau" (vers /#boucle)
-- [x] **PublicLayout.tsx** : suppression du lien navbar mobile "La boucle d'eau" (vers /#boucle)
-- [x] **Audit complet** : grep sur tout le codebase, aucune autre référence externe au bouton supprimé
+- [x] **PublicLayout.tsx** : suppression du lien navbar "La boucle d'eau" (desktop + mobile)
+- [x] **Audit complet** : aucune autre référence externe au bouton supprimé ✓
+- [x] **Commit** : `72f926e`
+
+### Partie 2 — Remplacer em-dashes "—" par virgules ","
+Demande utilisateur : retirer les tirets em-dashes du contenu visible et les remplacer par des virgules.
+
+- [x] **sections.tsx** : 7 em-dashes remplacés (Boucle d'eau, Tarifs, Options, Abonnement, FAQ)
+  - "Pas de lavage « sans eau »... — c'est ça" → "... c'est ça"
+  - "Pression optimisée — la saleté..." → "Pression optimisée, la saleté..."
+  - "circuit court — chaque lavage..." → "circuit court, chaque lavage..."
+  - "rentable — écologiquement..." → "rentable, écologiquement..."
+  - "exploitation — et donc vos prix" → "exploitation, et donc vos prix"
+  - "premier nettoyage — sans engagement" → "premier nettoyage, sans engagement"
+  - "Tout juste lancés — vos avis..." → "Tout juste lancés, vos avis..."
+  - "consommation) — c'est la politique..." → "consommation), c'est la politique..."
+- [x] **PricingSection.tsx** : "prix payé — rien de plus" → "prix payé, rien de plus"
+- [x] **PublicLayout.tsx** : copyright "© IZOX — Circular Fleet Care" → "© IZOX"
+- [x] **PublicLayout.tsx** : logo alt "IZOX — Circular Fleet Care" → "IZOX"
 - [x] **Build validation** : `npm run build` 0 erreur ✓
-- [x] **Commit + push** : `72f926e` sur branche `claude/izox-corrections-nppd3e`
+- [x] **Commit + push** : `6e69ea8`
 
 ### Review session 42
 
-**Livré — Nettoyage Hero landing :**
-- Bouton "Voir comment l'eau revit" supprimé (CTA scroll vers #boucle jugée inutile). Les utilisateurs découvrent la section Boucle d'eau en scrollant naturellement.
-- Lien navbar "La boucle d'eau" supprimé (cohérence avec le bouton retiré du Hero).
-- CTA "Envie d'un abonnement ou société ?" renommée en "Vous êtes une entreprise ?" (libellé plus clair et direct).
-- Audit : aucune autre référence orpheline identifiée.
+**Livré — Corrections landing :**
+- Nettoyage Hero : bouton CTA scroll + lien navbar "Boucle d'eau" supprimés.
+- CTA renommée en "Vous êtes une entreprise ?" (plus directe).
+- Em-dashes remplacés par virgules dans tout le contenu visible (9 occurrences).
+- Copyright simplifié : "© 2026 IZOX. Tous droits réservés." (sans "Circular Fleet Care").
 
 ---
 
