@@ -1,5 +1,13 @@
 # Lessons Learned — IZOX
 
+## `npm run build` ne suffit PAS — toujours `npx tsc` avant commit (session 42)
+
+- **Symptôme** : la landing crashait en prod avec l'error boundary "Something went wrong / An unexpected error occurred". Le build Vercel passait (vert), mais la page `/` plantait au runtime.
+- **Cause** : en nettoyant les imports de `sections.tsx` (suppression de `WaterLoopDiagram`, `installWaterLoop`, `useEffect`, `useRef`), j'ai **aussi retiré `ChevronDown`** de l'import `lucide-react` — alors qu'il était toujours utilisé dans la FAQ (`<ChevronDown />`). Résultat : `ReferenceError: ChevronDown is not defined` au rendu de la FAQ → error boundary.
+- **Pourquoi non détecté** : `vite build` **ne fait PAS de type-checking** — il bundle, transpile, mais ne vérifie pas les références TypeScript. Un identifiant non importé passe le build sans erreur et crashe uniquement à l'exécution. J'avais validé avec `npm run build` seul, en sautant `npx tsc --noEmit --skipLibCheck`.
+- **Règle absolue** : avant TOUT commit, lancer `npx tsc --noEmit --skipLibCheck` EN PLUS de `npm run build`. Le `tsc` aurait immédiatement signalé `Cannot find name 'ChevronDown'`. Le build vert ≠ code correct. C'est déjà dans CLAUDE.md ("Vérifier le build TypeScript") mais facile à zapper sous la pression de "ça compile".
+- **Corollaire — supprimer un import = vérifier qu'il n'est plus utilisé** : quand on retire un symbole d'une liste d'import groupée, faire un `grep` du symbole dans le fichier AVANT de le retirer. Ici un `grep "ChevronDown" sections.tsx` aurait montré l'usage L425. Ne jamais retirer un import "à vue" en supposant qu'il était lié au code qu'on supprime.
+
 ## Détourer un PNG statique — ffmpeg lumakey fonctionne aussi sur les images (session 41)
 
 - **`ffmpeg lumakey` n'est pas réservé à la vidéo** : la même commande fonctionne sur un PNG source (`ffmpeg -i src.png -vf "lumakey=threshold=0.04:tolerance=0.10:softness=0.22,gblur=sigma=1.5:steps=2:planes=8,format=rgba" output.png`). Le filtre `format=rgba` force la sortie avec canal alpha. Résultat : un PNG RGBA dont le fond noir est réellement transparent (pas juste masqué). Fonctionne mieux que la méthode PIL `max(r,g,b)` car le `gblur planes=8` floute uniquement le canal alpha → bords fondus naturellement.
