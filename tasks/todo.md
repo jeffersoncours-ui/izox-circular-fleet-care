@@ -32,13 +32,44 @@ Demande utilisateur : retirer les tirets em-dashes du contenu visible et les rem
 - [x] **Build validation** : `npm run build` 0 erreur ✓
 - [x] **Commit + push** : `6e69ea8`
 
+### Partie 3 — Remplacer schéma SVG de la boucle d'eau par image statique
+Demande utilisateur : remplacer le schéma SVG animé + textes autour par une image statique détourée avec textes au-dessus/dessous.
+
+- [x] **Image source** : détourage ffmpeg/PIL avec alpha transparent et feathering (bords fondus)
+  - Fond noir retiré via lumakey (threshold=25–65)
+  - Flou gaussian sur alpha pour bords fondus naturels
+  - PNG RGBA 1069×971 → `public/boucle-traitement.png`
+- [x] **sections.tsx** : simplifier WaterLoop()
+  - Retirer useRef + useEffect (animations scroll inutiles)
+  - Retirer import WaterLoopDiagram
+  - Retirer import installWaterLoop
+  - Remplacer schéma SVG par image centrée + deux textes blancs :
+    * "Recueillir la saleté avec un minimum de volume" (au-dessus)
+    * "Traitement des hydrocarbures et métaux lourds pour une maîtrise des déchets" (au-dessous)
+- [x] **Code mort supprimé** :
+  - `src/components/landing/illustrations/WaterLoopDiagram.tsx` (git rm)
+  - `installWaterLoop()` dans scrollScenes.ts (reste `installFilDeLeau`)
+- [x] **Build validation** : `npm run build` 0 erreur ✓
+- [x] **Commit + push** : `e701202`
+
 ### Review session 42
 
-**Livré — Corrections landing :**
-- Nettoyage Hero : bouton CTA scroll + lien navbar "Boucle d'eau" supprimés.
-- CTA renommée en "Vous êtes une entreprise ?" (plus directe).
-- Em-dashes remplacés par virgules dans tout le contenu visible (9 occurrences).
-- Copyright simplifié : "© 2026 IZOX. Tous droits réservés." (sans "Circular Fleet Care").
+**Livré — Corrections landing complètes :**
+
+**Partie 1 — Nettoyage Hero :**
+- Bouton "Voir comment l'eau revit" supprimé (CTA scroll inutile).
+- Lien navbar "La boucle d'eau" supprimé (cohérence).
+- CTA "Envie d'un abonnement ou société ?" → "Vous êtes une entreprise ?" (plus directe).
+
+**Partie 2 — Em-dashes → virgules :**
+- 9 em-dashes "—" remplacés par virgules dans le contenu visible.
+- Copyright : "© 2026 IZOX — Circular Fleet Care" → "© 2026 IZOX"
+
+**Partie 3 — Schéma boucle d'eau :**
+- Image statique détourée (alpha + feathering) remplace le schéma SVG animé.
+- Filigrane visible derrière l'image, bords fondus intégrés.
+- Deux textes blancs au-dessus et au-dessous (sans uppercase, même style que le reste).
+- Code mort supprimé : -147 lignes (SVG + animations scroll inutiles).
 
 ---
 
