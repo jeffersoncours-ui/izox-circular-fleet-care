@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
 import { WaterLoopDiagram } from "./illustrations/WaterLoopDiagram";
-import { AquaponieVideo } from "./illustrations/AquaponieVideo";
+import { AquaponieImage } from "./illustrations/AquaponieImage";
 import { installWaterLoop } from "./scrollScenes";
 import { CountUp } from "./CountUp";
 
@@ -315,7 +315,7 @@ export function Vision() {
             pour s'incruster dans le filigrane. -mx-5 mobile : annule le padding du
             container pour un rendu pleine largeur. */}
         <div className="rv -mx-5 mt-8 sm:mx-0" data-aqua-section>
-          <AquaponieVideo className="mx-auto w-full max-w-[480px]" />
+          <AquaponieImage className="mx-auto w-full max-w-[480px]" />
         </div>
 
         <div className="mt-8 grid gap-6 sm:grid-cols-3">
