@@ -152,7 +152,7 @@ Le dark mode est **scopé sous `.izox-b2c`** (class sur le wrapper `PublicLayout
 - `src/components/landing/CountUp.tsx` — compteur IntersectionObserver + easeOutCubic + prefers-reduced-motion
 
 **Illustrations SVG :**
-- `src/components/landing/illustrations/HeroCar.tsx` — masque de luminance R5 E-Tech (image `public/hero-car-r5.png`, fond noir détouré → blanc=tracé). Rendu via `div` + `mask-image`/`mask-mode:luminance` + `background:var(--b2c-accent)` → la couleur suit le TweakPanel en temps réel, zéro animation. Pour changer l'illustration : convertir la source en masque grayscale (`max(r,g,b)` + étirement contraste) via PIL, voir `tasks/lessons.md` (session 37)
+- `src/components/landing/illustrations/HeroCar.tsx` — **vidéo R5 E-Tech** (tracé vert fluo sur fond noir, `public/hero-car-r5.webm` VP9 + `public/hero-car-r5.mp4` H.264 fallback). Affichée DIRECTEMENT (pas de canvas) ; le fond noir est éliminé par `mix-blend-mode: screen` sur la page sombre (le noir devient transparent, le tracé fluo ressort). Autoplay muet en boucle, iOS unlock au premier toucher, `prefers-reduced-motion` → frame figée à t=1s. **NE PAS revenir au canvas chroma-key** (`drawImage`/`getImageData`) : cassé sur Firefox (vidéo `opacity:0` non décodée). La couleur de la voiture est figée dans la vidéo (ne suit plus le TweakPanel `--b2c-accent`). Voir `tasks/lessons.md` (session 40)
 - `src/components/landing/illustrations/WaterLoopDiagram.tsx` — tuyau stadium avec loop-draw/loop-sheen, 4 stations data-station-t, goutte pilote data-loop-drop
 - `src/components/landing/illustrations/AquaponieScene.tsx` — bassin, 3 poissons data-fish, bulles gv-bubble, cultures hors-sol
 

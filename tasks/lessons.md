@@ -1,5 +1,13 @@
 # Lessons Learned — IZOX
 
+## Détourer le fond noir d'une vidéo : `mix-blend-mode: screen`, PAS un canvas chroma-key (session 40)
+
+- **Le canvas chroma-key (`drawImage` + `getImageData`) est cassé sur Firefox** : Firefox ne décode PAS de façon exploitable les frames d'une vidéo masquée (`opacity:0`, hors-écran) pour `drawImage`/`getImageData` → le canvas reste vide/transparent. Chrome décode quand même, d'où un bug qui ne se voit QUE sur Firefox. Aucun réglage de la boucle (rAF pur, rVFC, canplay…) ne corrige ça : c'est une limitation du pipeline de décodage Firefox pour les vidéos non rendues. Les sessions 38-39 ont perdu beaucoup de temps là-dessus.
+- **Solution robuste cross-browser = afficher la vidéo DIRECTEMENT + `mix-blend-mode: screen`** : sur une page sombre, le noir de la vidéo est neutre pour le blend "screen" (`1-(1-bg)(1-0)=bg`) → il se fond dans le fond (devient transparent), le tracé clair/fluo ressort. Composité par le GPU, identique Firefox/Chrome/Safari, ZÉRO JS de rendu (pas de boucle, pas de `getImageData`). Code divisé par ~3 (111 → 43 lignes).
+- **Pourquoi `mix-blend-mode` avait "échoué" en session 38** : le piège est le **contexte de blend isolé**. `mix-blend-mode` blende contre le backdrop rendu DANS le même stacking context. Si la vidéo est dans un conteneur `isolation: isolate` qui n'a rien de sombre derrière, le noir reste noir. Ici la vidéo blende contre le fond abysse de la page → OK. Toujours vérifier qu'il y a bien un backdrop sombre derrière la vidéo, et PAS de wrapper isolé vide autour d'elle.
+- **Diagnostic "zone vide mais dimensionnée" = 2 causes possibles, à départager** : (A) un reveal CSS (`.rv` à `opacity:0`) dont l'IntersectionObserver ne se déclenche jamais (élément déjà dans le viewport au mount + `rootMargin` négatif) → le bloc garde sa taille mais reste invisible ; (B) le contenu (canvas) qui ne se peint pas. Filet anti-A : un watchdog `setTimeout` qui force `.is-in` sur tous les `.rv` après ~1,2 s (ajouté dans `PublicLayout`). Une fois A écarté (le wrapper devient visible mais reste vide), on sait que c'est B.
+- **Garder la double source webm/mp4 + iOS unlock** restent valables (leçon session 39) : WebM VP9 en 1ère source (Firefox/Chrome), mp4 fallback (Safari/iOS), déverrouillage autoplay au premier toucher.
+
 ## Firefox H.264 codec support — WebM VP9 fallback required (session 39)
 
 - **H.264 (mp4) is NOT natively decoded by Firefox on Linux without system codecs** : even if you've successfully used mp4 on Chrome/Edge/Safari, Firefox may fail silently and treat the video as audio (showing an audio player icon instead of rendering). This is a platform-dependent issue, not a bug in your code.
