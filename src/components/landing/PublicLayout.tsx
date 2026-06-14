@@ -13,6 +13,7 @@ import {
 } from "./useTweaks";
 import { installFilDeLeau } from "./scrollScenes";
 import { TweaksPanel } from "./TweaksPanel";
+import { SmokeBackground } from "./SmokeBackground";
 
 function Wordmark() {
   return (
@@ -226,6 +227,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
       className={`izox-b2c flex min-h-screen flex-col ${themeClass(tweaks.theme)}`}
       style={tweaksStyle(tweaks)}
     >
+      <SmokeBackground />
       <FilDeLeau />
       <PublicNavbar />
       <main className="flex-1">{children}</main>
