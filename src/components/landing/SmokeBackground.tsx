@@ -16,7 +16,7 @@ import { useEffect, useRef } from "react";
 import { useTweaks } from "./useTweaks";
 
 const RENDER_SCALE = 0.6; // résolution interne du canvas (étiré en CSS) — fumée floue, invisible à l'œil
-const FRAME_MS = 1000 / 30; // cap 30 fps
+const FRAME_MS = 1000 / 25; // cap 25 fps — fumée lente, 25 fps suffit, réduit contention GPU avec vidéo
 const FILIGRANE_STRENGTH = 0.12; // dosage du grain halftone fusionné
 
 const fragmentShaderSource = `#version 300 es
