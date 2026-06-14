@@ -119,7 +119,11 @@ export function AlphaVideo({
     <div
       ref={containerRef}
       className={className}
-      style={{ aspectRatio }}
+      style={{
+        aspectRatio,
+        willChange: "contents",
+        contain: "layout style paint",
+      }}
       role="img"
       aria-label={label}
     >
@@ -139,6 +143,8 @@ export function AlphaVideo({
           objectFit: "contain",
           opacity: ready ? 1 : 0,
           transition: "opacity 0.5s ease",
+          backfaceVisibility: "hidden",
+          WebkitFontSmoothing: "antialiased",
         }}
       >
         <source src={webmSrc} type="video/webm" />

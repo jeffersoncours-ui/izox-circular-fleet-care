@@ -16,7 +16,7 @@ export function Hero() {
   const head3 = words3.join(" ");
 
   return (
-    <section className="b2c-section relative overflow-hidden">
+    <section className="b2c-section relative overflow-hidden" style={{ contain: "layout style paint" }}>
       <div className="b2c-hero-halo" aria-hidden="true" />
       <div className="b2c-container relative grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
         {/* Colonne texte */}
