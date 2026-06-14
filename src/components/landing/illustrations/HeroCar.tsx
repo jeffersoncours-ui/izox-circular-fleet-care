@@ -69,11 +69,6 @@ export function HeroCar({ className = "" }: { className?: string }) {
 
     let stopped = false;
     let rafId = 0;
-    let vfcId = 0;
-    const vid = video as HTMLVideoElement & {
-      requestVideoFrameCallback?: (cb: () => void) => number;
-      cancelVideoFrameCallback?: (id: number) => void;
-    };
 
     const drawFrame = () => {
       if (stopped || video.readyState < 2) return;
@@ -94,18 +89,16 @@ export function HeroCar({ className = "" }: { className?: string }) {
       ctx.putImageData(img, 0, 0);
     };
 
-    // rVFC (requestVideoFrameCallback) : Firefox garantit que le frame est dans le
-    // buffer GPU au moment du callback → drawImage fonctionne. Fallback rAF pour
-    // les navigateurs sans rVFC.
-    // Les deux chemins appellent drawFrame() dans la même boucle.
+    // rAF pur : requestAnimationFrame se ré-arme TOUJOURS (même si la vidéo est en
+    // pause, hors-écran ou opacity:0). On dessine la frame courante de la vidéo à
+    // chaque tour. À l'inverse, requestVideoFrameCallback ne se déclenche QUE quand
+    // une nouvelle frame est présentée au compositeur — ce qui n'arrive pas de façon
+    // fiable sur Firefox pour une vidéo opacity:0, d'où la boucle morte et le canvas
+    // vide. rAF est universel et robuste : c'est le filet contre l'hypothèse B.
     const loop = () => {
       if (stopped) return;
       drawFrame();
-      if (vid.requestVideoFrameCallback) {
-        vfcId = vid.requestVideoFrameCallback(loop);
-      } else {
-        rafId = requestAnimationFrame(loop);
-      }
+      rafId = requestAnimationFrame(loop);
     };
 
     if (reduced) {
@@ -123,8 +116,10 @@ export function HeroCar({ className = "" }: { className?: string }) {
       if (video.readyState >= 1) seek();
       else video.addEventListener("loadedmetadata", seek, { once: true });
     } else {
-      // Filet : dessine immédiatement si les données sont déjà disponibles.
+      // Filets : dessine dès que des données/frames sont disponibles, avant même que
+      // la boucle rAF n'ait son premier tour utile (canvas jamais vide au démarrage).
       video.addEventListener("loadeddata", drawFrame, { once: true });
+      video.addEventListener("canplay", drawFrame, { once: true });
       video.play().catch(() => {});
       loop();
     }
@@ -132,7 +127,6 @@ export function HeroCar({ className = "" }: { className?: string }) {
     return () => {
       stopped = true;
       if (rafId) cancelAnimationFrame(rafId);
-      if (vfcId && vid.cancelVideoFrameCallback) vid.cancelVideoFrameCallback(vfcId);
     };
   }, [reduced, unlocked]);
 
