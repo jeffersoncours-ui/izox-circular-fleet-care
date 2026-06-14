@@ -1,5 +1,15 @@
 # Lessons Learned — IZOX
 
+## Firefox H.264 codec support — WebM VP9 fallback required (session 39)
+
+- **H.264 (mp4) is NOT natively decoded by Firefox on Linux without system codecs** : even if you've successfully used mp4 on Chrome/Edge/Safari, Firefox may fail silently and treat the video as audio (showing an audio player icon instead of rendering). This is a platform-dependent issue, not a bug in your code.
+- **Double source strategy : WebM first, mp4 fallback** : use `<source src=".webm" type="video/webm">` THEN `<source src=".mp4" type="video/mp4">` in a `<video>` element. Firefox will use WebM (VP9 codec, natively supported). Chrome/Edge support both (prefer WebM). Safari doesn't decode VP9 → falls back to mp4 (native). This covers all major browsers with a single video pair.
+- **WebM VP9 encoding** : always provide a VP9-encoded WebM alongside H.264 mp4. Use FFmpeg: `ffmpeg -i input.mp4 -c:v libvpx-vp9 -crf 30 -b:v 0 output.webm` (quality 30 is visually transparent, ~80% of original size).
+- **Imperative video element setup** : React doesn't reliably reflect `muted`, `defaultMuted`, `playsInline` attributes on `<video>` elements. After mounting, force-set them in JS: `video.muted = true; video.defaultMuted = true; video.playsInline = true;`. This ensures iOS autoplay + mute policies are respected.
+- **iOS autoplay unlock pattern** : if `video.play()` is rejected (autoplay policy), attach a one-time click/touchstart handler to a parent container. On first interaction, call `video.play()` again → succeeds after user gesture. Pattern: `container.addEventListener('click', unlock, { once: true }); container.addEventListener('touchstart', unlock, { once: true, passive: true })`. Update component state to trigger a re-render of the animation loop.
+- **Pure rAF (not rVFC) for robust video rendering** : `requestVideoFrameCallback` doesn't fire if the video is paused or off-screen (iOS Safari sandboxing). Use `requestAnimationFrame` instead for a continuous loop — it always fires (even if video is paused), and you call `video.drawImage()` on whatever frame is current. Fallback: draw the first frame immediately on `loadeddata` event (in case autoplay is blocked and rAF loop hasn't started yet).
+- **Audio icon in browser UI = MIME type issue** : if the browser shows an audio player icon (speaker icon) in the address bar, the file is either: (1) being served with the wrong MIME type (audio/* instead of video/*), or (2) the codec isn't recognized (Firefox H.264 issue). Check the server's Content-Type header and verify file format. A valid mp4 file served as audio/mpeg is still invalid.
+
 ## Canvas chroma-key pour transparence d'une vidéo — alpha keying sur luminance (session 38)
 
 - **Mix-blend-mode CSS (screen, lighten) est imprévisible pour éliminer un fond** : même avec `mix-blend-mode: screen`, le fond noir d'une vidéo reste visible sur certains navigateurs, à certains moments, ou dépend du contexte de blending parent. Solution fiable = Canvas chroma-key : traiter chaque frame en JavaScript.
