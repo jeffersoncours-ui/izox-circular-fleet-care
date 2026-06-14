@@ -18,6 +18,9 @@ export function HeroCar({ className = "" }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [reduced, setReduced] = useState(false);
+  // `ready` pilote un fondu d'apparition : la vidéo reste transparente tant qu'elle
+  // n'a pas de frame décodée → on évite le flash de fond noir au tout début du chargement.
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -25,6 +28,24 @@ export function HeroCar({ className = "" }: { className?: string }) {
     const onChange = () => setReduced(mq.matches);
     mq.addEventListener?.("change", onChange);
     return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+
+  // Révèle la vidéo dès qu'une frame est décodable (loadeddata/canplay). Filet de
+  // sécurité : si aucun événement ne se déclenche, on révèle quand même après 1,2 s
+  // (ne jamais rester invisible).
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const reveal = () => setReady(true);
+    if (video.readyState >= 2) reveal();
+    video.addEventListener("loadeddata", reveal, { once: true });
+    video.addEventListener("canplay", reveal, { once: true });
+    const fallback = window.setTimeout(reveal, 1200);
+    return () => {
+      video.removeEventListener("loadeddata", reveal);
+      video.removeEventListener("canplay", reveal);
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   // Lecture muette en boucle (sauf reduced-motion → frame figée à ~1 s).
@@ -100,6 +121,8 @@ export function HeroCar({ className = "" }: { className?: string }) {
           height: "100%",
           objectFit: "contain",
           mixBlendMode: "screen",
+          opacity: ready ? 1 : 0,
+          transition: "opacity 0.5s ease",
         }}
       >
         <source src="/hero-car-r5.webm" type="video/webm" />

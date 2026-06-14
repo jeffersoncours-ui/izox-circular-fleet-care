@@ -6,13 +6,10 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 
 export type B2cTheme = "abysse" | "noir" | "nuit" | "papier";
 export type TitleFont = "serif" | "outfit";
-export type CarRender = "trait" | "teinte";
 
 export interface Tweaks {
   accent: string; // #3FD8FF par défaut
   theme: B2cTheme;
-  carColor: string;
-  carRender: CarRender;
   titleFont: TitleFont;
   titleScale: number; // 0.8 .. 1.25
   glow: number; // 0 .. 1
@@ -25,8 +22,6 @@ export interface Tweaks {
 export const DEFAULT_TWEAKS: Tweaks = {
   accent: "#3FD8FF",
   theme: "abysse",
-  carColor: "#3FD8FF",
-  carRender: "trait",
   titleFont: "serif",
   titleScale: 1.25,
   glow: 0.75,
@@ -113,7 +108,6 @@ export function themeClass(theme: B2cTheme): string {
 export function tweaksStyle(t: Tweaks): React.CSSProperties {
   const vars: Record<string, string> = {
     "--b2c-accent": t.accent,
-    "--b2c-car": t.carColor,
     "--b2c-glow": String(t.glow),
     "--b2c-tscale": String(t.titleScale),
     "--primary": t.accent,

@@ -4,15 +4,9 @@
 
 import { useState } from "react";
 import { SlidersHorizontal, X, RotateCcw } from "lucide-react";
-import {
-  useTweaks,
-  type B2cTheme,
-  type CarRender,
-  type TitleFont,
-} from "./useTweaks";
+import { useTweaks, type B2cTheme, type TitleFont } from "./useTweaks";
 
 const ACCENTS = ["#3FD8FF", "#5BC8E8", "#A8C4B4", "#E8C268"];
-const CAR_COLORS = ["#3FD8FF", "#5BC8E8", "#E8C268", "#9AA3AD"];
 const THEMES: { id: B2cTheme; label: string }[] = [
   { id: "abysse", label: "Abysse vert" },
   { id: "noir", label: "Noir profond" },
@@ -33,7 +27,8 @@ export function TweaksPanel() {
         aria-label={open ? "Fermer les réglages" : "Ouvrir les réglages du thème"}
         className="fixed bottom-5 right-5 z-50 grid h-11 w-11 place-items-center rounded-full border border-[var(--b2c-line-strong)] bg-[var(--b2c-bg2)] text-[var(--b2c-accent)] shadow-lg transition-transform hover:scale-105"
         style={{
-          boxShadow: "0 0 calc(28px * var(--b2c-glow)) rgba(63,224,143,calc(0.4 * var(--b2c-glow)))",
+          boxShadow:
+            "0 0 calc(28px * var(--b2c-glow)) color-mix(in srgb, var(--b2c-accent) 40%, transparent)",
         }}
       >
         {open ? <X className="h-5 w-5" /> : <SlidersHorizontal className="h-5 w-5" />}
@@ -78,24 +73,6 @@ export function TweaksPanel() {
                 </option>
               ))}
             </select>
-          </Group>
-
-          {/* Voiture */}
-          <Group label="Carrosserie">
-            <Swatches
-              value={tweaks.carColor}
-              options={CAR_COLORS}
-              onPick={(c) => setTweaks({ carColor: c })}
-            />
-            <Segmented<CarRender>
-              className="mt-2.5"
-              value={tweaks.carRender}
-              options={[
-                { id: "trait", label: "Trait pur" },
-                { id: "teinte", label: "Teintée" },
-              ]}
-              onPick={(v) => setTweaks({ carRender: v })}
-            />
           </Group>
 
           {/* Typographie */}

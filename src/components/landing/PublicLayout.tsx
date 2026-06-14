@@ -229,9 +229,7 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={rootRef}
-      className={`izox-b2c flex min-h-screen flex-col ${themeClass(tweaks.theme)} ${
-        tweaks.carRender === "teinte" ? "car-teinte" : ""
-      }`}
+      className={`izox-b2c flex min-h-screen flex-col ${themeClass(tweaks.theme)}`}
       style={tweaksStyle(tweaks)}
     >
       <FilDeLeau />
