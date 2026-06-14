@@ -1,5 +1,11 @@
 # Lessons Learned — IZOX
 
+## Composant générique vs wrapper : factoriser la logique vidéo-alpha (session 41)
+
+- **Dès qu'une logique est réutilisée une 2e fois, extraire un composant générique** : HeroCar et AquaponieVideo ont exactement la même mécanique (alpha VP9, fondu opacity, prefers-reduced-motion, iOS unlock). La bonne architecture est `AlphaVideo` générique + wrappers minces (`HeroCar`, `AquaponieVideo`). Un 2e copier-coller de HeroCar.tsx aurait créé 2 bugs potentiels à maintenir identiquement.
+- **Les props `webmSrc`, `mp4Src`, `aspectRatio`, `label`, `reducedSeek` suffisent** pour couvrir tous les cas vidéo-alpha de la landing. Si une 3e illustration vidéo s'ajoute, c'est un wrapper de 10 lignes.
+- **Supprimer le code mort immédiatement** : `AquaponieScene.tsx` et `installAquaponie` devenaient du code mort dès le remplacement. Les laisser en place aurait pollué la codebase et trompé sur l'architecture réelle. Supprimer + vérifier tsc 0 erreur = confirmation propre.
+
 ## Détourer le fond noir d'une vidéo : canal alpha VP9 baked, PAS canvas ni blend (session 40)
 
 - **Solution définitive cross-browser = canal alpha réel dans le fichier WebM (VP9 yuva420p)** : encoder la vidéo avec `ffmpeg -vf "lumakey=threshold=0:tolerance=0.10:softness=0.16,format=yuva420p" -c:v libvpx-vp9 -pix_fmt yuva420p -auto-alt-ref 0 -b:v 0 -crf 48 -an`. Le fond noir devient transparent au niveau du codec — Firefox, Chrome et Edge lisent l'alpha natif. La vidéo s'affiche DIRECTEMENT dans un `<video>` sans aucun JS de rendu. mp4 H.264 en source de fallback pour Safari/iOS (pas d'alpha VP9, mais fond noir acceptable sur fond sombre).

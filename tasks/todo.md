@@ -2,6 +2,31 @@
 
 ---
 
+## Session 2026-06-14 (41) — AquaponieVideo : remplacement SVG par vidéo gravure
+
+Demande utilisateur : remplacer le schéma SVG aquaponie (poissons + rack) par une vidéo IA gravure (même style que la voiture R5), fond noir détouré en alpha VP9.
+
+- [x] **Inspection vidéo** : 1024×1024 · 4s · 24fps · fond noir pur (yuv420p) · style gravure fluo teal. ✓
+- [x] **Conversion WebM VP9 alpha** : ffmpeg lumakey → yuva420p · 768px · crf50 → `public/aquaponie.webm` 2,1 Mo (alpha_mode=1 vérifié)
+- [x] **MP4 fallback** : crf28 · 768px → `public/aquaponie.mp4` 1 Mo (Safari/iOS)
+- [x] **`AlphaVideo.tsx`** : composant générique partagé (logique vidéo-alpha) — HeroCar + AquaponieVideo l'utilisent, zéro duplication
+- [x] **`HeroCar.tsx`** : refactoré en mince wrapper sur `AlphaVideo` (comportement identique, -130 lignes)
+- [x] **`AquaponieVideo.tsx`** : nouveau composant (wrapper AlphaVideo, ratio 1/1)
+- [x] **`sections.tsx`** : remplace `AquaponieScene` → `AquaponieVideo`, retire wiring `installAquaponie` mort
+- [x] **`scrollScenes.ts`** : suppression `installAquaponie` (code mort — poissons SVG disparus)
+- [x] **`AquaponieScene.tsx`** : supprimé
+- [x] **Validation** : tsc 0 erreur · build OK · SSR `/` HTTP 200 (aquaponie.webm×1, aquaponie.mp4×1, AquaponieScene absent) · isolation CRM `/login` (0 token aquaponie/b2c-accent) ✓
+
+### Review session 41
+
+**Livré — AquaponieVideo (vidéo gravure) :**
+- Même pipeline que HeroCar session 40 : ffmpeg lumakey → WebM VP9 `yuva420p` alpha réel, alpha_mode=1. Fond transparent natif Firefox/Chrome/Edge, mp4 fallback Safari/iOS.
+- Factorisation architecturale : `AlphaVideo.tsx` composant générique évite la duplication ~130 lignes entre HeroCar et AquaponieVideo.
+- Suppression `AquaponieScene.tsx` + `installAquaponie` (code mort depuis remplacement).
+- Validation empirique complète : SSR correct, vidéos HTTP 200, isolation CRM confirmée.
+
+---
+
 ## Session 2026-06-14 (39) — Firefox H.264 codec fix + WebM fallback + iOS unlock
 
 Demande utilisateur : rollback à l'état avant aquaponie vidéo, puis investiguer pourquoi la voiture reste invisible sur Firefox malgré les fixes précédents. **Root cause diagnostiqué** : Firefox sur Linux ne supporte PAS le H.264 (mp4) sans codecs système. Le navigateur traitait le fichier mp4 comme audio → icon lecteur audio visible en UI.
