@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
 import { AquaponieImage } from "./illustrations/AquaponieImage";
-import { CountUp } from "./CountUp";
+import { SevenSegmentNumber, SevenSegmentDigit } from "./SevenSegment";
 import { FlipGallery } from "./FlipGallery";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
@@ -45,12 +45,9 @@ export function HowItWorks() {
         <SectionHeading kicker="Simple comme bonjour" title="Comment ça marche" />
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
           {steps.map((s, i) => (
-            <div key={s.title} className={`stepcard rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
-              <div className="flex items-center justify-between">
-                <div className="grid h-11 w-11 place-items-center rounded-md bg-[var(--primary-soft)]">
-                  {s.icon}
-                </div>
-                <span className="stepcard__num">0{i + 1}</span>
+            <div key={s.title} className={`stepcard b2c-glow-card rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
+              <div className="grid h-11 w-11 place-items-center rounded-md bg-[var(--primary-soft)]">
+                {s.icon}
               </div>
               <h3 className="b2c-display--md mt-4 !text-[1.5rem] text-[var(--b2c-tx)]">{s.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
@@ -82,8 +79,7 @@ export function WaterLoop() {
         <div className="mt-12">
           <div className="grid max-w-2xl gap-8 sm:grid-cols-2">
             <div className="rv">
-              <CountUp
-                className="b2c-figure b2c-glow-text"
+              <SevenSegmentNumber
                 prefix="~"
                 value={CHIFFRES_EAU.litresUtilises}
                 suffix=" L"
@@ -97,7 +93,12 @@ export function WaterLoop() {
               </p>
             </div>
             <div className="rv rv-d1">
-              <p className="b2c-figure b2c-glow-text">2 à 4×</p>
+              <span className="b2c-seg-number" aria-label="2 à 4 fois">
+                <SevenSegmentDigit value={2} />
+                <span className="b2c-seg-affix mx-[0.25em]"> à </span>
+                <SevenSegmentDigit value={4} />
+                <span className="b2c-seg-affix">×</span>
+              </span>
               <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">moins d'eau</p>
               <p className="mt-1 text-sm text-[var(--b2c-tx-dim)]">
                 qu'un lavage au jet à domicile
@@ -122,8 +123,7 @@ export function WaterLoop() {
 
           <div className="mx-auto mt-10 grid max-w-3xl gap-8 sm:grid-cols-2">
             <div className="rv">
-              <CountUp
-                className="b2c-figure b2c-glow-text"
+              <SevenSegmentNumber
                 value={CHIFFRES_EAU.pctRecupere}
                 suffix=" %"
               />
@@ -136,8 +136,7 @@ export function WaterLoop() {
               </p>
             </div>
             <div className="rv rv-d1">
-              <CountUp
-                className="b2c-figure b2c-glow-text"
+              <SevenSegmentNumber
                 value={CHIFFRES_EAU.pctReinjecte}
                 suffix=" %"
               />
@@ -259,7 +258,7 @@ export function SubscriptionTeaser() {
   return (
     <section className="b2c-section !py-12 border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
-        <div className="b2c-card rv flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center sm:p-8">
+        <div className="b2c-card b2c-glow-card rv flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center sm:p-8">
           <div>
             <h2 className="font-[var(--b2c-sans)] text-lg font-bold text-[var(--b2c-tx)]">
               Vous reviendrez ? L'abonnement vous fait économiser jusqu'à −15 %.
@@ -272,9 +271,9 @@ export function SubscriptionTeaser() {
           </div>
           <a
             href="mailto:contact@izox.fr?subject=Abonnement%20IZOX"
-            className="b2c-btn b2c-btn--ghost shrink-0"
+            className="shiny-cta shrink-0"
           >
-            En savoir plus
+            <span>En savoir plus</span>
           </a>
         </div>
       </div>
@@ -290,7 +289,7 @@ export function Reviews() {
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
         <SectionHeading kicker="Ils nous font confiance" title="Avis clients" />
-        <div className="b2c-card rv mt-10 border-dashed p-8 text-center">
+        <div className="b2c-card b2c-glow-card rv mt-10 p-8 text-center">
           <Quote className="mx-auto h-6 w-6 text-[var(--b2c-tx-faint)]" />
           <p className="mt-3 text-sm font-semibold text-[var(--b2c-tx)]">
             Tout juste lancés, vos avis apparaîtront ici.
@@ -299,8 +298,8 @@ export function Reviews() {
             Nous publions uniquement des avis réels de clients ayant réservé une intervention.
             Soyez parmi les premiers !
           </p>
-          <Link to="/reservation" className="b2c-btn b2c-btn--primary mt-5">
-            Réserver mon nettoyage
+          <Link to="/reservation" className="shiny-cta mt-5">
+            <span>Réserver mon nettoyage</span>
           </Link>
         </div>
       </div>
@@ -342,7 +341,7 @@ export function Faq() {
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container max-w-3xl">
         <SectionHeading kicker="Questions fréquentes" title="FAQ" />
-        <div className="b2c-card rv mt-8 divide-y divide-[var(--b2c-line)]">
+        <div className="b2c-card b2c-glow-card rv mt-8 divide-y divide-[var(--b2c-line)]">
           {FAQ_ITEMS.map((item) => (
             <details key={item.q} className="group px-5 py-4">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-[var(--b2c-tx)] [&::-webkit-details-marker]:hidden">
@@ -372,8 +371,8 @@ export function FinalCta() {
           clics.
         </p>
         <div className="rv rv-d2 mt-7 flex justify-center">
-          <Link to="/reservation" className="b2c-btn b2c-btn--primary">
-            Réserver mon nettoyage
+          <Link to="/reservation" className="shiny-cta">
+            <span>Réserver mon nettoyage</span>
           </Link>
         </div>
       </div>

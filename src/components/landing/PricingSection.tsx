@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { SevenSegmentNumber } from "./SevenSegment";
 import { VEHICULES_B2C, FORMULES_B2C, PRIX_B2C, OPTIONS_B2C } from "@/lib/pricing-b2c";
 import type { FormuleB2C } from "@/lib/pricing-b2c";
 import { SectionHeading } from "./sections";
@@ -44,7 +45,7 @@ export function PricingSection() {
           </div>
 
           {/* Liste véhicules pour la formule active */}
-          <div className="b2c-card rv rv-d1 mt-5 divide-y divide-[var(--b2c-line)]">
+          <div className="b2c-card b2c-glow-card rv rv-d1 mt-5 divide-y divide-[var(--b2c-line)]">
             {VEHICULES_B2C.map((v) => (
               <div
                 key={v.id}
@@ -54,25 +55,40 @@ export function PricingSection() {
                   <p className="font-semibold text-[var(--b2c-tx)]">{v.label}</p>
                   <p className="mt-0.5 text-[11px] text-[var(--b2c-tx-faint)]">{v.exemple}</p>
                 </div>
-                <p className="b2c-figure shrink-0 !text-[1.7rem]">
-                  {PRIX_B2C[formule][v.id]} €
-                </p>
+                <SevenSegmentNumber
+                  value={PRIX_B2C[formule][v.id]}
+                  suffix=" €"
+                  animate={false}
+                  digitHeight="1.7rem"
+                  className="shrink-0"
+                />
               </div>
             ))}
           </div>
 
           {/* Options */}
           <p className="b2c-kicker rv mt-9">Options</p>
-          <div className="b2c-card rv rv-d1 mt-3 divide-y divide-[var(--b2c-line)]">
+          <div className="b2c-card b2c-glow-card rv rv-d1 mt-3 divide-y divide-[var(--b2c-line)]">
             {OPTIONS_B2C.map((o) => (
               <div key={o.id} className="px-5 py-4 sm:px-7">
-                <div className="flex items-baseline justify-between gap-4">
+                <div className="flex items-center justify-between gap-4">
                   <p className="font-semibold text-[var(--b2c-tx)]">{o.label}</p>
-                  <p className="b2c-mono b2c-glow-text shrink-0 text-sm font-semibold text-[var(--b2c-accent)]">
-                    {o.prix.citadine === o.prix.utilitaire
-                      ? `${o.prix.citadine} €`
-                      : `${o.prix.citadine}–${o.prix.utilitaire} €`}
-                  </p>
+                  <div className="shrink-0">
+                    {o.prix.citadine === o.prix.utilitaire ? (
+                      <SevenSegmentNumber
+                        value={o.prix.citadine}
+                        suffix=" €"
+                        animate={false}
+                        digitHeight="1.3rem"
+                      />
+                    ) : (
+                      <span style={{ display: "inline-flex", alignItems: "flex-end", gap: "0.12em" }}>
+                        <SevenSegmentNumber value={o.prix.citadine} animate={false} digitHeight="1.3rem" />
+                        <span className="b2c-seg-affix">–</span>
+                        <SevenSegmentNumber value={o.prix.utilitaire} suffix=" €" animate={false} digitHeight="1.3rem" />
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p className="mt-1 max-w-md text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
                   {o.description}
@@ -91,8 +107,8 @@ export function PricingSection() {
           </p>
 
           <div className="rv mt-8 text-center">
-            <Link to="/reservation" className="b2c-btn b2c-btn--primary">
-              Calculer mon prix et réserver
+            <Link to="/reservation" className="shiny-cta">
+              <span>Calculer mon prix et réserver</span>
             </Link>
           </div>
         </div>

@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
-import { CountUp } from "@/components/landing/CountUp";
+import { SevenSegmentNumber, SevenSegmentDigit } from "@/components/landing/SevenSegment";
 
 export const Route = createFileRoute("/entreprises")({
   head: () => ({
@@ -59,8 +59,8 @@ function EntreprisesPage() {
               en circuit fermé et un reporting RSE chiffré que vous pouvez présenter à vos
               clients et partenaires.
             </p>
-            <a href="#contact" className="b2c-btn b2c-btn--primary rv mt-8">
-              Être rappelé par un conseiller
+            <a href="#contact" className="shiny-cta rv mt-8">
+              <span>Être rappelé par un conseiller</span>
             </a>
           </div>
         </div>
@@ -106,14 +106,24 @@ function EntreprisesPage() {
         <div className="b2c-container">
           <p className="b2c-kicker rv">Des chiffres réels, repris dans votre bilan RSE</p>
           <div className="mt-8 grid gap-10 sm:grid-cols-3">
-            <B2bStat figure="2 à 4×" label="moins d'eau qu'un lavage au jet (en moyenne, sur nos interventions)" />
             <B2bStat
-              figure={<CountUp value={CHIFFRES_EAU.pctRecupere} suffix=" %" />}
+              figure={
+                <span className="b2c-seg-number" aria-label="2 à 4 fois">
+                  <SevenSegmentDigit value={2} />
+                  <span className="b2c-seg-affix mx-[0.25em]"> à </span>
+                  <SevenSegmentDigit value={4} />
+                  <span className="b2c-seg-affix">×</span>
+                </span>
+              }
+              label="moins d'eau qu'un lavage au jet (en moyenne, sur nos interventions)"
+            />
+            <B2bStat
+              figure={<SevenSegmentNumber value={CHIFFRES_EAU.pctRecupere} suffix=" %" />}
               label="de l'eau récupérée sous le véhicule"
               delay="rv-d1"
             />
             <B2bStat
-              figure={<CountUp value={CHIFFRES_EAU.pctReinjecte} suffix=" %" />}
+              figure={<SevenSegmentNumber value={CHIFFRES_EAU.pctReinjecte} suffix=" %" />}
               label="réinjectée dans la boucle après recyclage"
               delay="rv-d2"
             />
@@ -165,7 +175,7 @@ function Lever({
   delay?: string;
 }) {
   return (
-    <div className={`b2c-card rv ${delay ?? ""} p-5`}>
+    <div className={`b2c-card b2c-glow-card rv ${delay ?? ""} p-5`}>
       <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--primary-soft)]">
         {icon}
       </div>
@@ -188,7 +198,7 @@ function B2bStat({
 }) {
   return (
     <div className={`rv ${delay ?? ""}`}>
-      <p className="b2c-figure b2c-glow-text !text-[clamp(2.4rem,6vw,3.4rem)]">{figure}</p>
+      <p className="leading-none">{figure}</p>
       <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{label}</p>
     </div>
   );
@@ -226,7 +236,7 @@ function LeadForm() {
 
   if (sent) {
     return (
-      <div className="b2c-card flex flex-col items-center justify-center p-10 text-center">
+      <div className="b2c-card b2c-glow-card flex flex-col items-center justify-center p-10 text-center">
         <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--primary-soft)]">
           <CheckCircle2 className="h-6 w-6 text-[var(--b2c-accent)]" />
         </div>
@@ -242,7 +252,7 @@ function LeadForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="b2c-card rv space-y-4 p-6 sm:p-8">
+    <form onSubmit={handleSubmit} className="b2c-card b2c-glow-card rv space-y-4 p-6 sm:p-8">
       <div className="flex items-center gap-2">
         <Building2 className="h-4 w-4 text-[var(--b2c-accent)]" />
         <p className="font-[var(--b2c-sans)] text-base font-bold text-[var(--b2c-tx)]">
@@ -304,9 +314,11 @@ function LeadForm() {
           />
         </div>
       </div>
-      <button type="submit" className="b2c-btn b2c-btn--primary w-full" disabled={sending}>
-        {sending && <Loader2 className="h-4 w-4 animate-spin" />}
-        Être rappelé par un conseiller
+      <button type="submit" className="shiny-cta w-full" disabled={sending}>
+        <span className="inline-flex items-center gap-2">
+          {sending && <Loader2 className="h-4 w-4 animate-spin" />}
+          Être rappelé par un conseiller
+        </span>
       </button>
       <p className="text-[11px] leading-relaxed text-[var(--b2c-tx-faint)]">
         Vos coordonnées sont utilisées uniquement pour vous recontacter au sujet de votre

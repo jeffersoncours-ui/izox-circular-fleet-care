@@ -59,7 +59,7 @@ function ReservationPage() {
             Retour à l'accueil
           </Link>
 
-          <div className="b2c-card mt-8 p-8 text-center">
+          <div className="b2c-card b2c-glow-card mt-8 p-8 text-center">
             {sent ? (
               <>
                 <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[var(--primary-soft)]">
@@ -110,9 +110,11 @@ function ReservationPage() {
                       onChange={(e) => setCodePostal(e.target.value.replace(/\D/g, ""))}
                     />
                   </div>
-                  <button type="submit" className="b2c-btn b2c-btn--primary w-full" disabled={sending}>
-                    {sending && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Me prévenir de l'ouverture
+                  <button type="submit" className="shiny-cta w-full" disabled={sending}>
+                    <span className="inline-flex items-center gap-2">
+                      {sending && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Me prévenir de l'ouverture
+                    </span>
                   </button>
                   <p className="text-[11px] leading-relaxed text-[var(--b2c-tx-faint)]">
                     Votre email sert uniquement à vous prévenir de l'ouverture des réservations.

@@ -8,6 +8,7 @@
    hors de l'arbre .izox-b2c.
    ============================================================ */
 
+
 .izox-b2c {
   /* ── Design tokens v2 ── */
   --b2c-bg: #06120c;
@@ -163,6 +164,63 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   border: 1px solid var(--b2c-line);
   border-radius: 14px;
 }
+
+/* ── Glow card — conteneur premium : bordure fluo statique + picots
+   intérieurs + lueur d'angles. Pilotée par --b2c-accent / --b2c-glow
+   (suit le TweakPanel). Même langage que .shiny-cta : statique, zéro
+   animation. S'AJOUTE à .b2c-card / .stepcard sans remplacer leur fond. */
+.izox-b2c .b2c-glow-card {
+  position: relative;
+  isolation: isolate;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--b2c-accent) 55%, transparent);
+  box-shadow:
+    0 0 calc(16px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.14 * var(--b2c-glow))),
+    inset 0 0 calc(34px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.035 * var(--b2c-glow)));
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Picots intérieurs — statiques, couleur accent, sous le contenu */
+.izox-b2c .b2c-glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  --pos: 2px;
+  background: radial-gradient(
+    circle at var(--pos) var(--pos),
+    var(--b2c-accent) calc(var(--pos) / 4),
+    transparent 0
+  ) padding-box;
+  background-size: calc(var(--pos) * 2) calc(var(--pos) * 2);
+  opacity: calc(0.14 * var(--b2c-glow));
+}
+
+/* Lueur douce aux quatre angles */
+.izox-b2c .b2c-glow-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at top left, rgba(63, 216, 255, 0.16), transparent 24%),
+    radial-gradient(circle at top right, rgba(63, 216, 255, 0.16), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(63, 216, 255, 0.11), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(63, 216, 255, 0.11), transparent 24%);
+  opacity: var(--b2c-glow);
+}
+
+/* Hover : intensifie le halo, garde le contour fluo (bat .stepcard:hover) */
+.izox-b2c .b2c-glow-card:hover {
+  border-color: color-mix(in srgb, var(--b2c-accent) 75%, transparent);
+  box-shadow:
+    0 0 calc(24px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.22 * var(--b2c-glow))),
+    inset 0 0 calc(34px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.05 * var(--b2c-glow)));
+}
 .b2c-hairline {
   border-color: var(--b2c-line);
 }
@@ -171,10 +229,20 @@ body.b2c-active:has(.izox-b2c.t-papier) {
     0 0 0 1px var(--b2c-line-strong),
     0 0 calc(48px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.18 * var(--b2c-glow)));
 }
+
+/* Séparateur horizontal fluo — navbar (bas) et footer (haut) */
+.izox-b2c .b2c-glow-sep-b {
+  border-bottom: 1px solid color-mix(in srgb, var(--b2c-accent) 45%, transparent);
+  box-shadow: 0 1px calc(18px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.13 * var(--b2c-glow)));
+}
+.izox-b2c .b2c-glow-sep-t {
+  border-top: 1px solid color-mix(in srgb, var(--b2c-accent) 45%, transparent);
+  box-shadow: 0 -1px calc(18px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.13 * var(--b2c-glow)));
+}
 .b2c-glow-text {
   text-shadow: var(--b2c-neon);
 }
-/* Grand chiffre RSE / compteur boucle */
+/* Grand chiffre RSE / compteur boucle (texte, conservé pour fallback) */
 .b2c-figure {
   font-family: var(--b2c-mono);
   font-weight: 700;
@@ -183,6 +251,40 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   font-size: clamp(2.4rem, 6vw, 3.4rem);
   line-height: 1;
   text-shadow: var(--b2c-neon);
+}
+
+/* ── 7-Segment display ───────────────────────────────────────────────── */
+/* Conteneur flex alignant chiffres + affixes */
+.b2c-seg-number {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.05em;
+  line-height: 1;
+}
+
+/* SVG d'un chiffre : glow via drop-shadow (text-shadow inopérant sur SVG) */
+.b2c-seg-digit {
+  display: block;
+  filter:
+    drop-shadow(0 0 calc(4px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))))
+    drop-shadow(0 0 calc(11px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))))
+    drop-shadow(0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow))));
+}
+
+/* Segment allumé */
+.b2c-seg-on  { fill: var(--b2c-accent); }
+/* Segment éteint — fantôme très atténué (effet LCD authentique) */
+.b2c-seg-off { fill: rgba(63, 216, 255, 0.07); }
+
+/* Préfixe/suffixe texte (« ~ », « L », « % », « € », « × », « à ») */
+.b2c-seg-affix {
+  font-family: var(--b2c-mono);
+  font-weight: 700;
+  color: var(--b2c-accent);
+  text-shadow: var(--b2c-neon);
+  font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+  line-height: 1;
+  padding-bottom: 0.12em;
 }
 
 /* ============================================================
@@ -217,14 +319,6 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.55 * var(--b2c-glow)));
   transform: translateY(-1px);
 }
-.b2c-btn--ghost {
-  background: transparent;
-  color: var(--b2c-tx);
-  border: 1px solid var(--b2c-line-strong);
-}
-.b2c-btn--ghost:hover {
-  border-color: var(--b2c-accent);
-}
 /* Hover « fillwater » (desktop uniquement — jamais sur tactile) :
    l'eau monte de bas en haut dans le bouton fantôme. */
 @media (hover: hover) and (pointer: fine) {
@@ -254,6 +348,96 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 .b2c-btn--yellow:hover {
   box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(255, 229, 0, calc(0.45 * var(--b2c-glow)));
   transform: translateY(-1px);
+}
+
+/* ── Shiny CTA — bouton principal premium, bordure fluo statique.
+   Couleurs câblées sur --b2c-accent → suit le TweakPanel en live.   */
+.izox-b2c .shiny-cta {
+  isolation: isolate;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  outline-offset: 4px;
+  padding: 1rem 2rem;
+  font-family: var(--b2c-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid var(--b2c-accent);
+  border-radius: 360px;
+  color: var(--b2c-tx);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--b2c-bg);
+  box-shadow:
+    0 0 calc(10px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow))),
+    0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.2 * var(--b2c-glow)));
+  transition: box-shadow 300ms ease, transform 200ms ease;
+}
+
+/* Motif de picots — statiques, couleur accent */
+.izox-b2c .shiny-cta::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  --pos: 2px;
+  background: radial-gradient(
+    circle at var(--pos) var(--pos),
+    var(--b2c-accent) calc(var(--pos) / 4),
+    transparent 0
+  ) padding-box;
+  background-size: calc(var(--pos) * 2) calc(var(--pos) * 2);
+  background-repeat: space;
+  border-radius: inherit;
+  opacity: calc(0.2 * var(--b2c-glow));
+}
+
+/* Lueur intérieure douce en bas */
+.izox-b2c .shiny-cta::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse at bottom, rgba(63, 216, 255, 0.08), transparent 70%);
+  border-radius: inherit;
+}
+
+/* Texte au-dessus des pseudo-éléments */
+.izox-b2c .shiny-cta span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hover / focus */
+.izox-b2c .shiny-cta:is(:hover, :focus-visible) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 calc(16px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.65 * var(--b2c-glow))),
+    0 0 calc(36px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.3 * var(--b2c-glow)));
+}
+
+/* Press */
+.izox-b2c .shiny-cta:active {
+  transform: translateY(1px);
+}
+
+/* Disabled */
+.izox-b2c .shiny-cta:disabled,
+.izox-b2c .shiny-cta[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .izox-b2c .shiny-cta {
+    transition: none;
+  }
 }
 
 /* ============================================================
