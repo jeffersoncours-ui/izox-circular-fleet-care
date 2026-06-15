@@ -16,6 +16,7 @@ import {
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
 import { AquaponieImage } from "./illustrations/AquaponieImage";
 import { CountUp } from "./CountUp";
+import { FlipGallery } from "./FlipGallery";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
 
@@ -200,38 +201,9 @@ function RseStat({
 
 /* ── 5. Avant / après ─────────────────────────────────────────────── */
 
-// Tuile photo avant/après — placeholder hachuré en attendant les vraies
-// photos. Glisse depuis la gauche (avant) ou la droite (après) au scroll.
-function BaCard({
-  tag,
-  label,
-  dir,
-  full,
-}: {
-  tag?: "avant" | "apres";
-  label: string;
-  dir: "left" | "right";
-  full?: boolean;
-}) {
-  return (
-    <figure
-      className={`b2c-card ba-ph rv ${dir === "left" ? "rv-left" : "rv-right"} ${
-        full ? "aspect-[16/9] sm:aspect-[21/9]" : "aspect-[4/5] sm:aspect-[4/3]"
-      }`}
-    >
-      {tag && (
-        <span className={`ba-tag absolute left-3 top-3 ${tag === "apres" ? "ba-tag--after" : ""}`}>
-          {tag === "apres" ? "Après" : "Avant"}
-        </span>
-      )}
-      <figcaption className="ba-ph__label absolute bottom-3 left-3">{label}</figcaption>
-    </figure>
-  );
-}
-
 export function BeforeAfter() {
-  // TODO : remplacer par de vraies photos (public/landing/avant-apres-*.jpg)
-  // — les libellés (Sellerie / Extérieur / Moquette) seront ajustés à ce moment-là.
+  // Galerie flip (avant → après du même véhicule, alternés). Les vraies photos
+  // seront branchées dans FlipGallery.tsx (ITEMS) — slots vides pour l'instant.
   return (
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
@@ -244,16 +216,8 @@ export function BeforeAfter() {
           }
           subtitle="Le résultat parle de lui-même. Photos prises sur nos interventions, sans retouche."
         />
-        <div className="mt-10 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <BaCard tag="avant" dir="left" label="Photo — Sellerie" />
-            <BaCard tag="apres" dir="right" label="Photo — Sellerie" />
-          </div>
-          <BaCard dir="right" label="Photo — Extérieur après intervention" full />
-          <div className="grid grid-cols-2 gap-4">
-            <BaCard tag="avant" dir="left" label="Photo — Moquette" />
-            <BaCard tag="apres" dir="right" label="Photo — Moquette" />
-          </div>
+        <div className="rv mt-12 flex justify-center pb-12">
+          <FlipGallery />
         </div>
       </div>
     </section>

@@ -2,6 +2,24 @@
 
 ---
 
+## Session 2026-06-15 (44) — Avant/Après → galerie flip (21st.dev)
+
+Demande utilisateur : remplacer la présentation avant/après (placeholders hachurés en grille) par le composant « Flip Gallery » (21st.dev, Le Thanh). Option A retenue : avant→après du même véhicule, alternés. Photos laissées vides (fournies plus tard).
+
+- [x] **Audit existant** : `BaCard`+`BeforeAfter` (sections.tsx), `<BeforeAfter/>` (index.tsx), classes `.ba-*`+`.rv-left/.rv-right` (landing-b2c.css). Vérifié : `.rv-left/.rv-right` utilisées uniquement par BaCard.
+- [x] **Critique du prompt** : template Next/shadcn générique → chemin `ui/` inadapté (→ `landing/`), `<style>` global à scoper, lucide déjà présent (no-op), `demo.tsx` = code mort écarté.
+- [x] **`FlipGallery.tsx`** créé (`src/components/landing/`) : types stricts (`GalleryItem`, refs typées), guards DOM (`querySelector?.animate`), cleanup des `setTimeout` au unmount, `prefers-reduced-motion` → swap instantané, aria FR. **Bug stale-closure corrigé** : index passé explicitement (la source lisait `currentIndex` via closure → image décalée).
+- [x] **CSS scopé** dans landing-b2c.css (`.izox-b2c #flip-gallery …`), couleurs sur tokens b2c, slot vide = hachures placeholder.
+- [x] **`BeforeAfter()`** réécrit : `SectionHeading` conservé + `<FlipGallery/>` centré. `BaCard` supprimé.
+- [x] **Code mort retiré** : `.ba-tag/.ba-tag--after/.ba-ph/.ba-ph__label/.rv-left/.rv-right`.
+- [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR `/` rend `flip-gallery` + 0 ancien marqueur · `/login` 0 token b2c (isolation CRM).
+- [ ] Commit + push
+
+### À fournir par l'utilisateur
+- Les vraies photos avant/après → renseigner `ITEMS[].url` dans `FlipGallery.tsx` (et déposer les fichiers dans `public/landing/`).
+
+---
+
 ## Session 2026-06-14 (43) — Fond fumée WebGL + perf vidéo + essais titres (rollbackés)
 
 ### Partie 1 — Fond animé fumée WebGL (conservé)
