@@ -69,12 +69,7 @@ export function WaterLoop() {
     <section id="boucle" className="b2c-section scroll-mt-20 border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
         <SectionHeading
-          kicker={
-            <>
-              <span className="block">Notre différence</span>
-              <span className="block">Des chiffres réels, pas des promesses</span>
-            </>
-          }
+          kicker="Notre différence"
           title={
             <>
               La boucle <em className="b2c-accent">d'eau</em>
@@ -85,7 +80,7 @@ export function WaterLoop() {
 
         {/* Schéma traitement — image statique avec textes */}
         <div className="mt-12">
-          <div className="mx-auto grid max-w-3xl gap-8 text-center sm:grid-cols-2">
+          <div className="grid max-w-2xl gap-8 sm:grid-cols-2">
             <div className="rv">
               <CountUp
                 className="b2c-figure b2c-glow-text"
