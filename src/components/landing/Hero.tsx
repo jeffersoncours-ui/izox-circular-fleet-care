@@ -39,16 +39,16 @@ export function Hero() {
           </p>
 
           <div className="rv rv-d2 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link to="/reservation" className="b2c-btn b2c-btn--primary">
-              {tweaks.ctaLabel}
+            <Link to="/reservation" className="shiny-cta">
+              <span>{tweaks.ctaLabel}</span>
             </Link>
           </div>
 
           <Link
             to="/entreprises"
-            className="rv b2c-btn b2c-btn--primary mt-2 w-full sm:w-auto"
+            className="rv shiny-cta mt-2 w-full sm:w-auto"
           >
-            Vous êtes une entreprise&nbsp;?
+            <span>Vous êtes une entreprise&nbsp;?</span>
           </Link>
 
           {/* Bandeau confiance */}

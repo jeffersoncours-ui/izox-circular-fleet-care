@@ -107,8 +107,8 @@ export function PricingSection() {
           </p>
 
           <div className="rv mt-8 text-center">
-            <Link to="/reservation" className="b2c-btn b2c-btn--primary">
-              Calculer mon prix et réserver
+            <Link to="/reservation" className="shiny-cta">
+              <span>Calculer mon prix et réserver</span>
             </Link>
           </div>
         </div>

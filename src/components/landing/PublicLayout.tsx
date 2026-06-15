@@ -89,10 +89,10 @@ function PublicNavbar() {
             </Link>
             <Link
               to="/reservation"
-              className="b2c-btn b2c-btn--primary mt-1 w-full"
+              className="shiny-cta mt-1 w-full"
               onClick={() => setOpen(false)}
             >
-              {tweaks.ctaLabel}
+              <span>{tweaks.ctaLabel}</span>
             </Link>
           </div>
         </nav>

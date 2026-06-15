@@ -298,8 +298,8 @@ export function Reviews() {
             Nous publions uniquement des avis réels de clients ayant réservé une intervention.
             Soyez parmi les premiers !
           </p>
-          <Link to="/reservation" className="b2c-btn b2c-btn--primary mt-5">
-            Réserver mon nettoyage
+          <Link to="/reservation" className="shiny-cta mt-5">
+            <span>Réserver mon nettoyage</span>
           </Link>
         </div>
       </div>
@@ -371,8 +371,8 @@ export function FinalCta() {
           clics.
         </p>
         <div className="rv rv-d2 mt-7 flex justify-center">
-          <Link to="/reservation" className="b2c-btn b2c-btn--primary">
-            Réserver mon nettoyage
+          <Link to="/reservation" className="shiny-cta">
+            <span>Réserver mon nettoyage</span>
           </Link>
         </div>
       </div>

@@ -59,8 +59,8 @@ function EntreprisesPage() {
               en circuit fermé et un reporting RSE chiffré que vous pouvez présenter à vos
               clients et partenaires.
             </p>
-            <a href="#contact" className="b2c-btn b2c-btn--primary rv mt-8">
-              Être rappelé par un conseiller
+            <a href="#contact" className="shiny-cta rv mt-8">
+              <span>Être rappelé par un conseiller</span>
             </a>
           </div>
         </div>
@@ -314,9 +314,11 @@ function LeadForm() {
           />
         </div>
       </div>
-      <button type="submit" className="b2c-btn b2c-btn--primary w-full" disabled={sending}>
-        {sending && <Loader2 className="h-4 w-4 animate-spin" />}
-        Être rappelé par un conseiller
+      <button type="submit" className="shiny-cta w-full" disabled={sending}>
+        <span className="inline-flex items-center gap-2">
+          {sending && <Loader2 className="h-4 w-4 animate-spin" />}
+          Être rappelé par un conseiller
+        </span>
       </button>
       <p className="text-[11px] leading-relaxed text-[var(--b2c-tx-faint)]">
         Vos coordonnées sont utilisées uniquement pour vous recontacter au sujet de votre
