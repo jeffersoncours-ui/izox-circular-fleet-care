@@ -16,6 +16,7 @@ import {
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
 import { AquaponieImage } from "./illustrations/AquaponieImage";
 import { CountUp } from "./CountUp";
+import { FlipGallery } from "./FlipGallery";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
 
@@ -79,20 +80,29 @@ export function WaterLoop() {
 
         {/* Schéma traitement — image statique avec textes */}
         <div className="mt-12">
-          <div className="rv mx-auto max-w-md text-center">
-            <CountUp
-              className="b2c-figure b2c-glow-text"
-              prefix="~"
-              value={CHIFFRES_EAU.litresUtilises}
-              suffix=" L"
-            />
-            <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">
-              par véhicule, en moyenne
-            </p>
-            <p className="mt-1 text-sm text-[var(--b2c-tx-dim)]">
-              vs {CHIFFRES_EAU.comparaisonJetMin}–{CHIFFRES_EAU.comparaisonJetMax} L pour un
-              lavage au jet à domicile
-            </p>
+          <div className="grid max-w-2xl gap-8 sm:grid-cols-2">
+            <div className="rv">
+              <CountUp
+                className="b2c-figure b2c-glow-text"
+                prefix="~"
+                value={CHIFFRES_EAU.litresUtilises}
+                suffix=" L"
+              />
+              <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">
+                par véhicule, en moyenne
+              </p>
+              <p className="mt-1 text-sm text-[var(--b2c-tx-dim)]">
+                vs {CHIFFRES_EAU.comparaisonJetMin}–{CHIFFRES_EAU.comparaisonJetMax} L pour un
+                lavage au jet à domicile
+              </p>
+            </div>
+            <div className="rv rv-d1">
+              <p className="b2c-figure b2c-glow-text">2 à 4×</p>
+              <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">moins d'eau</p>
+              <p className="mt-1 text-sm text-[var(--b2c-tx-dim)]">
+                qu'un lavage au jet à domicile
+              </p>
+            </div>
           </div>
 
           {/* Image traitement + textes */}
@@ -151,87 +161,11 @@ export function WaterLoop() {
   );
 }
 
-/* ── 4. Preuve RSE ────────────────────────────────────────────────── */
-
-export function RseProof() {
-  return (
-    <section className="b2c-section border-t border-[var(--b2c-line)]">
-      <div className="b2c-container">
-        <p className="b2c-kicker rv">Des chiffres réels, pas des promesses</p>
-        <div className="mt-8 grid gap-10 sm:grid-cols-3">
-          <RseStat figure="2 à 4×" label="moins d'eau qu'un lavage au jet à domicile" />
-          <RseStat
-            figure={<CountUp value={CHIFFRES_EAU.pctRecupere} suffix=" %" />}
-            label="de l'eau récupérée sous le véhicule, en moyenne"
-            delay="rv-d1"
-          />
-          <RseStat
-            figure={<CountUp value={CHIFFRES_EAU.pctReinjecte} suffix=" %" />}
-            label="de l'eau réinjectée dans la boucle après recyclage"
-            delay="rv-d2"
-          />
-        </div>
-        <p className="rv mt-8 max-w-2xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
-          Une démarche éco-responsable mesurée sur le terrain : produits bio, eau recyclée,
-          zéro rejet au caniveau. Chaque chiffre correspond à des relevés réels effectués
-          lors de nos interventions.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function RseStat({
-  figure,
-  label,
-  delay,
-}: {
-  figure: React.ReactNode;
-  label: string;
-  delay?: string;
-}) {
-  return (
-    <div className={`rv ${delay ?? ""}`}>
-      <p className="b2c-figure b2c-glow-text !text-[clamp(2.8rem,7vw,4rem)]">{figure}</p>
-      <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{label}</p>
-    </div>
-  );
-}
-
 /* ── 5. Avant / après ─────────────────────────────────────────────── */
 
-// Tuile photo avant/après — placeholder hachuré en attendant les vraies
-// photos. Glisse depuis la gauche (avant) ou la droite (après) au scroll.
-function BaCard({
-  tag,
-  label,
-  dir,
-  full,
-}: {
-  tag?: "avant" | "apres";
-  label: string;
-  dir: "left" | "right";
-  full?: boolean;
-}) {
-  return (
-    <figure
-      className={`b2c-card ba-ph rv ${dir === "left" ? "rv-left" : "rv-right"} ${
-        full ? "aspect-[16/9] sm:aspect-[21/9]" : "aspect-[4/5] sm:aspect-[4/3]"
-      }`}
-    >
-      {tag && (
-        <span className={`ba-tag absolute left-3 top-3 ${tag === "apres" ? "ba-tag--after" : ""}`}>
-          {tag === "apres" ? "Après" : "Avant"}
-        </span>
-      )}
-      <figcaption className="ba-ph__label absolute bottom-3 left-3">{label}</figcaption>
-    </figure>
-  );
-}
-
 export function BeforeAfter() {
-  // TODO : remplacer par de vraies photos (public/landing/avant-apres-*.jpg)
-  // — les libellés (Sellerie / Extérieur / Moquette) seront ajustés à ce moment-là.
+  // Galerie flip (avant → après du même véhicule, alternés). Les vraies photos
+  // seront branchées dans FlipGallery.tsx (ITEMS) — slots vides pour l'instant.
   return (
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
@@ -244,16 +178,8 @@ export function BeforeAfter() {
           }
           subtitle="Le résultat parle de lui-même. Photos prises sur nos interventions, sans retouche."
         />
-        <div className="mt-10 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <BaCard tag="avant" dir="left" label="Photo — Sellerie" />
-            <BaCard tag="apres" dir="right" label="Photo — Sellerie" />
-          </div>
-          <BaCard dir="right" label="Photo — Extérieur après intervention" full />
-          <div className="grid grid-cols-2 gap-4">
-            <BaCard tag="avant" dir="left" label="Photo — Moquette" />
-            <BaCard tag="apres" dir="right" label="Photo — Moquette" />
-          </div>
+        <div className="rv mt-12 flex justify-center pb-12">
+          <FlipGallery />
         </div>
       </div>
     </section>
@@ -285,9 +211,7 @@ export function Vision() {
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
         <div className="rv">
-          <div className="inline-flex items-center rounded-full border border-[var(--b2c-line-strong)] bg-[var(--primary-soft)] px-3 py-1">
-            <span className="b2c-kicker">Notre feuille de route</span>
-          </div>
+          <p className="b2c-kicker">Notre feuille de route</p>
           <h2 className="b2c-display--md mt-4 text-[var(--b2c-tx)]">
             Et demain, l'eau fait pousser des <em className="b2c-accent">légumes</em>
           </h2>
@@ -464,7 +388,7 @@ export function SectionHeading({
   title,
   subtitle,
 }: {
-  kicker: string;
+  kicker: React.ReactNode;
   title: React.ReactNode;
   subtitle?: string;
 }) {

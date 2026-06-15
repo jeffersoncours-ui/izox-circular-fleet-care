@@ -24,7 +24,7 @@ export function Hero() {
         {/* Colonne texte */}
         <div>
           <p className="b2c-kicker rv">Nettoyage circulaire</p>
-          <h1 className="b2c-display rv rv-d1 mt-5 text-[var(--b2c-tx)]">
+          <h1 className="b2c-display rv rv-d1 mt-2 text-[var(--b2c-tx)]">
             {tweaks.heroLine1}
             <br />
             {tweaks.heroLine2}

@@ -5,7 +5,6 @@ import { Hero } from "@/components/landing/Hero";
 import {
   HowItWorks,
   WaterLoop,
-  RseProof,
   BeforeAfter,
   Vision,
   SubscriptionTeaser,
@@ -66,7 +65,6 @@ function LandingPage() {
       <Hero />
       <HowItWorks />
       <WaterLoop />
-      <RseProof />
       <BeforeAfter />
       <PricingSection />
       <Vision />

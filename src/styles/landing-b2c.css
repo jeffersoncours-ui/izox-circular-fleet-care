@@ -17,6 +17,12 @@
   --b2c-tx-faint: #52685b;
   --b2c-accent: #3fd8ff;
   --b2c-glow: 0.75; /* 0..1 — piloté par le tweaks panel */
+  /* Halo néon bleu (3 couches), intensité pilotée par --b2c-glow. Réutilisé
+     par tous les textes bleus (kicker, accent, chiffres). */
+  --b2c-neon:
+    0 0 calc(4px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))),
+    0 0 calc(11px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))),
+    0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow)));
   --b2c-tscale: 1.25; /* échelle titres — piloté par tweaks */
   --b2c-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
   --b2c-sans: "Archivo", system-ui, -apple-system, sans-serif;
@@ -127,15 +133,17 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 .b2c-accent {
   font-style: italic;
   color: var(--b2c-accent);
-  text-shadow: 0 0 calc(28px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.55 * var(--b2c-glow)));
+  text-shadow: var(--b2c-neon);
 }
 .b2c-kicker {
   font-family: var(--b2c-mono);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--b2c-accent);
+  /* Néon bleu fixe (texte conservé bleu accent). */
+  text-shadow: var(--b2c-neon);
 }
 .b2c-lead {
   color: var(--b2c-tx-dim);
@@ -164,7 +172,7 @@ body.b2c-active:has(.izox-b2c.t-papier) {
     0 0 calc(48px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.18 * var(--b2c-glow)));
 }
 .b2c-glow-text {
-  text-shadow: 0 0 calc(24px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.5 * var(--b2c-glow)));
+  text-shadow: var(--b2c-neon);
 }
 /* Grand chiffre RSE / compteur boucle */
 .b2c-figure {
@@ -174,6 +182,7 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   color: var(--b2c-accent);
   font-size: clamp(2.4rem, 6vw, 3.4rem);
   line-height: 1;
+  text-shadow: var(--b2c-neon);
 }
 
 /* ============================================================
@@ -271,15 +280,6 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 .rv-d2 {
   transition-delay: 0.18s;
 }
-/* Variantes directionnelles (avant/après) : l'élément glisse depuis la
-   gauche ou la droite au lieu du bas. À combiner avec .rv (même observer). */
-.izox-b2c[data-anim="on"] .rv-left {
-  transform: translateX(-44px);
-}
-.izox-b2c[data-anim="on"] .rv-right {
-  transform: translateX(44px);
-}
-
 /* ============================================================
    Stepcards (section 02)
    ============================================================ */
@@ -301,47 +301,116 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 }
 
 /* ============================================================
-   Avant / Après (section 05)
+   Avant / Après — galerie flip (section 05)
+   Adapté de Flip Gallery (21st.dev). Styles scopés .izox-b2c pour ne pas
+   fuiter dans le CRM (sélecteurs génériques .flip-top/.flip-bottom).
    ============================================================ */
 
-.ba-tag {
-  font-family: var(--b2c-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.25rem 0.55rem;
-  border-radius: 999px;
+.izox-b2c .flip-frame {
+  position: relative;
+  padding: 0.5rem;
   border: 1px solid var(--b2c-line);
-  color: var(--b2c-tx-dim);
+  border-radius: 8px;
   background: var(--b2c-bg2);
 }
-.ba-tag--after {
-  color: #06120c;
-  font-weight: 700;
-  background: var(--b2c-accent);
-  border-color: var(--b2c-accent);
-}
-/* Placeholder photo : hachures diagonales discrètes (en attendant les vraies
-   photos) + étiquette mono en bas de tuile. */
-.ba-ph {
+
+.izox-b2c #flip-gallery {
   position: relative;
+  width: 240px;
+  height: 400px;
+  text-align: center;
+}
+@media (min-width: 600px) {
+  .izox-b2c #flip-gallery {
+    width: 300px;
+    height: 500px;
+  }
+}
+
+/* Barre de pliage centrale (couleur abysse = fond de page). */
+.izox-b2c #flip-gallery::after {
+  content: "";
+  position: absolute;
+  background-color: var(--b2c-bg);
+  width: 100%;
+  height: 4px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+/* Libellé sous la galerie, piloté par data-title + vars --title-*. */
+.izox-b2c #flip-gallery::before {
+  content: attr(data-title);
+  color: var(--b2c-tx-dim);
+  font-family: var(--b2c-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  left: -0.5rem;
+  position: absolute;
+  top: calc(100% + 1rem);
+  line-height: 2;
+  opacity: var(--title-opacity, 0);
+  transform: translateY(var(--title-y, 0));
+  transition: opacity 500ms ease-in-out, transform 500ms ease-in-out;
+}
+
+/* Volets (4 couches). background-size = dimension pleine image pour que les
+   moitiés haut/bas s'alignent (background-position top/bottom). */
+.izox-b2c #flip-gallery > .flip-unite {
+  position: absolute;
+  width: 100%;
+  height: 50%;
   overflow: hidden;
+  background-color: var(--b2c-bg3, rgba(255, 255, 255, 0.05));
+  background-size: 240px 400px;
+  background-repeat: no-repeat;
+}
+@media (min-width: 600px) {
+  .izox-b2c #flip-gallery > .flip-unite {
+    background-size: 300px 500px;
+  }
+}
+
+/* Slot vide (photos à venir) : hachures discrètes en placeholder. */
+.izox-b2c #flip-gallery > .flip-unite[data-empty] {
   background-image: repeating-linear-gradient(
     -45deg,
     rgba(63, 216, 255, 0.05) 0 16px,
     transparent 16px 34px
   );
 }
-.ba-ph__label {
-  font-family: var(--b2c-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--b2c-tx-dim);
-  background: rgba(6, 18, 12, 0.72);
-  border: 1px solid var(--b2c-line);
-  border-radius: 6px;
-  padding: 0.3rem 0.6rem;
+
+.izox-b2c .flip-top,
+.izox-b2c .flip-overlay-top {
+  top: 0;
+  transform-origin: bottom;
+  background-position: top;
+}
+.izox-b2c .flip-bottom,
+.izox-b2c .flip-overlay-bottom {
+  bottom: 0;
+  transform-origin: top;
+  background-position: bottom;
+}
+
+.izox-b2c .flip-nav {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.izox-b2c .flip-nav__btn {
+  color: var(--b2c-accent);
+  opacity: 0.75;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.izox-b2c .flip-nav__btn:hover {
+  opacity: 1;
+  transform: scale(1.25);
 }
 
 /* ============================================================

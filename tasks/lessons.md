@@ -1,5 +1,21 @@
 # Lessons Learned — IZOX
 
+## Composant 21st.dev : juger l'adéquation AVANT d'intégrer, pas juste l'adapter (session 44)
+
+- **Un composant 21st.dev peut être le mauvais outil même s'il a l'air joli** : le `NeonRGBTextEffect` fourni était un canvas WebGL **plein écran** au texte **codé en dur**, produisant une **aberration chromatique RGB (texte blanc frangé)** — l'opposé d'un « néon bleu ». Pour 12 kickers il aurait fallu 12 contextes WebGL (limite navigateur ~16, +1 déjà pris par le fond fumée) = désastre perf. La bonne réponse était **CSS `text-shadow` pur** : zéro JS, zéro WebGL, garde le texte bleu, réglable via `--b2c-glow`. **Toujours confronter le composant à la demande réelle et aux contraintes (perf, scope, archi) avant de coder** — recommander la solution simple si le composant ne colle pas.
+- **Le Flip Gallery (21st.dev) avait un bug de stale-closure** : `updateGallery(nextIndex)` n'utilisait jamais `nextIndex`, il lisait `currentIndex` via la closure (encore l'ancienne valeur juste après `setState`) → image décalée d'un cran. Fix : passer l'index explicitement aux fonctions (`setActiveImage(el, index)`). **Ne jamais copier-coller un composant 21st.dev sans relire sa gestion d'état** — beaucoup ont des bugs latents masqués par des données de démo aléatoires.
+- **Adapter le code 21st.dev (rappel sessions 43/41)** : retirer `"use client"`, déplacer les `<style>` globaux vers le CSS scopé (`.izox-b2c`) — surtout quand les sélecteurs sont génériques (`.top`, `.bottom`, `#flip-gallery`) qui fuiteraient dans le CRM —, retirer le wrapper démo plein écran (`min-h-screen bg-black`), typer les refs, gérer le cleanup des timeouts/animations au unmount, ajouter `prefers-reduced-motion`. Pas de `demo.tsx` (code mort).
+
+## Factoriser un effet CSS réutilisé dans une custom property (session 44)
+
+- **Quand le même `text-shadow` multi-couches doit s'appliquer à plusieurs classes** (`.b2c-kicker`, `.b2c-accent`, `.b2c-figure`, `.b2c-glow-text`), le définir UNE fois dans une variable CSS (`--b2c-neon`) puis `text-shadow: var(--b2c-neon)` partout. DRY, une seule source de vérité, et l'imbrication `var()` (le halo référence `--b2c-glow`) reste pilotable en live par le TweaksPanel. Évite la dérive (4 copies à maintenir).
+- **`text-shadow` n'affecte PAS les SVG** : les icônes lucide colorées en accent ne peuvent pas recevoir de néon via `text-shadow` (il faudrait `filter: drop-shadow`). Distinguer « texte » (text-shadow) et « icône SVG » (filter) quand une demande dit « tous les éléments bleus ».
+- **Deux classes posant `text-shadow` sur un même élément ne s'additionnent pas** : `text-shadow` est une propriété unique → la cascade en choisit une seule (pas de cumul). Donc poser le même `var(--b2c-neon)` sur `.b2c-figure` ET `.b2c-glow-text` ne double pas le halo — pratique pour unifier sans risque de sur-glow.
+
+## Espacement kicker→titre : comparer les marges réelles des deux côtés (session 44)
+
+- **Avant de « rapprocher » deux éléments, lire les marges réelles des deux blocs à comparer** : le kicker Hero semblait « trop loin » de son titre vs les sections. Cause : Hero `<h1>` avait `mt-5` (20px) alors que `SectionHeading` `<h2>` avait `mt-2` (8px). Aligner sur `mt-2` a suffi. Le `line-height` serré des titres (1.04/1.08) ne contribuait quasi rien — l'écart venait de la marge explicite.
+
 ## Effet visuel subjectif : livrer minimal + rollback facile, ne pas sur-investir (session 43)
 
 - **4 essais d'effets sur les titres/textes, 4 rejets** : TextBlockAnimation (GSAP), titres isométriques v1 (perspective 3D), v2 (skew 2D + extrusion), LayeredText (empilement de mots). Chaque essai a été reverté immédiatement. Leçon : sur un rendu **purement esthétique** où le goût de l'utilisateur tranche, ne pas câbler l'effet dans 8 endroits d'un coup ni ajouter une grosse lib avant validation. Faire **1 commit isolé et facilement révertable** par tentative → `git revert <sha>` propre, zéro résidu.

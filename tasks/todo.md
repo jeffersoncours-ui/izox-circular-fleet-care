@@ -2,6 +2,56 @@
 
 ---
 
+## Session 2026-06-15 (44) — Avant/Après → galerie flip (21st.dev)
+
+Demande utilisateur : remplacer la présentation avant/après (placeholders hachurés en grille) par le composant « Flip Gallery » (21st.dev, Le Thanh). Option A retenue : avant→après du même véhicule, alternés. Photos laissées vides (fournies plus tard).
+
+- [x] **Audit existant** : `BaCard`+`BeforeAfter` (sections.tsx), `<BeforeAfter/>` (index.tsx), classes `.ba-*`+`.rv-left/.rv-right` (landing-b2c.css). Vérifié : `.rv-left/.rv-right` utilisées uniquement par BaCard.
+- [x] **Critique du prompt** : template Next/shadcn générique → chemin `ui/` inadapté (→ `landing/`), `<style>` global à scoper, lucide déjà présent (no-op), `demo.tsx` = code mort écarté.
+- [x] **`FlipGallery.tsx`** créé (`src/components/landing/`) : types stricts (`GalleryItem`, refs typées), guards DOM (`querySelector?.animate`), cleanup des `setTimeout` au unmount, `prefers-reduced-motion` → swap instantané, aria FR. **Bug stale-closure corrigé** : index passé explicitement (la source lisait `currentIndex` via closure → image décalée).
+- [x] **CSS scopé** dans landing-b2c.css (`.izox-b2c #flip-gallery …`), couleurs sur tokens b2c, slot vide = hachures placeholder.
+- [x] **`BeforeAfter()`** réécrit : `SectionHeading` conservé + `<FlipGallery/>` centré. `BaCard` supprimé.
+- [x] **Code mort retiré** : `.ba-tag/.ba-tag--after/.ba-ph/.ba-ph__label/.rv-left/.rv-right`.
+- [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR `/` rend `flip-gallery` + 0 ancien marqueur · `/login` 0 token b2c (isolation CRM).
+- [x] Commit + push
+
+### Partie 2 — Kickers néon bleu (CSS pur)
+Demande : mettre les petits titres bleus majuscules (`.b2c-kicker`) en style néon, **en gardant le bleu et les majuscules**. Composant 21st.dev `NeonRGBTextEffect` fourni mais **écarté** (canvas WebGL plein écran, texte codé en dur, effet aberration RGB blanc ≠ néon bleu, 12 contextes GL nécessaires = perf/limite navigateur). Solution retenue : CSS `text-shadow`.
+
+- [x] **Analyse** : composant inadapté (blanchit le texte au lieu de bleu, 12 canvas WebGL impossibles avec le fond fumée déjà présent). Recommandé + validé : néon CSS fixe.
+- [x] **landing-b2c.css** : `text-shadow` néon 3 couches sur `.b2c-kicker`, dans `rgba(63,216,255,…)` (= accent), intensité pilotée par `--b2c-glow` (TweaksPanel). Texte conservé bleu accent. Fixe (pas de flicker).
+- [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR `/` kickers présents · `/login` 0 token b2c.
+
+### Partie 3 — Cadre kicker Vision + fusion sections doublons
+Demandes : (1) retirer le cadre (pilule bordée) du kicker « Notre feuille de route » (Vision). (2) fusionner RseProof dans WaterLoop : doublons 80 %/50 % supprimés, ne garder que « 2 à 4× » placé à côté du « ~50 L ». (3) kicker fusionné en 2 lignes empilées « Notre différence » + « Des chiffres réels, pas des promesses ».
+
+- [x] **Vision** : pilule `rounded-full border bg` retirée → `<p class="b2c-kicker">` simple (néon conservé).
+- [x] **SectionHeading** : prop `kicker` `string` → `React.ReactNode` (pour 2 lignes empilées).
+- [x] **WaterLoop** : kicker 2 lignes empilées ; bloc figures en grille 2 colonnes → `~50 L` + `2 à 4× / moins d'eau / qu'un lavage au jet à domicile`.
+- [x] **RseProof + RseStat supprimés** (code mort) ; import + rendu retirés de `index.tsx`. Les 80 %/50 % restent dans WaterLoop (descriptions berme/filtration).
+- [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR : kicker 2 lignes présent, `2 à 4×` unique (doublon éliminé), paragraphe RseProof absent, cadre pilule absent, `/login` 0 token b2c.
+
+### Partie 4 — Simplification kicker boucle d'eau + alignement chiffres
+- [x] **WaterLoop** : retrait de la 2e ligne du kicker (retour à « Notre différence » seul).
+- [x] **WaterLoop** : bloc `~50 L` + `2 à 4×` aligné à gauche (`max-w-2xl`, plus de `mx-auto`/`text-center`).
+
+### Partie 5 — Espacement kicker Hero
+- [x] **Hero.tsx** : `<h1>` `mt-5` → `mt-2` — rapproche le kicker néon de son titre, homogène avec les section headings.
+
+### Partie 6 — Néon généralisé à tous les textes bleus
+- [x] **landing-b2c.css** : variable `--b2c-neon` (halo 3 couches, pilotée par `--b2c-glow`) factorisée et appliquée à `.b2c-kicker`, `.b2c-accent` (mots italiques des titres), `.b2c-figure` (chiffres + prix véhicule), `.b2c-glow-text`.
+- [x] **PricingSection.tsx** : prix option → ajout `b2c-glow-text`.
+- [x] Icônes (SVG) volontairement non traitées (`text-shadow` inopérant sur SVG).
+- [x] **Validation** : `tsc` 0 erreur · `npm run build` OK.
+
+### Review session 44
+- **Livré** : (1) galerie flip avant/après (FlipGallery, photos vides en attente) ; (2) néon bleu fixe généralisé à TOUS les textes bleus via `--b2c-neon` (kickers, mots accentués, chiffres, prix), réglable par le slider glow ; (3) fusion des sections « boucle d'eau » / « preuve RSE » (doublons 80 %/50 % supprimés, `2 à 4×` rapatrié à côté du `~50 L`) ; (4) nettoyages d'espacement (cadre pilule Vision retiré, kicker Hero rapproché, chiffres alignés à gauche).
+- **Composants 21st.dev** : Flip Gallery intégré (adapté + bug stale-closure corrigé) ; NeonRGBTextEffect **écarté** (WebGL plein écran inadapté) au profit d'un néon CSS pur — plus simple, plus performant, et fidèle à la demande (bleu conservé).
+- **À fournir par l'utilisateur** : vraies photos avant/après → `ITEMS[].url` dans `FlipGallery.tsx` + fichiers dans `public/landing/`.
+- **Aucune donnée DB créée** (frontend/CSS only). Purge §7 exécutée avant merge par conformité.
+
+---
+
 ## Session 2026-06-14 (43) — Fond fumée WebGL + perf vidéo + essais titres (rollbackés)
 
 ### Partie 1 — Fond animé fumée WebGL (conservé)
