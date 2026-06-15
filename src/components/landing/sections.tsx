@@ -46,11 +46,8 @@ export function HowItWorks() {
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
           {steps.map((s, i) => (
             <div key={s.title} className={`stepcard rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
-              <div className="flex items-center justify-between">
-                <div className="grid h-11 w-11 place-items-center rounded-md bg-[var(--primary-soft)]">
-                  {s.icon}
-                </div>
-                <span className="stepcard__num">0{i + 1}</span>
+              <div className="grid h-11 w-11 place-items-center rounded-md bg-[var(--primary-soft)]">
+                {s.icon}
               </div>
               <h3 className="b2c-display--md mt-4 !text-[1.5rem] text-[var(--b2c-tx)]">{s.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{s.text}</p>
