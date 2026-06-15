@@ -68,7 +68,7 @@ export function PricingSection() {
               <div key={o.id} className="px-5 py-4 sm:px-7">
                 <div className="flex items-baseline justify-between gap-4">
                   <p className="font-semibold text-[var(--b2c-tx)]">{o.label}</p>
-                  <p className="b2c-mono shrink-0 text-sm font-semibold text-[var(--b2c-accent)]">
+                  <p className="b2c-mono b2c-glow-text shrink-0 text-sm font-semibold text-[var(--b2c-accent)]">
                     {o.prix.citadine === o.prix.utilitaire
                       ? `${o.prix.citadine} €`
                       : `${o.prix.citadine}–${o.prix.utilitaire} €`}

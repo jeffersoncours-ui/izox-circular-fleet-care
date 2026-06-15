@@ -17,6 +17,12 @@
   --b2c-tx-faint: #52685b;
   --b2c-accent: #3fd8ff;
   --b2c-glow: 0.75; /* 0..1 — piloté par le tweaks panel */
+  /* Halo néon bleu (3 couches), intensité pilotée par --b2c-glow. Réutilisé
+     par tous les textes bleus (kicker, accent, chiffres). */
+  --b2c-neon:
+    0 0 calc(4px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))),
+    0 0 calc(11px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))),
+    0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow)));
   --b2c-tscale: 1.25; /* échelle titres — piloté par tweaks */
   --b2c-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
   --b2c-sans: "Archivo", system-ui, -apple-system, sans-serif;
@@ -127,7 +133,7 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 .b2c-accent {
   font-style: italic;
   color: var(--b2c-accent);
-  text-shadow: 0 0 calc(28px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.55 * var(--b2c-glow)));
+  text-shadow: var(--b2c-neon);
 }
 .b2c-kicker {
   font-family: var(--b2c-mono);
@@ -136,12 +142,8 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--b2c-accent);
-  /* Néon bleu fixe : halos concentriques dans l'accent, intensité pilotée par
-     --b2c-glow (TweaksPanel). Texte conservé bleu accent. */
-  text-shadow:
-    0 0 calc(4px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))),
-    0 0 calc(11px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))),
-    0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow)));
+  /* Néon bleu fixe (texte conservé bleu accent). */
+  text-shadow: var(--b2c-neon);
 }
 .b2c-lead {
   color: var(--b2c-tx-dim);
@@ -170,7 +172,7 @@ body.b2c-active:has(.izox-b2c.t-papier) {
     0 0 calc(48px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.18 * var(--b2c-glow)));
 }
 .b2c-glow-text {
-  text-shadow: 0 0 calc(24px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.5 * var(--b2c-glow)));
+  text-shadow: var(--b2c-neon);
 }
 /* Grand chiffre RSE / compteur boucle */
 .b2c-figure {
@@ -180,6 +182,7 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   color: var(--b2c-accent);
   font-size: clamp(2.4rem, 6vw, 3.4rem);
   line-height: 1;
+  text-shadow: var(--b2c-neon);
 }
 
 /* ============================================================
