@@ -13,7 +13,7 @@ Demande utilisateur : remplacer la présentation avant/après (placeholders hach
 - [x] **`BeforeAfter()`** réécrit : `SectionHeading` conservé + `<FlipGallery/>` centré. `BaCard` supprimé.
 - [x] **Code mort retiré** : `.ba-tag/.ba-tag--after/.ba-ph/.ba-ph__label/.rv-left/.rv-right`.
 - [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR `/` rend `flip-gallery` + 0 ancien marqueur · `/login` 0 token b2c (isolation CRM).
-- [ ] Commit + push
+- [x] Commit + push
 
 ### Partie 2 — Kickers néon bleu (CSS pur)
 Demande : mettre les petits titres bleus majuscules (`.b2c-kicker`) en style néon, **en gardant le bleu et les majuscules**. Composant 21st.dev `NeonRGBTextEffect` fourni mais **écarté** (canvas WebGL plein écran, texte codé en dur, effet aberration RGB blanc ≠ néon bleu, 12 contextes GL nécessaires = perf/limite navigateur). Solution retenue : CSS `text-shadow`.
@@ -31,8 +31,24 @@ Demandes : (1) retirer le cadre (pilule bordée) du kicker « Notre feuille de r
 - [x] **RseProof + RseStat supprimés** (code mort) ; import + rendu retirés de `index.tsx`. Les 80 %/50 % restent dans WaterLoop (descriptions berme/filtration).
 - [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR : kicker 2 lignes présent, `2 à 4×` unique (doublon éliminé), paragraphe RseProof absent, cadre pilule absent, `/login` 0 token b2c.
 
-### À fournir par l'utilisateur
-- Les vraies photos avant/après → renseigner `ITEMS[].url` dans `FlipGallery.tsx` (et déposer les fichiers dans `public/landing/`).
+### Partie 4 — Simplification kicker boucle d'eau + alignement chiffres
+- [x] **WaterLoop** : retrait de la 2e ligne du kicker (retour à « Notre différence » seul).
+- [x] **WaterLoop** : bloc `~50 L` + `2 à 4×` aligné à gauche (`max-w-2xl`, plus de `mx-auto`/`text-center`).
+
+### Partie 5 — Espacement kicker Hero
+- [x] **Hero.tsx** : `<h1>` `mt-5` → `mt-2` — rapproche le kicker néon de son titre, homogène avec les section headings.
+
+### Partie 6 — Néon généralisé à tous les textes bleus
+- [x] **landing-b2c.css** : variable `--b2c-neon` (halo 3 couches, pilotée par `--b2c-glow`) factorisée et appliquée à `.b2c-kicker`, `.b2c-accent` (mots italiques des titres), `.b2c-figure` (chiffres + prix véhicule), `.b2c-glow-text`.
+- [x] **PricingSection.tsx** : prix option → ajout `b2c-glow-text`.
+- [x] Icônes (SVG) volontairement non traitées (`text-shadow` inopérant sur SVG).
+- [x] **Validation** : `tsc` 0 erreur · `npm run build` OK.
+
+### Review session 44
+- **Livré** : (1) galerie flip avant/après (FlipGallery, photos vides en attente) ; (2) néon bleu fixe généralisé à TOUS les textes bleus via `--b2c-neon` (kickers, mots accentués, chiffres, prix), réglable par le slider glow ; (3) fusion des sections « boucle d'eau » / « preuve RSE » (doublons 80 %/50 % supprimés, `2 à 4×` rapatrié à côté du `~50 L`) ; (4) nettoyages d'espacement (cadre pilule Vision retiré, kicker Hero rapproché, chiffres alignés à gauche).
+- **Composants 21st.dev** : Flip Gallery intégré (adapté + bug stale-closure corrigé) ; NeonRGBTextEffect **écarté** (WebGL plein écran inadapté) au profit d'un néon CSS pur — plus simple, plus performant, et fidèle à la demande (bleu conservé).
+- **À fournir par l'utilisateur** : vraies photos avant/après → `ITEMS[].url` dans `FlipGallery.tsx` + fichiers dans `public/landing/`.
+- **Aucune donnée DB créée** (frontend/CSS only). Purge §7 exécutée avant merge par conformité.
 
 ---
 
