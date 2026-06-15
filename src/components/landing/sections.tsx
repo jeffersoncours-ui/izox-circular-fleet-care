@@ -45,7 +45,7 @@ export function HowItWorks() {
         <SectionHeading kicker="Simple comme bonjour" title="Comment ça marche" />
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
           {steps.map((s, i) => (
-            <div key={s.title} className={`stepcard rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
+            <div key={s.title} className={`stepcard b2c-glow-card rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
               <div className="grid h-11 w-11 place-items-center rounded-md bg-[var(--primary-soft)]">
                 {s.icon}
               </div>
@@ -258,7 +258,7 @@ export function SubscriptionTeaser() {
   return (
     <section className="b2c-section !py-12 border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
-        <div className="b2c-card rv flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center sm:p-8">
+        <div className="b2c-card b2c-glow-card rv flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center sm:p-8">
           <div>
             <h2 className="font-[var(--b2c-sans)] text-lg font-bold text-[var(--b2c-tx)]">
               Vous reviendrez ? L'abonnement vous fait économiser jusqu'à −15 %.
@@ -289,7 +289,7 @@ export function Reviews() {
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
         <SectionHeading kicker="Ils nous font confiance" title="Avis clients" />
-        <div className="b2c-card rv mt-10 border-dashed p-8 text-center">
+        <div className="b2c-card b2c-glow-card rv mt-10 p-8 text-center">
           <Quote className="mx-auto h-6 w-6 text-[var(--b2c-tx-faint)]" />
           <p className="mt-3 text-sm font-semibold text-[var(--b2c-tx)]">
             Tout juste lancés, vos avis apparaîtront ici.
@@ -341,7 +341,7 @@ export function Faq() {
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container max-w-3xl">
         <SectionHeading kicker="Questions fréquentes" title="FAQ" />
-        <div className="b2c-card rv mt-8 divide-y divide-[var(--b2c-line)]">
+        <div className="b2c-card b2c-glow-card rv mt-8 divide-y divide-[var(--b2c-line)]">
           {FAQ_ITEMS.map((item) => (
             <details key={item.q} className="group px-5 py-4">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-[var(--b2c-tx)] [&::-webkit-details-marker]:hidden">

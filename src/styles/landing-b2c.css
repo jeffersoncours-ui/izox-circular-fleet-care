@@ -164,6 +164,63 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   border: 1px solid var(--b2c-line);
   border-radius: 14px;
 }
+
+/* ── Glow card — conteneur premium : bordure fluo statique + picots
+   intérieurs + lueur d'angles. Pilotée par --b2c-accent / --b2c-glow
+   (suit le TweakPanel). Même langage que .shiny-cta : statique, zéro
+   animation. S'AJOUTE à .b2c-card / .stepcard sans remplacer leur fond. */
+.izox-b2c .b2c-glow-card {
+  position: relative;
+  isolation: isolate;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--b2c-accent) 55%, transparent);
+  box-shadow:
+    0 0 calc(16px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.14 * var(--b2c-glow))),
+    inset 0 0 calc(34px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.035 * var(--b2c-glow)));
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Picots intérieurs — statiques, couleur accent, sous le contenu */
+.izox-b2c .b2c-glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  --pos: 2px;
+  background: radial-gradient(
+    circle at var(--pos) var(--pos),
+    var(--b2c-accent) calc(var(--pos) / 4),
+    transparent 0
+  ) padding-box;
+  background-size: calc(var(--pos) * 2) calc(var(--pos) * 2);
+  opacity: calc(0.14 * var(--b2c-glow));
+}
+
+/* Lueur douce aux quatre angles */
+.izox-b2c .b2c-glow-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at top left, rgba(63, 216, 255, 0.16), transparent 24%),
+    radial-gradient(circle at top right, rgba(63, 216, 255, 0.16), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(63, 216, 255, 0.11), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(63, 216, 255, 0.11), transparent 24%);
+  opacity: var(--b2c-glow);
+}
+
+/* Hover : intensifie le halo, garde le contour fluo (bat .stepcard:hover) */
+.izox-b2c .b2c-glow-card:hover {
+  border-color: color-mix(in srgb, var(--b2c-accent) 75%, transparent);
+  box-shadow:
+    0 0 calc(24px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.22 * var(--b2c-glow))),
+    inset 0 0 calc(34px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.05 * var(--b2c-glow)));
+}
 .b2c-hairline {
   border-color: var(--b2c-line);
 }

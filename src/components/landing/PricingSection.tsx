@@ -45,7 +45,7 @@ export function PricingSection() {
           </div>
 
           {/* Liste véhicules pour la formule active */}
-          <div className="b2c-card rv rv-d1 mt-5 divide-y divide-[var(--b2c-line)]">
+          <div className="b2c-card b2c-glow-card rv rv-d1 mt-5 divide-y divide-[var(--b2c-line)]">
             {VEHICULES_B2C.map((v) => (
               <div
                 key={v.id}
@@ -68,7 +68,7 @@ export function PricingSection() {
 
           {/* Options */}
           <p className="b2c-kicker rv mt-9">Options</p>
-          <div className="b2c-card rv rv-d1 mt-3 divide-y divide-[var(--b2c-line)]">
+          <div className="b2c-card b2c-glow-card rv rv-d1 mt-3 divide-y divide-[var(--b2c-line)]">
             {OPTIONS_B2C.map((o) => (
               <div key={o.id} className="px-5 py-4 sm:px-7">
                 <div className="flex items-center justify-between gap-4">
