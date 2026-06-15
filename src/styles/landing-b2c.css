@@ -136,6 +136,12 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--b2c-accent);
+  /* Néon bleu fixe : halos concentriques dans l'accent, intensité pilotée par
+     --b2c-glow (TweaksPanel). Texte conservé bleu accent. */
+  text-shadow:
+    0 0 calc(4px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))),
+    0 0 calc(11px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))),
+    0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow)));
 }
 .b2c-lead {
   color: var(--b2c-tx-dim);

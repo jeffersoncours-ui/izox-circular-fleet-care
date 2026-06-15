@@ -15,6 +15,13 @@ Demande utilisateur : remplacer la présentation avant/après (placeholders hach
 - [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR `/` rend `flip-gallery` + 0 ancien marqueur · `/login` 0 token b2c (isolation CRM).
 - [ ] Commit + push
 
+### Partie 2 — Kickers néon bleu (CSS pur)
+Demande : mettre les petits titres bleus majuscules (`.b2c-kicker`) en style néon, **en gardant le bleu et les majuscules**. Composant 21st.dev `NeonRGBTextEffect` fourni mais **écarté** (canvas WebGL plein écran, texte codé en dur, effet aberration RGB blanc ≠ néon bleu, 12 contextes GL nécessaires = perf/limite navigateur). Solution retenue : CSS `text-shadow`.
+
+- [x] **Analyse** : composant inadapté (blanchit le texte au lieu de bleu, 12 canvas WebGL impossibles avec le fond fumée déjà présent). Recommandé + validé : néon CSS fixe.
+- [x] **landing-b2c.css** : `text-shadow` néon 3 couches sur `.b2c-kicker`, dans `rgba(63,216,255,…)` (= accent), intensité pilotée par `--b2c-glow` (TweaksPanel). Texte conservé bleu accent. Fixe (pas de flicker).
+- [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR `/` kickers présents · `/login` 0 token b2c.
+
 ### À fournir par l'utilisateur
 - Les vraies photos avant/après → renseigner `ITEMS[].url` dans `FlipGallery.tsx` (et déposer les fichiers dans `public/landing/`).
 
