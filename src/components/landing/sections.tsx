@@ -69,7 +69,12 @@ export function WaterLoop() {
     <section id="boucle" className="b2c-section scroll-mt-20 border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
         <SectionHeading
-          kicker="Notre différence"
+          kicker={
+            <>
+              <span className="block">Notre différence</span>
+              <span className="block">Des chiffres réels, pas des promesses</span>
+            </>
+          }
           title={
             <>
               La boucle <em className="b2c-accent">d'eau</em>
@@ -80,20 +85,29 @@ export function WaterLoop() {
 
         {/* Schéma traitement — image statique avec textes */}
         <div className="mt-12">
-          <div className="rv mx-auto max-w-md text-center">
-            <CountUp
-              className="b2c-figure b2c-glow-text"
-              prefix="~"
-              value={CHIFFRES_EAU.litresUtilises}
-              suffix=" L"
-            />
-            <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">
-              par véhicule, en moyenne
-            </p>
-            <p className="mt-1 text-sm text-[var(--b2c-tx-dim)]">
-              vs {CHIFFRES_EAU.comparaisonJetMin}–{CHIFFRES_EAU.comparaisonJetMax} L pour un
-              lavage au jet à domicile
-            </p>
+          <div className="mx-auto grid max-w-3xl gap-8 text-center sm:grid-cols-2">
+            <div className="rv">
+              <CountUp
+                className="b2c-figure b2c-glow-text"
+                prefix="~"
+                value={CHIFFRES_EAU.litresUtilises}
+                suffix=" L"
+              />
+              <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">
+                par véhicule, en moyenne
+              </p>
+              <p className="mt-1 text-sm text-[var(--b2c-tx-dim)]">
+                vs {CHIFFRES_EAU.comparaisonJetMin}–{CHIFFRES_EAU.comparaisonJetMax} L pour un
+                lavage au jet à domicile
+              </p>
+            </div>
+            <div className="rv rv-d1">
+              <p className="b2c-figure b2c-glow-text">2 à 4×</p>
+              <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">moins d'eau</p>
+              <p className="mt-1 text-sm text-[var(--b2c-tx-dim)]">
+                qu'un lavage au jet à domicile
+              </p>
+            </div>
           </div>
 
           {/* Image traitement + textes */}
@@ -152,53 +166,6 @@ export function WaterLoop() {
   );
 }
 
-/* ── 4. Preuve RSE ────────────────────────────────────────────────── */
-
-export function RseProof() {
-  return (
-    <section className="b2c-section border-t border-[var(--b2c-line)]">
-      <div className="b2c-container">
-        <p className="b2c-kicker rv">Des chiffres réels, pas des promesses</p>
-        <div className="mt-8 grid gap-10 sm:grid-cols-3">
-          <RseStat figure="2 à 4×" label="moins d'eau qu'un lavage au jet à domicile" />
-          <RseStat
-            figure={<CountUp value={CHIFFRES_EAU.pctRecupere} suffix=" %" />}
-            label="de l'eau récupérée sous le véhicule, en moyenne"
-            delay="rv-d1"
-          />
-          <RseStat
-            figure={<CountUp value={CHIFFRES_EAU.pctReinjecte} suffix=" %" />}
-            label="de l'eau réinjectée dans la boucle après recyclage"
-            delay="rv-d2"
-          />
-        </div>
-        <p className="rv mt-8 max-w-2xl text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
-          Une démarche éco-responsable mesurée sur le terrain : produits bio, eau recyclée,
-          zéro rejet au caniveau. Chaque chiffre correspond à des relevés réels effectués
-          lors de nos interventions.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function RseStat({
-  figure,
-  label,
-  delay,
-}: {
-  figure: React.ReactNode;
-  label: string;
-  delay?: string;
-}) {
-  return (
-    <div className={`rv ${delay ?? ""}`}>
-      <p className="b2c-figure b2c-glow-text !text-[clamp(2.8rem,7vw,4rem)]">{figure}</p>
-      <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{label}</p>
-    </div>
-  );
-}
-
 /* ── 5. Avant / après ─────────────────────────────────────────────── */
 
 export function BeforeAfter() {
@@ -249,9 +216,7 @@ export function Vision() {
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
         <div className="rv">
-          <div className="inline-flex items-center rounded-full border border-[var(--b2c-line-strong)] bg-[var(--primary-soft)] px-3 py-1">
-            <span className="b2c-kicker">Notre feuille de route</span>
-          </div>
+          <p className="b2c-kicker">Notre feuille de route</p>
           <h2 className="b2c-display--md mt-4 text-[var(--b2c-tx)]">
             Et demain, l'eau fait pousser des <em className="b2c-accent">légumes</em>
           </h2>
@@ -428,7 +393,7 @@ export function SectionHeading({
   title,
   subtitle,
 }: {
-  kicker: string;
+  kicker: React.ReactNode;
   title: React.ReactNode;
   subtitle?: string;
 }) {

@@ -22,6 +22,15 @@ Demande : mettre les petits titres bleus majuscules (`.b2c-kicker`) en style né
 - [x] **landing-b2c.css** : `text-shadow` néon 3 couches sur `.b2c-kicker`, dans `rgba(63,216,255,…)` (= accent), intensité pilotée par `--b2c-glow` (TweaksPanel). Texte conservé bleu accent. Fixe (pas de flicker).
 - [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR `/` kickers présents · `/login` 0 token b2c.
 
+### Partie 3 — Cadre kicker Vision + fusion sections doublons
+Demandes : (1) retirer le cadre (pilule bordée) du kicker « Notre feuille de route » (Vision). (2) fusionner RseProof dans WaterLoop : doublons 80 %/50 % supprimés, ne garder que « 2 à 4× » placé à côté du « ~50 L ». (3) kicker fusionné en 2 lignes empilées « Notre différence » + « Des chiffres réels, pas des promesses ».
+
+- [x] **Vision** : pilule `rounded-full border bg` retirée → `<p class="b2c-kicker">` simple (néon conservé).
+- [x] **SectionHeading** : prop `kicker` `string` → `React.ReactNode` (pour 2 lignes empilées).
+- [x] **WaterLoop** : kicker 2 lignes empilées ; bloc figures en grille 2 colonnes → `~50 L` + `2 à 4× / moins d'eau / qu'un lavage au jet à domicile`.
+- [x] **RseProof + RseStat supprimés** (code mort) ; import + rendu retirés de `index.tsx`. Les 80 %/50 % restent dans WaterLoop (descriptions berme/filtration).
+- [x] **Validation** : `tsc` 0 erreur · `npm run build` OK · SSR : kicker 2 lignes présent, `2 à 4×` unique (doublon éliminé), paragraphe RseProof absent, cadre pilule absent, `/login` 0 token b2c.
+
 ### À fournir par l'utilisateur
 - Les vraies photos avant/après → renseigner `ITEMS[].url` dans `FlipGallery.tsx` (et déposer les fichiers dans `public/landing/`).
 
