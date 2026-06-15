@@ -271,9 +271,9 @@ export function SubscriptionTeaser() {
           </div>
           <a
             href="mailto:contact@izox.fr?subject=Abonnement%20IZOX"
-            className="b2c-btn b2c-btn--ghost shrink-0"
+            className="shiny-cta shrink-0"
           >
-            En savoir plus
+            <span>En savoir plus</span>
           </a>
         </div>
       </div>
