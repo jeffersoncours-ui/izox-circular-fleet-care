@@ -59,7 +59,7 @@ function ReservationPage() {
             Retour à l'accueil
           </Link>
 
-          <div className="b2c-card mt-8 p-8 text-center">
+          <div className="b2c-card b2c-glow-card mt-8 p-8 text-center">
             {sent ? (
               <>
                 <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[var(--primary-soft)]">

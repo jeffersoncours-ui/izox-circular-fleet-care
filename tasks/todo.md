@@ -2,6 +2,42 @@
 
 ---
 
+## Session 2026-06-15 (45) — Design premium landing : 7-seg, ShinyButton, GlowCard
+
+### Afficheur 7-segments LCD (chiffres fluo)
+- [x] **SevenSegment.tsx** créé (`src/components/landing/`) : `SevenSegmentDigit` (SVG 1 chiffre, `b2c-seg-on`/`b2c-seg-off`) + `SevenSegmentNumber` (multi-chiffres, IntersectionObserver + easeOutCubic, `animate=false` → `setDisplay(value)` dans `useEffect` pour prop change, `aria-label`). Fix : glow via `filter: drop-shadow()` (pas `text-shadow`, inopérant sur SVG).
+- [x] **sections.tsx** : WaterLoop `~50 L` + `80 %` + `50 %` + `2 à 4×` → SevenSegment. Retrait `CountUp`. Retrait step numbers `01/02/03` de HowItWorks.
+- [x] **PricingSection.tsx** : prix véhicules (80/110/140/170 €) + options (40/40-60 €) → SevenSegment. `items-baseline` → `items-center` (SVG incompatible avec baseline). `animate=false`.
+- [x] **entreprises.tsx** : `2 à 4×`, `80 %`, `50 %` → SevenSegment.
+- [x] **CSS** : `.b2c-seg-number`, `.b2c-seg-digit` (glow drop-shadow pilotés par `--b2c-glow`), `.b2c-seg-on`/`.b2c-seg-off`, `.b2c-seg-affix` (néon + alignement vertical).
+- [x] **CountUp.tsx** supprimé (code mort, toutes les instances remplacées par SevenSegmentNumber).
+
+### ShinyButton (CTA premium)
+- [x] **Étape 1 — animé (21st.dev Ali Imam)** : intégré avec `@property` Houdini + 3 `@keyframes` + conic-gradient tournant. Adapté : `"use client"` retiré, CSS scopé `.izox-b2c`, couleurs sur `--b2c-accent`. Appliqué sur tous les gros CTA (Hero, Reviews, FinalCta, Reservation, Entreprises, Abonnement).
+- [x] **Étape 2 — simplifié (bug animation)** : animation tournante jugée buggy/glitchy → remplacement par bordure fluo STATIQUE. Suppression des 4 `@property` + 3 `@keyframes`. Nouveau `.shiny-cta` : `border: 1px solid var(--b2c-accent)` + `box-shadow` glow, picots `::before` en accent statiques, lueur bas `::after`, hover = glow amplifié + `translateY(-1px)`. Aucune animation, zéro `animation-composition`.
+- [x] **`.b2c-btn--ghost`** supprimé (CSS mort, plus utilisé depuis conversion en `.shiny-cta`).
+
+### GlowCard (conteneurs premium)
+- [x] **`.b2c-glow-card`** (CSS, scopée `.izox-b2c`) : bordure fluo statique (`color-mix`), picots intérieurs `::before` en accent, lueur 4 angles `::after`, box-shadow halo pilotés par `--b2c-glow`, hover intensifié. `isolation: isolate` + `z-index: -1` sur pseudo-éléments → contenu toujours visible.
+- [x] **Appliquée sur `/`** : stepcard HowItWorks (×3), carte tarifs véhicules, carte options, carte Reviews, carte FAQ, carte abonnement.
+- [x] **Appliquée sur `/reservation`** : carte principale (incohérence détectée à l'audit + corrigée).
+- [x] **Appliquée sur `/entreprises`** : Lever cards (×4), LeadForm, confirmation envoi.
+- [x] **Navbar** : `b2c-glow-sep-b` (bordure inférieure fluo + halo vers le bas).
+- [x] **Footer** : `b2c-glow-sep-t` (bordure supérieure fluo + halo vers le haut).
+
+### Audit final + merge
+- [x] TypeScript 0 erreur · `npm run build` OK · isolation CRM : `b2c-glow-card`/`shiny-cta` dans bundles landing uniquement.
+- [x] Audit subagent : 3 problèmes identifiés et corrigés (carte /reservation manquante, CountUp.tsx mort, `.b2c-btn--ghost` CSS mort).
+- [x] Merge sur `main`.
+
+### Review session 45
+- **Livré** : 3 couches de design premium sur la landing — afficheur 7-segments LCD (chiffres fluo animés au scroll), ShinyButton statique fluo (pill sombre bordure accent, picots), GlowCard (bordure fluo + picots + lueur angles sur tous les conteneurs de contenu + navbar/footer).
+- **Code mort retiré** : `CountUp.tsx`, `.b2c-btn--ghost`, `border-dashed` sur la carte Reviews.
+- **Cohérence** : bouton et cartes partagent le même langage (statique, fluo, accent, glow piloté par `--b2c-glow`) → TweakPanel contrôle tout.
+- **Validation** : tsc 0 erreur, build propre, isolation CRM confirmée, audit subagent 0 problème résiduel.
+
+---
+
 ## Session 2026-06-15 (44) — Avant/Après → galerie flip (21st.dev)
 
 Demande utilisateur : remplacer la présentation avant/après (placeholders hachurés en grille) par le composant « Flip Gallery » (21st.dev, Le Thanh). Option A retenue : avant→après du même véhicule, alternés. Photos laissées vides (fournies plus tard).

@@ -1,5 +1,25 @@
 # Lessons Learned — IZOX
 
+## Code 21st.dev partiel : reconstruire le CSS manquant, pas juste adapter le JSX (session 45)
+
+- **Un snippet 21st.dev peut ne livrer que le JSX sans son CSS** : le `CardCanvas`/`Card` fourni ne contenait que la structure HTML (filtre SVG `#unopaq`, 4 `border-element`, `card-backdrop`) — tout l'effet réel (bords lumineux animés, motif points, keyframes) était dans un fichier CSS absent. Dans ce cas, « corriger le code » = le reconstruire entièrement, pas l'adapter. Toujours demander : « le snippet contient-il son CSS ? » avant de plonger.
+- **Le filtre SVG `feColorMatrix` bloom est coûteux sur mobile** : appliquer un bloom SVG animé sur 15+ conteneurs (FAQ, tarifs, cartes) sature le GPU sur mobile moyen + crée des bugs de stacking context avec les `transform`/`opacity` des reveals `.rv`. Quand un composant 21st.dev repose sur un filtre SVG par élément, évaluer la charge GPU AVANT d'approuver.
+- **Cohérence du langage visuel : si on retire une animation sur un type d'élément, ne pas la réintroduire sur un autre** : le conic-gradient tournant du ShinyButton a été rejeté (buggy, glitchy). Le `CardCanvas` 21st.dev utilise exactement le même mécanisme (bords lumineux rotatifs) sur les cartes. Intégrer ce composant tel quel aurait réintroduit le défaut qu'on venait de corriger ×15. Décision correcte : même langage statique pour boutons et cartes.
+
+## `filter: drop-shadow()` vs `text-shadow` — ne pas confondre texte et SVG (session 45)
+
+- **`text-shadow` est inopérant sur les SVG** : les chemins SVG (`<path>`, `<rect>`) ne sont pas du texte — `text-shadow` est ignoré silencieusement. Pour faire briller un SVG (ici les segments LCD), utiliser `filter: drop-shadow(0 0 Xpx color)` sur l'élément SVG conteneur. La valeur du filtre peut référencer des CSS custom properties (`calc(Xpx * var(--b2c-glow))`), ce qui le rend pilotable par le TweakPanel.
+- **SVG et `items-baseline`** : l'alignement `align-items: baseline` d'un flexbox ne fonctionne pas correctement avec des SVG inline — ils n'ont pas de ligne de base typographique. Utiliser `items-center` pour aligner chiffres SVG avec suffixes texte.
+
+## `useEffect` avec `animate=false` : penser aux mises à jour de props (session 45)
+
+- **Problème stale-value** : un composant avec `const [display, setDisplay] = useState(value)` initialise l'état à la valeur de la prop. Si `animate=false`, il ne lance pas le countup → `display` reste à la valeur initiale. Quand la prop `value` change (ex. switch d'onglet Formule dans PricingSection), l'état ne se met PAS à jour car l'`useEffect` dépend du flag `animate` qui n'a pas changé. Fix : ajouter `if (!animate) { setDisplay(value); return; }` en tête de l'`useEffect([value, animate])`. La dépendance à `value` garantit le re-run à chaque changement de prop.
+
+## Audit systématique avant merge : auditer même les fichiers « non touchés » (session 45)
+
+- **3 problèmes trouvés par l'audit subagent** : (1) carte `/reservation` oubliée (`.b2c-glow-card` non appliqué → incohérence visuelle), (2) `CountUp.tsx` devenu code mort non supprimé, (3) `.b2c-btn--ghost` CSS mort laissé en place. Aucun n'aurait cassé le build, mais tous auraient pollué le déploiement et trompé sur l'état réel du code.
+- **Checklist audit visuel post-session** : pour chaque nouvelle classe CSS créée → vérifier qu'elle est appliquée à TOUS les endroits prévus (grep dans `src/`) ; pour chaque composant remplacé → vérifier que l'ancien est supprimé (CountUp) ; pour chaque classe CSS retirée des templates → vérifier que son style CSS est aussi supprimé (`.b2c-btn--ghost`).
+
 ## Composant 21st.dev : juger l'adéquation AVANT d'intégrer, pas juste l'adapter (session 44)
 
 - **Un composant 21st.dev peut être le mauvais outil même s'il a l'air joli** : le `NeonRGBTextEffect` fourni était un canvas WebGL **plein écran** au texte **codé en dur**, produisant une **aberration chromatique RGB (texte blanc frangé)** — l'opposé d'un « néon bleu ». Pour 12 kickers il aurait fallu 12 contextes WebGL (limite navigateur ~16, +1 déjà pris par le fond fumée) = désastre perf. La bonne réponse était **CSS `text-shadow` pur** : zéro JS, zéro WebGL, garde le texte bleu, réglable via `--b2c-glow`. **Toujours confronter le composant à la demande réelle et aux contraintes (perf, scope, archi) avant de coder** — recommander la solution simple si le composant ne colle pas.

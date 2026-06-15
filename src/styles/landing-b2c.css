@@ -319,14 +319,6 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.55 * var(--b2c-glow)));
   transform: translateY(-1px);
 }
-.b2c-btn--ghost {
-  background: transparent;
-  color: var(--b2c-tx);
-  border: 1px solid var(--b2c-line-strong);
-}
-.b2c-btn--ghost:hover {
-  border-color: var(--b2c-accent);
-}
 /* Hover « fillwater » (desktop uniquement — jamais sur tactile) :
    l'eau monte de bas en haut dans le bouton fantôme. */
 @media (hover: hover) and (pointer: fine) {
