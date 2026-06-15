@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
-import { CountUp } from "@/components/landing/CountUp";
+import { SevenSegmentNumber, SevenSegmentDigit } from "@/components/landing/SevenSegment";
 
 export const Route = createFileRoute("/entreprises")({
   head: () => ({
@@ -106,14 +106,24 @@ function EntreprisesPage() {
         <div className="b2c-container">
           <p className="b2c-kicker rv">Des chiffres réels, repris dans votre bilan RSE</p>
           <div className="mt-8 grid gap-10 sm:grid-cols-3">
-            <B2bStat figure="2 à 4×" label="moins d'eau qu'un lavage au jet (en moyenne, sur nos interventions)" />
             <B2bStat
-              figure={<CountUp value={CHIFFRES_EAU.pctRecupere} suffix=" %" />}
+              figure={
+                <span className="b2c-seg-number" aria-label="2 à 4 fois">
+                  <SevenSegmentDigit value={2} />
+                  <span className="b2c-seg-affix mx-[0.25em]"> à </span>
+                  <SevenSegmentDigit value={4} />
+                  <span className="b2c-seg-affix">×</span>
+                </span>
+              }
+              label="moins d'eau qu'un lavage au jet (en moyenne, sur nos interventions)"
+            />
+            <B2bStat
+              figure={<SevenSegmentNumber value={CHIFFRES_EAU.pctRecupere} suffix=" %" />}
               label="de l'eau récupérée sous le véhicule"
               delay="rv-d1"
             />
             <B2bStat
-              figure={<CountUp value={CHIFFRES_EAU.pctReinjecte} suffix=" %" />}
+              figure={<SevenSegmentNumber value={CHIFFRES_EAU.pctReinjecte} suffix=" %" />}
               label="réinjectée dans la boucle après recyclage"
               delay="rv-d2"
             />
@@ -188,7 +198,7 @@ function B2bStat({
 }) {
   return (
     <div className={`rv ${delay ?? ""}`}>
-      <p className="b2c-figure b2c-glow-text !text-[clamp(2.4rem,6vw,3.4rem)]">{figure}</p>
+      <p className="leading-none">{figure}</p>
       <p className="mt-2 text-sm leading-relaxed text-[var(--b2c-tx-dim)]">{label}</p>
     </div>
   );

@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { SevenSegmentNumber } from "./SevenSegment";
 import { VEHICULES_B2C, FORMULES_B2C, PRIX_B2C, OPTIONS_B2C } from "@/lib/pricing-b2c";
 import type { FormuleB2C } from "@/lib/pricing-b2c";
 import { SectionHeading } from "./sections";
@@ -54,9 +55,13 @@ export function PricingSection() {
                   <p className="font-semibold text-[var(--b2c-tx)]">{v.label}</p>
                   <p className="mt-0.5 text-[11px] text-[var(--b2c-tx-faint)]">{v.exemple}</p>
                 </div>
-                <p className="b2c-figure shrink-0 !text-[1.7rem]">
-                  {PRIX_B2C[formule][v.id]} €
-                </p>
+                <SevenSegmentNumber
+                  value={PRIX_B2C[formule][v.id]}
+                  suffix=" €"
+                  animate={false}
+                  digitHeight="1.7rem"
+                  className="shrink-0"
+                />
               </div>
             ))}
           </div>

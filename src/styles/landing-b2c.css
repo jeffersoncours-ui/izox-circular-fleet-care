@@ -174,7 +174,7 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 .b2c-glow-text {
   text-shadow: var(--b2c-neon);
 }
-/* Grand chiffre RSE / compteur boucle */
+/* Grand chiffre RSE / compteur boucle (texte, conservé pour fallback) */
 .b2c-figure {
   font-family: var(--b2c-mono);
   font-weight: 700;
@@ -183,6 +183,40 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   font-size: clamp(2.4rem, 6vw, 3.4rem);
   line-height: 1;
   text-shadow: var(--b2c-neon);
+}
+
+/* ── 7-Segment display ───────────────────────────────────────────────── */
+/* Conteneur flex alignant chiffres + affixes */
+.b2c-seg-number {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.05em;
+  line-height: 1;
+}
+
+/* SVG d'un chiffre : glow via drop-shadow (text-shadow inopérant sur SVG) */
+.b2c-seg-digit {
+  display: block;
+  filter:
+    drop-shadow(0 0 calc(4px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))))
+    drop-shadow(0 0 calc(11px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))))
+    drop-shadow(0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow))));
+}
+
+/* Segment allumé */
+.b2c-seg-on  { fill: var(--b2c-accent); }
+/* Segment éteint — fantôme très atténué (effet LCD authentique) */
+.b2c-seg-off { fill: rgba(63, 216, 255, 0.07); }
+
+/* Préfixe/suffixe texte (« ~ », « L », « % », « € », « × », « à ») */
+.b2c-seg-affix {
+  font-family: var(--b2c-mono);
+  font-weight: 700;
+  color: var(--b2c-accent);
+  text-shadow: var(--b2c-neon);
+  font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+  line-height: 1;
+  padding-bottom: 0.12em;
 }
 
 /* ============================================================

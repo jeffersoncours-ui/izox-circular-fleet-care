@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
 import { AquaponieImage } from "./illustrations/AquaponieImage";
-import { CountUp } from "./CountUp";
+import { SevenSegmentNumber, SevenSegmentDigit } from "./SevenSegment";
 import { FlipGallery } from "./FlipGallery";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
@@ -82,8 +82,7 @@ export function WaterLoop() {
         <div className="mt-12">
           <div className="grid max-w-2xl gap-8 sm:grid-cols-2">
             <div className="rv">
-              <CountUp
-                className="b2c-figure b2c-glow-text"
+              <SevenSegmentNumber
                 prefix="~"
                 value={CHIFFRES_EAU.litresUtilises}
                 suffix=" L"
@@ -97,7 +96,12 @@ export function WaterLoop() {
               </p>
             </div>
             <div className="rv rv-d1">
-              <p className="b2c-figure b2c-glow-text">2 à 4×</p>
+              <span className="b2c-seg-number" aria-label="2 à 4 fois">
+                <SevenSegmentDigit value={2} />
+                <span className="b2c-seg-affix mx-[0.25em]"> à </span>
+                <SevenSegmentDigit value={4} />
+                <span className="b2c-seg-affix">×</span>
+              </span>
               <p className="mt-2 text-sm font-semibold text-[var(--b2c-tx)]">moins d'eau</p>
               <p className="mt-1 text-sm text-[var(--b2c-tx-dim)]">
                 qu'un lavage au jet à domicile
@@ -122,8 +126,7 @@ export function WaterLoop() {
 
           <div className="mx-auto mt-10 grid max-w-3xl gap-8 sm:grid-cols-2">
             <div className="rv">
-              <CountUp
-                className="b2c-figure b2c-glow-text"
+              <SevenSegmentNumber
                 value={CHIFFRES_EAU.pctRecupere}
                 suffix=" %"
               />
@@ -136,8 +139,7 @@ export function WaterLoop() {
               </p>
             </div>
             <div className="rv rv-d1">
-              <CountUp
-                className="b2c-figure b2c-glow-text"
+              <SevenSegmentNumber
                 value={CHIFFRES_EAU.pctReinjecte}
                 suffix=" %"
               />
