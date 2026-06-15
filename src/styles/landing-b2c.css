@@ -229,6 +229,16 @@ body.b2c-active:has(.izox-b2c.t-papier) {
     0 0 0 1px var(--b2c-line-strong),
     0 0 calc(48px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.18 * var(--b2c-glow)));
 }
+
+/* Séparateur horizontal fluo — navbar (bas) et footer (haut) */
+.izox-b2c .b2c-glow-sep-b {
+  border-bottom: 1px solid color-mix(in srgb, var(--b2c-accent) 45%, transparent);
+  box-shadow: 0 1px calc(18px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.13 * var(--b2c-glow)));
+}
+.izox-b2c .b2c-glow-sep-t {
+  border-top: 1px solid color-mix(in srgb, var(--b2c-accent) 45%, transparent);
+  box-shadow: 0 -1px calc(18px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.13 * var(--b2c-glow)));
+}
 .b2c-glow-text {
   text-shadow: var(--b2c-neon);
 }

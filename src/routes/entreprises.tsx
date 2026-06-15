@@ -175,7 +175,7 @@ function Lever({
   delay?: string;
 }) {
   return (
-    <div className={`b2c-card rv ${delay ?? ""} p-5`}>
+    <div className={`b2c-card b2c-glow-card rv ${delay ?? ""} p-5`}>
       <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--primary-soft)]">
         {icon}
       </div>
@@ -236,7 +236,7 @@ function LeadForm() {
 
   if (sent) {
     return (
-      <div className="b2c-card flex flex-col items-center justify-center p-10 text-center">
+      <div className="b2c-card b2c-glow-card flex flex-col items-center justify-center p-10 text-center">
         <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--primary-soft)]">
           <CheckCircle2 className="h-6 w-6 text-[var(--b2c-accent)]" />
         </div>
@@ -252,7 +252,7 @@ function LeadForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="b2c-card rv space-y-4 p-6 sm:p-8">
+    <form onSubmit={handleSubmit} className="b2c-card b2c-glow-card rv space-y-4 p-6 sm:p-8">
       <div className="flex items-center gap-2">
         <Building2 className="h-4 w-4 text-[var(--b2c-accent)]" />
         <p className="font-[var(--b2c-sans)] text-base font-bold text-[var(--b2c-tx)]">

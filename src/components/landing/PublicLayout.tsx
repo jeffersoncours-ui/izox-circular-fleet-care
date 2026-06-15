@@ -33,7 +33,7 @@ function PublicNavbar() {
   const { tweaks } = useTweaks();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[var(--b2c-line)] bg-[color-mix(in_srgb,var(--b2c-bg)_82%,transparent)] backdrop-blur-md">
+    <header className="b2c-glow-sep-b sticky top-0 z-40 w-full bg-[color-mix(in_srgb,var(--b2c-bg)_82%,transparent)] backdrop-blur-md">
       <div className="b2c-container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center">
           <Wordmark />
@@ -103,7 +103,7 @@ function PublicNavbar() {
 
 function PublicFooter() {
   return (
-    <footer className="border-t border-[var(--b2c-line)] bg-[var(--b2c-bg2)]">
+    <footer className="b2c-glow-sep-t bg-[var(--b2c-bg2)]">
       <div className="b2c-container py-12">
         <div className="grid gap-8 sm:grid-cols-3">
           <div>
