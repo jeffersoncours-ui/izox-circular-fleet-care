@@ -144,7 +144,7 @@ export function TestimonialsStagger({ testimonials }: { testimonials: Testimonia
     });
   };
 
-  const centerIndex = list.length % 2 ? (list.length + 1) / 2 : list.length / 2;
+  const centerIndex = Math.floor(list.length / 2);
   const centerName = list[centerIndex]?.auteurNom ?? "";
 
   return (
@@ -153,9 +153,7 @@ export function TestimonialsStagger({ testimonials }: { testimonials: Testimonia
         Témoignage de {centerName}
       </div>
       {list.map((item, index) => {
-        const position = list.length % 2
-          ? index - (list.length + 1) / 2
-          : index - list.length / 2;
+        const position = index - centerIndex;
         return (
           <TestimonialCard
             key={item._key}
