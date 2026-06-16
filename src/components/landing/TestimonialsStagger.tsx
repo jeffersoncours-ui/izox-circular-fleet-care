@@ -48,9 +48,11 @@ function TestimonialCard({ item, position, cardSize, onMove }: CardProps) {
   // Effet "deck" : les cartes se chevauchent (offset court) et s'enfoncent
   // (échelle + opacité + z-index décroissants) à mesure qu'on s'éloigne du
   // centre — on voit plusieurs cartes, partiellement cachées par les autres.
-  const spacing = cardSize * 0.36;
-  const scale = Math.max(0, 1 - depth * 0.09);
-  const opacity = Math.max(0, 1 - depth * 0.26);
+  // Seules les cartes à depth <= 2 sont rendues (cf. parent) : la chute
+  // échelle/opacité reste donc douce, jamais réduite à un fil quasi invisible.
+  const spacing = cardSize * 0.28;
+  const scale = Math.max(0.8, 1 - depth * 0.08);
+  const opacity = Math.max(0.45, 1 - depth * 0.24);
 
   const activate = () => {
     if (!isCenter) onMove(position);
@@ -80,9 +82,9 @@ function TestimonialCard({ item, position, cardSize, onMove }: CardProps) {
         transform: `
           translate(-50%, -50%)
           translateX(${spacing * position}px)
-          translateY(${depth * 14}px)
+          translateY(${depth * 10}px)
           scale(${scale})
-          rotate(${position * 3}deg)
+          rotate(${position * 1.5}deg)
         `,
       }}
     >
@@ -157,14 +159,28 @@ export function TestimonialsStagger({ testimonials }: { testimonials: Testimonia
 
   const centerIndex = Math.floor(list.length / 2);
   const centerName = list[centerIndex]?.auteurNom ?? "";
+  // Fenêtre de rendu limitée à 2 cartes de part et d'autre du centre : au-delà,
+  // l'effet d'échelle/opacité dégressif les rendrait quasi invisibles et leur
+  // sliver clippé par overflow-hidden donnait un artefact visuel "tordu".
+  const maxDepth = 2;
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: cardSize + 190 }}>
+    <div
+      className="relative w-full overflow-hidden"
+      style={{
+        height: cardSize + 190,
+        maskImage:
+          "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
+      }}
+    >
       <div aria-live="polite" className="sr-only">
         Témoignage de {centerName}
       </div>
       {list.map((item, index) => {
         const position = index - centerIndex;
+        if (Math.abs(position) > maxDepth) return null;
         return (
           <TestimonialCard
             key={item._key}
