@@ -40,6 +40,7 @@ import { Route as AdminDemandesRdvRouteImport } from './routes/admin.demandes-rd
 import { Route as AdminDemandesGelRouteImport } from './routes/admin.demandes-gel'
 import { Route as AdminContratsRouteImport } from './routes/admin.contrats'
 import { Route as AdminClientsRouteImport } from './routes/admin.clients'
+import { Route as AdminAvisRouteImport } from './routes/admin.avis'
 import { Route as ClientFacturesIndexRouteImport } from './routes/client.factures.index'
 import { Route as AdminPlanningIndexRouteImport } from './routes/admin.planning.index'
 import { Route as AdminInterventionsIndexRouteImport } from './routes/admin.interventions.index'
@@ -210,6 +211,11 @@ const AdminClientsRoute = AdminClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAvisRoute = AdminAvisRouteImport.update({
+  id: '/avis',
+  path: '/avis',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ClientFacturesIndexRoute = ClientFacturesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
   '/terrain': typeof TerrainRouteWithChildren
+  '/admin/avis': typeof AdminAvisRoute
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
   '/admin/demandes-gel': typeof AdminDemandesGelRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/reservation': typeof ReservationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/admin/avis': typeof AdminAvisRoute
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
   '/admin/demandes-gel': typeof AdminDemandesGelRoute
@@ -380,6 +388,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRouteWithChildren
   '/terrain': typeof TerrainRouteWithChildren
+  '/admin/avis': typeof AdminAvisRoute
   '/admin/clients': typeof AdminClientsRouteWithChildren
   '/admin/contrats': typeof AdminContratsRouteWithChildren
   '/admin/demandes-gel': typeof AdminDemandesGelRoute
@@ -429,6 +438,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/terrain'
+    | '/admin/avis'
     | '/admin/clients'
     | '/admin/contrats'
     | '/admin/demandes-gel'
@@ -473,6 +483,7 @@ export interface FileRouteTypes {
     | '/reservation'
     | '/reset-password'
     | '/settings'
+    | '/admin/avis'
     | '/admin/clients'
     | '/admin/contrats'
     | '/admin/demandes-gel'
@@ -517,6 +528,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/terrain'
+    | '/admin/avis'
     | '/admin/clients'
     | '/admin/contrats'
     | '/admin/demandes-gel'
@@ -786,6 +798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminClientsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/avis': {
+      id: '/admin/avis'
+      path: '/avis'
+      fullPath: '/admin/avis'
+      preLoaderRoute: typeof AdminAvisRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/client/factures/': {
       id: '/client/factures/'
       path: '/'
@@ -951,6 +970,7 @@ const AdminVehiculesRouteWithChildren = AdminVehiculesRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAvisRoute: typeof AdminAvisRoute
   AdminClientsRoute: typeof AdminClientsRouteWithChildren
   AdminContratsRoute: typeof AdminContratsRouteWithChildren
   AdminDemandesGelRoute: typeof AdminDemandesGelRoute
@@ -966,6 +986,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAvisRoute: AdminAvisRoute,
   AdminClientsRoute: AdminClientsRouteWithChildren,
   AdminContratsRoute: AdminContratsRouteWithChildren,
   AdminDemandesGelRoute: AdminDemandesGelRoute,

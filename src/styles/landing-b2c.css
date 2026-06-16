@@ -215,7 +215,9 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 }
 
 /* Hover : intensifie le halo, garde le contour fluo (bat .stepcard:hover) */
-.izox-b2c .b2c-glow-card:hover {
+/* .is-center (carrousel témoignages) reprend le même état intensifié */
+.izox-b2c .b2c-glow-card:hover,
+.izox-b2c .b2c-glow-card.is-center {
   border-color: color-mix(in srgb, var(--b2c-accent) 75%, transparent);
   box-shadow:
     0 0 calc(24px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.22 * var(--b2c-glow))),

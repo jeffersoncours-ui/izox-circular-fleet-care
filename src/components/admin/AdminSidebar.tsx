@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   CalendarRange,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const NAV: NavItem[] = [
   { to: "/admin/planning", label: "Planning & RDV", icon: CalendarRange, badgeKey: "rdv" },
   { to: "/admin/demandes-gel", label: "Demandes de gel", icon: Snowflake, badgeKey: "gel" },
   { to: "/admin/equipe", label: "Équipe", icon: Users, adminOnly: true },
+  { to: "/admin/avis", label: "Avis clients", icon: Star },
   { to: "/admin/facturation", label: "Facturation", icon: Receipt, adminOnly: true },
   { to: "/admin/impact", label: "Impact RSE", icon: Leaf, adminOnly: false },
 ];

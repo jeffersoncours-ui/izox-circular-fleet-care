@@ -1,5 +1,11 @@
 # Lessons Learned — IZOX
 
+## Serveur MCP Supabase qui se bloque en cours de session (session 47)
+
+- **« MCP tool call requires approval » peut bloquer TOUS les appels, pas juste un seul** : pendant la validation empirique de `avis_clients`, le serveur MCP Supabase s'est mis à refuser systématiquement tout appel (`execute_sql`, `list_tables`, `get_logs`), y compris un `SELECT 1` trivial, après plusieurs dizaines d'appels réussis dans la même session. Réessayer le même appel, recharger le schéma via `ToolSearch`, ou faire approuver explicitement par l'utilisateur n'a rien changé — la connexion au serveur était bloquée côté outil, pas une question de droits SQL.
+- **Ne pas boucler indéfiniment sur des retries d'un outil MCP cassé** : après 2-3 échecs identiques sur des requêtes différentes (y compris une requête triviale sans rapport avec la précédente), considérer le serveur comme indisponible plutôt que de continuer à réessayer — demander à l'utilisateur de vérifier/relancer la connexion, ou accepter de différer l'action (ex. nettoyage de données de test) plutôt que de bloquer toute la session.
+- **Conséquence concrète** : 3 lignes de test (`avis_clients`, préfixe `TEST-`) sont restées en base faute de pouvoir les supprimer — documentées dans `tasks/todo.md` avec leurs UUID exacts pour un nettoyage manuel ultérieur. Toujours noter precisément ce qui reste à nettoyer quand un nettoyage automatique est interrompu, pour ne pas perdre la trace de données de test avant un merge sur `main`.
+
 ## Rollback complet plutôt que d'itérer sur un design qui ne convainc pas (session 46)
 
 - **Vérifier le rendu réel déployé avant d'investir plus de temps** : le toggle "capsule verre dépoli" (glider glow, icônes Armchair/CarFront) a été conçu et implémenté sur plusieurs itérations, mais une fois vu en conditions réelles (déploiement Vercel), le résultat n'a pas convaincu. Plutôt que de continuer à patcher un design déjà jugé insatisfaisant, le rollback complet vers la version simple d'origine était la bonne décision — cohérent avec la leçon session 43 ("effet visuel subjectif : livrer minimal + rollback facile, ne pas sur-investir").

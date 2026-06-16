@@ -2,6 +2,7 @@
 // Layout dark + reveals (.rv). Illustrations boucle d'eau / aquaponie : images
 // statiques (voir AquaponieImage) ; fil de l'eau animé au scroll (scrollScenes.ts).
 
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   CalendarCheck,
@@ -14,9 +15,11 @@ import {
   Quote,
 } from "lucide-react";
 import { CHIFFRES_EAU } from "@/lib/pricing-b2c";
+import { supabase } from "@/integrations/supabase/client";
 import { AquaponieImage } from "./illustrations/AquaponieImage";
 import { SevenSegmentNumber, SevenSegmentDigit } from "./SevenSegment";
 import { FlipGallery } from "./FlipGallery";
+import { TestimonialsStagger, type TestimonialEntry } from "./TestimonialsStagger";
 
 /* ── 2. Comment ça marche ─────────────────────────────────────────── */
 
@@ -287,24 +290,58 @@ export function SubscriptionTeaser() {
 /* ── 9. Avis clients ──────────────────────────────────────────────── */
 
 export function Reviews() {
-  // Aucun faux avis (L121-2 C. conso) — empty-state honnête tant qu'il n'y en a pas.
+  // Aucun faux avis (L121-2 C. conso) — chargés depuis avis_clients (publie=true).
+  // Empty-state honnête tant qu'il n'y en a pas (RLS publique : voir migration avis_clients).
+  const [testimonials, setTestimonials] = useState<TestimonialEntry[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from("avis_clients")
+      .select("id, auteur_nom, auteur_role, texte, note, photo_url")
+      .eq("publie", true)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (!active || !data) return;
+        setTestimonials(
+          data.map((row) => ({
+            id: row.id,
+            auteurNom: row.auteur_nom,
+            auteurRole: row.auteur_role,
+            texte: row.texte,
+            note: row.note,
+            photoUrl: row.photo_url,
+          }))
+        );
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
         <SectionHeading kicker="Ils nous font confiance" title="Avis clients" />
-        <div className="b2c-card b2c-glow-card rv mt-10 p-8 text-center">
-          <Quote className="mx-auto h-6 w-6 text-[var(--b2c-tx-faint)]" />
-          <p className="mt-3 text-sm font-semibold text-[var(--b2c-tx)]">
-            Tout juste lancés, vos avis apparaîtront ici.
-          </p>
-          <p className="mx-auto mt-1.5 max-w-md text-sm text-[var(--b2c-tx-dim)]">
-            Nous publions uniquement des avis réels de clients ayant réservé une intervention.
-            Soyez parmi les premiers !
-          </p>
-          <Link to="/reservation" className="shiny-cta mt-5">
-            <span>Réserver mon nettoyage</span>
-          </Link>
-        </div>
+        {testimonials.length >= 3 ? (
+          <div className="rv mt-10">
+            <TestimonialsStagger testimonials={testimonials} />
+          </div>
+        ) : (
+          <div className="b2c-card b2c-glow-card rv mt-10 p-8 text-center">
+            <Quote className="mx-auto h-6 w-6 text-[var(--b2c-tx-faint)]" />
+            <p className="mt-3 text-sm font-semibold text-[var(--b2c-tx)]">
+              Tout juste lancés, vos avis apparaîtront ici.
+            </p>
+            <p className="mx-auto mt-1.5 max-w-md text-sm text-[var(--b2c-tx-dim)]">
+              Nous publions uniquement des avis réels de clients ayant réservé une intervention.
+              Soyez parmi les premiers !
+            </p>
+            <Link to="/reservation" className="shiny-cta mt-5">
+              <span>Réserver mon nettoyage</span>
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );
