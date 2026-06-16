@@ -1,18 +1,12 @@
 // Grille tarifaire B2C — design v2 dark. Tabs Intérieur / Int.+Ext., matrice
 // TTC complète + options. Sans astérisque caché.
 
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Armchair, CarFront, Droplet } from "lucide-react";
 import { SevenSegmentNumber } from "./SevenSegment";
 import { VEHICULES_B2C, FORMULES_B2C, PRIX_B2C, OPTIONS_B2C } from "@/lib/pricing-b2c";
 import type { FormuleB2C } from "@/lib/pricing-b2c";
 import { SectionHeading } from "./sections";
-
-const FORMULE_ICONS: Record<FormuleB2C, typeof Armchair> = {
-  interieur: Armchair,
-  interieur_exterieur: CarFront,
-};
 
 export function PricingSection() {
   const [formule, setFormule] = useState<FormuleB2C>("interieur");
@@ -27,29 +21,26 @@ export function PricingSection() {
         />
 
         <div className="mx-auto mt-8 max-w-2xl">
-          {/* Toggle formule */}
+          {/* Tabs formule */}
           <div className="rv flex justify-center">
-            <div className="b2c-formule-toggle">
+            <div className="inline-flex w-full rounded-lg border border-[var(--b2c-line)] bg-[var(--b2c-bg2)] p-1 sm:w-auto">
               {FORMULES_B2C.map((f) => {
-                const Icon = FORMULE_ICONS[f.id];
+                const active = f.id === formule;
                 return (
-                  <Fragment key={f.id}>
-                    <input
-                      type="radio"
-                      name="formule"
-                      id={`formule-${f.id}`}
-                      checked={formule === f.id}
-                      onChange={() => setFormule(f.id)}
-                    />
-                    <label htmlFor={`formule-${f.id}`} className="b2c-formule-toggle__label">
-                      <Icon size={16} aria-hidden="true" />
-                      <span>{f.id === "interieur" ? "Intérieur" : "Int. + Ext."}</span>
-                    </label>
-                  </Fragment>
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setFormule(f.id)}
+                    className={`b2c-mono flex-1 rounded-md px-4 py-2.5 text-[12px] font-semibold uppercase tracking-wider transition-colors sm:flex-none sm:px-6 ${
+                      active
+                        ? "bg-[var(--b2c-accent)] text-[#06120c]"
+                        : "text-[var(--b2c-tx-dim)] hover:text-[var(--b2c-tx)]"
+                    }`}
+                  >
+                    {f.id === "interieur" ? "Intérieur" : "Int. + Ext. (+30 €)"}
+                  </button>
                 );
               })}
-              <Droplet className="b2c-formule-toggle__droplet" size={18} aria-hidden="true" />
-              <div className="b2c-formule-glider" aria-hidden="true" />
             </div>
           </div>
 
