@@ -66,6 +66,7 @@ export function TweaksPanel() {
             <select
               value={tweaks.theme}
               onChange={(e) => setTweaks({ theme: e.target.value as B2cTheme })}
+              aria-label="Fond"
               className="w-full rounded-md border border-[var(--b2c-line)] bg-[var(--b2c-bg)] px-3 py-2 text-sm text-[var(--b2c-tx)]"
             >
               {THEMES.map((t) => (
@@ -101,6 +102,7 @@ export function TweaksPanel() {
           {/* Lumière */}
           <Group label="Intensité de la lueur">
             <Range
+              label="Intensité de la lueur"
               min={0}
               max={1}
               step={0.01}
@@ -131,14 +133,20 @@ export function TweaksPanel() {
 
           {/* Textes */}
           <Group label="Accroche">
-            <TextRow value={tweaks.heroLine1} onChange={(v) => setTweaks({ heroLine1: v })} />
+            <TextRow
+              label="Accroche, ligne 1"
+              value={tweaks.heroLine1}
+              onChange={(v) => setTweaks({ heroLine1: v })}
+            />
             <TextRow
               className="mt-2"
+              label="Accroche, ligne 2"
               value={tweaks.heroLine2}
               onChange={(v) => setTweaks({ heroLine2: v })}
             />
             <TextRow
               className="mt-2"
+              label="Accroche, ligne 3"
               value={tweaks.heroLine3}
               onChange={(v) => setTweaks({ heroLine3: v })}
               hint="Dernier mot mis en accent"
@@ -146,7 +154,11 @@ export function TweaksPanel() {
           </Group>
 
           <Group label="Bouton principal">
-            <TextRow value={tweaks.ctaLabel} onChange={(v) => setTweaks({ ctaLabel: v })} />
+            <TextRow
+              label="Texte du bouton principal"
+              value={tweaks.ctaLabel}
+              onChange={(v) => setTweaks({ ctaLabel: v })}
+            />
           </Group>
         </aside>
       )}
@@ -182,6 +194,7 @@ function Swatches({
           type="button"
           onClick={() => onPick(c)}
           aria-label={`Couleur ${c}`}
+          aria-pressed={value.toLowerCase() === c.toLowerCase()}
           className={`h-7 w-7 rounded-full border transition-transform hover:scale-110 ${
             value.toLowerCase() === c.toLowerCase()
               ? "border-white ring-2 ring-white/40"
@@ -221,6 +234,7 @@ function Segmented<T extends string>({
           key={o.id}
           type="button"
           onClick={() => onPick(o.id)}
+          aria-pressed={value === o.id}
           className={`rounded px-2.5 py-1.5 text-xs transition-colors ${
             value === o.id
               ? "bg-[var(--b2c-accent)] text-[#06120c]"
@@ -265,6 +279,7 @@ function Range({
         max={max}
         step={step}
         value={value}
+        aria-label={label}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="w-full accent-[var(--b2c-accent)]"
       />
@@ -276,11 +291,13 @@ function TextRow({
   value,
   onChange,
   hint,
+  label,
   className = "",
 }: {
   value: string;
   onChange: (v: string) => void;
   hint?: string;
+  label?: string;
   className?: string;
 }) {
   return (
@@ -289,6 +306,7 @@ function TextRow({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        aria-label={label ?? hint}
         className="w-full rounded-md border border-[var(--b2c-line)] bg-[var(--b2c-bg)] px-3 py-2 text-sm text-[var(--b2c-tx)]"
       />
       {hint && <p className="mt-1 text-[10px] text-[var(--b2c-tx-faint)]">{hint}</p>}

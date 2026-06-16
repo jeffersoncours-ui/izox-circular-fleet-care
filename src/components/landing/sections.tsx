@@ -1,6 +1,6 @@
 // Sections statiques de la landing B2C — design v2 dark (design-brief-v2.md §4).
-// Phase 2a : layout dark + reveals (.rv). Les illustrations SVG (boucle tuyau,
-// aquaponie) et les animations scroll-driven arrivent en Phase 2b/2c.
+// Layout dark + reveals (.rv). Illustrations boucle d'eau / aquaponie : images
+// statiques (voir AquaponieImage) ; fil de l'eau animé au scroll (scrollScenes.ts).
 
 import { Link } from "@tanstack/react-router";
 import {

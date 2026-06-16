@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // AlphaVideo — vidéo gravure affichée DIRECTEMENT, sans canvas ni blend CSS.
 // Le fond noir est détouré et baké en TRANSPARENCE RÉELLE (canal alpha) dans le
