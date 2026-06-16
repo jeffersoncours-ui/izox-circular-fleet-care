@@ -2,6 +2,28 @@
 
 ---
 
+## Session 2026-06-16 (46) — Rollback toggle formule + audit complet landing
+
+Demande utilisateur : tentative de redesign du toggle de formule (Intérieur/Int.+Ext.) en "capsule verre dépoli" avec glider glow + icônes (`FormuleToggle.tsx`). Après vérification visuelle sur le déploiement Vercel, le rendu n'a pas convaincu — rollback complet décidé plutôt que de continuer à itérer.
+
+- [x] **Rollback** : `PricingSection.tsx` + `landing-b2c.css` restaurés à l'état pré-expérience (`git checkout <commit pré-toggle> -- ...`), tabs simples d'origine. `FormuleToggle.tsx` + `public/plaque-formule.png` supprimés (`git rm`).
+- [x] **Audit complet landing** (3 agents parallèles, scopes non-chevauchants : composants `.tsx` / `landing-b2c.css` / routes) :
+  - Fix bug : `installFilDeLeau` ne s'installait jamais sur une page sans élément `.rv` (return précoce dans `PublicLayout.tsx`) — découplé des reveals IntersectionObserver.
+  - Fix bug : `try/catch/finally` manquant autour de `supabase.functions.invoke("create-lead", ...)` dans `reservation.tsx` et `entreprises.tsx` — un throw réseau laissait le bouton bloqué en chargement (`setSending` jamais remis à `false`).
+  - Dead code : import `React` inutilisé (`AlphaVideo.tsx`), fonctions `remap`/`viewportProgress` jamais appelées (`scrollScenes.ts`), 302 lignes de CSS orpheline dans `landing-b2c.css` (anciens boutons `.b2c-btn--ghost`/`.b2c-btn--yellow`, `.b2c-figure`, `.b2c-glow-ring/text`, `.b2c-hairline`, `.stepcard__num`, tout l'ancien bloc d'animations SVG `gv-*`/`.station`/`.fish`/`.chain-item` remplacé par des images statiques en session 42). Thèmes `.t-noir/.t-nuit/.t-papier` (appliqués dynamiquement en JS, non grep-ables côté `.tsx`) explicitement préservés.
+  - A11y : `aria-pressed` (tabs PricingSection, swatches/segmented TweaksPanel), `aria-label` (select thème, range glow, 3 champs accroche + CTA du TweaksPanel).
+  - Commentaires de phase obsolètes corrigés (`Hero.tsx`, `sections.tsx`, `PublicLayout.tsx` mentionnaient encore "Phase 2b/2c" pour des features déjà livrées).
+- [x] **Validation** : `npx tsc --noEmit --skipLibCheck` 0 erreur + `npm run build` clean sur l'état consolidé (rollback + 3 audits).
+- [x] Commit + push sur `claude/circular-fleet-care-landing-2lu5v6`.
+
+### Review session 46
+- **Livré** : retour à un toggle de formule simple et fiable après échec visuel de la version "capsule verre dépoli" ; profit de la pause pour un audit défensif complet de toute la landing B2C (bugs réels + dead code + a11y), sans toucher au design existant.
+- **2 vrais bugs corrigés**, pas de simples nitpicks : un défaut d'animation scroll silencieux (`installFilDeLeau`) et un risque de bouton bloqué sur erreur réseau dans 2 formulaires de lead.
+- **503 lignes nettes supprimées** (CSS mort + composant/asset abandonnés) contre 104 insertions — la landing ressort plus légère qu'avant l'expérience.
+- **Méthode** : 3 agents parallèles sur des scopes disjoints (composants / CSS / routes) pour auditer vite sans risque de conflit, chacun avec sa propre vérification (`tsc`/`build`), puis revue manuelle de chaque diff avant commit.
+
+---
+
 ## Session 2026-06-15 (45) — Design premium landing : 7-seg, ShinyButton, GlowCard
 
 ### Afficheur 7-segments LCD (chiffres fluo)
