@@ -221,6 +221,122 @@ body.b2c-active:has(.izox-b2c.t-papier) {
     0 0 calc(24px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.22 * var(--b2c-glow))),
     inset 0 0 calc(34px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.05 * var(--b2c-glow)));
 }
+/* ── Plaque formule (gravures intérieur/extérieur, masque luminance) ──── */
+.izox-b2c .b2c-formule-plaque {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 26rem;
+  margin: 0 auto;
+  border-radius: 1.5rem;
+  padding: 0.4rem;
+  gap: 0.1rem;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--b2c-tx) 12%, transparent),
+    color-mix(in srgb, var(--b2c-tx) 3%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--b2c-tx) 22%, transparent);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
+    0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.izox-b2c .b2c-formule-plaque__half {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 8rem;
+  padding: 0.5rem 0.5rem 0.55rem;
+  border-radius: 1.2rem;
+  background: color-mix(in srgb, var(--b2c-bg) 75%, transparent);
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 0.4s ease;
+}
+
+.izox-b2c .b2c-formule-plaque__half:hover {
+  background: color-mix(in srgb, var(--b2c-bg) 55%, transparent);
+}
+
+.izox-b2c .b2c-formule-plaque__gravure {
+  position: absolute;
+  inset: 0.3rem 0.3rem 1.3rem;
+  background: var(--b2c-tx-faint);
+  mask-image: var(--gravure-img);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-mode: luminance;
+  -webkit-mask-image: var(--gravure-img);
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  opacity: 0.5;
+  transition: background 0.5s ease, opacity 0.5s ease, filter 0.5s ease;
+}
+
+.izox-b2c .b2c-formule-plaque__half.is-active .b2c-formule-plaque__gravure {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--b2c-accent) 85%, white), var(--b2c-accent));
+  opacity: 1;
+  filter: drop-shadow(0 0 calc(8px * var(--b2c-glow)) color-mix(in srgb, var(--b2c-accent) 60%, transparent));
+}
+
+.izox-b2c .b2c-formule-plaque__label {
+  position: relative;
+  z-index: 2;
+  font-family: var(--b2c-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--b2c-tx-faint);
+  transition: color 0.4s ease;
+}
+
+.izox-b2c .b2c-formule-plaque__half.is-active .b2c-formule-plaque__label {
+  color: var(--b2c-tx);
+}
+
+.izox-b2c .b2c-formule-plaque__divider {
+  width: 1px;
+  margin: 0.5rem 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--b2c-tx) 22%, transparent),
+    transparent
+  );
+}
+
+.izox-b2c .b2c-formule-plaque__badge {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.4rem;
+  z-index: 2;
+  color: var(--b2c-accent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.izox-b2c .b2c-formule-plaque__half--ext.is-active .b2c-formule-plaque__badge {
+  opacity: 0.75;
+}
+
+.izox-b2c .b2c-formule-plaque__half--int .b2c-formule-plaque__gravure {
+  --gravure-img: url("/gravure-interieur.png");
+}
+
+.izox-b2c .b2c-formule-plaque__half--ext .b2c-formule-plaque__gravure {
+  --gravure-img: url("/gravure-exterieur.png");
+}
+
 .b2c-hairline {
   border-color: var(--b2c-line);
 }
