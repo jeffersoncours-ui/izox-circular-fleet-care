@@ -500,14 +500,20 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 
 .izox-b2c #flip-gallery {
   position: relative;
-  width: 240px;
-  height: 400px;
+  width: 280px;
+  height: 460px;
   text-align: center;
 }
 @media (min-width: 600px) {
   .izox-b2c #flip-gallery {
-    width: 300px;
-    height: 500px;
+    width: 380px;
+    height: 620px;
+  }
+}
+@media (min-width: 900px) {
+  .izox-b2c #flip-gallery {
+    width: 460px;
+    height: 750px;
   }
 }
 
@@ -548,12 +554,17 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   height: 50%;
   overflow: hidden;
   background-color: var(--b2c-bg3, rgba(255, 255, 255, 0.05));
-  background-size: 240px 400px;
+  background-size: 280px 460px;
   background-repeat: no-repeat;
 }
 @media (min-width: 600px) {
   .izox-b2c #flip-gallery > .flip-unite {
-    background-size: 300px 500px;
+    background-size: 380px 620px;
+  }
+}
+@media (min-width: 900px) {
+  .izox-b2c #flip-gallery > .flip-unite {
+    background-size: 460px 750px;
   }
 }
 
