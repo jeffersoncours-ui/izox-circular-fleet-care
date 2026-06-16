@@ -43,6 +43,14 @@ interface CardProps {
 
 function TestimonialCard({ item, position, cardSize, onMove }: CardProps) {
   const isCenter = position === 0;
+  const depth = Math.abs(position);
+
+  // Effet "deck" : les cartes se chevauchent (offset court) et s'enfoncent
+  // (échelle + opacité + z-index décroissants) à mesure qu'on s'éloigne du
+  // centre — on voit plusieurs cartes, partiellement cachées par les autres.
+  const spacing = cardSize * 0.36;
+  const scale = Math.max(0, 1 - depth * 0.09);
+  const opacity = Math.max(0, 1 - depth * 0.26);
 
   const activate = () => {
     if (!isCenter) onMove(position);
@@ -62,16 +70,19 @@ function TestimonialCard({ item, position, cardSize, onMove }: CardProps) {
       }}
       className={cn(
         "b2c-card b2c-glow-card absolute left-1/2 top-1/2 flex flex-col p-7 transition-all duration-500 ease-in-out sm:p-8",
-        isCenter ? "is-center z-10 cursor-default" : "z-0 cursor-pointer"
+        isCenter ? "is-center cursor-default" : "cursor-pointer"
       )}
       style={{
         width: cardSize,
         height: cardSize,
+        zIndex: 50 - depth,
+        opacity,
         transform: `
           translate(-50%, -50%)
-          translateX(${(cardSize / 1.5) * position}px)
-          translateY(${isCenter ? -65 : position % 2 ? 15 : -15}px)
-          rotate(${isCenter ? 0 : position % 2 ? 2.5 : -2.5}deg)
+          translateX(${spacing * position}px)
+          translateY(${depth * 14}px)
+          scale(${scale})
+          rotate(${position * 3}deg)
         `,
       }}
     >
@@ -115,7 +126,7 @@ export function TestimonialsStagger({ testimonials }: { testimonials: Testimonia
   useEffect(() => {
     const updateSize = () => {
       const { matches } = window.matchMedia("(min-width: 640px)");
-      setCardSize(matches ? 365 : 290);
+      setCardSize(matches ? 360 : 255);
     };
     updateSize();
     window.addEventListener("resize", updateSize);
@@ -148,7 +159,7 @@ export function TestimonialsStagger({ testimonials }: { testimonials: Testimonia
   const centerName = list[centerIndex]?.auteurNom ?? "";
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: 600 }}>
+    <div className="relative w-full overflow-hidden" style={{ height: cardSize + 190 }}>
       <div aria-live="polite" className="sr-only">
         Témoignage de {centerName}
       </div>
