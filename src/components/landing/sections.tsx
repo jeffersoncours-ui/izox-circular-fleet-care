@@ -77,8 +77,8 @@ export function WaterLoop() {
 
         {/* Schéma traitement — image statique avec textes */}
         <div className="mt-12">
-          <div className="grid max-w-2xl gap-8 sm:grid-cols-2">
-            <div className="b2c-card b2c-glow-card rv p-6">
+          <div className="b2c-card b2c-glow-card rv max-w-2xl divide-y divide-[var(--b2c-line)]">
+            <div className="px-5 py-5 sm:px-7">
               <SevenSegmentNumber
                 prefix="~"
                 value={CHIFFRES_EAU.litresUtilises}
@@ -92,7 +92,7 @@ export function WaterLoop() {
                 lavage au jet à domicile
               </p>
             </div>
-            <div className="b2c-card b2c-glow-card rv rv-d1 p-6">
+            <div className="px-5 py-5 sm:px-7">
               <span className="b2c-seg-number" aria-label="2 à 4 fois">
                 <SevenSegmentDigit value={2} />
                 <span className="b2c-seg-affix mx-[0.25em]"> à </span>
@@ -121,8 +121,8 @@ export function WaterLoop() {
             </p>
           </div>
 
-          <div className="mx-auto mt-10 grid max-w-3xl gap-8 sm:grid-cols-2">
-            <div className="b2c-card b2c-glow-card rv p-6">
+          <div className="b2c-card b2c-glow-card rv mx-auto mt-10 max-w-3xl divide-y divide-[var(--b2c-line)]">
+            <div className="px-5 py-5 sm:px-7">
               <SevenSegmentNumber
                 value={CHIFFRES_EAU.pctRecupere}
                 suffix=" %"
@@ -135,7 +135,7 @@ export function WaterLoop() {
                 repartent avec nous au lieu de finir dans le caniveau.
               </p>
             </div>
-            <div className="b2c-card b2c-glow-card rv rv-d1 p-6">
+            <div className="px-5 py-5 sm:px-7">
               <SevenSegmentNumber
                 value={CHIFFRES_EAU.pctReinjecte}
                 suffix=" %"
