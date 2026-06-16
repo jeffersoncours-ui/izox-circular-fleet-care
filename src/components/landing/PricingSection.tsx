@@ -4,7 +4,8 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { SevenSegmentNumber } from "./SevenSegment";
-import { VEHICULES_B2C, FORMULES_B2C, PRIX_B2C, OPTIONS_B2C } from "@/lib/pricing-b2c";
+import { FormuleToggle } from "./FormuleToggle";
+import { VEHICULES_B2C, PRIX_B2C, OPTIONS_B2C } from "@/lib/pricing-b2c";
 import type { FormuleB2C } from "@/lib/pricing-b2c";
 import { SectionHeading } from "./sections";
 
@@ -21,27 +22,9 @@ export function PricingSection() {
         />
 
         <div className="mx-auto mt-8 max-w-2xl">
-          {/* Tabs formule */}
-          <div className="rv flex justify-center">
-            <div className="inline-flex w-full rounded-lg border border-[var(--b2c-line)] bg-[var(--b2c-bg2)] p-1 sm:w-auto">
-              {FORMULES_B2C.map((f) => {
-                const active = f.id === formule;
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setFormule(f.id)}
-                    className={`b2c-mono flex-1 rounded-md px-4 py-2.5 text-[12px] font-semibold uppercase tracking-wider transition-colors sm:flex-none sm:px-6 ${
-                      active
-                        ? "bg-[var(--b2c-accent)] text-[#06120c]"
-                        : "text-[var(--b2c-tx-dim)] hover:text-[var(--b2c-tx)]"
-                    }`}
-                  >
-                    {f.id === "interieur" ? "Intérieur" : "Int. + Ext. (+30 €)"}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Plaque formule */}
+          <div className="rv">
+            <FormuleToggle value={formule} onChange={setFormule} />
           </div>
 
           {/* Liste véhicules pour la formule active */}
