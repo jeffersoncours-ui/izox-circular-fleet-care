@@ -77,7 +77,7 @@ export function WaterLoop() {
 
         {/* Schéma traitement — image statique avec textes */}
         <div className="mt-12">
-          <div className="b2c-card b2c-glow-card rv max-w-2xl divide-y divide-[var(--b2c-line)]">
+          <div className="b2c-card b2c-glow-card rv mx-auto max-w-2xl divide-y divide-[var(--b2c-line)]">
             <div className="px-5 py-5 sm:px-7">
               <SevenSegmentNumber
                 prefix="~"
@@ -121,7 +121,7 @@ export function WaterLoop() {
             </p>
           </div>
 
-          <div className="b2c-card b2c-glow-card rv mx-auto mt-10 max-w-3xl divide-y divide-[var(--b2c-line)]">
+          <div className="b2c-card b2c-glow-card rv mx-auto mt-10 max-w-2xl divide-y divide-[var(--b2c-line)]">
             <div className="px-5 py-5 sm:px-7">
               <SevenSegmentNumber
                 value={CHIFFRES_EAU.pctRecupere}
