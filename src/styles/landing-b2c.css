@@ -221,15 +221,6 @@ body.b2c-active:has(.izox-b2c.t-papier) {
     0 0 calc(24px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.22 * var(--b2c-glow))),
     inset 0 0 calc(34px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.05 * var(--b2c-glow)));
 }
-.b2c-hairline {
-  border-color: var(--b2c-line);
-}
-.b2c-glow-ring {
-  box-shadow:
-    0 0 0 1px var(--b2c-line-strong),
-    0 0 calc(48px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.18 * var(--b2c-glow)));
-}
-
 /* Séparateur horizontal fluo — navbar (bas) et footer (haut) */
 .izox-b2c .b2c-glow-sep-b {
   border-bottom: 1px solid color-mix(in srgb, var(--b2c-accent) 45%, transparent);
@@ -238,19 +229,6 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 .izox-b2c .b2c-glow-sep-t {
   border-top: 1px solid color-mix(in srgb, var(--b2c-accent) 45%, transparent);
   box-shadow: 0 -1px calc(18px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.13 * var(--b2c-glow)));
-}
-.b2c-glow-text {
-  text-shadow: var(--b2c-neon);
-}
-/* Grand chiffre RSE / compteur boucle (texte, conservé pour fallback) */
-.b2c-figure {
-  font-family: var(--b2c-mono);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--b2c-accent);
-  font-size: clamp(2.4rem, 6vw, 3.4rem);
-  line-height: 1;
-  text-shadow: var(--b2c-neon);
 }
 
 /* ── 7-Segment display ───────────────────────────────────────────────── */
@@ -319,37 +297,6 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.55 * var(--b2c-glow)));
   transform: translateY(-1px);
 }
-/* Hover « fillwater » (desktop uniquement — jamais sur tactile) :
-   l'eau monte de bas en haut dans le bouton fantôme. */
-@media (hover: hover) and (pointer: fine) {
-  .b2c-btn--ghost::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 0;
-    background: var(--b2c-accent);
-    opacity: 0.16;
-    transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .b2c-btn--ghost:hover::before {
-    height: 100%;
-  }
-}
-
-/* Bouton jaune — CTA secondaire (professionnel / abonnement) */
-.b2c-btn--yellow {
-  background: #ffe500;
-  color: #06120c;
-  font-weight: 700;
-  box-shadow: 0 0 calc(36px * var(--b2c-glow)) rgba(255, 229, 0, calc(0.28 * var(--b2c-glow)));
-}
-.b2c-btn--yellow:hover {
-  box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(255, 229, 0, calc(0.45 * var(--b2c-glow)));
-  transform: translateY(-1px);
-}
-
 /* ── Shiny CTA — bouton principal premium, bordure fluo statique.
    Couleurs câblées sur --b2c-accent → suit le TweakPanel en live.   */
 .izox-b2c .shiny-cta {
@@ -478,11 +425,6 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 .stepcard:hover {
   border-color: var(--b2c-line-strong);
 }
-.stepcard__num {
-  font-family: var(--b2c-mono);
-  font-size: 12px;
-  color: var(--b2c-tx-faint);
-}
 
 /* ============================================================
    Avant / Après — galerie flip (section 05)
@@ -500,14 +442,20 @@ body.b2c-active:has(.izox-b2c.t-papier) {
 
 .izox-b2c #flip-gallery {
   position: relative;
-  width: 240px;
-  height: 400px;
+  width: 280px;
+  height: 460px;
   text-align: center;
 }
 @media (min-width: 600px) {
   .izox-b2c #flip-gallery {
-    width: 300px;
-    height: 500px;
+    width: 380px;
+    height: 620px;
+  }
+}
+@media (min-width: 900px) {
+  .izox-b2c #flip-gallery {
+    width: 460px;
+    height: 750px;
   }
 }
 
@@ -548,12 +496,17 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   height: 50%;
   overflow: hidden;
   background-color: var(--b2c-bg3, rgba(255, 255, 255, 0.05));
-  background-size: 240px 400px;
+  background-size: 280px 460px;
   background-repeat: no-repeat;
 }
 @media (min-width: 600px) {
   .izox-b2c #flip-gallery > .flip-unite {
-    background-size: 300px 500px;
+    background-size: 380px 620px;
+  }
+}
+@media (min-width: 900px) {
+  .izox-b2c #flip-gallery > .flip-unite {
+    background-size: 460px 750px;
   }
 }
 
@@ -670,250 +623,6 @@ body.b2c-active:has(.izox-b2c.t-papier) {
   max-width: 1120px;
   margin-inline: auto;
   padding-inline: 1.25rem;
-}
-
-/* ============================================================
-   Illustrations au trait — micro-animations autonomes (CSS)
-   (les parties scroll-driven : fil, boucle, poissons → JS Phase 2c)
-   ============================================================ */
-
-/* Trait de base des gravures */
-.gv-stroke {
-  fill: none;
-  stroke: var(--b2c-accent);
-  stroke-width: 1.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-}
-.gv-dim {
-  stroke: var(--b2c-tx-dim);
-  opacity: 0.55;
-}
-.gv-faint {
-  stroke: var(--b2c-tx-faint);
-  opacity: 0.4;
-}
-.gv-fill-soft {
-  fill: var(--b2c-accent);
-  opacity: 0.06;
-  stroke: none;
-}
-.gv-label {
-  font-family: var(--b2c-mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  fill: var(--b2c-tx-dim);
-}
-
-/* Jets haute pression — éventail de traits en écoulement */
-@keyframes gv-flow {
-  to {
-    stroke-dashoffset: -17;
-  }
-}
-.gv-jet {
-  stroke: var(--b2c-accent);
-  stroke-width: 1.3;
-  stroke-linecap: round;
-  stroke-dasharray: 2.5 6;
-  animation: gv-flow 1.4s linear infinite;
-  filter: drop-shadow(0 0 calc(3px * var(--b2c-glow)) rgba(63, 216, 255, 0.6));
-}
-.gv-jet--2 {
-  animation-duration: 1.1s;
-}
-.gv-jet--3 {
-  animation-duration: 1.7s;
-}
-.gv-jet--4 {
-  animation-duration: 1.9s;
-}
-
-/* Brume aux points d'impact */
-@keyframes gv-mist {
-  0%,
-  100% {
-    opacity: 0.12;
-    transform: scale(0.9);
-  }
-  50% {
-    opacity: 0.85;
-    transform: scale(1.05);
-  }
-}
-.gv-mist {
-  fill: var(--b2c-accent);
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: gv-mist 2.8s ease-in-out infinite;
-}
-
-/* Gouttes qui chutent le long des flancs */
-@keyframes gv-drip {
-  0% {
-    opacity: 0;
-    transform: translateY(0);
-  }
-  20% {
-    opacity: 0.9;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(26px);
-  }
-}
-.gv-drip {
-  fill: var(--b2c-accent);
-  transform-box: fill-box;
-  animation: gv-drip 2.2s ease-in infinite;
-}
-.gv-drip--2 {
-  animation-delay: 0.7s;
-}
-.gv-drip--3 {
-  animation-delay: 1.3s;
-}
-.gv-drip--4 {
-  animation-delay: 1.9s;
-}
-
-/* Badge pulse (étiquettes) */
-@keyframes gv-pulse {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-.gv-pulse {
-  animation: gv-pulse 2.4s ease-in-out infinite;
-}
-
-/* ── Boucle d'eau : goutte dont le contour se dessine au scroll ── */
-.drop-track {
-  fill: none;
-  stroke: var(--b2c-line);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.drop-fill {
-  fill: var(--b2c-accent);
-  opacity: 0.06;
-  stroke: none;
-}
-.loop-draw {
-  fill: none;
-  stroke: var(--b2c-accent);
-  stroke-width: 2.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 0 calc(7px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))));
-  /* dasharray/offset posés en JS (longueur réelle du path) — scrollScenes */
-}
-.station {
-  opacity: 1;
-  transition:
-    opacity 0.4s ease,
-    transform 0.4s ease;
-}
-/* Dim initial uniquement si JS anime (sinon tout reste visible) */
-.izox-b2c[data-anim="on"] .station {
-  opacity: 0.35;
-}
-.izox-b2c[data-anim="on"] .station.lit,
-.station.lit {
-  opacity: 1;
-}
-.station__dot {
-  fill: var(--b2c-bg2);
-  stroke: var(--b2c-line-strong);
-  stroke-width: 1.5;
-  transition:
-    fill 0.4s ease,
-    stroke 0.4s ease;
-}
-.station.lit .station__dot {
-  fill: var(--b2c-accent);
-  stroke: var(--b2c-accent);
-  filter: drop-shadow(0 0 calc(8px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.8 * var(--b2c-glow))));
-}
-.loop-drop {
-  fill: var(--b2c-accent);
-  filter: drop-shadow(0 0 calc(9px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))));
-}
-
-/* ── Aquaponie : rampes LED + poissons + bulles ── */
-.gv-led {
-  fill: none;
-  stroke: var(--b2c-accent);
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-dasharray: 12 7;
-  filter: drop-shadow(0 0 calc(5px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))));
-}
-.fish {
-  fill: none;
-  stroke: var(--b2c-accent);
-  stroke-width: 1.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  /* translate piloté par setFish() — Phase 2c */
-}
-@keyframes gv-bubble {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.6);
-  }
-  30% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-34px) scale(1);
-  }
-}
-.gv-bubble {
-  fill: none;
-  stroke: var(--b2c-accent);
-  stroke-width: 1;
-  transform-box: fill-box;
-  animation: gv-bubble 3.4s ease-in infinite;
-}
-.gv-bubble--2 {
-  animation-delay: 1.2s;
-}
-.gv-bubble--3 {
-  animation-delay: 2.3s;
-}
-
-/* Chaîne compost → aquaponie → légumes */
-.chain-item {
-  opacity: 1;
-  transition: opacity 0.5s ease;
-}
-.izox-b2c[data-anim="on"] .chain-item {
-  opacity: 0.4;
-}
-.izox-b2c[data-anim="on"] .chain-item.lit,
-.chain-item.lit {
-  opacity: 1;
-}
-.chain-dot {
-  fill: var(--b2c-bg2);
-  stroke: var(--b2c-line-strong);
-  stroke-width: 1.5;
-  transition:
-    fill 0.4s ease,
-    stroke 0.4s ease;
-}
-.chain-item.lit .chain-dot {
-  fill: var(--b2c-accent);
-  stroke: var(--b2c-accent);
 }
 
 /* ============================================================

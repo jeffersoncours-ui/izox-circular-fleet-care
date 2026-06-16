@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // AlphaVideo — vidéo gravure affichée DIRECTEMENT, sans canvas ni blend CSS.
 // Le fond noir est détouré et baké en TRANSPARENCE RÉELLE (canal alpha) dans le
@@ -96,6 +96,24 @@ export function AlphaVideo({
     video.play().catch(() => {});
   }, [reduced, reducedSeek]);
 
+  // Pause le décodage VP9 quand la vidéo quitte l'écran : un décodeur alpha qui
+  // tourne hors-viewport gaspille GPU/CPU et fait saccader le scroll du reste de la
+  // page. On relance dès qu'elle revient. Inactif en reduced-motion (frame figée).
+  useEffect(() => {
+    const video = videoRef.current;
+    const container = containerRef.current;
+    if (!video || !container || reduced) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) video.play().catch(() => {});
+        else video.pause();
+      },
+      { threshold: 0.01 },
+    );
+    io.observe(container);
+    return () => io.disconnect();
+  }, [reduced]);
+
   // iOS : si l'autoplay est bloqué, le premier toucher/click déverrouille la lecture.
   useEffect(() => {
     const container = containerRef.current;
@@ -133,7 +151,7 @@ export function AlphaVideo({
         loop={!reduced}
         autoPlay={!reduced}
         playsInline
-        preload="auto"
+        preload="metadata"
         aria-hidden="true"
         tabIndex={-1}
         style={{

@@ -156,8 +156,8 @@ function PublicFooter() {
   );
 }
 
-// Fil de l'eau (fixe à droite). Structure posée ; l'animation scroll
-// (height + position de la goutte) est branchée en Phase 2c.
+// Fil de l'eau (fixe à droite). Animation scroll (height + position de la
+// goutte) branchée via installFilDeLeau() dans LayoutInner.
 function FilDeLeau() {
   return (
     <div className="fil" aria-hidden="true">
@@ -186,37 +186,41 @@ function LayoutInner({ children }: { children: React.ReactNode }) {
     root.setAttribute("data-anim", "on");
 
     const els = Array.from(root.querySelectorAll<HTMLElement>(".rv"));
-    if (els.length === 0) return;
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            e.target.classList.add("is-in");
-            io.unobserve(e.target);
+    let io: IntersectionObserver | undefined;
+    let revealTimer: number | undefined;
+    if (els.length > 0) {
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              e.target.classList.add("is-in");
+              io!.unobserve(e.target);
+            }
           }
-        }
-      },
-      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
-    );
-    els.forEach((el) => io.observe(el));
+        },
+        { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
+      );
+      els.forEach((el) => io!.observe(el));
 
-    // Filet anti-"reveal bloqué" : si l'IntersectionObserver ne se déclenche jamais
-    // pour un élément (cas connu Firefox : élément déjà dans le viewport au mount,
-    // combiné au rootMargin négatif → isIntersecting peut rester false), le bloc
-    // resterait à opacity:0 indéfiniment (zone vide mais dimensionnée). Ce watchdog
-    // révèle tout ce qui n'a pas encore été révélé après un court délai. Les éléments
-    // déjà révélés par l'IO ne sont pas affectés (ajouter .is-in deux fois est inerte).
-    const revealTimer = window.setTimeout(() => {
-      els.forEach((el) => el.classList.add("is-in"));
-    }, 1200);
+      // Filet anti-"reveal bloqué" : si l'IntersectionObserver ne se déclenche jamais
+      // pour un élément (cas connu Firefox : élément déjà dans le viewport au mount,
+      // combiné au rootMargin négatif → isIntersecting peut rester false), le bloc
+      // resterait à opacity:0 indéfiniment (zone vide mais dimensionnée). Ce watchdog
+      // révèle tout ce qui n'a pas encore été révélé après un court délai. Les éléments
+      // déjà révélés par l'IO ne sont pas affectés (ajouter .is-in deux fois est inerte).
+      revealTimer = window.setTimeout(() => {
+        els.forEach((el) => el.classList.add("is-in"));
+      }, 1200);
+    }
 
-    // Fil de l'eau — progression globale au scroll.
+    // Fil de l'eau — progression globale au scroll. Indépendant des reveals
+    // .rv : doit s'installer même sur une page qui n'en contient aucun.
     const cleanupFil = installFilDeLeau(root);
 
     return () => {
-      io.disconnect();
-      window.clearTimeout(revealTimer);
+      io?.disconnect();
+      if (revealTimer !== undefined) window.clearTimeout(revealTimer);
       cleanupFil();
     };
   }, []);

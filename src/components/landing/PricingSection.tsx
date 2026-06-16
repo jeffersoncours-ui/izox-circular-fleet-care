@@ -30,6 +30,7 @@ export function PricingSection() {
                   <button
                     key={f.id}
                     type="button"
+                    aria-pressed={active}
                     onClick={() => setFormule(f.id)}
                     className={`b2c-mono flex-1 rounded-md px-4 py-2.5 text-[12px] font-semibold uppercase tracking-wider transition-colors sm:flex-none sm:px-6 ${
                       active

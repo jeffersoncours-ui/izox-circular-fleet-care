@@ -1,6 +1,6 @@
 // Sections statiques de la landing B2C — design v2 dark (design-brief-v2.md §4).
-// Phase 2a : layout dark + reveals (.rv). Les illustrations SVG (boucle tuyau,
-// aquaponie) et les animations scroll-driven arrivent en Phase 2b/2c.
+// Layout dark + reveals (.rv). Illustrations boucle d'eau / aquaponie : images
+// statiques (voir AquaponieImage) ; fil de l'eau animé au scroll (scrollScenes.ts).
 
 import { Link } from "@tanstack/react-router";
 import {
@@ -77,8 +77,8 @@ export function WaterLoop() {
 
         {/* Schéma traitement — image statique avec textes */}
         <div className="mt-12">
-          <div className="grid max-w-2xl gap-8 sm:grid-cols-2">
-            <div className="rv">
+          <div className="b2c-card b2c-glow-card rv mx-auto max-w-2xl divide-y divide-[var(--b2c-line)]">
+            <div className="px-5 py-5 sm:px-7">
               <SevenSegmentNumber
                 prefix="~"
                 value={CHIFFRES_EAU.litresUtilises}
@@ -92,7 +92,7 @@ export function WaterLoop() {
                 lavage au jet à domicile
               </p>
             </div>
-            <div className="rv rv-d1">
+            <div className="px-5 py-5 sm:px-7">
               <span className="b2c-seg-number" aria-label="2 à 4 fois">
                 <SevenSegmentDigit value={2} />
                 <span className="b2c-seg-affix mx-[0.25em]"> à </span>
@@ -121,8 +121,8 @@ export function WaterLoop() {
             </p>
           </div>
 
-          <div className="mx-auto mt-10 grid max-w-3xl gap-8 sm:grid-cols-2">
-            <div className="rv">
+          <div className="b2c-card b2c-glow-card rv mx-auto mt-10 max-w-2xl divide-y divide-[var(--b2c-line)]">
+            <div className="px-5 py-5 sm:px-7">
               <SevenSegmentNumber
                 value={CHIFFRES_EAU.pctRecupere}
                 suffix=" %"
@@ -135,7 +135,7 @@ export function WaterLoop() {
                 repartent avec nous au lieu de finir dans le caniveau.
               </p>
             </div>
-            <div className="rv rv-d1">
+            <div className="px-5 py-5 sm:px-7">
               <SevenSegmentNumber
                 value={CHIFFRES_EAU.pctReinjecte}
                 suffix=" %"
@@ -231,7 +231,10 @@ export function Vision() {
 
         <div className="mt-8 grid gap-6 sm:grid-cols-3">
           {steps.map((s, i) => (
-            <div key={s.title} className={`rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}>
+            <div
+              key={s.title}
+              className={`stepcard b2c-glow-card rv ${i === 1 ? "rv-d1" : i === 2 ? "rv-d2" : ""}`}
+            >
               <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--primary-soft)]">
                 {s.icon}
               </div>

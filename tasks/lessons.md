@@ -1,5 +1,12 @@
 # Lessons Learned — IZOX
 
+## Rollback complet plutôt que d'itérer sur un design qui ne convainc pas (session 46)
+
+- **Vérifier le rendu réel déployé avant d'investir plus de temps** : le toggle "capsule verre dépoli" (glider glow, icônes Armchair/CarFront) a été conçu et implémenté sur plusieurs itérations, mais une fois vu en conditions réelles (déploiement Vercel), le résultat n'a pas convaincu. Plutôt que de continuer à patcher un design déjà jugé insatisfaisant, le rollback complet vers la version simple d'origine était la bonne décision — cohérent avec la leçon session 43 ("effet visuel subjectif : livrer minimal + rollback facile, ne pas sur-investir").
+- **`git checkout <commit> -- <fichiers>` est suffisant pour un rollback ciblé** : pas besoin de `git revert` quand l'état cible existe déjà tel quel dans un commit antérieur connu — restaurer fichier par fichier les fichiers concernés, puis `git rm` les fichiers entièrement nouveaux créés pendant l'expérience (composant + asset). Plus simple et plus sûr qu'un revert qui rejouerait l'historique à l'envers.
+- **Un rollback est une bonne occasion d'audit défensif gratuit** : profiter de la pause forcée pour lancer un audit complet (bugs + dead code + a11y) sur tout le périmètre touché récemment, via agents parallèles sur scopes disjoints (composants/CSS/routes) pour éviter les conflits d'édition concurrents. A permis de trouver 2 vrais bugs (animation scroll qui ne s'installait jamais sans `.rv`, bouton de formulaire bloqué sur erreur réseau) sans rapport avec le rollback lui-même.
+- **Toujours diffuser contre `origin/<branche>`, pas la ref locale** : la ref locale `main` peut être très en retard sur `origin/main` si jamais explicitement mise à jour/fetchée — toujours `git fetch` puis comparer/merger contre `origin/main` pour le bon point de référence, sinon risque de merge-base erroné.
+
 ## Code 21st.dev partiel : reconstruire le CSS manquant, pas juste adapter le JSX (session 45)
 
 - **Un snippet 21st.dev peut ne livrer que le JSX sans son CSS** : le `CardCanvas`/`Card` fourni ne contenait que la structure HTML (filtre SVG `#unopaq`, 4 `border-element`, `card-backdrop`) — tout l'effet réel (bords lumineux animés, motif points, keyframes) était dans un fichier CSS absent. Dans ce cas, « corriger le code » = le reconstruire entièrement, pas l'adapter. Toujours demander : « le snippet contient-il son CSS ? » avant de plonger.

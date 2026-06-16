@@ -5,22 +5,11 @@
 
 const clamp = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v));
 
-// Remap d'une valeur de [a,b] vers [0,1].
-const remap = (v: number, a: number, b: number) => clamp((v - a) / (b - a));
-
 function prefersReduced(): boolean {
   return (
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
   );
-}
-
-// Fraction de défilement d'un élément à travers le viewport : 0 quand il
-// entre par le bas, 1 quand il sort par le haut. 0.5 ≈ centré.
-function viewportProgress(el: HTMLElement): number {
-  const rect = el.getBoundingClientRect();
-  const vh = window.innerHeight || 1;
-  return clamp((vh - rect.top) / (vh + rect.height));
 }
 
 // rAF throttle : exécute fn au plus une fois par frame.

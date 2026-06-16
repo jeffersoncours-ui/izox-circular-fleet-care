@@ -223,14 +223,19 @@ function LeadForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSending(true);
-    const { error } = await supabase.functions.invoke("create-lead", {
-      body: { type: "b2b", ...form },
-    });
-    setSending(false);
-    if (error) {
+    try {
+      const { error } = await supabase.functions.invoke("create-lead", {
+        body: { type: "b2b", ...form },
+      });
+      if (error) {
+        toast.error("Une erreur est survenue", { description: "Réessayez dans un instant." });
+      } else {
+        setSent(true);
+      }
+    } catch {
       toast.error("Une erreur est survenue", { description: "Réessayez dans un instant." });
-    } else {
-      setSent(true);
+    } finally {
+      setSending(false);
     }
   };
 

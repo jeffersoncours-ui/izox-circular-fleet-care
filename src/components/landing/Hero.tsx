@@ -1,6 +1,6 @@
 // Hero landing B2C — design v2 dark. Accroche serif éditoriale (dernier mot
 // en italique accentué), double CTA, lien flotte, bandeau confiance.
-// L'illustration gravure R5 E-Tech arrive en Phase 2b (placeholder halo ici).
+// Illustration : vidéo gravure R5 E-Tech (voir HeroCar / AlphaVideo).
 
 import { Link } from "@tanstack/react-router";
 import { Droplets, Leaf, ShieldCheck } from "lucide-react";

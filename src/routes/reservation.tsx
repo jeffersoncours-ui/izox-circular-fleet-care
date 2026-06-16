@@ -36,14 +36,19 @@ function ReservationPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSending(true);
-    const { error } = await supabase.functions.invoke("create-lead", {
-      body: { type: "b2c_attente", email, code_postal: codePostal },
-    });
-    setSending(false);
-    if (error) {
+    try {
+      const { error } = await supabase.functions.invoke("create-lead", {
+        body: { type: "b2c_attente", email, code_postal: codePostal },
+      });
+      if (error) {
+        toast.error("Une erreur est survenue", { description: "Réessayez dans un instant." });
+      } else {
+        setSent(true);
+      }
+    } catch {
       toast.error("Une erreur est survenue", { description: "Réessayez dans un instant." });
-    } else {
-      setSent(true);
+    } finally {
+      setSending(false);
     }
   };
 
