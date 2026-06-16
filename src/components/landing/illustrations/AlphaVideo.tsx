@@ -139,6 +139,7 @@ export function AlphaVideo({
       className={className}
       style={{
         aspectRatio,
+        willChange: "contents",
         contain: "layout style paint",
       }}
       role="img"
