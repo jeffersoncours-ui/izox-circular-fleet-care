@@ -72,7 +72,7 @@ export function MorphingCardStack({ testimonials }: { testimonials: TestimonialE
 
       {/* Conteneur de pile — plus grand que les cartes pour laisser dépasser
           l'offset des cartes du dessous. */}
-      <div className="relative h-[330px] w-[290px] sm:h-[350px] sm:w-[380px]">
+      <div className="relative h-[370px] w-[320px] sm:h-[400px] sm:w-[430px]">
         <AnimatePresence mode="popLayout">
           {ordered.map((card) => {
             const pos = card.stackPosition;
@@ -108,7 +108,7 @@ export function MorphingCardStack({ testimonials }: { testimonials: TestimonialE
                 // cartes retombent dans le flux normal, débordant la page.
                 style={{ position: "absolute" }}
                 className={cn(
-                  "b2c-card b2c-glow-card flex h-[300px] w-[270px] flex-col p-6 sm:h-[320px] sm:w-[350px] sm:p-7",
+                  "b2c-card b2c-glow-card flex h-[330px] w-[290px] flex-col p-6 sm:h-[360px] sm:w-[390px] sm:p-7",
                   isTop ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
                 )}
               >
