@@ -1,5 +1,21 @@
 # Lessons Learned — IZOX
 
+## Spécificité CSS `.b2c-glow-card` vs classes utilitaires Tailwind (session 48)
+
+- **Le sélecteur `.izox-b2c .b2c-glow-card { position: relative }` a une spécificité de 2 classes** (0,0,2,0) contre 1 seule pour un utilitaire Tailwind comme `.absolute` (0,0,1,0). Dans le périmètre `.izox-b2c`, n'importe quel utilitaire Tailwind portant une propriété déjà définie sur `.b2c-glow-card` sera écrasé silencieusement. Cas confirmé : cartes de pile qui retombaient dans le flux normal du document (empilées verticalement au lieu de se superposer) parce que `position: relative` battait `position: absolute`. Aucun message d'erreur ni avertissement — le comportement visuel est simplement cassé.
+- **Règle absolue** : sur la landing IZOX, tout élément portant simultanément `.b2c-glow-card` ET une position absolue/fixe doit forcer la position via un **style inline** (`style={{ position: "absolute" }}`). Les styles inline ont une spécificité de (1,0,0,0) — imbattables par n'importe quel sélecteur de classe, même `!important` ne peut les écraser qu'avec `!important` inline lui-même.
+- **Même piège sur d'autres propriétés** : vérifier également `z-index`, `display`, `overflow` — toute propriété que `.b2c-glow-card` ou `.b2c-card` pose explicitement sera potentiellement écrasée si la valeur souhaitée vient d'un utilitaire Tailwind. Préférer le style inline dès qu'il y a un doute, ou augmenter la spécificité du sélecteur Tailwind (ex. via `[@.izox-b2c_&]:absolute`).
+
+## Composant 21st.dev avec animation framer-motion — adaptation à `.b2c-glow-card` (session 48)
+
+- **framer-motion anime les styles via `style` inline** (propriété `animate` transformée en `style` par motion) : c'est justement ce mécanisme qui contourne le problème de spécificité CSS décrit ci-dessus. En choisissant un composant framer-motion (`motion.div`) plutôt qu'un carrousel CSS-only (translate/absolute Tailwind), on bénéficie automatiquement d'un style inline pour les propriétés animées (`top`, `left`, `rotate`, `scale`, `opacity`) — les plus susceptibles d'être écrasées par des règles CSS de scope. **Un composant framer-motion est donc plus robuste qu'un équivalent CSS-only dans le contexte `.izox-b2c`** pour les éléments portant `.b2c-glow-card`.
+- **Toujours vérifier quelles propriétés CSS la classe de scope redéfinit** avant d'intégrer un composant qui en dépend. `position` en est un exemple, mais l'audit de `.b2c-card`/`.b2c-glow-card` dans `landing-b2c.css` révèle aussi : `border-style`, `border-color`, `box-shadow`, `transition`, `background`, `border-radius`, `isolation`. Toute valeur Tailwind tentant de modifier ces propriétés sur un `div.b2c-glow-card` sera potentiellement écrasée selon la spécificité.
+
+## Audit systématique : vérifier le code mort par grep AVANT de supprimer (session 48)
+
+- **Ne jamais se fier à la mémoire pour décider qu'un symbole est mort** : `data-aqua-section`, `--b2c-surface`, `--b2c-bg3` — chacun semblait mort mais un seul `grep` confirmait l'absence d'usage. L'audit a aussi montré que `prixTotalB2C` et `formatPrixTTC` sont « inutilisés » *maintenant* mais sont des fondations documentées du tunnel Stripe Phase 2g. Un grep sans contexte de roadmap aurait conclu à de la mort. **La règle du grep confirme la mort — la connaissance du projet décide de la suppression.**
+- **Un audit de landing B2C sur 14 fichiers révèle principalement du code mort et des bugs mineurs** (pas de bugs critiques si le code a été bien structuré dès le départ). L'investissement d'un subagent dédié (scope + instructions précises) sur ce périmètre prend ~2 min et donne un rapport priorisé exploitable directement. À refaire avant chaque merge majeur.
+
 ## Serveur MCP Supabase qui se bloque en cours de session (session 47)
 
 - **« MCP tool call requires approval » peut bloquer TOUS les appels, pas juste un seul** : pendant la validation empirique de `avis_clients`, le serveur MCP Supabase s'est mis à refuser systématiquement tout appel (`execute_sql`, `list_tables`, `get_logs`), y compris un `SELECT 1` trivial, après plusieurs dizaines d'appels réussis dans la même session. Réessayer le même appel, recharger le schéma via `ToolSearch`, ou faire approuver explicitement par l'utilisateur n'a rien changé — la connexion au serveur était bloquée côté outil, pas une question de droits SQL.

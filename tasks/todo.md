@@ -2,6 +2,46 @@
 
 ---
 
+## Session 2026-06-17 (48) — Avis clients : morphing card stack + audit landing
+
+### Carrousel avis (remplacement complet)
+
+Suite session 47 — le carrousel `TestimonialsStagger` était visuellement cassé sur mobile.
+**Cause racine** : `.izox-b2c .b2c-glow-card { position: relative }` (spécificité 2 classes) bat `.absolute` Tailwind (1 classe) → cartes en flux normal, empilées verticalement.
+
+- [x] `src/components/ui/morphing-card-stack.tsx` — pile framer-motion, mode stack uniquement, habillage `.b2c-card b2c-glow-card`, étoiles, swipe + flèches + points, aria-live
+- [x] `TestimonialsStagger.tsx` supprimé + règle `.is-center` retirée de `landing-b2c.css`
+- [x] `Reviews()` rebranché ; empty-state honnête conservé si < 3 avis
+- [x] Fix critique : `position:"absolute"` forcé en style inline (imbattable par tout sélecteur CSS)
+- [x] Cartes légèrement agrandies (290×330 mobile / 390×360 desktop)
+- [x] **Zéro nouvelle dépendance** : framer-motion ^12.40.0 déjà installé
+- [x] `tsc` 0 erreur + `vite build` ✓
+
+### Audit complet landing B2C (subagent)
+
+- [x] 14 fichiers audités (composants, CSS, routes, lib) → base saine, aucun bug critique
+- [x] Bug `SmokeBackground` : écriture de ref pendant le render → `useEffect`
+- [x] Bug `PricingSection` : heuristique `citadine===utilitaire` → `new Set(Object.values(o.prix)).size === 1`
+- [x] Lag `FlipGallery` : `timeoutsRef` grossissait sans purge → purge en tête de `updateGallery`
+- [x] Code mort : `data-aqua-section` orphelin, `--b2c-surface` (×2), `--b2c-bg3` fantôme nettoyés
+- [x] Conservé volontairement : `prixTotalB2C/formatPrixTTC` + champs `FORMULES_B2C` (Phase 2g Stripe)
+- [x] `tsc` 0 erreur + `vite build` ✓
+
+### Purge DB + merge
+
+- [x] Purge `avis_clients` (6 lignes TEST-) + purge complète §7 CLAUDE.md
+- [x] `SELECT COUNT(*) FROM auth.users` = 4 comptes techniques
+- [x] `tasks/todo.md` + `tasks/lessons.md` mis à jour
+- [x] Merge `claude/izox-project-continuation-2nkupi` → `main`
+
+### Review session 48
+
+- **Root cause** enfin fixée : spécificité CSS `.izox-b2c .b2c-glow-card` (2 classes) > utilitaire Tailwind mono-classe. Règle : toujours forcer `position` en style inline sur les cartes landing.
+- **Morphing Card Stack** : framer-motion, swipe natif, pile conforme à la référence 21st.dev, 0 dépendance ajoutée.
+- **Audit** : base saine sur 14 fichiers. 3 bugs mineurs + 3 codes morts nettoyés. 0 bug critique.
+
+---
+
 ## Session 2026-06-16 (47) — Avis clients : carrousel StaggerTestimonials + table admin-manageable
 
 Demande utilisateur : composant 21st.dev "Stagger Testimonials" fourni pour la section Avis clients de la landing. Après critique (contenu factice = conflit avec la politique "aucun faux avis" L121-2 C. conso déjà en place, style carte blanche/clip-path incohérent avec `.b2c-glow-card`), décisions validées :
