@@ -1,5 +1,33 @@
 # Lessons Learned — IZOX
 
+## Audit sécurité : vérification de rôle dans les edge functions — toujours utiliser `profiles`, jamais `user_roles` (session 51)
+
+- **`user_roles` est une table auxiliaire désynchronisée** : la source de vérité pour le rôle d'un utilisateur est `profiles.role`. `user_roles` est maintenu en parallèle (legacy) mais n'est pas garanti à jour. Une vérification d'accès admin qui consulte `user_roles` peut échouer silencieusement si la table est vide ou incohérente, laissant passer ou bloquant à tort des utilisateurs légitimes.
+- **Pattern correct** : `admin.from("profiles").select("role").eq("id", userData.user.id).maybeSingle()` → `profile?.role === "admin"`. Un seul SELECT, source canonique, pas de tableau à itérer.
+
+## CORS wildcard `*.vercel.app` : toujours expliciter l'hostname exact (session 51)
+
+- **`.endsWith(".vercel.app")` autorise N'IMPORTE quel projet Vercel** : un attaquant qui déploie `izox-attaque.vercel.app` obtient un CORS valide vers les edge functions. Le fix est de comparer `o.hostname === "izox-circular-fleet-care.vercel.app"` (ou `=== siteHost` pour le domaine de prod).
+- **Pattern correct dans `corsFor`** : `o.hostname === siteHost || o.hostname === "izox-circular-fleet-care.vercel.app"`. Mettre à jour ce literal quand le domaine migre vers `izox.fr` (à ce moment-là, la branche `o.hostname === "izox-circular-fleet-care.vercel.app"` devient obsolète et peut être retirée).
+- **Concerne aussi `safeRedirectTo`** : dans `create-client-account`, la même wildcard apparaissait dans la validation du paramètre `redirect_to`. Un `redirect_to=https://evil.vercel.app/reset-password` passait la vérification.
+
+## Ne jamais faire confiance au `montant_ttc` envoyé par le client (session 51)
+
+- **Le montant d'une commande doit toujours être recalculé server-side** : l'edge function `create-reservation-b2c` acceptait `body.montant_ttc` sans vérification. N'importe qui avec `curl` pouvait soumettre `"montant_ttc": 1` et réserver pour 1 €. Fix : supprimer le paramètre côté client, recalculer avec le catalogue inline dans la fonction.
+- **Catalogue inline** : dupliquer les constantes de prix dans la Deno function (sync manuelle avec `src/lib/pricing-b2c.ts`). Une désynchronisation est détectable immédiatement à la revue code car les deux fichiers sont dans le même dépôt.
+
+## `.env` dans `.gitignore` : vérifier dès la création du projet (session 51)
+
+- **Un `.env` commis dans git = clés exposées pour toujours** (l'historique Git est public même après suppression du fichier). Ajouter `.env` + `.env.*` à `.gitignore` dès `git init`. Si des clés ont déjà été commitées (commits `5206ed2`, `297d342`, `c4583fb` ici), il faut les **révoquer dans le dashboard Supabase** et en générer de nouvelles — `git filter-repo` pour purger l'historique est destructif et nécessite coordination avec toutes les branches.
+
+## `RoleGuard` sur les layouts de route parent (session 51)
+
+- **Un layout parent sans `RoleGuard` laisse toutes ses routes enfants accessibles** : `/terrain` n'avait pas de guard, contrairement à `/admin`. N'importe quel utilisateur connecté (même `client`) pouvait accéder aux routes `/terrain/*` directement. Toujours ajouter `<RoleGuard allowed={[...]}>` dans le composant du layout parent, pas seulement dans les routes feuilles.
+
+## `dangerouslySetInnerHTML` : valider les valeurs avant injection CSS (session 51)
+
+- **Les color values injectées dans `<style>` peuvent contenir du CSS arbitraire** si elles viennent d'une source externe. Même si dans ce projet elles viennent du code Recharts (sûr), la règle défensive est d'appliquer une regex allowlist (`/^(#...|rgba?...|hsla?...|var\(--...\)|[a-zA-Z]+)$/`) avant injection. Coût : 3 lignes. Protège contre une future contamination si la config de chart devient dynamique.
+
 ## RLS perf : toujours wrapper `auth.uid()` en `(SELECT auth.uid())` dans les politiques (2026-06-17)
 
 - **Supabase Performance Advisor signale `auth.uid()` nu dans les clauses `USING`** : PostgreSQL peut réévaluer la fonction pour chaque ligne scannée. Le fix est mécanique et sans risque : remplacer `auth.uid()` par `(SELECT auth.uid())`. Le moteur évalue le sous-SELECT **une seule fois** par requête et réutilise le résultat — même UUID, même logique, meilleure perf à grande échelle.

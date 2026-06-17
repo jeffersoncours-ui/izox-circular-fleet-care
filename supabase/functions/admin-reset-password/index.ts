@@ -17,7 +17,7 @@ function corsFor(req: Request): Record<string, string> {
   try {
     const o = new URL(requestOrigin);
     const siteHost = new URL(SITE_URL).hostname;
-    if (o.hostname === siteHost || o.hostname.endsWith(".vercel.app")) {
+    if (o.hostname === siteHost || o.hostname === "izox-circular-fleet-care.vercel.app") {
       allow = requestOrigin;
     }
   } catch {
@@ -194,11 +194,12 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(url, serviceKey);
-    const { data: roles } = await admin
-      .from("user_roles")
+    const { data: profile } = await admin
+      .from("profiles")
       .select("role")
-      .eq("user_id", userData.user.id);
-    const isAdmin = roles?.some((r) => r.role === "admin");
+      .eq("id", userData.user.id)
+      .maybeSingle();
+    const isAdmin = profile?.role === "admin";
     if (!isAdmin) {
       return new Response(JSON.stringify({ error: "Réservé aux administrateurs" }), {
         status: 403, headers: jsonHeaders,

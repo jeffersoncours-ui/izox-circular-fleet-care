@@ -2,6 +2,32 @@
 
 ---
 
+## Session 2026-06-17 (51) — Audit sécurité : corrections de vulnérabilités
+
+### Plan
+
+- [x] **P0 — `.gitignore`** : ajout `.env` + `.env.*` + `!.env.example` — le fichier `.env` avait été commis dans au moins 3 commits (`5206ed2`, `297d342`, `c4583fb`). ⚠️ Clés à révoquer manuellement dans le dashboard Supabase.
+- [x] **P1a — `admin-reset-password`** : vérification rôle admin via `profiles.role` (à la place de `user_roles`).
+- [x] **P1b — CORS wildcard** : `.endsWith(".vercel.app")` → `=== "izox-circular-fleet-care.vercel.app"` dans les 4 edge functions (`create-lead`, `request-password-reset`, `admin-reset-password`, `create-client-account`). Idem pour `safeRedirectTo` dans `create-client-account`.
+- [x] **P2 — `RoleGuard` sur `/terrain`** : ajout `<RoleGuard allowed={["operateur", "admin"]}>` dans `src/routes/terrain.tsx`.
+- [x] **P3 — Prix server-side** : `create-reservation-b2c` recalcule `montant_ttc` côté serveur (catalogue inliné) — `body.montant_ttc` client ignoré.
+- [x] **P4 — `chart.tsx` CSS injection** : regex allowlist (`SAFE_COLOR_RE`, `SAFE_ID_RE`) avant `dangerouslySetInnerHTML`.
+- [x] **P5 — `seed-users`** : déjà neutralisée (retourne 410 Gone).
+- [x] Déploiement 5 edge functions modifiées via MCP Supabase (toutes ACTIVE).
+- [x] `tsc` 0 erreur · `npm run build` ✓
+
+### Action requise utilisateur (non automatisable)
+
+- [ ] **Révoquer et régénérer la Supabase Anon key** depuis le dashboard Supabase → Settings → API. Les clés présentes dans l'historique git sont considérées compromises.
+- [ ] Mettre à jour `VITE_SUPABASE_ANON_KEY` (et `SUPABASE_ANON_KEY`) dans Vercel après rotation.
+
+### Review session 51
+
+- 7 correctifs de sécurité déployés. Build propre, 5 edge functions ACTIVE.
+- Seule action bloquée : rotation manuelle des clés Supabase (opération dashboard).
+
+---
+
 ## Correctif 2026-06-17 — RLS perf `user_roles`
 
 - [x] Migration `20260617150000_fix_rls_user_roles_perf.sql` — wrap `auth.uid()` en `(SELECT auth.uid())` sur les 3 politiques de `public.user_roles` (`user_roles_self_select`, `user_roles_admin_all`, `user_roles_staff_select`). Avertissement Supabase Performance Advisor supprimé. Zéro changement de logique.

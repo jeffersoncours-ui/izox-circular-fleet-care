@@ -61,12 +61,23 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = "Chart";
 
+// Allowlist for CSS color values injected via dangerouslySetInnerHTML.
+// Accepts hex, rgb/rgba, hsl/hsla, CSS custom properties, and named colors.
+const SAFE_COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]{1,60}\)|hsla?\([^)]{1,60}\)|var\(--[a-zA-Z0-9_-]{1,80}\)|[a-zA-Z]{1,30})$/;
+const SAFE_ID_RE = /^[a-zA-Z0-9_-]+$/;
+
+function sanitizeColor(value: string): string | null {
+  return SAFE_COLOR_RE.test(value.trim()) ? value.trim() : null;
+}
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([, config]) => config.theme || config.color);
 
   if (!colorConfig.length) {
     return null;
   }
+
+  if (!SAFE_ID_RE.test(id)) return null;
 
   return (
     <style
@@ -77,7 +88,8 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+    const rawColor = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+    const color = rawColor ? sanitizeColor(rawColor) : null;
     return color ? `  --color-${key}: ${color};` : null;
   })
   .join("\n")}

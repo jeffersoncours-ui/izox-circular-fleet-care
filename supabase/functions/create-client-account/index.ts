@@ -11,7 +11,7 @@ function corsFor(req: Request): Record<string, string> {
   try {
     const u = new URL(origin);
     const siteHost = new URL(SITE_URL).hostname;
-    if (u.hostname === siteHost || u.hostname.endsWith(".vercel.app")) {
+    if (u.hostname === siteHost || u.hostname === "izox-circular-fleet-care.vercel.app") {
       allowed = origin;
     }
   } catch { /* ignore */ }
@@ -29,7 +29,7 @@ function safeRedirectTo(raw: unknown): string {
   try {
     const parsed = new URL(raw);
     const siteHost = new URL(SITE_URL).hostname;
-    if (parsed.hostname === siteHost || parsed.hostname.endsWith(".vercel.app")) {
+    if (parsed.hostname === siteHost || parsed.hostname === "izox-circular-fleet-care.vercel.app") {
       return raw;
     }
     return fallback;

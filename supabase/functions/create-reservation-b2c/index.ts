@@ -1,6 +1,22 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+// Inline pricing catalog — kept in sync with src/lib/pricing-b2c.ts.
+const PRIX_BASE: Record<string, Record<string, number>> = {
+  interieur: { citadine: 80, berline: 110, suv: 140, utilitaire: 170 },
+  interieur_exterieur: { citadine: 110, berline: 140, suv: 170, utilitaire: 200 },
+};
+const PRIX_OPTIONS: Record<string, Record<string, number>> = {
+  puzzi: { citadine: 40, berline: 47, suv: 53, utilitaire: 60 },
+  ozone: { citadine: 40, berline: 40, suv: 40, utilitaire: 40 },
+};
+
+function calculerPrix(vehicule: string, formule: string, options: string[]): number {
+  const base = PRIX_BASE[formule]?.[vehicule] ?? 0;
+  const opts = options.reduce((sum, o) => sum + (PRIX_OPTIONS[o]?.[vehicule] ?? 0), 0);
+  return base + opts;
+}
+
 const ALLOWED_ORIGINS = [
   "https://izox-circular-fleet-care.vercel.app",
   "http://localhost:3000",
@@ -59,8 +75,9 @@ Deno.serve(async (req: Request) => {
       if (!["puzzi","ozone"].includes(o)) throw new Error(`Option invalide : ${o}`);
     }
 
-    const montant_ttc = Number(body.montant_ttc);
-    if (!isFinite(montant_ttc) || montant_ttc <= 0) throw new Error("Montant invalide");
+    // Price is always recalculated server-side — never trusted from the client.
+    const montant_ttc = calculerPrix(vehicule, formule, options);
+    if (montant_ttc <= 0) throw new Error("Montant invalide");
 
     const creneaux = Array.isArray(body.creneaux_preferes) ? body.creneaux_preferes : [];
     if (creneaux.length < 2) throw new Error("Minimum 2 créneaux requis");

@@ -15,7 +15,7 @@ function corsFor(req: Request): Record<string, string> {
   try {
     const o = new URL(requestOrigin);
     const siteHost = new URL(siteUrl).hostname;
-    if (o.hostname === siteHost || o.hostname.endsWith(".vercel.app")) {
+    if (o.hostname === siteHost || o.hostname === "izox-circular-fleet-care.vercel.app") {
       origin = requestOrigin;
     }
   } catch { /* keep siteUrl fallback */ }
