@@ -18,13 +18,13 @@
 
 ### Action requise utilisateur (non automatisable)
 
-- [ ] **Révoquer et régénérer la Supabase Anon key** depuis le dashboard Supabase → Settings → API. Les clés présentes dans l'historique git sont considérées compromises.
-- [ ] Mettre à jour `VITE_SUPABASE_ANON_KEY` (et `SUPABASE_ANON_KEY`) dans Vercel après rotation.
+- [x] **Rotation Supabase Anon key** — nouvelle clé publishable (`sb_publishable_...`) générée depuis Settings → API Keys. Ancienne clé legacy (exposée dans le git) remplacée.
+- [x] Mettre à jour `VITE_SUPABASE_ANON_KEY` dans Vercel — redéploiement effectué, app validée sur `main` ✓
 
 ### Review session 51
 
 - 7 correctifs de sécurité déployés. Build propre, 5 edge functions ACTIVE.
-- Seule action bloquée : rotation manuelle des clés Supabase (opération dashboard).
+- Rotation des clés Supabase complète — app validée en production le 2026-06-17.
 
 ---
 
