@@ -9,7 +9,8 @@ export type EmailType =
   | "staff_notification"
   | "rdv_annule_client"
   | "rdv_annule_admin"
-  | "facture_emise";
+  | "facture_emise"
+  | "reservation_b2c_confirmee";
 
 /** Fire-and-forget : ne bloque pas le flux principal en cas d'échec. */
 export async function sendEmail(type: EmailType, targetId: string): Promise<void> {

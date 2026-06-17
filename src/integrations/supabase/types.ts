@@ -1322,7 +1322,9 @@ export type Database = {
           notes_operateur: string | null
           operateur_id: string | null
           operator_id: string | null
+          reservation_b2c_id: string | null
           signature_url: string | null
+          source: string
           statut: string
           submitted_at: string | null
           telephone_intervention: string | null
@@ -1359,7 +1361,9 @@ export type Database = {
           notes_operateur?: string | null
           operateur_id?: string | null
           operator_id?: string | null
+          reservation_b2c_id?: string | null
           signature_url?: string | null
+          source?: string
           statut?: string
           submitted_at?: string | null
           telephone_intervention?: string | null
@@ -1396,7 +1400,9 @@ export type Database = {
           notes_operateur?: string | null
           operateur_id?: string | null
           operator_id?: string | null
+          reservation_b2c_id?: string | null
           signature_url?: string | null
+          source?: string
           statut?: string
           submitted_at?: string | null
           telephone_intervention?: string | null
@@ -1456,6 +1462,13 @@ export type Database = {
             columns: ["operator_id"]
             isOneToOne: false
             referencedRelation: "operators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_reservation_b2c_id_fkey"
+            columns: ["reservation_b2c_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_b2c"
             referencedColumns: ["id"]
           },
           {
@@ -1928,6 +1941,74 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_entreprises_vehicules_resume"
             referencedColumns: ["entreprise_id"]
+          },
+        ]
+      }
+      reservations_b2c: {
+        Row: {
+          adresse: string
+          code_postal: string
+          created_at: string
+          creneaux_preferes: Json
+          email: string
+          formule: string
+          id: string
+          intervention_id: string | null
+          montant_ttc: number
+          nom: string
+          notes_admin: string | null
+          options: Json
+          prenom: string
+          statut: string
+          telephone: string
+          vehicule: string
+          ville: string
+        }
+        Insert: {
+          adresse: string
+          code_postal: string
+          created_at?: string
+          creneaux_preferes?: Json
+          email: string
+          formule: string
+          id?: string
+          intervention_id?: string | null
+          montant_ttc: number
+          nom: string
+          notes_admin?: string | null
+          options?: Json
+          prenom: string
+          statut?: string
+          telephone: string
+          vehicule: string
+          ville: string
+        }
+        Update: {
+          adresse?: string
+          code_postal?: string
+          created_at?: string
+          creneaux_preferes?: Json
+          email?: string
+          formule?: string
+          id?: string
+          intervention_id?: string | null
+          montant_ttc?: number
+          nom?: string
+          notes_admin?: string | null
+          options?: Json
+          prenom?: string
+          statut?: string
+          telephone?: string
+          vehicule?: string
+          ville?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_b2c_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "interventions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2536,6 +2617,10 @@ export type Database = {
         Args: { p_demande_id: string; p_motif: string }
         Returns: Json
       }
+      annuler_reservation_b2c: {
+        Args: { p_motif?: string; p_reservation_id: string }
+        Returns: undefined
+      }
       appliquer_remise_commerciale: {
         Args: {
           p_contrat_id: string
@@ -2580,6 +2665,16 @@ export type Database = {
       confirmer_demande_rdv_multi: {
         Args: { p_date_intervention: string; p_demande_id: string }
         Returns: Json
+      }
+      confirmer_reservation_b2c: {
+        Args: {
+          p_date: string
+          p_heure: string
+          p_operator_id: string
+          p_reservation_id: string
+          p_time_slot: string
+        }
+        Returns: string
       }
       creer_demande_rdv: {
         Args: {
