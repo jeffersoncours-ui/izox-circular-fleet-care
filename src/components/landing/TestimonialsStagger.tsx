@@ -13,7 +13,7 @@
 //   - prefers-reduced-motion : déjà neutralisé globalement par la règle
 //     `.izox-b2c * { transition-duration: 0.001ms !important }` (landing-b2c.css)
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,10 +38,11 @@ interface CardProps {
   item: ListItem;
   position: number;
   cardSize: number;
+  spacing: number;
   onMove: (steps: number) => void;
 }
 
-function TestimonialCard({ item, position, cardSize, onMove }: CardProps) {
+function TestimonialCard({ item, position, cardSize, spacing, onMove }: CardProps) {
   const isCenter = position === 0;
   const depth = Math.abs(position);
 
@@ -50,7 +51,6 @@ function TestimonialCard({ item, position, cardSize, onMove }: CardProps) {
   // centre — on voit plusieurs cartes, partiellement cachées par les autres.
   // Seules les cartes à depth <= 2 sont rendues (cf. parent) : la chute
   // échelle/opacité reste donc douce, jamais réduite à un fil quasi invisible.
-  const spacing = cardSize * 0.28;
   const scale = Math.max(0.8, 1 - depth * 0.08);
   const opacity = Math.max(0.45, 1 - depth * 0.24);
 
@@ -75,6 +75,7 @@ function TestimonialCard({ item, position, cardSize, onMove }: CardProps) {
         isCenter ? "is-center cursor-default" : "cursor-pointer"
       )}
       style={{
+        position: "absolute",
         width: cardSize,
         height: cardSize,
         zIndex: 50 - depth,
@@ -118,6 +119,8 @@ function TestimonialCard({ item, position, cardSize, onMove }: CardProps) {
 
 export function TestimonialsStagger({ testimonials }: { testimonials: TestimonialEntry[] }) {
   const [cardSize, setCardSize] = useState(365);
+  const [containerWidth, setContainerWidth] = useState(1120);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [list, setList] = useState<ListItem[]>(() => toListItems(testimonials));
 
   useEffect(() => {
@@ -133,6 +136,16 @@ export function TestimonialsStagger({ testimonials }: { testimonials: Testimonia
     updateSize();
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setContainerWidth(el.offsetWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   if (testimonials.length < 3) return null;
@@ -163,16 +176,24 @@ export function TestimonialsStagger({ testimonials }: { testimonials: Testimonia
   // l'effet d'échelle/opacité dégressif les rendrait quasi invisibles et leur
   // sliver clippé par overflow-hidden donnait un artefact visuel "tordu".
   const maxDepth = 2;
+  // Espacement dérivé de la largeur réelle du conteneur (pas seulement de
+  // cardSize) pour que les cartes de bord s'étalent jusqu'aux extrémités —
+  // visibles sur toute la largeur de la section, pas tassées au centre.
+  const spacing = Math.max(
+    cardSize * 0.32,
+    Math.min(cardSize * 0.85, (containerWidth - cardSize) / (2 * maxDepth))
+  );
 
   return (
     <div
+      ref={containerRef}
       className="relative w-full overflow-hidden"
       style={{
         height: cardSize + 190,
         maskImage:
-          "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
+          "linear-gradient(to right, transparent, black 4%, black 96%, transparent)",
         WebkitMaskImage:
-          "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
+          "linear-gradient(to right, transparent, black 4%, black 96%, transparent)",
       }}
     >
       <div aria-live="polite" className="sr-only">
@@ -187,6 +208,7 @@ export function TestimonialsStagger({ testimonials }: { testimonials: Testimonia
             item={item}
             position={position}
             cardSize={cardSize}
+            spacing={spacing}
             onMove={handleMove}
           />
         );

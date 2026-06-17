@@ -323,11 +323,13 @@ export function Reviews() {
     <section className="b2c-section border-t border-[var(--b2c-line)]">
       <div className="b2c-container">
         <SectionHeading kicker="Ils nous font confiance" title="Avis clients" />
-        {testimonials.length >= 3 ? (
-          <div className="rv mt-10">
-            <TestimonialsStagger testimonials={testimonials} />
-          </div>
-        ) : (
+      </div>
+      {testimonials.length >= 3 ? (
+        <div className="rv mt-10 w-full">
+          <TestimonialsStagger testimonials={testimonials} />
+        </div>
+      ) : (
+        <div className="b2c-container">
           <div className="b2c-card b2c-glow-card rv mt-10 p-8 text-center">
             <Quote className="mx-auto h-6 w-6 text-[var(--b2c-tx-faint)]" />
             <p className="mt-3 text-sm font-semibold text-[var(--b2c-tx)]">
@@ -341,8 +343,8 @@ export function Reviews() {
               <span>Réserver mon nettoyage</span>
             </Link>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 }
