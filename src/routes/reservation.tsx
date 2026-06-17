@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, Loader2, User, Building2,
+  ArrowLeft, ArrowRight, CheckCircle2, Loader2, User, Building2, Info,
 } from "lucide-react";
 import { addDays, endOfMonth, startOfDay, format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -402,6 +402,20 @@ function ReservationPage() {
                   </h2>
                   <p className="text-sm text-[var(--b2c-tx-dim)]">
                     Sélectionnez 2 à {MAX_CRENEAUX} dates ce mois-ci — samedi inclus
+                  </p>
+                </div>
+
+                {/* Explication du concept multi-créneaux */}
+                <div
+                  className="flex gap-2.5 rounded-lg p-3"
+                  style={{ background: "rgba(63,216,255,0.06)", border: "1px solid rgba(63,216,255,0.18)" }}
+                >
+                  <Info className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: "var(--b2c-accent)" }} />
+                  <p className="text-xs leading-relaxed text-[var(--b2c-tx-dim)]">
+                    Pour optimiser les déplacements de nos équipes, proposez{" "}
+                    <span className="font-medium text-[var(--b2c-tx)]">au moins 2 jours différents</span>.
+                    Nous vous confirmerons ensuite le créneau le mieux adapté à notre tournée — un seul
+                    horaire par jour suffit.
                   </p>
                 </div>
 
