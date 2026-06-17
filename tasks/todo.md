@@ -2,6 +2,37 @@
 
 ---
 
+## Session 2026-06-17 (50) — Corrections tunnel B2C : vue semaine + récapitulatif
+
+### Plan
+
+- [x] `src/lib/calendrier-contraintes.ts` — ajout `isDateSelectableB2C` (samedi OK, dimanche exclu, mois en cours uniquement)
+- [x] `src/components/landing/WeekSlotPicker.tsx` — nouveau composant : grille lun-sam × 4 créneaux horaires, nav semaine bornée au mois en cours, 1 créneau max par jour, max 3 jours, grisage saturation
+- [x] `src/routes/reservation.tsx` — refonte étapes 4→6 : step 4 = WeekSlotPicker (+ encart Info), step 5 = Récapitulatif, step 6 = Coordonnées. StepProgress X/6.
+- [x] `supabase/functions/create-reservation-b2c/index.ts` — v2 : guard un-seul-créneau-par-date + guard dimanche côté serveur. Déployée via MCP.
+- [x] Em-dash `—` → virgule `,` dans l'encart Info step 4
+- [x] Audit landing (`/audit-landing`) — bug setTimeout non nettoyé dans `MorphingCardStack` → corrigé avec `useRef` + cleanup `useEffect`
+- [x] `tsc` 0 erreur · `npm run build` ✓
+- [x] `tasks/todo.md` + `tasks/lessons.md` mis à jour
+- [x] Merge `claude/izox-fleet-care-wxcva4` → `main`
+
+### Décisions d'architecture
+
+- **Vue semaine** (lun-sam, 4 heures fixes : 08h/10h/14h/16h) remplace le calendrier mensuel : meilleure lisibilité, conformité au brief B2C
+- **Samedi autorisé B2C** (≠ B2B) : `isDateSelectableB2C` distinct de `isDateSelectable` — zéro collision
+- **Mois en cours uniquement** : `endOfMonth(today)` borne la navigation (`canNext`) et la fonction de sélectabilité
+- **1 créneau max par jour** : logique dans `WeekSlotPicker.handleClick` (toggle / remplace / ajoute) + guard serveur
+- **Min 2 jours différents** validé côté edge function (`uniqueDates.size < 2`)
+- **Pas de purge** : tunnel public, aucune donnée test insérée
+
+### Review session 50
+
+- **WeekSlotPicker** : nouveau composant autonome, logique saturation (`isSlotFull`) et navigation encapsulées, aucun état partagé externe hormis `selected`/`onSelect`/`satMap`.
+- **Edge function v2** déployée et ACTIVE : double validation (dates uniques + pas de dimanche) côté Supabase.
+- **Audit** : CSS saine (0 orphelin/fantôme), routes saines (error handling OK), 1 bug mémoire corrigé dans `MorphingCardStack` (setTimeout sans cleanup → ref + useEffect).
+
+---
+
 ## Session 2026-06-17 (49) — Tunnel de vente B2C pré-Stripe
 
 ### Plan

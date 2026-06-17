@@ -13,7 +13,7 @@
 //   - navigation : swipe (drag x) + flèches ‹ › + points indicateurs, le tout
 //     a11y (aria-live, aria-label)
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,13 @@ const SWIPE_THRESHOLD = 50;
 export function MorphingCardStack({ testimonials }: { testimonials: TestimonialEntry[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const dragTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (dragTimeoutRef.current !== null) clearTimeout(dragTimeoutRef.current);
+    };
+  }, []);
 
   if (!testimonials || testimonials.length === 0) return null;
 
@@ -51,7 +58,8 @@ export function MorphingCardStack({ testimonials }: { testimonials: TestimonialE
       goPrev();
     }
     // léger délai : éviter qu'un drag déclenche aussi un onClick
-    setTimeout(() => setIsDragging(false), 0);
+    if (dragTimeoutRef.current !== null) clearTimeout(dragTimeoutRef.current);
+    dragTimeoutRef.current = setTimeout(() => setIsDragging(false), 0);
   };
 
   // Réordonne la pile pour que activeIndex soit devant ; on inverse pour que

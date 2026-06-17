@@ -1,5 +1,28 @@
 # Lessons Learned — IZOX
 
+## Composant de calendrier : toujours lire la contrainte métier avant de choisir le primitif (session 50)
+
+- **Le calendrier mensuel shadcn (`Calendar`) ne suffit pas pour un créneau B2C avec 4 heures fixes** : il gère des dates isolées, pas des couples date+heure. Dès qu'on a besoin de 4 sous-sélections par jour (08h/10h/14h/16h) ET de règles sur le nombre de jours distincts, un composant dédié (`WeekSlotPicker`) est plus simple qu'une surcouche sur `Calendar`.
+- **Construire autour d'une grille semaine (lun-sam × heures) donne une UX plus claire** pour un délai court (mois en cours) : l'utilisateur voit 6 jours en un coup d'œil, le grisage de saturation est lisible colonne par colonne, et la navigation semaine est bornée naturellement par `endOfMonth`.
+- **Règle 1-par-jour dans le click handler** : 3 cas à traiter → (1) même créneau = toggle off, (2) autre heure même jour = remplacer, (3) nouveau jour + pas au max = ajouter. Toute logique manquante laisse l'utilisateur sélectionner 3 fois le même jour.
+
+## Double validation client + serveur pour les contraintes de réservation (session 50)
+
+- **Le frontend peut être contourné** : même si `WeekSlotPicker` empêche UI deux créneaux le même jour, l'edge function doit valider elle-même (`uniqueDates.size !== creneaux.length`). Sinon un appel API direct bypasse la règle.
+- **Valider le jour de la semaine côté serveur avec UTC** : `new Date(c.date + "T12:00:00Z").getUTCDay()` — utiliser midi UTC évite les décalages de timezone qui feraient classer un samedi soir comme dimanche.
+
+## setTimeout dans un handler d'événement framer-motion : toujours stocker l'ID (session 50)
+
+- **`setTimeout(() => setState(...), 0)` dans `handleDragEnd` (framer-motion `onDragEnd`)** : si le composant se démonte avant que le timeout se déclenche (ex. navigation rapide), le callback s'exécute sur un composant démontés. Fix : stocker l'ID dans un `useRef`, retourner un cleanup `useEffect` qui appelle `clearTimeout`. Même pour un délai 0ms, la bonne pratique s'impose — elle coûte 3 lignes et évite un avertissement React en dev.
+- **Pattern minimal** :
+  ```tsx
+  const tRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (tRef.current !== null) clearTimeout(tRef.current); }, []);
+  // dans le handler :
+  if (tRef.current !== null) clearTimeout(tRef.current);
+  tRef.current = setTimeout(() => setState(false), 0);
+  ```
+
 ## Tunnel B2C public : séparer table + edge function quand auth non disponible (session 49)
 
 - **Un tunnel public (sans Supabase Auth) ne peut PAS réutiliser une RPC qui lit `auth.uid()`** : `creer_demande_rdv` requiert un utilisateur connecté, un `entreprise_id` et des `vehicule_ids[]`. Vouloir forcer la réutilisation aurait exigé soit de byp la RLS (risque sécurité), soit d'inventer des IDs fictifs (incohérence DB). La bonne décision : nouvelle table `reservations_b2c` + edge function publique (`verify_jwt=false`) avec service_role. Coût faible, séparation nette.

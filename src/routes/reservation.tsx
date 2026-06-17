@@ -414,7 +414,7 @@ function ReservationPage() {
                   <p className="text-xs leading-relaxed text-[var(--b2c-tx-dim)]">
                     Pour optimiser les déplacements de nos équipes, proposez{" "}
                     <span className="font-medium text-[var(--b2c-tx)]">au moins 2 jours différents</span>.
-                    Nous vous confirmerons ensuite le créneau le mieux adapté à notre tournée — un seul
+                    Nous vous confirmerons ensuite le créneau le mieux adapté à notre tournée, un seul
                     horaire par jour suffit.
                   </p>
                 </div>
