@@ -70,12 +70,16 @@ export function PricingSection() {
           {/* Options */}
           <p className="b2c-kicker rv mt-9">Options</p>
           <div className="b2c-card b2c-glow-card rv rv-d1 mt-3 divide-y divide-[var(--b2c-line)]">
-            {OPTIONS_B2C.map((o) => (
+            {OPTIONS_B2C.map((o) => {
+              // Prix unique seulement si TOUS les véhicules sont au même tarif
+              // (un simple citadine===utilitaire raterait un écart berline/suv).
+              const prixUniforme = new Set(Object.values(o.prix)).size === 1;
+              return (
               <div key={o.id} className="px-5 py-4 sm:px-7">
                 <div className="flex items-center justify-between gap-4">
                   <p className="font-semibold text-[var(--b2c-tx)]">{o.label}</p>
                   <div className="shrink-0">
-                    {o.prix.citadine === o.prix.utilitaire ? (
+                    {prixUniforme ? (
                       <SevenSegmentNumber
                         value={o.prix.citadine}
                         suffix=" €"
@@ -94,13 +98,14 @@ export function PricingSection() {
                 <p className="mt-1 max-w-md text-sm leading-relaxed text-[var(--b2c-tx-dim)]">
                   {o.description}
                 </p>
-                {o.prix.citadine !== o.prix.utilitaire && (
+                {!prixUniforme && (
                   <p className="b2c-mono mt-2 text-[11px] text-[var(--b2c-tx-faint)]">
                     {VEHICULES_B2C.map((v) => `${v.label} ${o.prix[v.id]} €`).join(" · ")}
                   </p>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <p className="b2c-mono rv mt-7 text-center text-[11px] uppercase tracking-[0.14em] text-[var(--b2c-tx-faint)]">

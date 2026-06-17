@@ -223,7 +223,9 @@ export function SmokeBackground() {
   const rendererRef = useRef<Renderer | null>(null);
   // L'intensité pilote l'opacité CSS ET coupe le rendu GPU quand elle est nulle.
   const intensityRef = useRef(tweaks.smokeIntensity);
-  intensityRef.current = tweaks.smokeIntensity;
+  useEffect(() => {
+    intensityRef.current = tweaks.smokeIntensity;
+  }, [tweaks.smokeIntensity]);
 
   // Setup unique au montage (pas de re-création du contexte sur changement de couleur/intensité).
   useEffect(() => {

@@ -2,6 +2,71 @@
 
 ---
 
+## Session 2026-06-17 (48) — Avis clients : morphing card stack + audit landing
+
+### Carrousel avis (remplacement complet)
+
+Suite session 47 — le carrousel `TestimonialsStagger` était visuellement cassé sur mobile.
+**Cause racine** : `.izox-b2c .b2c-glow-card { position: relative }` (spécificité 2 classes) bat `.absolute` Tailwind (1 classe) → cartes en flux normal, empilées verticalement.
+
+- [x] `src/components/ui/morphing-card-stack.tsx` — pile framer-motion, mode stack uniquement, habillage `.b2c-card b2c-glow-card`, étoiles, swipe + flèches + points, aria-live
+- [x] `TestimonialsStagger.tsx` supprimé + règle `.is-center` retirée de `landing-b2c.css`
+- [x] `Reviews()` rebranché ; empty-state honnête conservé si < 3 avis
+- [x] Fix critique : `position:"absolute"` forcé en style inline (imbattable par tout sélecteur CSS)
+- [x] Cartes légèrement agrandies (290×330 mobile / 390×360 desktop)
+- [x] **Zéro nouvelle dépendance** : framer-motion ^12.40.0 déjà installé
+- [x] `tsc` 0 erreur + `vite build` ✓
+
+### Audit complet landing B2C (subagent)
+
+- [x] 14 fichiers audités (composants, CSS, routes, lib) → base saine, aucun bug critique
+- [x] Bug `SmokeBackground` : écriture de ref pendant le render → `useEffect`
+- [x] Bug `PricingSection` : heuristique `citadine===utilitaire` → `new Set(Object.values(o.prix)).size === 1`
+- [x] Lag `FlipGallery` : `timeoutsRef` grossissait sans purge → purge en tête de `updateGallery`
+- [x] Code mort : `data-aqua-section` orphelin, `--b2c-surface` (×2), `--b2c-bg3` fantôme nettoyés
+- [x] Conservé volontairement : `prixTotalB2C/formatPrixTTC` + champs `FORMULES_B2C` (Phase 2g Stripe)
+- [x] `tsc` 0 erreur + `vite build` ✓
+
+### Purge DB + merge
+
+- [x] Purge `avis_clients` (6 lignes TEST-) + purge complète §7 CLAUDE.md
+- [x] `SELECT COUNT(*) FROM auth.users` = 4 comptes techniques
+- [x] `tasks/todo.md` + `tasks/lessons.md` mis à jour
+- [x] Merge `claude/izox-project-continuation-2nkupi` → `main`
+
+### Review session 48
+
+- **Root cause** enfin fixée : spécificité CSS `.izox-b2c .b2c-glow-card` (2 classes) > utilitaire Tailwind mono-classe. Règle : toujours forcer `position` en style inline sur les cartes landing.
+- **Morphing Card Stack** : framer-motion, swipe natif, pile conforme à la référence 21st.dev, 0 dépendance ajoutée.
+- **Audit** : base saine sur 14 fichiers. 3 bugs mineurs + 3 codes morts nettoyés. 0 bug critique.
+
+---
+
+## Session 2026-06-16 (47) — Avis clients : carrousel StaggerTestimonials + table admin-manageable
+
+Demande utilisateur : composant 21st.dev "Stagger Testimonials" fourni pour la section Avis clients de la landing. Après critique (contenu factice = conflit avec la politique "aucun faux avis" L121-2 C. conso déjà en place, style carte blanche/clip-path incohérent avec `.b2c-glow-card`), décisions validées :
+- Carrousel codé mais vide pour l'instant (0 avis réel) — rempli plus tard.
+- Cartes restylées en `.b2c-card b2c-glow-card` (pas de clip-path/bandelette/inversion couleur).
+- Aucune photo par défaut (slot `photo_url` prévu pour une future synchro Google Reviews — espoir exprimé par l'utilisateur, hors scope aujourd'hui).
+- Stockage en table Supabase admin-manageable (pas un tableau codé en dur) — anticipe le besoin futur.
+
+### Plan
+
+- [x] **Migration `avis_clients`** : `auteur_nom` text not null, `auteur_role` text nullable, `texte` text not null, `note` smallint nullable (check 1-5), `photo_url` text nullable, `source` text not null default `'manuel'` (check `manuel`/`google`), `google_review_id` text nullable unique, `publie` boolean not null default `false`, `created_at` timestamptz default now().
+- [x] **RLS** : SELECT public (anon+authenticated) où `publie = true` ; ALL pour admin/staff via `has_role()`. Testé empiriquement (cf. note ci-dessous).
+- [x] Régénérer les types TypeScript Supabase.
+- [x] **`src/components/landing/TestimonialsStagger.tsx`** : adapté du snippet 21st.dev — retrait `"use client"`, clip-path, bandelette diagonale, inversion couleur carte centrale (remplacée par glow/bordure renforcés, `.is-center` directement sur la carte `.b2c-glow-card` → réutilise la règle `:hover` existante dans `landing-b2c.css`) ; cartes en `.b2c-card b2c-glow-card` ; étoiles (lucide `Star`) si `note` présent ; avatar uniquement si `photo_url` présent ; a11y clavier (`role="button"`/`tabIndex`/Enter-Espace) + `aria-live` ; respect `prefers-reduced-motion` (règle globale déjà en place) ; retourne `null` si moins de 3 avis (pas assez pour un effet stagger correct).
+- [x] **`Reviews()` (`sections.tsx`)** : fetch des avis publiés ; si ≥ 3 → `<TestimonialsStagger/>` ; sinon la carte honnête actuelle reste affichée à l'identique (zéro changement visiteur tant qu'il n'y a pas assez d'avis réels).
+- [x] **Admin `/admin/avis`** (admin + staff) : liste + créer/éditer/supprimer + bascule publié/dépublié. Champs : nom, rôle, texte, note (select 1-5), publié (switch). `source` toujours `'manuel'` depuis ce formulaire (`photo_url` pas dans le formulaire admin pour l'instant — réservé à la future synchro Google). Entrée sidebar "Avis clients" (icône `Star`, visible admin+staff+commercial, `RoleGuard` interne limite réellement à admin+staff).
+- [x] Validation empirique DB : insert avis publié + non publié ; RLS anon → ne voit que `publie=true` ; RLS admin → voit tout (y compris non publié, via impersonation JWT claims) ; mise en défaut → anon `INSERT` refusé (`42501 insufficient_privilege`, erreur RLS brute vérifiée sans handler qui l'aurait masquée) ; mise en défaut #2 → `commercial` ne peut ni lire les non-publiés ni `DELETE` (0 ligne affectée, RLS `USING` exclut le rôle). UPDATE (toggle publié) testé admin → OK. SELECT anon avec exactement les colonnes utilisées par `Reviews()` → 3 lignes retournées dès que `publie=true`, confirmant le seuil `≥3` du carrousel.
+- [x] `npx tsc --noEmit --skipLibCheck` (0 erreur) + `npm run build` (0 erreur, `routeTree.gen.ts` régénéré pour `/admin/avis`).
+- [x] Commit + push sur `claude/izox-project-continuation-2nkupi` (commit `f80d42c`).
+- [ ] **Nettoyage différé** : le serveur MCP Supabase s'est bloqué (« MCP tool call requires approval » sur tout appel, y compris `SELECT 1`) avant la suppression des 3 lignes de test (`avis_clients.auteur_nom LIKE 'TEST-%'`). Sur décision utilisateur, le nettoyage automatique a été abandonné — **à supprimer manuellement** (dashboard Supabase ou page `/admin/avis` une fois déployée) avant tout merge sur `main`. Les UUID : `5d0abf7b-4292-42a3-8f7b-a5debe8e6242`, `d0a5f0d2-6604-4992-965e-d54585a06142`, `bacadfde-56bd-4642-87bb-7d716fae7f30`.
+
+**Hors scope explicite** : intégration réelle API Google Business Profile (OAuth, credentials) — le schéma (`source`, `google_review_id`, `photo_url`, `note`) est prêt à l'accueillir sans nouvelle migration, mais aucun code de synchro aujourd'hui.
+
+---
+
 ## Session 2026-06-16 (46) — Rollback toggle formule + audit complet landing
 
 Demande utilisateur : tentative de redesign du toggle de formule (Intérieur/Int.+Ext.) en "capsule verre dépoli" avec glider glow + icônes (`FormuleToggle.tsx`). Après vérification visuelle sur le déploiement Vercel, le rendu n'a pas convaincu — rollback complet décidé plutôt que de continuer à itérer.

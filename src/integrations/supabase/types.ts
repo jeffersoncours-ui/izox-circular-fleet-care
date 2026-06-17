@@ -65,6 +65,45 @@ export type Database = {
         }
         Relationships: []
       }
+      avis_clients: {
+        Row: {
+          auteur_nom: string
+          auteur_role: string | null
+          created_at: string
+          google_review_id: string | null
+          id: string
+          note: number | null
+          photo_url: string | null
+          publie: boolean
+          source: string
+          texte: string
+        }
+        Insert: {
+          auteur_nom: string
+          auteur_role?: string | null
+          created_at?: string
+          google_review_id?: string | null
+          id?: string
+          note?: number | null
+          photo_url?: string | null
+          publie?: boolean
+          source?: string
+          texte: string
+        }
+        Update: {
+          auteur_nom?: string
+          auteur_role?: string | null
+          created_at?: string
+          google_review_id?: string | null
+          id?: string
+          note?: number | null
+          photo_url?: string | null
+          publie?: boolean
+          source?: string
+          texte?: string
+        }
+        Relationships: []
+      }
       avoirs: {
         Row: {
           annee_fiscale: number

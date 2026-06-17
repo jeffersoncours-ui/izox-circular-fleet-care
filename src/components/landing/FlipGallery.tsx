@@ -100,6 +100,11 @@ export function FlipGallery() {
     const gallery = containerRef.current;
     if (!gallery) return;
 
+    // Purge les timeouts de l'anim précédente : évite la croissance non bornée
+    // du tableau et coupe les swaps en cours si on enchaîne les clics.
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+
     const reduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
