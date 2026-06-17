@@ -228,7 +228,7 @@ export function Vision() {
             filigrane de la page (plus de card opaque derrière). Bords feather (flou alpha)
             pour s'incruster dans le filigrane. -mx-5 mobile : annule le padding du
             container pour un rendu pleine largeur. */}
-        <div className="rv -mx-5 mt-8 sm:mx-0" data-aqua-section>
+        <div className="rv -mx-5 mt-8 sm:mx-0">
           <AquaponieImage className="mx-auto w-full max-w-[680px]" />
         </div>
 
