@@ -102,8 +102,13 @@ export function MorphingCardStack({ testimonials }: { testimonials: TestimonialE
                   if (isDragging || isTop) return;
                   goNext();
                 }}
+                // position:absolute FORCÉ en inline — sinon la règle
+                // `.izox-b2c .b2c-glow-card{position:relative}` (spécificité 2
+                // classes) bat la classe utilitaire .absolute (1 classe) et les
+                // cartes retombent dans le flux normal, débordant la page.
+                style={{ position: "absolute" }}
                 className={cn(
-                  "b2c-card b2c-glow-card absolute flex h-[300px] w-[270px] flex-col p-6 sm:h-[320px] sm:w-[350px] sm:p-7",
+                  "b2c-card b2c-glow-card flex h-[300px] w-[270px] flex-col p-6 sm:h-[320px] sm:w-[350px] sm:p-7",
                   isTop ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
                 )}
               >
