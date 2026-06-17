@@ -68,6 +68,7 @@ Deno.serve(async (req: Request) => {
     const dates = creneaux.map((c: { date: string }) => c.date);
     const uniqueDates = new Set(dates);
     if (uniqueDates.size < 2) throw new Error("Les créneaux doivent être sur au moins 2 dates différentes");
+    if (uniqueDates.size !== creneaux.length) throw new Error("Un seul créneau par date autorisé");
 
     const VALID_HEURES = ["08:00","10:00","14:00","16:00"];
     for (const c of creneaux) {
@@ -75,6 +76,8 @@ Deno.serve(async (req: Request) => {
         throw new Error("Date créneau invalide");
       if (!VALID_HEURES.includes(c.heure))
         throw new Error(`Heure invalide : ${c.heure}`);
+      const dayOfWeek = new Date(c.date + "T12:00:00Z").getUTCDay();
+      if (dayOfWeek === 0) throw new Error("Les dimanches ne sont pas disponibles");
     }
 
     const supabase = createClient(

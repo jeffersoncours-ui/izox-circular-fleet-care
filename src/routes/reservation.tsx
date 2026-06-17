@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, Loader2, X, User, Building2,
+  ArrowLeft, ArrowRight, CheckCircle2, Loader2, User, Building2,
 } from "lucide-react";
-import { addDays, startOfDay, format, isAfter, parseISO } from "date-fns";
+import { addDays, endOfMonth, startOfDay, format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { PublicLayout } from "@/components/landing/PublicLayout";
-import { Calendar } from "@/components/ui/calendar";
+import { WeekSlotPicker, MAX_CRENEAUX } from "@/components/landing/WeekSlotPicker";
+import type { CreneauB2C } from "@/components/landing/WeekSlotPicker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +22,6 @@ import {
   type FormuleB2C,
   type OptionB2C,
 } from "@/lib/pricing-b2c";
-import { isDateSelectable } from "@/lib/calendrier-contraintes";
 
 export const Route = createFileRoute("/reservation")({
   head: () => ({
@@ -38,23 +38,9 @@ export const Route = createFileRoute("/reservation")({
   component: ReservationPage,
 });
 
-type Step = 1 | 2 | 3 | 4 | 5 | "success";
-
-interface CreneauB2C {
-  date: string;
-  heure: "08:00" | "10:00" | "14:00" | "16:00";
-}
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | "success";
 
 type SatEntry = { nb: number; cap: number };
-
-const HOUR_SLOTS = [
-  { heure: "08:00" as const, label: "08h00", timeSlot: "morning" as const },
-  { heure: "10:00" as const, label: "10h00", timeSlot: "morning" as const },
-  { heure: "14:00" as const, label: "14h00", timeSlot: "afternoon" as const },
-  { heure: "16:00" as const, label: "16h00", timeSlot: "afternoon" as const },
-];
-
-const MAX_CRENEAUX = 3;
 
 // ---------- helpers ----------
 
@@ -68,13 +54,7 @@ function formatDateFr(dateStr: string) {
 
 // ---------- sub-components ----------
 
-function StepProgress({
-  step,
-  onBack,
-}: {
-  step: number;
-  onBack?: () => void;
-}) {
+function StepProgress({ step, onBack }: { step: number; onBack?: () => void }) {
   return (
     <div className="flex items-center justify-between mb-6">
       {onBack ? (
@@ -95,7 +75,7 @@ function StepProgress({
         </Link>
       )}
       <span className="text-xs font-mono text-[var(--b2c-tx-dim)]">
-        Étape <span className="text-[var(--b2c-accent)]">{step}</span> / 5
+        Étape <span className="text-[var(--b2c-accent)]">{step}</span> / 6
       </span>
     </div>
   );
@@ -141,11 +121,10 @@ function ReservationPage() {
 
   // Step 4
   const [creneaux, setCreneaux] = useState<CreneauB2C[]>([]);
-  const [calDate, setCalDate] = useState<Date | undefined>(undefined);
   const [satMap, setSatMap] = useState<Record<string, SatEntry>>({});
   const [satLoading, setSatLoading] = useState(false);
 
-  // Step 5
+  // Step 6
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
@@ -157,13 +136,13 @@ function ReservationPage() {
 
   const prix = vehicule && formule ? prixTotalB2C(vehicule, formule, selectedOptions) : 0;
 
-  // Fetch occupancy when entering step 4
+  // Fetch occupancy when entering step 4 — bounded to current month
   useEffect(() => {
     if (step !== 4) return;
     setSatLoading(true);
     const today = startOfDay(new Date());
     const min = addDays(today, 1);
-    const max = addDays(today, 60);
+    const max = endOfMonth(today);
     supabase
       .rpc("get_creneaux_disponibles", {
         p_date_debut: format(min, "yyyy-MM-dd"),
@@ -184,34 +163,10 @@ function ReservationPage() {
         }
         setSatMap(map);
       })
-      .finally(() => setSatLoading(false));
+      .then(() => setSatLoading(false), () => setSatLoading(false));
   }, [step]);
 
-  const today = startOfDay(new Date());
-  const maxDate = addDays(today, 60);
-
-  const isDateDisabled = (date: Date) =>
-    !isDateSelectable(date) || isAfter(date, maxDate);
-
-  const isSlotFull = (date: Date, timeSlot: "morning" | "afternoon") => {
-    const key = `${format(date, "yyyy-MM-dd")}-${timeSlot}`;
-    const entry = satMap[key];
-    return !!entry && entry.cap > 0 && entry.nb >= entry.cap;
-  };
-
   const uniqueDates = new Set(creneaux.map((c) => c.date)).size;
-
-  const handleAddCreneau = (heure: CreneauB2C["heure"]) => {
-    if (!calDate) return;
-    const dateStr = format(calDate, "yyyy-MM-dd");
-    if (creneaux.some((c) => c.date === dateStr && c.heure === heure)) return;
-    if (creneaux.length >= MAX_CRENEAUX) {
-      toast.error(`Maximum ${MAX_CRENEAUX} créneaux.`);
-      return;
-    }
-    setCreneaux((prev) => [...prev, { date: dateStr, heure }]);
-    setCalDate(undefined);
-  };
 
   const handleSubmit = async () => {
     if (!prenom.trim() || !nom.trim()) {
@@ -281,29 +236,17 @@ function ReservationPage() {
                     onClick={() => setStep(2)}
                     className="flex flex-col items-center gap-3 p-6 rounded-xl border border-[var(--b2c-line)] hover:border-[var(--b2c-accent)] transition-colors text-center group"
                   >
-                    <User
-                      className="h-8 w-8 text-[var(--b2c-tx-dim)] group-hover:text-[var(--b2c-accent)] transition-colors"
-                    />
-                    <span className="font-semibold text-[var(--b2c-tx)]">
-                      Particulier
-                    </span>
-                    <span className="text-xs text-[var(--b2c-tx-dim)]">
-                      Usage personnel
-                    </span>
+                    <User className="h-8 w-8 text-[var(--b2c-tx-dim)] group-hover:text-[var(--b2c-accent)] transition-colors" />
+                    <span className="font-semibold text-[var(--b2c-tx)]">Particulier</span>
+                    <span className="text-xs text-[var(--b2c-tx-dim)]">Usage personnel</span>
                   </button>
                   <button
                     onClick={() => navigate({ to: "/entreprises" })}
                     className="flex flex-col items-center gap-3 p-6 rounded-xl border border-[var(--b2c-line)] hover:border-[var(--b2c-accent)] transition-colors text-center group"
                   >
-                    <Building2
-                      className="h-8 w-8 text-[var(--b2c-tx-dim)] group-hover:text-[var(--b2c-accent)] transition-colors"
-                    />
-                    <span className="font-semibold text-[var(--b2c-tx)]">
-                      Professionnel
-                    </span>
-                    <span className="text-xs text-[var(--b2c-tx-dim)]">
-                      Flotte d'entreprise
-                    </span>
+                    <Building2 className="h-8 w-8 text-[var(--b2c-tx-dim)] group-hover:text-[var(--b2c-accent)] transition-colors" />
+                    <span className="font-semibold text-[var(--b2c-tx)]">Professionnel</span>
+                    <span className="text-xs text-[var(--b2c-tx-dim)]">Flotte d'entreprise</span>
                   </button>
                 </div>
               </div>
@@ -322,10 +265,7 @@ function ReservationPage() {
                   {VEHICULES_B2C.map((v) => (
                     <button
                       key={v.id}
-                      onClick={() => {
-                        setVehicule(v.id);
-                        setStep(3);
-                      }}
+                      onClick={() => { setVehicule(v.id); setStep(3); }}
                       className={`p-4 rounded-xl border text-left transition-colors ${
                         vehicule === v.id
                           ? "border-[var(--b2c-accent)] bg-[rgba(63,216,255,0.08)]"
@@ -375,10 +315,7 @@ function ReservationPage() {
                             <p className="font-semibold text-[var(--b2c-tx)]">{f.label}</p>
                             <p className="text-xs text-[var(--b2c-tx-dim)] mt-0.5">{f.description}</p>
                           </div>
-                          <span
-                            className="text-base font-bold flex-shrink-0"
-                            style={{ color: "var(--b2c-accent)" }}
-                          >
+                          <span className="text-base font-bold flex-shrink-0" style={{ color: "var(--b2c-accent)" }}>
                             {unitPrice} €
                           </span>
                         </div>
@@ -389,9 +326,7 @@ function ReservationPage() {
 
                 {/* Options */}
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-[var(--b2c-tx)]">
-                    Options complémentaires
-                  </p>
+                  <p className="text-sm font-medium text-[var(--b2c-tx)]">Options complémentaires</p>
                   {OPTIONS_B2C.map((o) => {
                     const checked = selectedOptions.includes(o.id as OptionB2C);
                     const optPrice = vehicule ? o.prix[vehicule] : 0;
@@ -400,9 +335,7 @@ function ReservationPage() {
                         key={o.id}
                         onClick={() => {
                           setSelectedOptions((prev) =>
-                            checked
-                              ? prev.filter((x) => x !== o.id)
-                              : [...prev, o.id as OptionB2C],
+                            checked ? prev.filter((x) => x !== o.id) : [...prev, o.id as OptionB2C],
                           );
                         }}
                         className={`w-full p-3 rounded-lg border text-left transition-colors ${
@@ -421,19 +354,8 @@ function ReservationPage() {
                               }}
                             >
                               {checked && (
-                                <svg
-                                  width="10"
-                                  height="8"
-                                  viewBox="0 0 10 8"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M1 4L3.5 6.5L9 1"
-                                    stroke="#06120c"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
+                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                  <path d="M1 4L3.5 6.5L9 1" stroke="#06120c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                               )}
                             </div>
@@ -442,9 +364,7 @@ function ReservationPage() {
                               <p className="text-xs text-[var(--b2c-tx-dim)]">{o.description}</p>
                             </div>
                           </div>
-                          <span className="text-sm font-semibold text-[var(--b2c-tx-dim)] flex-shrink-0">
-                            +{optPrice} €
-                          </span>
+                          <span className="text-sm font-semibold text-[var(--b2c-tx-dim)] flex-shrink-0">+{optPrice} €</span>
                         </div>
                       </button>
                     );
@@ -475,110 +395,26 @@ function ReservationPage() {
           ) : step === 4 ? (
             <>
               <StepProgress step={4} onBack={() => setStep(3)} />
-              <div className="b2c-card b2c-glow-card p-8 space-y-6">
+              <div className="b2c-card b2c-glow-card p-6 space-y-5">
                 <div>
                   <h2 className="text-xl font-bold text-[var(--b2c-tx)] mb-1">
                     Mes créneaux préférés
                   </h2>
                   <p className="text-sm text-[var(--b2c-tx-dim)]">
-                    Proposez au moins 2 dates différentes (max. {MAX_CRENEAUX})
+                    Sélectionnez 2 à {MAX_CRENEAUX} dates ce mois-ci — samedi inclus
                   </p>
                 </div>
 
-                {/* Selected creneaux chips */}
-                {creneaux.length > 0 && (
-                  <div className="space-y-2">
-                    {creneaux.map((c, i) => (
-                      <div
-                        key={`${c.date}-${c.heure}`}
-                        className="flex items-center justify-between px-3 py-2 rounded-lg text-sm"
-                        style={{ background: "rgba(63,216,255,0.08)", border: "1px solid rgba(63,216,255,0.2)" }}
-                      >
-                        <span className="text-[var(--b2c-tx)]">
-                          {formatDateFr(c.date)}{" "}
-                          <span className="font-semibold" style={{ color: "var(--b2c-accent)" }}>
-                            {heureLabel(c.heure)}
-                          </span>
-                        </span>
-                        <button
-                          onClick={() => setCreneaux((prev) => prev.filter((_, idx) => idx !== i))}
-                          className="ml-2 text-[var(--b2c-tx-dim)] hover:text-[var(--b2c-tx)]"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                {satLoading ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="h-5 w-5 animate-spin text-[var(--b2c-tx-dim)]" />
                   </div>
-                )}
-
-                {creneaux.length < MAX_CRENEAUX && (
-                  <>
-                    {satLoading ? (
-                      <div className="flex justify-center py-6">
-                        <Loader2 className="h-5 w-5 animate-spin text-[var(--b2c-tx-dim)]" />
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-4">
-                        <Calendar
-                          mode="single"
-                          selected={calDate}
-                          onSelect={setCalDate}
-                          disabled={isDateDisabled}
-                          locale={fr}
-                          className="rounded-xl border border-[var(--b2c-line)]"
-                        />
-
-                        {calDate && (
-                          <div className="w-full space-y-2">
-                            <p className="text-sm text-[var(--b2c-tx-dim)]">
-                              Heure souhaitée le{" "}
-                              <span className="text-[var(--b2c-tx)]">
-                                {format(calDate, "d MMMM", { locale: fr })}
-                              </span>{" "}
-                              :
-                            </p>
-                            <div className="grid grid-cols-4 gap-2">
-                              {HOUR_SLOTS.map((slot) => {
-                                const full = isSlotFull(calDate, slot.timeSlot);
-                                const already = creneaux.some(
-                                  (c) =>
-                                    c.date === format(calDate, "yyyy-MM-dd") &&
-                                    c.heure === slot.heure,
-                                );
-                                return (
-                                  <button
-                                    key={slot.heure}
-                                    disabled={full || already}
-                                    onClick={() => handleAddCreneau(slot.heure)}
-                                    className="py-2 rounded-lg border text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                    style={{
-                                      borderColor:
-                                        already
-                                          ? "var(--b2c-accent)"
-                                          : "var(--b2c-line)",
-                                      color:
-                                        already ? "var(--b2c-accent)" : "var(--b2c-tx)",
-                                      background:
-                                        already
-                                          ? "rgba(63,216,255,0.1)"
-                                          : "transparent",
-                                    }}
-                                  >
-                                    {slot.label}
-                                    {full && (
-                                      <span className="block text-[9px] text-[var(--b2c-tx-dim)]">
-                                        complet
-                                      </span>
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
+                ) : (
+                  <WeekSlotPicker
+                    selected={creneaux}
+                    onSelect={setCreneaux}
+                    satMap={satMap}
+                  />
                 )}
 
                 <button
@@ -587,8 +423,8 @@ function ReservationPage() {
                   className="shiny-cta w-full disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {uniqueDates < 2
-                    ? `Ajoutez encore ${2 - uniqueDates} date${uniqueDates === 0 ? "s" : ""}`
-                    : "Mes coordonnées"}
+                    ? `Sélectionnez encore ${2 - uniqueDates} date${2 - uniqueDates > 1 ? "s" : ""}`
+                    : "Voir le récapitulatif"}
                   {uniqueDates >= 2 && <ArrowRight className="h-4 w-4" />}
                 </button>
               </div>
@@ -597,122 +433,99 @@ function ReservationPage() {
             <>
               <StepProgress step={5} onBack={() => setStep(4)} />
               <div className="b2c-card b2c-glow-card p-8 space-y-6">
-                <h2 className="text-xl font-bold text-[var(--b2c-tx)] mb-2">
-                  Mes coordonnées
-                </h2>
+                <h2 className="text-xl font-bold text-[var(--b2c-tx)]">Récapitulatif</h2>
 
-                {/* Récapitulatif */}
-                <div
-                  className="rounded-xl p-4 space-y-2 text-sm"
-                  style={{ background: "rgba(63,216,255,0.06)", border: "1px solid rgba(63,216,255,0.2)" }}
-                >
-                  <p className="font-semibold text-[var(--b2c-tx)] mb-1">Récapitulatif</p>
-                  <div className="flex justify-between text-[var(--b2c-tx-dim)]">
-                    <span>Véhicule</span>
-                    <span className="text-[var(--b2c-tx)]">
+                <div className="space-y-0 divide-y divide-[var(--b2c-line)]">
+                  <div className="flex justify-between py-3 text-sm">
+                    <span className="text-[var(--b2c-tx-dim)]">Véhicule</span>
+                    <span className="font-medium text-[var(--b2c-tx)]">
                       {VEHICULES_B2C.find((v) => v.id === vehicule)?.label}
                     </span>
                   </div>
-                  <div className="flex justify-between text-[var(--b2c-tx-dim)]">
-                    <span>Formule</span>
-                    <span className="text-[var(--b2c-tx)]">
+                  <div className="flex justify-between py-3 text-sm">
+                    <span className="text-[var(--b2c-tx-dim)]">Formule</span>
+                    <span className="font-medium text-[var(--b2c-tx)]">
                       {FORMULES_B2C.find((f) => f.id === formule)?.label}
                     </span>
                   </div>
                   {selectedOptions.length > 0 && (
-                    <div className="flex justify-between text-[var(--b2c-tx-dim)]">
-                      <span>Options</span>
-                      <span className="text-[var(--b2c-tx)]">
+                    <div className="flex justify-between py-3 text-sm">
+                      <span className="text-[var(--b2c-tx-dim)]">Options</span>
+                      <span className="font-medium text-[var(--b2c-tx)] text-right">
                         {OPTIONS_B2C.filter((o) => selectedOptions.includes(o.id as OptionB2C))
                           .map((o) => o.label.split(" — ")[0])
                           .join(", ")}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between text-[var(--b2c-tx-dim)]">
-                    <span>Créneaux</span>
-                    <div className="text-right text-[var(--b2c-tx)] space-y-0.5">
+                  <div className="py-3 text-sm">
+                    <span className="text-[var(--b2c-tx-dim)]">Créneaux proposés</span>
+                    <div className="mt-2 space-y-1.5">
                       {creneaux.map((c) => (
-                        <p key={`${c.date}-${c.heure}`}>
-                          {format(parseISO(c.date), "d MMM", { locale: fr })} {heureLabel(c.heure)}
-                        </p>
+                        <div key={`${c.date}-${c.heure}`} className="flex items-center gap-2">
+                          <span
+                            className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                            style={{ background: "var(--b2c-accent)" }}
+                          />
+                          <span className="text-[var(--b2c-tx)]">
+                            {formatDateFr(c.date)}{" "}
+                            <span className="font-semibold" style={{ color: "var(--b2c-accent)" }}>
+                              {heureLabel(c.heure)}
+                            </span>
+                          </span>
+                        </div>
                       ))}
                     </div>
                   </div>
-                  <div className="flex justify-between pt-1 border-t border-[var(--b2c-line)]">
+                  <div className="flex justify-between py-3">
                     <span className="font-semibold text-[var(--b2c-tx)]">Total TTC</span>
-                    <span className="font-bold text-lg" style={{ color: "var(--b2c-accent)" }}>
+                    <span className="text-xl font-bold" style={{ color: "var(--b2c-accent)" }}>
                       {formatPrixTTC(prix)}
                     </span>
                   </div>
                 </div>
 
-                {/* Form fields */}
+                <button
+                  onClick={() => setStep(6)}
+                  className="shiny-cta w-full flex items-center justify-center gap-2"
+                >
+                  Mes coordonnées
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </>
+          ) : step === 6 ? (
+            <>
+              <StepProgress step={6} onBack={() => setStep(5)} />
+              <div className="b2c-card b2c-glow-card p-8 space-y-6">
+                <h2 className="text-xl font-bold text-[var(--b2c-tx)]">Mes coordonnées</h2>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="prenom">Prénom *</Label>
-                    <Input
-                      id="prenom"
-                      value={prenom}
-                      onChange={(e) => setPrenom(e.target.value)}
-                      placeholder="Jean"
-                      autoComplete="given-name"
-                    />
+                    <Input id="prenom" value={prenom} onChange={(e) => setPrenom(e.target.value)} placeholder="Jean" autoComplete="given-name" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="nom">Nom *</Label>
-                    <Input
-                      id="nom"
-                      value={nom}
-                      onChange={(e) => setNom(e.target.value)}
-                      placeholder="Dupont"
-                      autoComplete="family-name"
-                    />
+                    <Input id="nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Dupont" autoComplete="family-name" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="jean.dupont@exemple.fr"
-                    autoComplete="email"
-                  />
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jean.dupont@exemple.fr" autoComplete="email" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="tel">Téléphone *</Label>
-                  <Input
-                    id="tel"
-                    type="tel"
-                    value={tel}
-                    onChange={(e) => setTel(e.target.value)}
-                    placeholder="06 12 34 56 78"
-                    autoComplete="tel"
-                    inputMode="tel"
-                  />
+                  <Input id="tel" type="tel" value={tel} onChange={(e) => setTel(e.target.value)} placeholder="06 12 34 56 78" autoComplete="tel" inputMode="tel" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="adresse">Adresse d'intervention *</Label>
-                  <Input
-                    id="adresse"
-                    value={adresse}
-                    onChange={(e) => setAdresse(e.target.value)}
-                    placeholder="12 rue de la Paix"
-                    autoComplete="street-address"
-                  />
+                  <Input id="adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} placeholder="12 rue de la Paix" autoComplete="street-address" />
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="col-span-2 space-y-1.5">
                     <Label htmlFor="ville">Ville *</Label>
-                    <Input
-                      id="ville"
-                      value={ville}
-                      onChange={(e) => setVille(e.target.value)}
-                      placeholder="Évry-Courcouronnes"
-                      autoComplete="address-level2"
-                    />
+                    <Input id="ville" value={ville} onChange={(e) => setVille(e.target.value)} placeholder="Évry-Courcouronnes" autoComplete="address-level2" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="cp">Code postal *</Label>
@@ -727,7 +540,7 @@ function ReservationPage() {
                   </div>
                 </div>
 
-                <p className="text-[11px] text-[var(--b2c-tx-faint)] leading-relaxed">
+                <p className="text-[11px] text-[var(--b2c-tx-dim)] leading-relaxed">
                   * Champs obligatoires. Vos données sont utilisées uniquement pour
                   traiter votre demande. Pas de newsletter, pas de revente.
                 </p>

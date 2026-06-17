@@ -9,7 +9,7 @@
  * - Créneaux : matin (8h-12h) ou après-midi (14h-18h)
  */
 
-import { addDays, endOfMonth, isBefore, isSameDay, isWeekend, startOfDay } from "date-fns";
+import { addDays, endOfMonth, isAfter, isBefore, isSameDay, isWeekend, startOfDay } from "date-fns";
 
 export function getJoursFeriesFr(year: number): Date[] {
   const fixes = [
@@ -51,6 +51,23 @@ export function isJourFerie(date: Date): boolean {
   const year = date.getFullYear();
   const feries = [...getJoursFeriesFr(year), ...getJoursFeriesFr(year + 1)];
   return feries.some((ferie) => isSameDay(ferie, date));
+}
+
+/**
+ * Contraintes calendrier B2C (particuliers).
+ * Samedi autorisé, dimanche exclu, mois calendaire en cours uniquement.
+ */
+export function isDateSelectableB2C(date: Date): boolean {
+  const today = startOfDay(new Date());
+  const target = startOfDay(date);
+  const minDate = addDays(today, 1);
+  const monthEnd = endOfMonth(today);
+
+  if (isBefore(target, minDate)) return false;
+  if (isAfter(target, monthEnd)) return false;
+  if (target.getDay() === 0) return false; // Dimanche uniquement
+  if (isJourFerie(target)) return false;
+  return true;
 }
 
 export function isDateSelectable(date: Date): boolean {
