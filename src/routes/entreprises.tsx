@@ -35,6 +35,53 @@ export const Route = createFileRoute("/entreprises")({
       { name: "bingbot", content: "index, follow" },
       { property: "og:title", content: "IZOX Entreprises — Nettoyage de flotte éco-responsable" },
       { property: "og:type", content: "website" },
+      // TODO: remplacer par le domaine final après migration
+      { property: "og:url", content: "https://izox-circular-fleet-care.vercel.app/entreprises" },
+      {
+        property: "og:description",
+        content:
+          "Externalisez le nettoyage de votre flotte : intervention sur site, reporting RSE chiffré, facturation simple. Essonne et Île-de-France sud.",
+      },
+      {
+        "script:ld+json": {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": "Nettoyage de flotte automobile éco-responsable",
+          "description": "Entretien régulier de flottes professionnelles avec eau recyclée en circuit fermé et reporting RSE chiffré. Intervention directement sur le site de l'entreprise, facturation simplifiée.",
+          "provider": {
+            "@type": "LocalBusiness",
+            "name": "IZOX",
+            "url": "https://izox-circular-fleet-care.vercel.app",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Évry-Courcouronnes",
+              "postalCode": "91000",
+              "addressRegion": "Essonne",
+              "addressCountry": "FR",
+            },
+          },
+          "areaServed": [
+            {
+              "@type": "State",
+              "name": "Île-de-France",
+              "containedInPlace": {
+                "@type": "Country",
+                "name": "France",
+              },
+            },
+          ],
+          "serviceType": "Nettoyage automobile pour flottes professionnelles",
+          "audience": {
+            "@type": "BusinessAudience",
+            "audienceType": "Entreprises et flottes automobiles",
+          },
+          "offers": {
+            "@type": "Offer",
+            "description": "Tarification contractuelle selon la taille de la flotte. Contrat mensuel ou à la prestation.",
+            "priceCurrency": "EUR",
+          },
+        },
+      },
     ],
   }),
   component: EntreprisesPage,

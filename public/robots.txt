@@ -1,4 +1,8 @@
 # IZOX — robots.txt
+# TODO: mettre à jour l'URL du sitemap après migration du domaine
+Sitemap: https://izox-circular-fleet-care.vercel.app/sitemap.xml
+
+# IZOX — robots.txt
 # Pages vitrine publiques (/, /reservation, /entreprises) : indexables.
 # CRM (admin/client/terrain/settings) : interdit aux crawlers — doublé par les
 # meta robots noindex du root pour les routes applicatives.

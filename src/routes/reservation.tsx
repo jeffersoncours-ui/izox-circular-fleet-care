@@ -33,6 +33,8 @@ export const Route = createFileRoute("/reservation")({
           "Réservez votre nettoyage automobile à domicile en ligne. Évry-Courcouronnes et 25 km alentours.",
       },
       { name: "robots", content: "index, follow" },
+      // TODO: remplacer par le domaine final après migration
+      { property: "og:url", content: "https://izox-circular-fleet-care.vercel.app/reservation" },
     ],
   }),
   component: ReservationPage,
