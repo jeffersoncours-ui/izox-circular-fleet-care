@@ -1,5 +1,19 @@
 # Lessons Learned — IZOX
 
+## Tunnel B2C public : séparer table + edge function quand auth non disponible (session 49)
+
+- **Un tunnel public (sans Supabase Auth) ne peut PAS réutiliser une RPC qui lit `auth.uid()`** : `creer_demande_rdv` requiert un utilisateur connecté, un `entreprise_id` et des `vehicule_ids[]`. Vouloir forcer la réutilisation aurait exigé soit de byp la RLS (risque sécurité), soit d'inventer des IDs fictifs (incohérence DB). La bonne décision : nouvelle table `reservations_b2c` + edge function publique (`verify_jwt=false`) avec service_role. Coût faible, séparation nette.
+- **`GRANT EXECUTE ... TO anon` est nécessaire pour les RPC appelées depuis un client non authentifié** : `get_creneaux_disponibles` était utilisable par les clients Supabase Auth, mais bloquée pour `anon`. Ajouter le GRANT dans la migration suffit. Vérifier toujours les GRANTs existants (`\df+ <fonction>` en psql ou `pg_get_functiondef` + `has_function_privilege('anon', ...)`) avant de conclure qu'une fonction "ne répond pas".
+
+## Saturation créneaux B2B+B2C : la confirmation admin = le vrai verrou (session 49)
+
+- **Les réservations B2C pré-paiement n'occupent un créneau qu'après confirmation admin** : `get_creneaux_disponibles` compte uniquement les `interventions` créées. Une réservation B2C `en_attente_paiement` n'en crée pas encore — le slot reste disponible. C'est acceptable en pré-Stripe (faible volume, admin traite rapidement). Une fois Stripe câblé, envisager de compter aussi les réservations B2C payées-mais-pas-encore-confirmées dans la RPC pour éviter les doubles réservations en cas de pics.
+
+## Emails outbound Resend ≠ inbox pour recevoir les alertes (session 49)
+
+- **Resend est un service d'envoi d'emails transactionnels, pas un serveur de messagerie entrant** : envoyer des alertes à `contact@izox.fr` via Resend n'a de sens que si la boîte `contact@izox.fr` existe réellement et est configurée pour recevoir. Sans mailbox OVH/Gsuite/autre, les emails partent dans le vide ou rebondissent. **Toujours vérifier que la boîte destinataire existe et est opérationnelle avant de câbler les alertes**, sinon les tests d'email génèrent des bounces qui peuvent dégrader la réputation du domaine `izox.fr`.
+- **SPF merge obligatoire** si OVH Zimbra vient s'ajouter à Resend : ne pas laisser OVH écraser l'enregistrement SPF existant. Résultat attendu : `v=spf1 include:mx.ovh.com include:spf.resend.com ~all`.
+
 ## Spécificité CSS `.b2c-glow-card` vs classes utilitaires Tailwind (session 48)
 
 - **Le sélecteur `.izox-b2c .b2c-glow-card { position: relative }` a une spécificité de 2 classes** (0,0,2,0) contre 1 seule pour un utilitaire Tailwind comme `.absolute` (0,0,1,0). Dans le périmètre `.izox-b2c`, n'importe quel utilitaire Tailwind portant une propriété déjà définie sur `.b2c-glow-card` sera écrasé silencieusement. Cas confirmé : cartes de pile qui retombaient dans le flux normal du document (empilées verticalement au lieu de se superposer) parce que `position: relative` battait `position: absolute`. Aucun message d'erreur ni avertissement — le comportement visuel est simplement cassé.

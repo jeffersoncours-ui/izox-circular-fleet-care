@@ -2,6 +2,42 @@
 
 ---
 
+## Session 2026-06-17 (49) — Tunnel de vente B2C pré-Stripe
+
+### Plan
+
+- [x] Migration SQL `20260617120000_reservations_b2c.sql` — table `reservations_b2c`, colonnes `source`/`reservation_b2c_id` sur `interventions`, RLS, `GRANT TO anon` sur `get_creneaux_disponibles`, RPCs `confirmer_reservation_b2c` + `annuler_reservation_b2c`
+- [x] Edge function `create-reservation-b2c` (publique, verify_jwt=false) — validation payload, insert + notif interne fire-and-forget
+- [x] `send-email` v19 — cas `reservation_b2c_confirmee`, template email confirmation client B2C
+- [x] `src/lib/email.ts` — type `"reservation_b2c_confirmee"` ajouté à `EmailType`
+- [x] `src/routes/reservation.tsx` — tunnel 5 étapes : particulier/pro, véhicule, formule+options+prix TTC live, planning créneaux (4 heures fixes, min 2 dates différentes, grislage selon saturation CRM partagée), coordonnées+récap+submit
+- [x] `src/components/admin/AssignerReservationB2CDialog.tsx` — dialog admin : détails client+prestation, sélection créneau proposé, sélection opérateur, confirmation RPC + email, annulation avec motif
+- [x] `src/components/admin/DemandesRdvList.tsx` — toggle B2B / B2C en tête de l'onglet Demandes ; sous-composant `B2CReservationsList` pour la vue B2C
+- [x] Types Supabase régénérés après migration
+- [x] Commit `2ec6d5b` pushé sur `claude/izox-fleet-care-wxcva4`
+
+### Décisions d'architecture
+
+- B2C tunnel est **public (no auth)** → table `reservations_b2c` indépendante de `demandes_rdv` (qui exige un user authentifié + entreprise_id)
+- Saturation créneaux partagée B2B+B2C : `get_creneaux_disponibles` compte les interventions confirmées — les réservations B2C n'occupent un créneau qu'après confirmation admin. Acceptable pré-Stripe.
+- Pas de dashboard B2C séparé — quand le client B2C obtiendra un compte, il accède au même `/client` que B2B
+- Email `reservation_b2c_confirmee` = confirmation après validation admin (pas après paiement — Stripe pas encore câblé)
+- Heures fixes B2C : `08:00`, `10:00`, `14:00`, `16:00` (mapping → time_slot matin/après-midi)
+
+### Reste bloqué (externe)
+
+- [ ] **Phase 2g — Paiement Stripe** : BLOQUÉ en attente des clés Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `VITE_STRIPE_PUBLISHABLE_KEY`). Une fois disponibles : ajouter l'étape paiement entre l'étape 5 (coordonnées) et la confirmation, et passer le statut `en_attente_paiement` → `paye` via webhook.
+- [ ] **Alertes email staff vers `contact@izox.fr`** : DIFFÉRÉ en attente de la configuration OVH Zimbra Pro. À câbler quand la boîte mail est opérationnelle : nouvelle réservation B2C, nouvelle demande RDV B2B, intervention en_revision. Utiliser type `"staff_notification"` existant dans `send-email`.
+- [ ] **SPF record merge** : quand OVH Zimbra activé → `v=spf1 include:mx.ovh.com include:spf.resend.com ~all` (ne pas écraser l'enregistrement Resend).
+
+### Review session 49
+
+- **Tunnel B2C complet** pré-Stripe : 5 étapes, saturation créneaux partagée avec le CRM, validation côté edge function, vue admin B2B/B2C dans l'onglet Demandes.
+- **Aucune donnée de test à purger** : le tunnel est public, aucune insertion de test effectuée.
+- **Architecture saine** : 2 systèmes RDV coexistent sans collision (B2B via `demandes_rdv` + auth, B2C via `reservations_b2c` + edge function publique).
+
+---
+
 ## Session 2026-06-17 (48) — Avis clients : morphing card stack + audit landing
 
 ### Carrousel avis (remplacement complet)
