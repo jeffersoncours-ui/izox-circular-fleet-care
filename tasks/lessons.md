@@ -1,5 +1,11 @@
 # Lessons Learned — IZOX
 
+## RLS perf : toujours wrapper `auth.uid()` en `(SELECT auth.uid())` dans les politiques (2026-06-17)
+
+- **Supabase Performance Advisor signale `auth.uid()` nu dans les clauses `USING`** : PostgreSQL peut réévaluer la fonction pour chaque ligne scannée. Le fix est mécanique et sans risque : remplacer `auth.uid()` par `(SELECT auth.uid())`. Le moteur évalue le sous-SELECT **une seule fois** par requête et réutilise le résultat — même UUID, même logique, meilleure perf à grande échelle.
+- **Concerne aussi les appels indirects** : `has_role(auth.uid(), ...)` → `has_role((SELECT auth.uid()), ...)`. Appliquer le pattern à tous les appels de fonctions auth dans les politiques RLS, pas seulement les comparaisons directes.
+- **Zéro régression possible** : `auth.uid()` est stable (même valeur pour toute la durée d'une requête). Changer le *comment* PostgreSQL l'optimise ne change pas la *valeur* retournée ni la logique d'accès.
+
 ## Composant de calendrier : toujours lire la contrainte métier avant de choisir le primitif (session 50)
 
 - **Le calendrier mensuel shadcn (`Calendar`) ne suffit pas pour un créneau B2C avec 4 heures fixes** : il gère des dates isolées, pas des couples date+heure. Dès qu'on a besoin de 4 sous-sélections par jour (08h/10h/14h/16h) ET de règles sur le nombre de jours distincts, un composant dédié (`WeekSlotPicker`) est plus simple qu'une surcouche sur `Calendar`.

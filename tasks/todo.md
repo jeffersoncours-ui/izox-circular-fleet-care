@@ -2,6 +2,12 @@
 
 ---
 
+## Correctif 2026-06-17 — RLS perf `user_roles`
+
+- [x] Migration `20260617150000_fix_rls_user_roles_perf.sql` — wrap `auth.uid()` en `(SELECT auth.uid())` sur les 3 politiques de `public.user_roles` (`user_roles_self_select`, `user_roles_admin_all`, `user_roles_staff_select`). Avertissement Supabase Performance Advisor supprimé. Zéro changement de logique.
+
+---
+
 ## Session 2026-06-17 (50) — Corrections tunnel B2C : vue semaine + récapitulatif
 
 ### Plan
