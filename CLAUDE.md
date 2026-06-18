@@ -20,7 +20,7 @@ Stack : TanStack Start (SSR) + Supabase + Vercel + Resend.
 - **Impact minimal** : modifier uniquement ce qui est nécessaire. Éviter les bugs régressifs et les effets de bord.
 
 ### 2. Planification
-- Pour toute tâche non triviale (3+ étapes ou changement architectural) : écrire le plan dans `tasks/todo.md` avant de coder.
+- Pour toute tâche non triviale (3+ étapes ou changement architectural) : écrire le plan dans `tasks/todo.md` **puis exécuter immédiatement** — pas de pause pour approbation.
 - Si l'exécution dévie du plan : STOP, réévaluer, re-planifier. Ne pas forcer une approche qui échoue.
 
 ### 3. Exécution
@@ -42,7 +42,7 @@ Stack : TanStack Start (SSR) + Supabase + Vercel + Resend.
 - Développer des règles pour prévenir les erreurs récurrentes.
 
 ### 6. Workflow tâches
-1. Écrire le plan dans `tasks/todo.md` avec des items actionnables et cochables
+1. Écrire le plan dans `tasks/todo.md` avec des items actionnables et cochables, puis enchaîner immédiatement l'exécution sans attendre validation
 2. Marquer les items comme terminés au fil de l'avancement
 3. Ajouter une section "Review" à `tasks/todo.md` à la fin
 4. Mettre à jour `tasks/lessons.md` avec les enseignements clés
