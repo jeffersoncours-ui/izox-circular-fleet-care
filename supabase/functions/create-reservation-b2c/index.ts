@@ -118,13 +118,36 @@ Deno.serve(async (req: Request) => {
 
     if (error) throw new Error(error.message);
 
-    // Fire-and-forget: notif interne équipe
-    supabase.from("notifications_internes").insert({
-      type: "reservation_b2c",
-      message: `Nouvelle réservation B2C — ${prenom} ${nom} (${vehicule}, ${formule}) — ${montant_ttc} € TTC`,
-      target_id: data.id,
-      target_type: "reservation_b2c",
-    }).then(() => {});
+    // Alerte équipe : notif in-app (1 ligne / membre staff) + email.
+    // Awaited (best-effort) car l'isolate Deno peut être recyclé après la réponse ;
+    // la réservation est déjà persistée, ces étapes ne peuvent plus la faire échouer.
+    try {
+      const { data: staff } = await supabase
+        .from("profiles")
+        .select("id")
+        .in("role", ["admin", "staff", "commercial"]);
+      if (staff && staff.length > 0) {
+        await supabase.from("notifications_internes").insert(
+          staff.map((p: { id: string }) => ({
+            user_id: p.id,
+            titre: `Nouvelle réservation B2C — ${prenom} ${nom}`,
+            severite: "info",
+            source_action: "reservation_b2c_recue",
+            action_requise: true,
+            link_url: "/admin/planning?tab=demandes",
+            details: { reservation_id: data.id, vehicule, formule, montant_ttc },
+          })),
+        );
+      }
+    } catch (_e) { /* notif interne best-effort */ }
+
+    try {
+      // Service-to-service : le client service-role est porteur du SERVICE_ROLE_KEY,
+      // reconnu comme appel interne de confiance par send-email.
+      await supabase.functions.invoke("send-email", {
+        body: { type: "reservation_b2c_recue", target_id: data.id },
+      });
+    } catch (_e) { /* email best-effort */ }
 
     return new Response(JSON.stringify({ id: data.id }), {
       status: 201,

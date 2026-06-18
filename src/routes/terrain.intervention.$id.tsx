@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { RoleGuard } from "@/components/RoleGuard";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { sendEmail } from "@/lib/email";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -312,6 +313,8 @@ function InterventionStepper() {
         .update({ statut: "en_revision", submitted_at: new Date().toISOString() })
         .eq("id", intervention.id);
       if (error) throw error;
+      // Alerte équipe : intervention en attente de validation admin.
+      void sendEmail("intervention_a_valider", intervention.id);
       try { localStorage.removeItem(lsKey(id)); } catch { /* ignore */ }
       toast.success("Fiche soumise pour validation");
       navigate({ to: "/terrain" });

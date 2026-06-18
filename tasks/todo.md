@@ -2,6 +2,65 @@
 
 ---
 
+## BACKLOG (sessions dédiées — à traiter séparément pour ne pas saturer le contexte)
+
+### Export PDF RSE — aperçu HTML puis impression PDF
+- [ ] Créer une route dédiée `/client/impact/rapport` : rapport RSE complet rendu en HTML dans l'app (en-tête IZOX brandé, période, 4 KPIs + équivalences, tableau mensuel interventions, AreaChart, pied de page).
+- [ ] Bouton "Télécharger en PDF" en haut → `window.print()` sur cette page (le navigateur propose "Enregistrer en PDF" nativement). **Aucune dépendance lourde** (`jspdf`/`react-pdf` écartés).
+- [ ] CSS `@media print` dédié sur cette route uniquement (page-break, header répété, masquage nav).
+- [ ] Sélecteur de période (mois / trimestre / année) avant le bouton.
+- [ ] Réutilise `getClientImpactSummary()` + `fetchClientRecords()` (`src/lib/impact.ts`, déjà en place).
+- Existant : `exportImpactCSV()` (CSV) + `window.print()` basique sur `/client/impact`. À conserver.
+
+### PWA Terrain — offline complet avec sync différée
+- [ ] `npm install vite-plugin-pwa` + `idb` ; config Workbox dans `vite.config.ts` (précache assets JS/CSS/fonts).
+- [ ] `public/manifest.webmanifest` (nom "IZOX Terrain", thème `#3FE08F`, `display: standalone`, portrait) + icônes 192/512/maskable depuis `public/logo-izox.png`.
+- [ ] Meta PWA dans `src/routes/__root.tsx`.
+- [ ] Runtime cache network-first des lectures interventions (Supabase REST).
+- [ ] IndexedDB (via `idb`) : file d'attente des mutations terrain offline (checklist, notes, changement statut, soumission).
+- [ ] Photos : compression canvas avant stockage IndexedDB → upload Storage au retour réseau ; alerte si quota IndexedDB proche.
+- [ ] Background sync Workbox : rejoue la queue au retour réseau + toast de confirmation.
+- [ ] Indicateur online/offline + compteur "X action(s) en attente de sync" dans la navbar terrain.
+- État actuel : **rien** (zéro manifest, zéro SW, zéro plugin PWA). App terrain = webapp standard.
+
+---
+
+## Session 2026-06-18 (52) — Alertes staff (email + in-app) sur 3 événements clés
+
+### Contexte / audit
+- Type email `staff_notification` existait déjà mais **uniquement pour les demandes de gel**.
+- 3 événements clés n'alertaient PAS le staff par email : nouvelle réservation B2C, nouvelle demande RDV B2B, intervention soumise `en_revision`.
+- **Bug découvert** : `create-reservation-b2c` insérait une notif interne avec des colonnes inexistantes (`type/message/target_id/target_type`) → insert échouait silencieusement (fire-and-forget). Le staff ne recevait donc même pas la notif in-app B2C.
+- `creer_demande_rdv` (RPC) crée déjà une notif in-app (`demande_rdv_creee`) + retourne `{success, demande_id}`.
+- `send-email` exigeait un user authentifié + **bloquait entièrement le rôle operateur**.
+
+### Plan
+- [x] `src/lib/email.ts` : ajouter 2 `EmailType` browser-triggered (`rdv_demande_recue`, `intervention_a_valider`). `reservation_b2c_recue` reste server-only (pas dans le type client).
+- [x] `send-email` (v21) : (a) chemin service-to-service (bearer = SERVICE_ROLE_KEY → appel interne de confiance) ; (b) `OPERATEUR_ALLOWED_TYPES=['intervention_a_valider']` scopé `operateur_id` ; (c) `rdv_demande_recue` ajouté à `CLIENT_ALLOWED_TYPES` scopé `entreprise_id` ; (d) helper `staffRecipients()` factorisé (dédup `rdv_annule_client` + `staff_notification`) ; (e) 3 builders HTML + 3 cases ; (f) `reservation_b2c_recue` refusé si `!isServiceCall`.
+- [x] `create-reservation-b2c` (v5) : corriger la notif interne (vraies colonnes, 1 ligne/staff) + appel `send-email` (service key) pour `reservation_b2c_recue` (awaited best-effort).
+- [x] `CreerDemandeRdvDialog.tsx` : capturer `demande_id` du RPC → `sendEmail("rdv_demande_recue", id)`.
+- [x] `terrain.intervention.$id.tsx` : après update `en_revision` → `sendEmail("intervention_a_valider", id)`.
+- [x] Migration `20260618120000_notif_intervention_en_revision.sql` : trigger `AFTER UPDATE` → notif in-app staff sur transition `en_revision`.
+- [x] Tests empiriques DB : trigger nominal (3 notifs), guard (0 doublon), mise en défaut (re-soumission re-déclenche, transitions non-`en_revision` n'émettent rien) ; `staffRecipients` résout 3 emails ; jsonb double-encodé confirmé → `asArray()` valide ; `email_logs` sans contrainte sur `type`.
+- [x] tsc 0 erreur + build OK + 2 edge functions déployées ACTIVE + migration appliquée.
+
+### Review session 52
+- **Bug réel corrigé** : la notif in-app B2C échouait silencieusement (mauvaises colonnes + fire-and-forget sans catch) → staff jamais notifié des réservations B2C. Corrigé.
+- **3 alertes email staff** câblées (B2C / RDV B2B / intervention en_revision) réutilisant le mécanisme `staff_notification` existant, via un **chemin service-to-service** propre dans `send-email`.
+- **RBAC durci proprement** : operateur passe de "bloqué entièrement" à "1 type autorisé scopé à sa propre intervention" ; client peut déclencher l'alerte RDV scopée à son entreprise ; type B2C server-only.
+- **Notif in-app en_revision** ajoutée via trigger DB (robuste, garantie quel que soit le chemin).
+- **Limite testée honnêtement** : l'envoi Resend réel + le chemin service-to-service end-to-end ne sont pas testables depuis le sandbox (réseau sortant bloqué) et ne doivent pas être déclenchés vers les `@izox.fr` de test (bounces). À vérifier sur l'app déployée : soumettre une réservation B2C / une demande RDV / une intervention, puis contrôler `email_logs` (status `sent`) + boîtes staff.
+- **POST-ZIMBRA** noté : ajouter `contact@izox.fr` dans `staffRecipients()` quand la boîte sera opérationnelle.
+- Base purgée vérifiée : 4 users, 0 donnée test.
+
+### ⚠️ POST-ZIMBRA — branchement réel à faire (BLOQUÉ en attente OVH Zimbra)
+- [ ] Une fois `contact@izox.fr` opérationnel sur OVH Zimbra : décider si les alertes staff partent AUSSI (ou EN REMPLACEMENT) vers `contact@izox.fr` (boîte partagée équipe), en plus de l'envoi actuel aux emails auth de tous les `profiles` role ∈ {admin, staff, commercial}.
+- [ ] Fichier concerné : `supabase/functions/send-email/index.ts` → helper `staffRecipients()`. Ajouter `contact@izox.fr` à la liste retournée (ou variable env `STAFF_ALERT_EMAIL`).
+- [ ] Vérifier SPF merge OVH + Resend : `v=spf1 include:mx.ovh.com include:spf.resend.com ~all` (ne pas écraser Resend).
+- [ ] Tester un envoi réel vers la boîte une fois créée (éviter les bounces qui dégradent la réputation du domaine).
+
+---
+
 ## Session 2026-06-17 (51) — Audit sécurité : corrections de vulnérabilités
 
 ### Plan

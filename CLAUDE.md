@@ -212,6 +212,14 @@ Tout est calculé **on-the-fly** depuis `interventions.statut='validee'` × coef
 - **`admin.interventions.tsx` = layout pur** : `component: () => <Outlet/>`, PAS de `beforeLoad`. Le redirect `/admin/planning` est dans `admin.interventions.index.tsx` (path exact). Un `beforeLoad` dans le parent s'applique aussi à `$id` → fiches non cliquables. Même pattern que `admin.planning.tsx` / `admin.planning.index.tsx`.
 - **Emails RDV** : types supportés dans `src/lib/email.ts` → `"rdv_confirmee"` | `"rdv_annule_client"` | `"rdv_annule_admin"` | `"rdv_modifie"`. Edge function `send-email` v9 gère tous ces types.
 - **Email `facture_emise`** : ajouté session 32. Déclenché par `handleEmettre` dans `admin.facturation.tsx` (fire-and-forget). Edge function `send-email` v18. Template : numéro FA, période, montant TTC, échéance, CTA → `/client/documents`. Hors `CLIENT_ALLOWED_TYPES` → seuls admin/staff/commercial peuvent déclencher.
+- **Alertes staff (session 52, `send-email` v21)** : 3 types email notifient l'équipe (admin/staff/commercial via `staffRecipients()`) sur les événements clés :
+  - `reservation_b2c_recue` — **server-only** (refusé si `!isServiceCall`). Déclenché par l'edge function `create-reservation-b2c` (chemin service-to-service).
+  - `rdv_demande_recue` — déclenché côté client après `creer_demande_rdv` (l'id vient du retour `{success, demande_id}` du RPC). Dans `CLIENT_ALLOWED_TYPES`, scopé `entreprise_id`.
+  - `intervention_a_valider` — déclenché côté terrain après soumission `en_revision`. Dans `OPERATEUR_ALLOWED_TYPES`, scopé `interventions.operateur_id === auth.uid()`.
+  - **Chemin service-to-service** : si `Authorization: Bearer <SERVICE_ROLE_KEY>` → `isServiceCall=true`, bypass RBAC user. Le service key (JWT legacy injecté par Supabase) passe `verify_jwt` ET matche `bearer === serviceKey`. Permet à toute edge function d'appeler `send-email` via `supabase.functions.invoke` avec un client service-role.
+  - **Helper `staffRecipients(admin)`** : factorise la résolution des emails staff (était dupliquée). **POST-ZIMBRA** : y ajouter `contact@izox.fr` (voir `tasks/todo.md`).
+- **Notif in-app intervention `en_revision`** : trigger DB `trg_notif_intervention_en_revision` (`AFTER UPDATE ON interventions`, mirroir de `tg_log_intervention_validee`) → crée une `notifications_internes` (severite `warning`, lien `/admin/interventions/<id>`) pour admin/staff/commercial. Garantit la notif quel que soit le chemin d'écriture. Guard transition (pas de doublon).
+- **⚠️ jsonb double-encodé** : `reservations_b2c.options`/`creneaux_preferes` sont stockés via `JSON.stringify` dans des colonnes jsonb → type jsonb `string`, pas array. Toujours normaliser à la lecture (helper `asArray()` dans `send-email`).
 
 ## Architecture gel véhicule
 

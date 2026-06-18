@@ -1,5 +1,33 @@
 # Lessons Learned — IZOX
 
+## Alertes staff : chemin service-to-service pour appeler send-email depuis une edge function publique (session 52)
+
+- **Une edge function publique sans user (ex. `create-reservation-b2c`) ne peut PAS appeler `send-email` via le chemin user** : `send-email` exige un user authentifié (`getUser()`). Solution propre : un **chemin service-to-service** — si le bearer token == `SUPABASE_SERVICE_ROLE_KEY`, l'appel est traité comme interne de confiance (`isServiceCall=true`) et bypass le RBAC par-utilisateur. Le service-role key est un secret server-only, jamais exposé au navigateur → sûr.
+- **`supabase.functions.invoke()` depuis un client service-role envoie automatiquement `Authorization: Bearer <serviceKey>`** : créer le client avec `createClient(url, SERVICE_ROLE_KEY)` puis `functions.invoke("send-email", {...})` suffit. Le `SERVICE_ROLE_KEY` injecté par Supabase dans les edge functions reste au **format JWT legacy** (même après rotation des clés publishable en `sb_publishable_...`) → il passe le gateway `verify_jwt=true` ET matche le `bearer === serviceKey` côté send-email.
+- **Détecter le service call AVANT `getUser()`** : comparer le bearer au service key d'abord. Ne pas faire confiance à `getUser()` avec un service key (comportement non garanti). Pattern : `const isServiceCall = bearer.length > 0 && bearer === serviceKey;` puis `if (!isServiceCall) { ...getUser... }`.
+
+## Ouvrir un type d'email à operateur/client : whitelist + scope par ressource (session 52)
+
+- **`send-email` bloquait entièrement le rôle `operateur`** (`if (callerRole === "operateur") return 403`). Pour autoriser UN type précis (intervention soumise → `intervention_a_valider`), remplacer le blocage total par une whitelist `OPERATEUR_ALLOWED_TYPES` + un **scope par ressource** dans le case : `if (callerRole === "operateur" && inter.operateur_id !== callerUserId) return 403`. L'opérateur ne peut déclencher l'alerte que pour SON intervention. Idem côté client (`CLIENT_ALLOWED_TYPES` + scope `entreprise_id`).
+- **Vérifier que la colonne de scope est bien posée** : `prendre_en_charge_intervention` pose `operateur_id = auth.uid()` → le scope check est fiable. Toujours vérifier la RPC qui peuple la colonne de scope AVANT de s'appuyer dessus, sinon faux 403 en prod.
+- **`reservation_b2c_recue` est server-only** : refusé si `!isServiceCall` (aucun navigateur ne doit le déclencher, seule l'edge function B2C le fait). Deny-by-default explicite pour les types internes.
+
+## jsonb double-encodé : `JSON.stringify` dans une colonne jsonb stocke une STRING, pas un array (session 52)
+
+- **`create-reservation-b2c` fait `options: JSON.stringify(options)` vers une colonne `jsonb`** → Postgres stocke un jsonb de type `string` (`jsonb_typeof` = `'string'`), pas un array. supabase-js relit alors une **string JS** `'["puzzi"]'`, pas un tableau. Vérifié empiriquement : `to_jsonb('["puzzi","ozone"]'::text)` → `jsonb_typeof` = `string`.
+- **Toujours normaliser défensivement à la lecture** : helper `asArray(v)` → si `Array.isArray` ok, sinon si `typeof === "string"` faire `JSON.parse` et revérifier `Array.isArray`. Sans ça, un template email aurait affiché la string brute au lieu des options. Le helper couvre les deux formats (jsonb-array natif ET jsonb-string double-encodé) → robuste quel que soit le mode d'écriture.
+
+## Bug : insert `notifications_internes` avec mauvaises colonnes échouait silencieusement (session 52)
+
+- **`create-reservation-b2c` insérait `{type, message, target_id, target_type}`** — colonnes INEXISTANTES dans `notifications_internes` (le vrai schéma : `user_id NOT NULL, source_action NOT NULL, titre NOT NULL, severite NOT NULL, details jsonb, ...`). L'insert échouait, mais en **fire-and-forget `.then(() => {})` sans gestion d'erreur** → échec totalement silencieux. Le staff ne recevait JAMAIS de notif in-app pour les réservations B2C, sans aucune trace.
+- **Pattern correct** (cf. `create-lead`) : une ligne par membre staff (`profiles.role IN (admin,staff,commercial)`), `user_id: p.id`, `titre`, `severite`, `source_action`, `action_requise`, `details` jsonb. `statut` omis → défaut `'non_lu'` (contrainte `read_at IS NULL` si `non_lu` → ne pas poser `read_at`).
+- **Leçon** : un fire-and-forget `.then(() => {})` sans `.catch`/log masque les erreurs DB. Toujours au moins logger l'erreur, et **vérifier les noms de colonnes contre le schéma réel** (`information_schema.columns`) avant d'écrire un insert — ne pas se fier à un schéma supposé.
+
+## Logger un événement in-app robustement = trigger DB, pas seulement code client (session 52)
+
+- **L'email d'alerte est best-effort côté client** (fire-and-forget après l'action), mais la **notif in-app doit être garantie** quel que soit le chemin. Pour `intervention → en_revision` (un simple UPDATE direct côté terrain, sans RPC), un **trigger `AFTER UPDATE`** (`tg_notif_intervention_en_revision`, mirroir de `tg_log_intervention_validee`) garantit la notif in-app même si le client plante après l'UPDATE. Guard `NEW.statut='en_revision' AND OLD.statut IS DISTINCT FROM 'en_revision'` → pas de doublon sur ré-édition, mais re-déclenche sur re-soumission légitime (refusee → en_revision). Testé : nominal (3 staff), guard (UPDATE non-statut = 0 doublon), mise en défaut (refusee→en_revision = +3, en_revision→validee = 0).
+
+
 ## Audit sécurité : vérification de rôle dans les edge functions — toujours utiliser `profiles`, jamais `user_roles` (session 51)
 
 - **`user_roles` est une table auxiliaire désynchronisée** : la source de vérité pour le rôle d'un utilisateur est `profiles.role`. `user_roles` est maintenu en parallèle (legacy) mais n'est pas garanti à jour. Une vérification d'accès admin qui consulte `user_roles` peut échouer silencieusement si la table est vide ou incohérente, laissant passer ou bloquant à tort des utilisateurs légitimes.
