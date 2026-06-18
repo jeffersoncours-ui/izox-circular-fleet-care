@@ -27,7 +27,49 @@ type EmailType =
   | "staff_notification"
   | "rdv_annule_client"
   | "rdv_annule_admin"
-  | "facture_emise";
+  | "facture_emise"
+  | "reservation_b2c_recue"
+  | "rdv_demande_recue"
+  | "intervention_a_valider";
+
+// Vehicle/formula labels for staff-facing alert templates (B2C catalog).
+const VEHICULE_LABELS: Record<string, string> = {
+  citadine: "Citadine", berline: "Berline", suv: "SUV", utilitaire: "Utilitaire",
+};
+const FORMULE_LABELS: Record<string, string> = {
+  interieur: "Intérieur", interieur_exterieur: "Intérieur + Extérieur",
+};
+const OPTION_LABELS: Record<string, string> = {
+  puzzi: "Injection-extraction (Puzzi)", ozone: "Traitement ozone",
+};
+const PACK_LABELS: Record<string, string> = {
+  pack_interieur: "Pack Intérieur", pack_standard: "Pack Standard", pack_vtc: "Pack VTC",
+  interieur: "Intérieur", exterieur: "Extérieur", complet: "Complet",
+  standard: "Standard", vtc: "VTC Premium",
+};
+
+// jsonb columns are sometimes stored double-encoded (a JSON string of an array).
+// Normalize to a real array regardless of how it was written.
+function asArray(v: unknown): unknown[] {
+  if (Array.isArray(v)) return v;
+  if (typeof v === "string") {
+    try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; }
+  }
+  return [];
+}
+
+function creneauxSummary(v: unknown): string {
+  const arr = asArray(v) as Array<Record<string, unknown>>;
+  if (arr.length === 0) return "—";
+  return arr
+    .map((c) => {
+      const date = c.date ? formatDate(String(c.date)) : "?";
+      const heure = c.heure ? " à " + String(c.heure) : "";
+      const cre = c.creneau ? " (" + String(c.creneau).replace("_", "-") + ")" : "";
+      return date + heure + cre;
+    })
+    .join(" · ");
+}
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00");
@@ -407,6 +449,123 @@ function buildFactureEmiseHtml(d: Record<string, unknown>): string {
   `);
 }
 
+// ── Staff-facing alert templates ───────────────────────────────────────────
+
+const APP_URL = "https://izox-circular-fleet-care.vercel.app";
+
+function staffAlertBox(rows: Array<[string, string]>, accent = "#1B4332", bg = "#f0fdf4"): string {
+  const cells = rows
+    .map(([label, value], i) => `
+          <p style="margin:${i === 0 ? "0" : "12px 0 0"} 0 6px;font-size:13px;color:#6b7280">${esc(label)}</p>
+          <p style="margin:0;font-size:15px;font-weight:600;color:#111827">${value}</p>`)
+    .join("");
+  return `<table cellpadding="12" cellspacing="0" border="0" width="100%"
+      style="background:${bg};border-radius:8px;border-left:4px solid ${accent};margin-bottom:24px">
+      <tr><td>${cells}</td></tr>
+    </table>`;
+}
+
+function ctaButton(label: string, href: string): string {
+  return `<table cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="border-radius:8px;background:#1B4332">
+        <a href="${href}" style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">${esc(label)}</a>
+      </td></tr></table>`;
+}
+
+// Nouvelle réservation B2C (site vitrine) → notifie l'équipe IZOX
+function buildReservationB2cRecueHtml(d: Record<string, unknown>): string {
+  const client = esc([d.prenom, d.nom].filter(Boolean).join(" ") || "—");
+  const veh = esc(VEHICULE_LABELS[d.vehicule as string] ?? (d.vehicule as string) ?? "—");
+  const formule = esc(FORMULE_LABELS[d.formule as string] ?? (d.formule as string) ?? "—");
+  const opts = asArray(d.options).map((o) => OPTION_LABELS[o as string] ?? String(o));
+  const optsLabel = opts.length ? esc(opts.join(", ")) : "Aucune";
+  const montant = formatEuro(d.montant_ttc);
+  const ville = esc((d.ville as string) ?? "—");
+  const tel = esc((d.telephone as string) ?? "—");
+  return wrapHtml("Nouvelle réservation B2C", `
+    <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">🚗 Nouvelle réservation à traiter</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Notification équipe IZOX — réservation site vitrine</p>
+    <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6">
+      Un particulier vient de soumettre une réservation depuis le site. Assignez-lui un créneau et un opérateur.
+    </p>
+    ${staffAlertBox([
+      ["Client", client],
+      ["Véhicule", veh],
+      ["Formule", formule + (opts.length ? ` · ${optsLabel}` : "")],
+      ["Montant TTC", `<span style="color:#1B4332;font-size:18px;font-weight:700">${montant}</span>`],
+      ["Ville", ville],
+      ["Téléphone", tel],
+      ["Créneaux souhaités", esc(creneauxSummary(d.creneaux_preferes))],
+    ])}
+    ${ctaButton("Traiter la réservation", `${APP_URL}/admin/planning?tab=demandes`)}
+  `);
+}
+
+// Nouvelle demande de RDV B2B (client connecté) → notifie l'équipe IZOX
+function buildRdvDemandeRecueHtml(d: Record<string, unknown>): string {
+  const ent = d.entreprises as Record<string, string> | null;
+  const nom = esc(ent?.nom ?? "—");
+  const nbVeh = Number(d.nb_vehicules_rdv ?? 1);
+  const ville = esc((d.ville_intervention as string) ?? "—");
+  const comm = (d.commentaires as string)?.trim();
+  const rows: Array<[string, string]> = [
+    ["Client", nom],
+    ["Véhicules", `${nbVeh} véhicule${nbVeh > 1 ? "s" : ""}`],
+    ["Lieu d'intervention", ville],
+    ["Créneaux souhaités", esc(creneauxSummary(d.creneaux_preferes))],
+  ];
+  if (comm) rows.push(["Commentaires", `<span style="font-style:italic;color:#374151">${esc(comm)}</span>`]);
+  return wrapHtml("Nouvelle demande de RDV", `
+    <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">📅 Nouvelle demande de rendez-vous</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Notification équipe IZOX</p>
+    <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6">
+      Un client professionnel vient de soumettre une demande de rendez-vous à traiter.
+    </p>
+    ${staffAlertBox(rows)}
+    ${ctaButton("Traiter la demande", `${APP_URL}/admin/planning?tab=demandes`)}
+  `);
+}
+
+// Intervention soumise par l'opérateur → en attente de validation admin
+function buildInterventionAValiderHtml(d: Record<string, unknown>): string {
+  const ent = d.entreprises as Record<string, string> | null;
+  const veh = d.vehicules as Record<string, string> | null;
+  const nom = esc(ent?.nom ?? "—");
+  const immat = esc(veh?.immatriculation ?? "—");
+  const marque = esc([veh?.marque, veh?.modele].filter(Boolean).join(" ") || "—");
+  const type = esc(PACK_LABELS[d.type_prestation as string] ?? (d.type_prestation as string) ?? "Prestation");
+  const dateInter = d.date_intervention ? formatDate(d.date_intervention as string) : "—";
+  return wrapHtml("Intervention à valider", `
+    <h2 style="margin:0 0 8px;color:#1B4332;font-size:20px">✅ Une intervention attend votre validation</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px">Notification équipe IZOX</p>
+    <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6">
+      Un opérateur vient de soumettre une fiche d'intervention. Vérifiez photos, checklists et notes avant validation.
+    </p>
+    ${staffAlertBox([
+      ["Client", nom],
+      ["Véhicule", `${immat} — ${marque}`],
+      ["Type de prestation", type],
+      ["Date d'intervention", dateInter],
+    ], "#ca8a04", "#fefce8")}
+    ${ctaButton("Valider l'intervention", `${APP_URL}/admin/interventions/${esc(d.id)}`)}
+  `);
+}
+
+// Staff recipients = auth emails of all admin/staff/commercial profiles.
+// POST-ZIMBRA : ajouter ici contact@izox.fr (boîte partagée) — voir tasks/todo.md.
+async function staffRecipients(admin: ReturnType<typeof createClient>): Promise<string[]> {
+  const { data: staffProfiles } = await admin
+    .from("profiles")
+    .select("id")
+    .in("role", ["admin", "staff", "commercial"]);
+  const staffIds = (staffProfiles ?? []).map((p: Record<string, string>) => p.id);
+  if (staffIds.length === 0) return [];
+  const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  return users
+    .filter((u: Record<string, unknown>) => staffIds.includes(u.id as string) && u.email)
+    .map((u: Record<string, unknown>) => u.email as string);
+}
+
 // When entreprises.email_contact is null, fall back to the auth email of the
 // client profile linked to that entreprise. Avoids silent skips on new accounts.
 async function resolveClientEmail(
@@ -438,38 +597,63 @@ Deno.serve(async (req) => {
   const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
 
   try {
-    // Verify caller is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Non authentifié" }), { status: 401, headers: jsonHeaders });
-    }
-    const userClient = createClient(url, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData.user) {
-      return new Response(JSON.stringify({ error: "Session invalide" }), { status: 401, headers: jsonHeaders });
     }
 
     if (!resendKey) {
       return new Response(JSON.stringify({ error: "RESEND_API_KEY non configurée" }), { status: 500, headers: jsonHeaders });
     }
 
-    const { type, target_id }: { type: EmailType; target_id: string } = await req.json();
     const admin = createClient(url, serviceKey);
 
-    // Role-based access control — clients can only trigger their own notification types
-    const { data: callerProfile } = await admin
-      .from("profiles")
-      .select("role, entreprise_id")
-      .eq("id", userData.user.id)
-      .maybeSingle();
-    const callerRole = callerProfile?.role ?? "client";
-    const CLIENT_ALLOWED_TYPES: EmailType[] = ["rdv_annule_client", "staff_notification"];
+    // ── Authentication: trusted service-to-service OR authenticated user ──────
+    // A bearer token equal to the service-role key denotes a trusted internal
+    // call (e.g. the public create-reservation-b2c edge function). The service
+    // key is a server-only secret — never exposed to browsers — so such callers
+    // are fully trusted and bypass the per-user RBAC below.
+    const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const isServiceCall = bearer.length > 0 && bearer === serviceKey;
+
+    let callerRole = "service";
+    let callerUserId: string | null = null;
+    let callerEntrepriseId: string | null = null;
+
+    if (!isServiceCall) {
+      const userClient = createClient(url, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData, error: userErr } = await userClient.auth.getUser();
+      if (userErr || !userData.user) {
+        return new Response(JSON.stringify({ error: "Session invalide" }), { status: 401, headers: jsonHeaders });
+      }
+      callerUserId = userData.user.id;
+      const { data: callerProfile } = await admin
+        .from("profiles")
+        .select("role, entreprise_id")
+        .eq("id", userData.user.id)
+        .maybeSingle();
+      callerRole = callerProfile?.role ?? "client";
+      callerEntrepriseId = (callerProfile?.entreprise_id as string | null) ?? null;
+    }
+
+    const { type, target_id }: { type: EmailType; target_id: string } = await req.json();
+
+    // Role-based access control (skipped for trusted service calls).
+    // Clients may only trigger their own notification types; operateurs may only
+    // submit interventions for validation. Both are further scoped per-resource
+    // inside the relevant switch cases below.
+    const CLIENT_ALLOWED_TYPES: EmailType[] = ["rdv_annule_client", "staff_notification", "rdv_demande_recue"];
+    const OPERATEUR_ALLOWED_TYPES: EmailType[] = ["intervention_a_valider"];
+    // reservation_b2c_recue is server-only — never triggerable by a browser caller.
+    if (!isServiceCall && type === "reservation_b2c_recue") {
+      return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+    }
     if (callerRole === "client" && !CLIENT_ALLOWED_TYPES.includes(type)) {
       return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
     }
-    if (callerRole === "operateur") {
+    if (callerRole === "operateur" && !OPERATEUR_ALLOWED_TYPES.includes(type)) {
       return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
     }
 
@@ -535,19 +719,11 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !rdv) throw new Error("Demande RDV introuvable");
-        if (callerRole === "client" && rdv.entreprise_id !== callerProfile?.entreprise_id) {
+        if (callerRole === "client" && rdv.entreprise_id !== callerEntrepriseId) {
           return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
         }
 
-        const { data: staffProfiles } = await admin
-          .from("profiles")
-          .select("id")
-          .in("role", ["admin", "staff", "commercial"]);
-        const staffIds = (staffProfiles ?? []).map((p: Record<string, string>) => p.id);
-        const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
-        emailTo = users
-          .filter((u: Record<string, unknown>) => staffIds.includes(u.id as string) && u.email)
-          .map((u: Record<string, unknown>) => u.email as string);
+        emailTo = await staffRecipients(admin);
 
         const entNom = (rdv.entreprises as Record<string, string> | null)?.nom ?? "Client";
         subject = `⚠ RDV annulé par un client — ${entNom}`;
@@ -607,23 +783,60 @@ Deno.serve(async (req) => {
           .eq("id", target_id)
           .single();
         if (error || !demande) throw new Error("Demande gel introuvable");
-        if (callerRole === "client" && demande.entreprise_id !== callerProfile?.entreprise_id) {
+        if (callerRole === "client" && demande.entreprise_id !== callerEntrepriseId) {
           return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
         }
 
-        const { data: staffProfiles } = await admin
-          .from("profiles")
-          .select("id")
-          .in("role", ["admin", "staff", "commercial"]);
-
-        const staffIds = (staffProfiles ?? []).map((p: Record<string, string>) => p.id);
-        const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
-        emailTo = users
-          .filter((u: Record<string, unknown>) => staffIds.includes(u.id as string) && u.email)
-          .map((u: Record<string, unknown>) => u.email as string);
+        emailTo = await staffRecipients(admin);
 
         subject = `⚡ Nouvelle demande de gel — ${(demande.entreprises as Record<string, string> | null)?.nom ?? "Client"}`;
         html = buildStaffNotificationHtml(demande as Record<string, unknown>);
+        break;
+      }
+
+      case "reservation_b2c_recue": {
+        const { data: resa, error } = await admin
+          .from("reservations_b2c")
+          .select("*")
+          .eq("id", target_id)
+          .single();
+        if (error || !resa) throw new Error("Réservation introuvable");
+        emailTo = await staffRecipients(admin);
+        subject = `🚗 Nouvelle réservation B2C — ${[resa.prenom, resa.nom].filter(Boolean).join(" ")}`.trim();
+        html = buildReservationB2cRecueHtml(resa as Record<string, unknown>);
+        break;
+      }
+
+      case "rdv_demande_recue": {
+        const { data: rdv, error } = await admin
+          .from("demandes_rdv")
+          .select("*, entreprises(nom)")
+          .eq("id", target_id)
+          .single();
+        if (error || !rdv) throw new Error("Demande RDV introuvable");
+        if (callerRole === "client" && rdv.entreprise_id !== callerEntrepriseId) {
+          return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+        }
+        emailTo = await staffRecipients(admin);
+        subject = `📅 Nouvelle demande RDV — ${(rdv.entreprises as Record<string, string> | null)?.nom ?? "Client"}`;
+        html = buildRdvDemandeRecueHtml(rdv as Record<string, unknown>);
+        break;
+      }
+
+      case "intervention_a_valider": {
+        const { data: inter, error } = await admin
+          .from("interventions")
+          .select("*, vehicules(immatriculation, marque, modele), entreprises(nom)")
+          .eq("id", target_id)
+          .single();
+        if (error || !inter) throw new Error("Intervention introuvable");
+        if (callerRole === "operateur" && inter.operateur_id !== callerUserId) {
+          return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403, headers: jsonHeaders });
+        }
+        emailTo = await staffRecipients(admin);
+        const immat = (inter.vehicules as Record<string, string> | null)?.immatriculation ?? "";
+        subject = `✅ Intervention à valider${immat ? ` — ${immat}` : ""}`;
+        html = buildInterventionAValiderHtml(inter as Record<string, unknown>);
         break;
       }
 

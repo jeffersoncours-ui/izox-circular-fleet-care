@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { sendEmail } from "@/lib/email";
 import { cn } from "@/lib/utils";
 
 import {
@@ -235,7 +236,7 @@ export function CreerDemandeRdvDialog({
         date: format(c.date!, "yyyy-MM-dd"),
         creneau: c.creneau,
       }));
-      const { error } = await supabase.rpc("creer_demande_rdv", {
+      const { data: rpcData, error } = await supabase.rpc("creer_demande_rdv", {
         p_vehicule_ids: selectedVehiculeIds,
         p_creneaux_preferes: formatCreneauxPourRPC(payload) as any,
         p_commentaires: commentaires.trim(),
@@ -247,6 +248,9 @@ export function CreerDemandeRdvDialog({
         p_telephone: telephoneIntervention.trim(),
       } as any);
       if (error) throw error;
+      // Alerte équipe par email (la notif in-app est déjà créée par le RPC).
+      const demandeId = (rpcData as { demande_id?: string } | null)?.demande_id;
+      if (demandeId) void sendEmail("rdv_demande_recue", demandeId);
       toast.success("Demande de rendez-vous envoyée");
       reset();
       onOpenChange(false);
