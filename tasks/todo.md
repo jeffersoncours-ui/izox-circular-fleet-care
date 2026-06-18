@@ -2,15 +2,33 @@
 
 ---
 
+## Session 2026-06-18 (53) — Rapport PDF RSE client
+
+### Plan
+- [x] `client.impact.tsx` → layout pur (`<Outlet />`) pour permettre les sous-routes
+- [x] `client.impact.index.tsx` → contenu existant + bouton "Générer le rapport PDF"
+- [x] `client.impact.rapport.tsx` → page rapport RSE complète (période, 4 KPIs, tableau mensuel, print CSS)
+- [x] tsc 0 erreur + build OK
+- [x] Commit + push
+
+### Review
+- **Architecture propre** : `client.impact.tsx` converti en layout pur (`<Outlet />`), contenu existant migré vers `client.impact.index.tsx` (route `/client/impact/`), nouveau `client.impact.rapport.tsx` (route `/client/impact/rapport`). Même pattern que `client.factures`.
+- **Page rapport** : sélecteur période (mois/trimestre/année/historique), 4 KPIs + équivalences (douches + km), graphe mensuel AreaChart, tableau mensuel détaillé (prestations + 4 colonnes couleur), section méthodologie, pied de page ADEME. Bouton "Télécharger PDF" → `window.print()`.
+- **CSS dédié** : `@media print` scopé à cette route — masque nav/contrôles, en-tête IZOX vert `#1B4332` full-width, tableaux adaptatifs. Aucun effet sur `/client/impact` (index).
+- **Impact zéro** : `client.impact.index.tsx` = copie conforme de l'ancien `client.impact.tsx` + bouton "Rapport PDF". Aucune régression sur la page existante.
+- **tsc 0 erreur · build OK** · routeTree.gen.ts régénéré automatiquement (3 nouvelles entrées : `/client/impact`, `/client/impact/`, `/client/impact/rapport`).
+
+---
+
 ## BACKLOG (sessions dédiées — à traiter séparément pour ne pas saturer le contexte)
 
 ### Export PDF RSE — aperçu HTML puis impression PDF
-- [ ] Créer une route dédiée `/client/impact/rapport` : rapport RSE complet rendu en HTML dans l'app (en-tête IZOX brandé, période, 4 KPIs + équivalences, tableau mensuel interventions, AreaChart, pied de page).
-- [ ] Bouton "Télécharger en PDF" en haut → `window.print()` sur cette page (le navigateur propose "Enregistrer en PDF" nativement). **Aucune dépendance lourde** (`jspdf`/`react-pdf` écartés).
-- [ ] CSS `@media print` dédié sur cette route uniquement (page-break, header répété, masquage nav).
-- [ ] Sélecteur de période (mois / trimestre / année) avant le bouton.
-- [ ] Réutilise `getClientImpactSummary()` + `fetchClientRecords()` (`src/lib/impact.ts`, déjà en place).
-- Existant : `exportImpactCSV()` (CSV) + `window.print()` basique sur `/client/impact`. À conserver.
+- [x] Créer une route dédiée `/client/impact/rapport` : rapport RSE complet rendu en HTML dans l'app (en-tête IZOX brandé, période, 4 KPIs + équivalences, tableau mensuel interventions, AreaChart, pied de page).
+- [x] Bouton "Télécharger en PDF" en haut → `window.print()` sur cette page (le navigateur propose "Enregistrer en PDF" nativement). **Aucune dépendance lourde** (`jspdf`/`react-pdf` écartés).
+- [x] CSS `@media print` dédié sur cette route uniquement (page-break, header répété, masquage nav).
+- [x] Sélecteur de période (mois / trimestre / année) avant le bouton.
+- [x] Réutilise `getClientImpactSummary()` + `fetchClientRecords()` (`src/lib/impact.ts`, déjà en place).
+- Existant : `exportImpactCSV()` (CSV) + `window.print()` basique sur `/client/impact`. Conservé.
 
 ### PWA Terrain — offline complet avec sync différée
 - [ ] `npm install vite-plugin-pwa` + `idb` ; config Workbox dans `vite.config.ts` (précache assets JS/CSS/fonts).
