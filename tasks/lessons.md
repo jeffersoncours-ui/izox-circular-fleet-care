@@ -1,5 +1,35 @@
 # Lessons Learned — IZOX
 
+## SKILL — Test réel + test d'intrusion systématiques après chaque ajout de code (session 53)
+
+Après chaque implémentation (route, RPC, RLS, composant), exécuter systématiquement 2 phases :
+
+### Phase 1 — Test réel (nominal + cas limites)
+1. Créer les fixtures de test nécessaires via `execute_sql` (user auth, profil, entreprise, données métier).
+2. Impersonner l'utilisateur cible avec `SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claims', '{"sub":"<uuid>","role":"authenticated"}', true);` **dans la même transaction**.
+3. Tester le cas nominal (data retournée = attendu).
+4. Tester les cas limites : période sans données (0 rows), toutes les options de filtre, valeurs nulles.
+5. Nettoyer les fixtures après, sauf si utiles aux tests manuels.
+
+### Phase 2 — Test d'intrusion (mise en défaut)
+- **Cross-tenant** : impersonner user A, tenter de lire les données du tenant B → doit retourner 0 rows.
+- **Élévation de rôle** : client tente INSERT `validee` sur `interventions` → doit être bloqué par RLS.
+- **Mutation non autorisée** : client tente UPDATE statut `en_revision` → `validee` → doit échouer.
+- **Injection de paramètre** : passer un `entreprise_id` arbitraire dans un filtre → RLS doit ignorer le paramètre et ne retourner que les données du user courant.
+
+### Pièges courants d'impersonation SQL
+- `service_role` bypass toutes les RLS → toujours `SET LOCAL ROLE authenticated` sinon les politiques ne s'activent pas.
+- `\gset` est psql-only, échoue dans `execute_sql` → utiliser des sous-requêtes SQL à la place.
+- Le trigger `handle_new_user` crée automatiquement un row `profiles` à l'INSERT dans `auth.users` → faire `UPDATE profiles SET ...` plutôt qu'`INSERT INTO profiles`.
+- Encapsuler impersonation + requête dans une transaction et `ROLLBACK` à la fin pour ne pas laisser de role context polluer les requêtes suivantes.
+
+## Filtrage de période : `isAfter` (strict) exclut la borne — utiliser `!isBefore` sur les `startOf*` (session 53)
+
+- **`isAfter(date, cutoff)` est strictement `>`** : une intervention dont `created_at` est exactement `2026-06-01 00:00:00` est ÉGALE à `startOfMonth(now)` → `isAfter(equal, equal) = false` → intervention exclue à tort du filtre "Mois en cours".
+- **Fix correct** : `!isBefore(date, cutoff)` qui vaut `>=` → borne incluse. C'est la bonne sémantique pour un `startOf*` (la borne est le début de la période, elle doit être incluse).
+- **Quand ce piège s'applique** : tout filtre de la forme `"depuis le début de [mois|trimestre|année]"` avec `startOfMonth` / `startOfQuarter` / `startOfYear`. Dès qu'une donnée peut tomber exactement à minuit du 1er jour, `isAfter` la manque.
+- **Quand `isAfter` est correct** : comparaisons de type "créé APRÈS un événement ponctuel" (ex. `isAfter(date, lastLogin)`) où la borne elle-même ne doit pas être incluse.
+
 ## Alertes staff : chemin service-to-service pour appeler send-email depuis une edge function publique (session 52)
 
 - **Une edge function publique sans user (ex. `create-reservation-b2c`) ne peut PAS appeler `send-email` via le chemin user** : `send-email` exige un user authentifié (`getUser()`). Solution propre : un **chemin service-to-service** — si le bearer token == `SUPABASE_SERVICE_ROLE_KEY`, l'appel est traité comme interne de confiance (`isServiceCall=true`) et bypass le RBAC par-utilisateur. Le service-role key est un secret server-only, jamais exposé au navigateur → sûr.

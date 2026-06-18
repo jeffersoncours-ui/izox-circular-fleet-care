@@ -19,7 +19,7 @@ import {
   type ImpactRecord,
 } from "@/lib/impact";
 import {
-  format, parseISO, isAfter,
+  format, parseISO, isBefore,
   startOfMonth, startOfQuarter, startOfYear,
 } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -91,11 +91,13 @@ function ImpactRapportPage() {
     })();
   }, [profile?.entreprise_id]);
 
-  // Filtrage par période
+  // Filtrage par période — borne incluse (>= début de période).
+  // isAfter (strict) excluait à tort une prestation datée le 1er du mois/trimestre/année
+  // car cutoff = minuit du 1er jour = exactement la date de la prestation.
   const filteredRecords = useMemo(() => {
     const cutoff = getPeriodCutoff(period);
     if (!cutoff) return records;
-    return records.filter((r) => isAfter(parseISO(r.created_at), cutoff));
+    return records.filter((r) => !isBefore(parseISO(r.created_at), cutoff));
   }, [records, period]);
 
   // Totaux par catégorie
