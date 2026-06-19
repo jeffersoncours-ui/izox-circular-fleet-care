@@ -2574,6 +2574,10 @@ export type Database = {
       }
     }
     Functions: {
+      _passages_pris_vehicule_mois: {
+        Args: { p_ref_month: string; p_vehicule_id: string }
+        Returns: number
+      }
       _recalculer_caches_contrat: {
         Args: { p_contrat_id: string }
         Returns: undefined
@@ -2776,6 +2780,15 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_vehicules_reservables_mois: {
+        Args: never
+        Returns: {
+          passages_pris: number
+          quota: number
+          reservable: boolean
+          vehicule_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2808,6 +2821,10 @@ export type Database = {
       rejeter_vehicule: {
         Args: { p_raison: string; p_vehicule_id: string }
         Returns: Json
+      }
+      resilier_contrat: {
+        Args: { p_contrat_id: string; p_motif: string; p_user_id: string }
+        Returns: undefined
       }
       setup_2fa: {
         Args: { p_method: string; p_phone?: string; p_totp_secret?: string }

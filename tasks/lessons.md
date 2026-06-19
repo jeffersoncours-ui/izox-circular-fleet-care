@@ -1,5 +1,12 @@
 # Lessons Learned — IZOX
 
+## Règle métier dépendant d'un quota : un seul helper SQL pour éviter les écarts (session 54)
+
+- **Quand une nouvelle règle (min-2-véhicules) dépend d'un calcul déjà existant (quota mensuel `passages_mois`), ne JAMAIS recopier le comptage** : extraire un helper SQL unique (`_passages_pris_vehicule_mois(vehicule_id, ref_month)`) et le réutiliser partout — la boucle quota d'origine dans `creer_demande_rdv`, la garde serveur de la nouvelle règle, et la RPC d'affichage `get_vehicules_reservables_mois`. L'utilisateur avait explicitement signalé le risque d'« écart » entre le quota (2 passages/mois) et la nouvelle règle ; un helper partagé rend la divergence structurellement impossible.
+- **Règle « souple » bien posée = pas de cul-de-sac** : exiger 2 véhicules SAUF s'il ne reste qu'un seul véhicule *réservable* (quota restant), et non « sauf le dernier véhicule de la flotte ». La nuance « réservable » (vs « existant ») évite de bloquer un client dont tous les autres véhicules ont épuisé leur quota du mois. Tant qu'au moins 2 véhicules ont du quota, le pairing reste toujours possible.
+- **Toujours doubler la validation client + serveur** (rappel session 50) : l'UI (`minVehicules`, grisage des véhicules saturés, alerte) guide ; la garde dans la RPC `creer_demande_rdv` (`flotte ≥ 3 AND réservables ≥ 2 AND len < 2 → EXCEPTION`) est la vraie barrière, infranchissable par appel API direct.
+- **Vérification empirique d'une garde RPC sans polluer la base** : impersonation `set_config('request.jwt.claims', …, true)` dans la même requête (le cas d'échec lève l'exception avant tout INSERT → rien à nettoyer) ; pour le cas de succès et la simulation de saturation, marquer les lignes de test (`commentaires LIKE 'TEST-SOUPLE%'`) puis les supprimer par ce marqueur. Toujours recompter à 0 après nettoyage.
+
 ## SKILL — Test réel + test d'intrusion systématiques après chaque ajout de code (session 53)
 
 Après chaque implémentation (route, RPC, RLS, composant), exécuter systématiquement 2 phases :

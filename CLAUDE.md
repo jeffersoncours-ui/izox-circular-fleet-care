@@ -347,6 +347,14 @@ Stocké en JSONB sur `demandes_rdv`. Format :
 - Créneaux saturés grisés : `get_creneaux_disponibles(date_debut, date_fin)` → `(slot_date, time_slot, nb_interventions, capacite_totale)`. Capacite = `COUNT(operators)*2`. Calendar grise dates full-saturées ; RadioGroup grise la demi-journée saturée.
 - Guard race condition dans `creer_demande_rdv` : exception SQL si tous les créneaux proposés sont saturés au moment du submit.
 
+### Obligation 2 véhicules quand flotte ≥ 3 (session 2026-06-19)
+
+Règle « souple » imposée côté client **et** serveur : si l'entreprise a **≥ 3 véhicules actifs** ET **≥ 2 véhicules encore réservables ce mois**, une demande RDV doit porter sur **2 véhicules** (traités dans le même passage). S'il ne reste qu'**un seul véhicule réservable** (les autres ont épuisé leur quota mensuel), 1 suffit.
+- « Réservable ce mois » = `passages_pris_mois < passages_mois` (quota du pack). Helper SQL **unique** `_passages_pris_vehicule_mois(vehicule_id, ref_month)` — source de vérité partagée par `creer_demande_rdv` (boucle quota + garde min-2) et `get_vehicules_reservables_mois()` (état par véhicule pour le dialog). **Ne jamais dupliquer ce comptage** ailleurs.
+- `get_vehicules_reservables_mois()` (RPC, GRANT authenticated, scopée `entreprise_id` du caller) → `(vehicule_id, passages_pris, quota, reservable)` pour les véhicules actifs, mois en cours.
+- `CreerDemandeRdvDialog` : `minVehicules = vehicules.length >= 3 && nbReservables >= 2 ? 2 : 1`. Véhicules non réservables **grisés** (mention « quota du mois atteint »), impossibles à sélectionner. La garde serveur dans `creer_demande_rdv` lève une exception si la règle est contournée.
+- Périmètre : demandes **client B2B** uniquement (pas l'assignation admin ni le tunnel B2C).
+
 ## Comptes de test (après purge 2026-06-02)
 
 | Email | Rôle |

@@ -76,6 +76,8 @@ export function CreerDemandeRdvDialog({
     defaultVehiculeId ? [defaultVehiculeId] : [],
   );
   const [maxVehicules, setMaxVehicules] = useState<number>(2);
+  // id véhicule → réservable ce mois (quota passages restant). Absent ⇒ réservable.
+  const [reservableMap, setReservableMap] = useState<Record<string, boolean>>({});
   const [creneaux, setCreneaux] = useState<CreneauForm[]>([
     { date: undefined, creneau: "matin" },
     { date: undefined, creneau: "matin" },
@@ -97,8 +99,13 @@ export function CreerDemandeRdvDialog({
     const entrepriseId = profile?.entreprise_id;
     if (!open || !entrepriseId) return;
     (async () => {
-      const [{ data: vehData }, { data: maxData }, { data: entData }, { data: occData }] =
-        await Promise.all([
+      const [
+        { data: vehData },
+        { data: maxData },
+        { data: entData },
+        { data: occData },
+        { data: resData },
+      ] = await Promise.all([
           supabase
             .from("vehicules")
             .select("id, immatriculation, marque, modele")
@@ -115,6 +122,7 @@ export function CreerDemandeRdvDialog({
             p_date_debut: format(minDate, "yyyy-MM-dd"),
             p_date_fin: format(maxDate, "yyyy-MM-dd"),
           } as any),
+          supabase.rpc("get_vehicules_reservables_mois"),
         ]);
       setVehicules((vehData ?? []) as VehiculeOption[]);
       if (typeof maxData === "number" && maxData > 0) setMaxVehicules(maxData);
@@ -125,6 +133,11 @@ export function CreerDemandeRdvDialog({
         setTelephoneIntervention((entData as any).telephone ?? "");
       }
       setOccupancy((occData ?? []) as OccupancyRow[]);
+      const rmap: Record<string, boolean> = {};
+      for (const r of (resData ?? []) as Array<{ vehicule_id: string; reservable: boolean }>) {
+        rmap[r.vehicule_id] = r.reservable;
+      }
+      setReservableMap(rmap);
     })();
   }, [open, profile?.entreprise_id]);
 
@@ -134,6 +147,11 @@ export function CreerDemandeRdvDialog({
       setSelectedVehiculeIds(defaultVehiculeId ? [defaultVehiculeId] : []);
     }
   }, [open, defaultVehiculeId]);
+
+  // Retirer toute sélection devenue non réservable (quota du mois atteint)
+  useEffect(() => {
+    setSelectedVehiculeIds((prev) => prev.filter((id) => reservableMap[id] !== false));
+  }, [reservableMap]);
 
   const reset = () => {
     setSelectedVehiculeIds(defaultVehiculeId ? [defaultVehiculeId] : []);
@@ -165,6 +183,10 @@ export function CreerDemandeRdvDialog({
     setSelectedVehiculeIds((prev) => {
       if (checked) {
         if (prev.includes(id)) return prev;
+        if (reservableMap[id] === false) {
+          toast.warning("Ce véhicule a atteint son quota de passages ce mois-ci");
+          return prev;
+        }
         if (prev.length >= maxVehicules) {
           toast.warning(
             `Maximum ${maxVehicules} véhicule${maxVehicules > 1 ? "s" : ""} par demande`,
@@ -199,8 +221,14 @@ export function CreerDemandeRdvDialog({
     return new Set(dates).size !== dates.length;
   })();
 
+  // Règle métier : flotte active ≥ 3 ET ≥ 2 véhicules réservables ce mois ⇒ 2 véhicules obligatoires.
+  // "Souple" : s'il ne reste qu'un seul véhicule réservable, 1 suffit.
+  const isReservable = (id: string) => reservableMap[id] !== false;
+  const nbReservables = vehicules.filter((v) => isReservable(v.id)).length;
+  const minVehicules = vehicules.length >= 3 && nbReservables >= 2 ? 2 : 1;
+
   const canSubmit =
-    selectedVehiculeIds.length >= 1 &&
+    selectedVehiculeIds.length >= minVehicules &&
     selectedVehiculeIds.length <= maxVehicules &&
     creneauxRemplis.length >= 2 &&
     !hasSameDayCreneaux &&
@@ -274,8 +302,18 @@ export function CreerDemandeRdvDialog({
         <DialogHeader>
           <DialogTitle>Demander un rendez-vous</DialogTitle>
           <DialogDescription>
-            Sélectionnez jusqu'à {maxVehicules} véhicule{maxVehicules > 1 ? "s" : ""}{" "}
-            et proposez au moins 2 créneaux sur des <strong>jours différents</strong> (jusqu'à 3 maximum).
+            {minVehicules === 2 ? (
+              <>
+                Votre flotte compte au moins 3 véhicules : sélectionnez{" "}
+                <strong>2 véhicules</strong> à traiter dans le même passage, et proposez au
+                moins 2 créneaux sur des <strong>jours différents</strong> (jusqu'à 3 maximum).
+              </>
+            ) : (
+              <>
+                Sélectionnez jusqu'à {maxVehicules} véhicule{maxVehicules > 1 ? "s" : ""} et
+                proposez au moins 2 créneaux sur des <strong>jours différents</strong> (jusqu'à 3 maximum).
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -294,8 +332,10 @@ export function CreerDemandeRdvDialog({
                 <ul className="space-y-1">
                   {vehicules.map((v) => {
                     const checked = selectedVehiculeIds.includes(v.id);
+                    const reservable = reservableMap[v.id] !== false;
                     const disabled =
-                      !checked && selectedVehiculeIds.length >= maxVehicules;
+                      !reservable ||
+                      (!checked && selectedVehiculeIds.length >= maxVehicules);
                     return (
                       <li key={v.id}>
                         <label
@@ -317,6 +357,12 @@ export function CreerDemandeRdvDialog({
                                 · {[v.marque, v.modele].filter(Boolean).join(" ")}
                               </span>
                             )}
+                            {!reservable && (
+                              <span className="text-muted-foreground">
+                                {" "}
+                                · quota du mois atteint
+                              </span>
+                            )}
                           </span>
                         </label>
                       </li>
@@ -325,6 +371,15 @@ export function CreerDemandeRdvDialog({
                 </ul>
               )}
             </ScrollArea>
+            {minVehicules === 2 && selectedVehiculeIds.length < 2 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Avec au moins 3 véhicules, vous devez sélectionner{" "}
+                  <strong>2 véhicules</strong> à traiter dans le même passage.
+                </AlertDescription>
+              </Alert>
+            )}
             {selectedVehiculeIds.length === 2 && (
               <Alert className="bg-blue-50 border-blue-200">
                 <Info className="h-4 w-4 text-blue-600" />

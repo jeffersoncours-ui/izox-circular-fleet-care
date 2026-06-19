@@ -2,6 +2,26 @@
 
 ---
 
+## Session 2026-06-19 (54) — Obligation 2 véhicules par demande RDV quand flotte ≥ 3
+
+### Contexte
+Demande utilisateur : un client avec ≥ 3 véhicules actifs doit être obligé de réserver 2 véhicules sur le même créneau (même passage) lors d'une demande RDV, pour optimiser le temps de prestation. Règle « souple » retenue : exiger 2 véhicules SAUF s'il ne reste qu'un seul véhicule réservable ce mois (quota `passages_mois` restant). Base = véhicules actifs. Attention quota : ne jamais forcer un 2ᵉ véhicule déjà saturé.
+
+### Plan
+- [x] Migration `20260619120000_rdv_min_2_vehicules.sql` : helper `_passages_pris_vehicule_mois` (source unique), RPC `get_vehicules_reservables_mois`, garde serveur min-2 dans `creer_demande_rdv` (+ refactor de la boucle quota sur le helper).
+- [x] `CreerDemandeRdvDialog.tsx` : charge `get_vehicules_reservables_mois`, `minVehicules` dynamique, `canSubmit` ≥ minVehicules, véhicules non réservables grisés (« quota du mois atteint »), description + alerte d'obligation, nettoyage des sélections devenues non réservables.
+- [x] Types Supabase régénérés (nouvelle RPC `get_vehicules_reservables_mois`).
+- [x] Tests empiriques DB (client de test, 5 véhicules actifs) : réservables=5 ; 1 véhicule → exception ; 2 véhicules → succès ; saturation 4/5 → 1 véhicule (dernier réservable) → succès (souple) ; flotte < 3 garantie par la garde `>= 3`. Données de test nettoyées.
+- [x] `tsc` 0 erreur + `npm run build` OK.
+- [ ] Commit + push (en attente validation utilisateur).
+
+### Review
+- Règle métier **doublée client + serveur** (cf. leçon session 50) : la garde serveur dans `creer_demande_rdv` est la vraie barrière, l'UI guide l'utilisateur.
+- **Anti-écart** (préoccupation utilisateur sur le quota) : un seul helper SQL `_passages_pris_vehicule_mois` alimente le comptage quota existant ET la nouvelle règle → impossible de diverger.
+- **Souple** : le cas du dernier véhicule impair est géré nativement par `nbReservables >= 2` ; tant qu'un autre véhicule a du quota, le pairing reste possible.
+
+---
+
 ## Session 2026-06-18 (53) — Rapport PDF RSE client
 
 ### Plan
