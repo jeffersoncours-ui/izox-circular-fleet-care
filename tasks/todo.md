@@ -13,7 +13,10 @@ Demande utilisateur : un client avec ≥ 3 véhicules actifs doit être obligé 
 - [x] Types Supabase régénérés (nouvelle RPC `get_vehicules_reservables_mois`).
 - [x] Tests empiriques DB (client de test, 5 véhicules actifs) : réservables=5 ; 1 véhicule → exception ; 2 véhicules → succès ; saturation 4/5 → 1 véhicule (dernier réservable) → succès (souple) ; flotte < 3 garantie par la garde `>= 3`. Données de test nettoyées.
 - [x] `tsc` 0 erreur + `npm run build` OK.
-- [ ] Commit + push (en attente validation utilisateur).
+- [x] Commit + push.
+- [x] Tests empiriques re-validés en début de session suivante (garde serveur, cas souple, cleanup).
+- [x] Purge DB pré-merge (toutes tables à 0, auth.users=4).
+- [x] Merge main.
 
 ### Review
 - Règle métier **doublée client + serveur** (cf. leçon session 50) : la garde serveur dans `creer_demande_rdv` est la vraie barrière, l'UI guide l'utilisateur.
