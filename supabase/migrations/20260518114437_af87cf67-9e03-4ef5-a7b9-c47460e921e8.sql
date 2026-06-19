@@ -1,0 +1,1 @@
+ALTER VIEW public.v_entreprises_actives SET (security_invoker = true);

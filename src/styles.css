@@ -1,0 +1,276 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   IZOX — Design System v2
+   Forest green #1B4332 · Outfit/Inter/JetBrains
+   Sidebar blanche · surfaces neutres · no gradient
+   ============================================ */
+
+@theme inline {
+  /* Fonts */
+  --font-display: "Outfit", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Radius scale — r2=4px · r4=8px (btns/inputs) · r6=10px (cards) · r10=14px */
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-full: 9999px;
+
+  /* Semantic color aliases → Tailwind utilities */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Shadows — soft enterprise (design tokens) */
+  --shadow-elegant: 0 1px 2px rgba(17, 24, 39, 0.04);
+  --shadow-card: 0 1px 2px rgba(17, 24, 39, 0.04), 0 12px 30px -20px rgba(17, 24, 39, 0.20);
+  --shadow-strong: 0 10px 30px -10px rgba(27, 67, 50, 0.20);
+}
+
+:root {
+  /* Base radius = 10px (r6 = cards) ; r4 = 8px via --radius-md */
+  --radius: 0.625rem;
+
+  /* ── Surfaces ── */
+  --background: #F9FAFB;
+  --foreground: #111827;
+
+  --card: #FFFFFF;
+  --card-foreground: #111827;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #111827;
+
+  /* ── Brand — Vert forêt IZOX #1B4332 ── */
+  --primary: #1B4332;
+  --primary-foreground: #FFFFFF;
+  --primary-light: #1F8A5B;
+  --primary-soft: #E7EFEA;
+
+  --secondary: #F3F4F6;
+  --secondary-foreground: #111827;
+
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+
+  --accent: #E7EFEA;
+  --accent-foreground: #1B4332;
+
+  /* ── Semantic (+ soft tints pour status pills / encarts) ── */
+  --destructive: #C8412F;
+  --destructive-foreground: #FFFFFF;
+  --destructive-soft: #F3D8D3;
+
+  --success: #1F8A5B;
+  --success-foreground: #FFFFFF;
+  --success-soft: #DCEEE4;
+
+  --warning: #C7811E;
+  --warning-foreground: #FFFFFF;
+  --warning-soft: #F6E8CD;
+
+  --info: #2A6FDB;
+  --info-foreground: #FFFFFF;
+  --info-soft: #D5E2F6;
+
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #1B4332;
+
+  /* ── Sidebar — fond blanc, item actif teinté vert ── */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #111827;
+  --sidebar-primary: #FFFFFF;
+  --sidebar-primary-foreground: #1B4332;
+  --sidebar-accent: #E7EFEA;
+  --sidebar-accent-foreground: #1B4332;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #1B4332;
+}
+
+.dark {
+  --background: #111827;
+  --foreground: #F9FAFB;
+  --card: #1F2937;
+  --card-foreground: #F9FAFB;
+  --popover: #1F2937;
+  --popover-foreground: #F9FAFB;
+  --primary: #1F8A5B;
+  --primary-foreground: #F9FAFB;
+  --primary-light: #34D399;
+  --primary-soft: #064E3B;
+  --secondary: #1F2937;
+  --secondary-foreground: #F9FAFB;
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+  --accent: #064E3B;
+  --accent-foreground: #F9FAFB;
+  --destructive: #EF4444;
+  --destructive-foreground: #F9FAFB;
+  --destructive-soft: rgba(239, 68, 68, 0.15);
+  --success: #34D399;
+  --success-foreground: #111827;
+  --success-soft: rgba(52, 211, 153, 0.15);
+  --warning: #F59E0B;
+  --warning-foreground: #111827;
+  --warning-soft: rgba(245, 158, 11, 0.15);
+  --info: #60A5FA;
+  --info-foreground: #111827;
+  --info-soft: rgba(96, 165, 250, 0.15);
+  --border: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #1F8A5B;
+  --sidebar: #1F2937;
+  --sidebar-foreground: #F9FAFB;
+  --sidebar-primary: #064E3B;
+  --sidebar-primary-foreground: #34D399;
+  --sidebar-accent: #111827;
+  --sidebar-accent-foreground: #F9FAFB;
+  --sidebar-border: rgba(255, 255, 255, 0.10);
+  --sidebar-ring: #1F8A5B;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html, body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+/* ============================================
+   Animations design system (handoff v2)
+   checkPop/drawCheck — succès 2FA · shake — erreur OTP
+   stripeMove — drop zones planning · pulseDot — drag en cours
+   ============================================ */
+@keyframes checkPop {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+@keyframes drawCheck {
+  from { stroke-dashoffset: 24; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes shake {
+  0%, 100%  { transform: translateX(0); }
+  20%, 60%  { transform: translateX(-6px); }
+  40%, 80%  { transform: translateX(6px); }
+}
+@keyframes stripeMove {
+  from { background-position: 0 0; }
+  to   { background-position: 20px 20px; }
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+@layer utilities {
+  .animate-check-pop  { animation: checkPop 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+  .animate-draw-check { animation: drawCheck 0.35s 0.15s ease-out both; }
+  .animate-shake      { animation: shake 0.4s ease; }
+  .animate-pulse-dot  { animation: pulseDot 1.2s ease-in-out infinite; }
+}
+
+/* ============================================
+   Impression facture — n'imprimer que .facture-print-root
+   (page client /client/factures/$id + dialog admin)
+   ============================================ */
+@media print {
+  body * { visibility: hidden; }
+  .facture-print-root,
+  .facture-print-root * { visibility: visible; }
+  .facture-print-root {
+    /* position:fixed breaks out of DialogContent overflow-y:auto clipping */
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    /* Re-scope light-mode variables: overrides .dark on <html>/<body> */
+    color-scheme: light;
+    --foreground: #111827;
+    --card: #ffffff;
+    --card-foreground: #111827;
+    --muted: #F3F4F6;
+    --muted-foreground: #6B7280;
+    --primary: #1B4332;
+    --primary-soft: #E7EFEA;
+    --border: #E5E7EB;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+  }
+  .no-print { display: none !important; }
+}

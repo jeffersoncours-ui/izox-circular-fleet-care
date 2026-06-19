@@ -1,0 +1,16 @@
+project_id = "izox"
+
+[functions.seed-users]
+verify_jwt = false
+
+[functions.create-client-account]
+verify_jwt = true
+
+[functions.admin-reset-password]
+verify_jwt = true
+
+[functions.send-email]
+verify_jwt = true
+
+[functions.compute-impact]
+verify_jwt = true

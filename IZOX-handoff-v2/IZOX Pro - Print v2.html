@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>IZOX Pro — Nouveaux Écrans (PDF)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #D1D5DB; font-family: "Inter", system-ui, sans-serif; color: #111827; }
+  button, input, select { font-family: inherit; }
+
+  /* Chaque page = 1440×900 avec gouttière écran */
+  .page {
+    width: 1440px;
+    min-height: 900px;
+    height: 900px;
+    overflow: hidden;
+    position: relative;
+    background: #F9FAFB;
+    margin: 0 auto 16px;
+    box-shadow: 0 4px 32px rgba(0,0,0,.18);
+  }
+
+  /* Label artboard écran seulement */
+  .page-label {
+    position: absolute; top: 0; left: 0; right: 0; height: 26px; z-index: 9999;
+    background: rgba(17,24,39,.8); color: #fff;
+    font-family: "Inter",system-ui,sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .06em;
+    display: flex; align-items: center; padding: 0 14px;
+    pointer-events: none;
+  }
+
+  /* Section divider page */
+  .section-page {
+    width: 1440px; height: 900px;
+    background: #1B4332;
+    margin: 0 auto 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,.2);
+  }
+
+  /* Contenu mis à l'échelle dans la page */
+  .scale-wrap {
+    position: absolute;
+    transform-origin: top left;
+  }
+
+  @media print {
+    @page { size: 1440px 900px; margin: 0; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body { background: white !important; }
+    .page-label { display: none !important; }
+    .page, .section-page { margin: 0 !important; box-shadow: none !important; break-after: page; page-break-after: always; }
+  }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#1B4332"/>
+    <rect x="200" y="160" width="340" height="480" rx="12" fill="rgba(255,255,255,.08)"/>
+    <rect x="220" y="180" width="300" height="32" rx="6" fill="rgba(255,255,255,.18)"/>
+    <rect x="220" y="228" width="300" height="64" rx="6" fill="rgba(255,255,255,.12)"/>
+    <rect x="220" y="308" width="300" height="64" rx="6" fill="rgba(255,255,255,.08)"/>
+    <rect x="220" y="388" width="300" height="64" rx="6" fill="rgba(255,255,255,.08)"/>
+    <rect x="580" y="160" width="420" height="220" rx="12" fill="rgba(255,255,255,.08)"/>
+    <circle cx="650" cy="270" r="40" fill="rgba(44,189,130,.5)"/>
+    <circle cx="750" cy="230" r="28" fill="rgba(42,111,219,.5)"/>
+    <circle cx="840" cy="290" r="34" fill="rgba(124,58,237,.5)"/>
+    <rect x="580" y="400" width="420" height="240" rx="12" fill="rgba(255,255,255,.08)"/>
+    <rect x="600" y="420" width="160" height="20" rx="4" fill="rgba(255,255,255,.18)"/>
+    <rect x="600" y="454" width="380" height="12" rx="3" fill="rgba(255,255,255,.08)"/>
+    <rect x="600" y="478" width="380" height="12" rx="3" fill="rgba(255,255,255,.06)"/>
+    <text x="600" y="700" font-family="system-ui,sans-serif" font-size="28" font-weight="700" fill="rgba(255,255,255,.9)" letter-spacing="2">IZOX Pro — Nouveaux Écrans</text>
+  </svg>
+</template>
+<div id="root"></div>
+
+<!-- Design system -->
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="izox2/tokens.jsx"></script>
+<script type="text/babel" src="izox2/atoms.jsx"></script>
+<script type="text/babel" src="izox2/brand.jsx"></script>
+<script type="text/babel" src="izox2/photos.jsx"></script>
+<script type="text/babel" src="izox2/cards.jsx"></script>
+<script type="text/babel" src="izox2/shell.jsx"></script>
+<script type="text/babel" src="izox2/admin-overview.jsx"></script>
+<script type="text/babel" src="izox2/admin-planning.jsx"></script>
+<script type="text/babel" src="izox2/admin-map.jsx"></script>
+<script type="text/babel" src="izox2/admin-rdv-v2.jsx"></script>
+<script type="text/babel" src="izox2/security.jsx"></script>
+<script type="text/babel" src="izox2/legal.jsx"></script>
+<!-- Extras -->
+<script type="text/babel" src="izox2/extras-planning.jsx"></script>
+<script type="text/babel" src="izox2/extras-map.jsx"></script>
+<script type="text/babel" src="izox2/extras-2fa.jsx"></script>
+<script type="text/babel" src="izox2/extras-rdv.jsx"></script>
+
+<script type="text/babel">
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+const PW = 1440, PH = 900;
+
+// Monte un composant React dans une div mis à l'échelle à l'intérieur d'une .page
+const ScaledPage = ({ label, srcW = 1440, srcH = 900, children }) => {
+  const scale = Math.min(PW / srcW, PH / srcH);
+  const ox = (PW - srcW * scale) / 2;
+  const oy = (PH - srcH * scale) / 2;
+  return (
+    <div className="page">
+      <div className="page-label">{label}</div>
+      <div className="scale-wrap" style={{
+        width: srcW, height: srcH,
+        transform: `translate(${ox}px,${oy}px) scale(${scale})`,
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// Page de séparation de section — une seule par section
+const SectionDiv = ({ num, title, subtitle, artboards }) => (
+  <div className="section-page">
+    {/* Grille déco */}
+    <div style={{ position:"absolute", inset:0, opacity:.04, backgroundImage:"repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 60px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 60px)" }}/>
+    {/* Numéro section grand fond */}
+    <div style={{ position:"absolute", right:60, top:"50%", transform:"translateY(-50%)", fontFamily:"Outfit,sans-serif", fontSize:260, fontWeight:700, color:"rgba(255,255,255,.04)", lineHeight:1, userSelect:"none" }}>{num}</div>
+    {/* Contenu */}
+    <div style={{ position:"relative", textAlign:"center", display:"flex", flexDirection:"column", alignItems:"center", gap:18, maxWidth:780, padding:"0 40px" }}>
+      <div style={{ fontFamily:"Inter,sans-serif", fontSize:11, fontWeight:700, letterSpacing:".2em", color:"rgba(255,255,255,.45)", textTransform:"uppercase" }}>Section {num}</div>
+      <div style={{ fontFamily:"Outfit,sans-serif", fontSize:58, fontWeight:700, letterSpacing:"-1.5px", color:"#fff", lineHeight:1.05 }}>{title}</div>
+      <div style={{ fontFamily:"Inter,sans-serif", fontSize:16, color:"rgba(255,255,255,.55)", lineHeight:1.7, maxWidth:600 }}>{subtitle}</div>
+      <div style={{ display:"flex", gap:10, marginTop:6, flexWrap:"wrap", justifyContent:"center" }}>
+        {artboards.map(a => (
+          <div key={a} style={{ background:"rgba(255,255,255,.1)", border:"1px solid rgba(255,255,255,.18)", padding:"5px 16px", borderRadius:999, fontFamily:"Inter,sans-serif", fontSize:11, color:"rgba(255,255,255,.7)", fontWeight:600 }}>{a}</div>
+        ))}
+      </div>
+    </div>
+    {/* Barre verte bas */}
+    <div style={{ position:"absolute", bottom:0, left:0, right:0, height:5, background:"#7CC9A5" }}/>
+  </div>
+);
+
+// Page de couverture
+const CoverPage = () => (
+  <div className="section-page" style={{ background:"#111827" }}>
+    <div style={{ position:"absolute", inset:0, opacity:.04, backgroundImage:"repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 1px,transparent 28px)" }}/>
+    <div style={{ position:"relative", display:"flex", flexDirection:"column", alignItems:"center", gap:22 }}>
+      {/* Logo IZOX */}
+      <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+        <div style={{ width:56,height:56,background:"#1B4332",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center" }}>
+          <span style={{ fontFamily:"Outfit,sans-serif",fontSize:20,fontWeight:700,color:"#fff" }}>iz</span>
+        </div>
+        <svg width={200} height={46} viewBox="0 0 220 50" fill="none">
+          <rect x="0" y="0" width="12" height="50" fill="#FFFFFF"/>
+          <path d="M22 0 H78 V12 L42 38 H78 V50 H22 V38 L58 12 H22 Z" fill="#FFFFFF"/>
+          <path d="M118 0 a25 25 0 1 0 0.01 0 Z M118 12 a13 13 0 1 1-0.01 0 Z" fill="#FFFFFF" fillRule="evenodd"/>
+          <path d="M150 0 H166 L178 18 L190 0 H206 L186 24 L208 50 H192 L178 32 L164 50 H148 L170 24 Z" fill="#FFFFFF"/>
+          <rect x="208" y="40" width="12" height="10" fill="#7CC9A5"/>
+        </svg>
+      </div>
+      <div style={{ fontFamily:"Outfit,sans-serif", fontSize:52, fontWeight:700, letterSpacing:"-1.5px", color:"#fff", textAlign:"center", lineHeight:1.1 }}>
+        Nouveaux Écrans<br/><span style={{ color:"#7CC9A5" }}>IZOX Pro</span>
+      </div>
+      <div style={{ fontFamily:"Inter,sans-serif", fontSize:15, color:"rgba(255,255,255,.5)", textAlign:"center", lineHeight:1.7 }}>
+        Planning Admin · Carte Géographique · Demandes RDV<br/>Double Authentification 2FA · Pages RGPD &amp; CGV
+      </div>
+      <div style={{ display:"flex", gap:10, marginTop:6 }}>
+        {["5 sections","22 artboards","4 états par écran","Juin 2026"].map(t => (
+          <div key={t} style={{ background:"rgba(255,255,255,.1)", border:"1px solid rgba(255,255,255,.16)", padding:"6px 16px", borderRadius:999, fontFamily:"Inter,sans-serif", fontSize:12, color:"rgba(255,255,255,.7)", fontWeight:600 }}>{t}</div>
+        ))}
+      </div>
+    </div>
+    <div style={{ position:"absolute", bottom:0, left:0, right:0, height:5, background:"#1B4332" }}/>
+  </div>
+);
+
+// ── Squelette chargement planning ─────────────────────────────────────────────
+const PlanningSkeleton = () => {
+  const navItems = [...NAV_ADMIN, { label:"Planning", icon:<I.cal s={15}/> }];
+  return (
+    <Page>
+      <style>{`@keyframes sk{0%,100%{opacity:.4}50%{opacity:.9}}`}</style>
+      <Sidebar items={navItems} active="Planning" role="Admin" user={{ name:"Admin Ops", org:"IZOX · Paris" }}/>
+      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 22px", borderBottom:`1px solid ${TOK.line}`, background:TOK.surface, flexShrink:0 }}>
+          {[200,120,160].map((w,i) => <div key={i} style={{ width:w, height:28, borderRadius:TOK.r2, background:TOK.line, animation:"sk 1.4s ease infinite", animationDelay:`${i*.2}s` }}/>)}
+          <div style={{ flex:1 }}/>
+          <div style={{ width:160, height:32, borderRadius:TOK.r2, background:TOK.brand, opacity:.25, animation:"sk 1.4s ease infinite" }}/>
+        </div>
+        <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
+          {[OPERATORS["Karim B."],OPERATORS["Sofia T."],OPERATORS["Yann L."]].map((op,ci) => (
+            <div key={ci} style={{ flex:"0 0 370px", borderRight:`1px solid ${TOK.line}`, padding:14, display:"flex", flexDirection:"column", gap:8 }}>
+              <div style={{ height:82, background:op.bg, borderRadius:TOK.r4, animation:"sk 1.4s ease infinite" }}/>
+              {[76,60,60,76,60,60].map((h,i) => (
+                <div key={i} style={{ height:h, background:TOK.line, borderRadius:TOK.r4, animation:"sk 1.4s ease infinite", animationDelay:`${i*.1+ci*.05}s`, opacity:.6-i*.05 }}/>
+              ))}
+            </div>
+          ))}
+        </div>
+      </main>
+    </Page>
+  );
+};
+
+// ── App print ─────────────────────────────────────────────────────────────────
+function PrintApp() {
+  return (
+    <div style={{ paddingTop:24, paddingBottom:60 }}>
+
+      {/* ── COUVERTURE ── */}
+      <CoverPage/>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 10 — PLANNING ADMIN
+      ══════════════════════════════════════════════════════════════ */}
+      <SectionDiv num="10" title="Planning Admin"
+        subtitle="Vue semaine · 3 opérateurs côte à côte · créneaux matin/après-midi · drag-drop zones visibles · indicateurs de charge · version mobile responsive."
+        artboards={["loaded","drag-drop","empty","error","mobile"]}/>
+
+      <ScaledPage label="10.1 — Planning · Vue semaine (état chargé)" srcW={1440} srcH={900}>
+        <Planning_Loaded/>
+      </ScaledPage>
+
+      <ScaledPage label="10.2 — Planning · Drag-drop zones visibles + déplacement en cours" srcW={1440} srcH={900}>
+        <Planning_DragDrop/>
+      </ScaledPage>
+
+      <ScaledPage label="10.3 — Planning · État vide (aucune intervention planifiée)" srcW={1440} srcH={900}>
+        <Planning_Empty/>
+      </ScaledPage>
+
+      <ScaledPage label="10.4 — Planning · État erreur (créneau indisponible)" srcW={1440} srcH={900}>
+        <Planning_Error/>
+      </ScaledPage>
+
+      <ScaledPage label="10.5 — Planning · Skeleton (chargement)" srcW={1440} srcH={900}>
+        <PlanningSkeleton/>
+      </ScaledPage>
+
+      <ScaledPage label="10.6 — Planning · Version mobile responsive (390×844)" srcW={1440} srcH={900}>
+        <PlanningMobileWrapper/>
+      </ScaledPage>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 11 — CARTE GÉOGRAPHIQUE
+      ══════════════════════════════════════════════════════════════ */}
+      <SectionDiv num="11" title="Carte Géographique"
+        subtitle="Légende drawer gauche · panel droit interventions + Valider tournée · pins colorés par opérateur · polylines · drag-drop réordonnancement."
+        artboards={["loaded","empty","drag-in-progress","error"]}/>
+
+      <ScaledPage label="11.1 — Carte · État chargé (légende + interventions + panel valider tournée)" srcW={1440} srcH={900}>
+        <Map_Loaded/>
+      </ScaledPage>
+
+      <ScaledPage label="11.2 — Carte · État vide (aucune intervention aujourd'hui)" srcW={1440} srcH={900}>
+        <Map_Empty/>
+      </ScaledPage>
+
+      <ScaledPage label="11.3 — Carte · Drag-in-progress (réorganisation panel)" srcW={1440} srcH={900}>
+        <Map_Drag/>
+      </ScaledPage>
+
+      <ScaledPage label="11.4 — Carte · État erreur (tuiles indisponibles)" srcW={1440} srcH={900}>
+        <Map_Error/>
+      </ScaledPage>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 12 — DEMANDES RDV
+      ══════════════════════════════════════════════════════════════ */}
+      <SectionDiv num="12" title="Demandes RDV"
+        subtitle="Split view 40/60 · liste interactive + carte statique · hover active le pin · modal assignation rapide (sélect opérateur + créneau + confirmer)."
+        artboards={["loaded","empty","modal-assignation","modal-erreur"]}/>
+
+      <ScaledPage label="12.1 — Demandes RDV · État chargé + hover pin actif sur carte" srcW={1440} srcH={900}>
+        <RDV_Loaded/>
+      </ScaledPage>
+
+      <ScaledPage label="12.2 — Demandes RDV · État vide" srcW={1440} srcH={900}>
+        <RDV_Empty/>
+      </ScaledPage>
+
+      <ScaledPage label="12.3 — Demandes RDV · Modal assignation rapide (opérateur + créneau)" srcW={1440} srcH={900}>
+        <RDV_WithModal/>
+      </ScaledPage>
+
+      <ScaledPage label="12.4 — Demandes RDV · Modal erreur (créneau pris entre-temps)" srcW={1440} srcH={900}>
+        <RDV_ModalError/>
+      </ScaledPage>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 13 — DOUBLE AUTHENTIFICATION 2FA
+      ══════════════════════════════════════════════════════════════ */}
+      <SectionDiv num="13" title="Double Authentification"
+        subtitle="Flow 4 étapes · SMS ou Authenticator QR · OTP 6 cases · état erreur code incorrect · check animé succès · 8 codes de récupération."
+        artboards={["étape 2 SMS","étape 2 QR","étape 3 code","étape 3 erreur","étape 4 recovery","admin"]}/>
+
+      <ScaledPage label="13.1 — 2FA · Étape 2 — Saisir numéro SMS (numéro complété)" srcW={900} srcH={820}>
+        <TwoFA_Step2_SMS/>
+      </ScaledPage>
+
+      <ScaledPage label="13.2 — 2FA · Étape 2 — Scanner QR code (Authenticator app)" srcW={900} srcH={820}>
+        <TwoFA_Step2_App/>
+      </ScaledPage>
+
+      <ScaledPage label="13.3 — 2FA · Étape 3 — Saisie code OTP (code en cours)" srcW={900} srcH={820}>
+        <TwoFA_Step3_OTP/>
+      </ScaledPage>
+
+      <ScaledPage label="13.4 — 2FA · Étape 3 — Code incorrect (état erreur)" srcW={900} srcH={820}>
+        <TwoFA_Step3_Error/>
+      </ScaledPage>
+
+      <ScaledPage label="13.5 — 2FA · Étape 4 — Codes de récupération (succès activé)" srcW={900} srcH={820}>
+        <TwoFA_Step4/>
+      </ScaledPage>
+
+      <ScaledPage label="13.6 — 2FA · Côté Admin (même layout, label Administration)" srcW={900} srcH={820}>
+        <Security2FA_Admin/>
+      </ScaledPage>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SECTION 14 — RGPD & CGV
+      ══════════════════════════════════════════════════════════════ */}
+      <SectionDiv num="14" title="RGPD & CGV"
+        subtitle="Deux onglets · sidebar sections · contenu juridique réaliste · checkbox acceptation CGV + date · bannière cookies non-intrusive (localStorage 12 mois)."
+        artboards={["CGV client","RGPD client","vue admin"]}/>
+
+      <ScaledPage label="14.1 — Légal · Conditions Générales de Vente (client)" srcW={1280} srcH={900}>
+        <LegalPage_Client/>
+      </ScaledPage>
+
+      <ScaledPage label="14.2 — Légal · Politique de confidentialité RGPD (client)" srcW={1280} srcH={900}>
+        <LegalPage_Client/>
+      </ScaledPage>
+
+      <ScaledPage label="14.3 — Légal · Vue Admin" srcW={1280} srcH={900}>
+        <LegalPage_Admin/>
+      </ScaledPage>
+
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<PrintApp/>);
+
+// Auto-print après chargement complet fonts + React
+document.fonts.ready.then(() => {
+  setTimeout(() => window.print(), 3500);
+});
+</script>
+</body>
+</html>

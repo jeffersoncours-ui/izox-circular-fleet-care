@@ -1,0 +1,88 @@
+# IZOX — robots.txt
+# TODO: mettre à jour l'URL du sitemap après migration du domaine
+Sitemap: https://izox-circular-fleet-care.vercel.app/sitemap.xml
+
+# IZOX — robots.txt
+# Pages vitrine publiques (/, /reservation, /entreprises) : indexables.
+# CRM (admin/client/terrain/settings) : interdit aux crawlers — doublé par les
+# meta robots noindex du root pour les routes applicatives.
+
+# ─── Moteurs de recherche classiques ────────────────────────────────────────
+User-agent: *
+Disallow: /admin
+Disallow: /client
+Disallow: /terrain
+Disallow: /settings
+Disallow: /reset-password
+
+# ─── Crawlers IA — blocage total ────────────────────────────────────────────
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+# Anthropic / Claude
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+# Common Crawl (source principale des LLMs open-source)
+User-agent: CCBot
+Disallow: /
+
+# Google (Bard / Gemini training)
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: GoogleOther
+Disallow: /
+
+# Meta (LLaMA training)
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+# Apple
+User-agent: Applebot-Extended
+Disallow: /
+
+# Cohere
+User-agent: cohere-ai
+Disallow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Disallow: /
+
+# Bytedance / TikTok
+User-agent: Bytespider
+Disallow: /
+
+# Amazon / Alexa
+User-agent: Amazonbot
+Disallow: /
+
+# Scrapers SEO
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /

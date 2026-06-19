@@ -1,0 +1,4 @@
+ALTER FUNCTION public.trg_tracker_dernier_passage() SECURITY DEFINER;
+
+COMMENT ON FUNCTION public.trg_tracker_dernier_passage() IS
+'Trigger function : met a jour automatiquement contrats.date_dernier_passage selon les changements sur interventions. Logique de "Recalcul Intelligent" : comparaison rapide pour les validations (frequentes), MAX() complet pour les devalidations/suppressions (rares). Critique pour la detection des contrats dormants par le cron quotidien. SECURITY DEFINER avec search_path explicite (public, pg_temp) - permet aux operateurs de declencher le trigger sans droits directs sur contrats. Pattern aligne sur les autres fonctions internes du projet.';

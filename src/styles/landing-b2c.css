@@ -1,0 +1,643 @@
+/* ============================================================
+   IZOX — Landing B2C · Design v2 (dark premium)
+   tasks/design-brief-v2.md
+
+   ⚠️ TOUT est scopé sous .izox-b2c — ne JAMAIS toucher au :root
+   global de styles.css. Le CRM B2B (admin/client/terrain/settings/
+   login) reste en light mode, intact. Ce fichier n'a aucun effet
+   hors de l'arbre .izox-b2c.
+   ============================================================ */
+
+
+.izox-b2c {
+  /* ── Design tokens v2 ── */
+  --b2c-bg: #06120c;
+  --b2c-bg2: #0a1b12;
+  --b2c-tx: #e7e6dd;
+  --b2c-tx-dim: #8aa295;
+  --b2c-tx-faint: #52685b;
+  --b2c-accent: #3fd8ff;
+  --b2c-glow: 0.75; /* 0..1 — piloté par le tweaks panel */
+  /* Halo néon bleu (3 couches), intensité pilotée par --b2c-glow. Réutilisé
+     par tous les textes bleus (kicker, accent, chiffres). */
+  --b2c-neon:
+    0 0 calc(4px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))),
+    0 0 calc(11px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))),
+    0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow)));
+  --b2c-tscale: 1.25; /* échelle titres — piloté par tweaks */
+  --b2c-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --b2c-sans: "Archivo", system-ui, -apple-system, sans-serif;
+  --b2c-mono: "JetBrains Mono", ui-monospace, monospace;
+  --b2c-line: rgba(231, 230, 221, 0.1);
+  --b2c-line-strong: rgba(63, 216, 255, 0.28);
+
+  /* ── Remap des tokens sémantiques CRM → shared Button/Input/Label
+        rendent dark UNIQUEMENT dans cet arbre (cascade CSS). ── */
+  --background: var(--b2c-bg);
+  --foreground: var(--b2c-tx);
+  --card: var(--b2c-bg2);
+  --card-foreground: var(--b2c-tx);
+  --popover: var(--b2c-bg2);
+  --popover-foreground: var(--b2c-tx);
+  --muted: #0e2417;
+  --muted-foreground: var(--b2c-tx-dim);
+  --primary: var(--b2c-accent);
+  --primary-foreground: #06120c;
+  --primary-soft: rgba(63, 216, 255, 0.12);
+  --secondary: #0e2417;
+  --secondary-foreground: var(--b2c-tx);
+  --accent: rgba(63, 216, 255, 0.14);
+  --accent-foreground: var(--b2c-accent);
+  --border: var(--b2c-line);
+  --input: rgba(231, 230, 221, 0.18);
+  --ring: var(--b2c-accent);
+
+  background-color: var(--b2c-bg);
+  color: var(--b2c-tx);
+  font-family: var(--b2c-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* clip (et non hidden) : coupe les débordements horizontaux des halos/glow
+     sans créer de conteneur de scroll — préserve la navbar sticky. */
+  overflow-x: clip;
+  /* Stacking context propre pour que le fond animé <SmokeBackground/>
+     (canvas z-index -2) reste au-dessus du fond mais sous tout le contenu.
+     Le filigrane halftone est désormais FUSIONNÉ dans ce canvas (shader),
+     il n'y a plus de pseudo-élément ::before. */
+  position: relative;
+  isolation: isolate;
+}
+
+/* Fond du body pendant que la landing est montée (évite le seam clair
+   en overscroll/rubber-band mobile). Retiré au démontage par PublicLayout. */
+body.b2c-active {
+  background-color: #06120c;
+}
+
+/* ── Thèmes additionnels (tweaks panel) ── */
+.izox-b2c.t-noir {
+  --b2c-bg: #0e0d0b;
+  --b2c-bg2: #16140f;
+  --background: #0e0d0b;
+  --card: #16140f;
+  --muted: #1c1a13;
+}
+.izox-b2c.t-nuit {
+  --b2c-bg: #070d17;
+  --b2c-bg2: #0c1422;
+  --background: #070d17;
+  --card: #0c1422;
+  --muted: #111c30;
+}
+.izox-b2c.t-papier {
+  --b2c-bg: #ede8dc;
+  --b2c-bg2: #f5f1e8;
+  --b2c-tx: #1a1712;
+  --b2c-tx-dim: #5a5343;
+  --b2c-tx-faint: #8a8060;
+  --b2c-line: rgba(26, 23, 18, 0.12);
+  --background: #ede8dc;
+  --foreground: #1a1712;
+  --card: #f5f1e8;
+  --card-foreground: #1a1712;
+  --muted: #e2dbc9;
+  --muted-foreground: #5a5343;
+  --border: rgba(26, 23, 18, 0.12);
+}
+.izox-b2c.t-papier ~ body,
+body.b2c-active:has(.izox-b2c.t-papier) {
+  background-color: #ede8dc;
+}
+
+/* ============================================================
+   Typographie
+   ============================================================ */
+
+.b2c-display {
+  font-family: var(--b2c-serif);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  /* clamp ×  échelle titres pilotée par tweaks */
+  font-size: calc(clamp(2.5rem, 7vw, 4.5rem) * var(--b2c-tscale));
+}
+.b2c-display--md {
+  font-family: var(--b2c-serif);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  font-size: calc(clamp(1.9rem, 4vw, 2.9rem) * var(--b2c-tscale));
+}
+/* Mot/segment accentué : italique serif en vert lumineux */
+.b2c-accent {
+  font-style: italic;
+  color: var(--b2c-accent);
+  text-shadow: var(--b2c-neon);
+}
+.b2c-kicker {
+  font-family: var(--b2c-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--b2c-accent);
+  /* Néon bleu fixe (texte conservé bleu accent). */
+  text-shadow: var(--b2c-neon);
+}
+.b2c-lead {
+  color: var(--b2c-tx-dim);
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  line-height: 1.65;
+}
+.b2c-mono {
+  font-family: var(--b2c-mono);
+}
+
+/* ============================================================
+   Surfaces, bordures, glow
+   ============================================================ */
+
+.b2c-card {
+  background: var(--b2c-bg2);
+  border: 1px solid var(--b2c-line);
+  border-radius: 14px;
+}
+
+/* ── Glow card — conteneur premium : bordure fluo statique + picots
+   intérieurs + lueur d'angles. Pilotée par --b2c-accent / --b2c-glow
+   (suit le TweakPanel). Même langage que .shiny-cta : statique, zéro
+   animation. S'AJOUTE à .b2c-card / .stepcard sans remplacer leur fond. */
+.izox-b2c .b2c-glow-card {
+  position: relative;
+  isolation: isolate;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--b2c-accent) 55%, transparent);
+  box-shadow:
+    0 0 calc(16px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.14 * var(--b2c-glow))),
+    inset 0 0 calc(34px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.035 * var(--b2c-glow)));
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Picots intérieurs — statiques, couleur accent, sous le contenu */
+.izox-b2c .b2c-glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  --pos: 2px;
+  background: radial-gradient(
+    circle at var(--pos) var(--pos),
+    var(--b2c-accent) calc(var(--pos) / 4),
+    transparent 0
+  ) padding-box;
+  background-size: calc(var(--pos) * 2) calc(var(--pos) * 2);
+  opacity: calc(0.14 * var(--b2c-glow));
+}
+
+/* Lueur douce aux quatre angles */
+.izox-b2c .b2c-glow-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at top left, rgba(63, 216, 255, 0.16), transparent 24%),
+    radial-gradient(circle at top right, rgba(63, 216, 255, 0.16), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(63, 216, 255, 0.11), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(63, 216, 255, 0.11), transparent 24%);
+  opacity: var(--b2c-glow);
+}
+
+/* Hover : intensifie le halo, garde le contour fluo (bat .stepcard:hover) */
+.izox-b2c .b2c-glow-card:hover {
+  border-color: color-mix(in srgb, var(--b2c-accent) 75%, transparent);
+  box-shadow:
+    0 0 calc(24px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.22 * var(--b2c-glow))),
+    inset 0 0 calc(34px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.05 * var(--b2c-glow)));
+}
+/* Séparateur horizontal fluo — navbar (bas) et footer (haut) */
+.izox-b2c .b2c-glow-sep-b {
+  border-bottom: 1px solid color-mix(in srgb, var(--b2c-accent) 45%, transparent);
+  box-shadow: 0 1px calc(18px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.13 * var(--b2c-glow)));
+}
+.izox-b2c .b2c-glow-sep-t {
+  border-top: 1px solid color-mix(in srgb, var(--b2c-accent) 45%, transparent);
+  box-shadow: 0 -1px calc(18px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.13 * var(--b2c-glow)));
+}
+
+/* ── 7-Segment display ───────────────────────────────────────────────── */
+/* Conteneur flex alignant chiffres + affixes */
+.b2c-seg-number {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.05em;
+  line-height: 1;
+}
+
+/* SVG d'un chiffre : glow via drop-shadow (text-shadow inopérant sur SVG) */
+.b2c-seg-digit {
+  display: block;
+  filter:
+    drop-shadow(0 0 calc(4px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow))))
+    drop-shadow(0 0 calc(11px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.7 * var(--b2c-glow))))
+    drop-shadow(0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow))));
+}
+
+/* Segment allumé */
+.b2c-seg-on  { fill: var(--b2c-accent); }
+/* Segment éteint — fantôme très atténué (effet LCD authentique) */
+.b2c-seg-off { fill: rgba(63, 216, 255, 0.07); }
+
+/* Préfixe/suffixe texte (« ~ », « L », « % », « € », « × », « à ») */
+.b2c-seg-affix {
+  font-family: var(--b2c-mono);
+  font-weight: 700;
+  color: var(--b2c-accent);
+  text-shadow: var(--b2c-neon);
+  font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+  line-height: 1;
+  padding-bottom: 0.12em;
+}
+
+/* ============================================================
+   Boutons (CTA) — vert lumineux, hover « fillwater » (desktop)
+   Le remplissage animé bas→haut est greffé en Phase 2c.
+   ============================================================ */
+
+.b2c-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--b2c-sans);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  padding: 0.85rem 1.4rem;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+  overflow: hidden;
+}
+.b2c-btn--primary {
+  background: var(--b2c-accent);
+  color: #06120c;
+  box-shadow: 0 0 calc(36px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.35 * var(--b2c-glow)));
+}
+.b2c-btn--primary:hover {
+  box-shadow: 0 0 calc(54px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.55 * var(--b2c-glow)));
+  transform: translateY(-1px);
+}
+/* ── Shiny CTA — bouton principal premium, bordure fluo statique.
+   Couleurs câblées sur --b2c-accent → suit le TweakPanel en live.   */
+.izox-b2c .shiny-cta {
+  isolation: isolate;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  outline-offset: 4px;
+  padding: 1rem 2rem;
+  font-family: var(--b2c-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid var(--b2c-accent);
+  border-radius: 360px;
+  color: var(--b2c-tx);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--b2c-bg);
+  box-shadow:
+    0 0 calc(10px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.45 * var(--b2c-glow))),
+    0 0 calc(22px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.2 * var(--b2c-glow)));
+  transition: box-shadow 300ms ease, transform 200ms ease;
+}
+
+/* Motif de picots — statiques, couleur accent */
+.izox-b2c .shiny-cta::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  --pos: 2px;
+  background: radial-gradient(
+    circle at var(--pos) var(--pos),
+    var(--b2c-accent) calc(var(--pos) / 4),
+    transparent 0
+  ) padding-box;
+  background-size: calc(var(--pos) * 2) calc(var(--pos) * 2);
+  background-repeat: space;
+  border-radius: inherit;
+  opacity: calc(0.2 * var(--b2c-glow));
+}
+
+/* Lueur intérieure douce en bas */
+.izox-b2c .shiny-cta::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse at bottom, rgba(63, 216, 255, 0.08), transparent 70%);
+  border-radius: inherit;
+}
+
+/* Texte au-dessus des pseudo-éléments */
+.izox-b2c .shiny-cta span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hover / focus */
+.izox-b2c .shiny-cta:is(:hover, :focus-visible) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 calc(16px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.65 * var(--b2c-glow))),
+    0 0 calc(36px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.3 * var(--b2c-glow)));
+}
+
+/* Press */
+.izox-b2c .shiny-cta:active {
+  transform: translateY(1px);
+}
+
+/* Disabled */
+.izox-b2c .shiny-cta:disabled,
+.izox-b2c .shiny-cta[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .izox-b2c .shiny-cta {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Reveals — progressive enhancement
+   Par défaut tout est VISIBLE (si JS échoue, rien n'est caché).
+   L'état initial masqué n'est appliqué que lorsque PublicLayout
+   pose data-anim="on" (JS actif). Animation pilotée en Phase 2c.
+   ============================================================ */
+
+.izox-b2c[data-anim="on"] .rv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.izox-b2c[data-anim="on"] .rv.is-in {
+  opacity: 1;
+  transform: none;
+}
+.rv-d1 {
+  transition-delay: 0.09s;
+}
+.rv-d2 {
+  transition-delay: 0.18s;
+}
+/* ============================================================
+   Stepcards (section 02)
+   ============================================================ */
+
+.stepcard {
+  background: var(--b2c-bg2);
+  border: 1px solid var(--b2c-line);
+  border-radius: 14px;
+  padding: 1.6rem;
+  transition: border-color 0.3s ease;
+}
+.stepcard:hover {
+  border-color: var(--b2c-line-strong);
+}
+
+/* ============================================================
+   Avant / Après — galerie flip (section 05)
+   Adapté de Flip Gallery (21st.dev). Styles scopés .izox-b2c pour ne pas
+   fuiter dans le CRM (sélecteurs génériques .flip-top/.flip-bottom).
+   ============================================================ */
+
+.izox-b2c .flip-frame {
+  position: relative;
+  padding: 0.5rem;
+  border: 1px solid var(--b2c-line);
+  border-radius: 8px;
+  background: var(--b2c-bg2);
+}
+
+.izox-b2c #flip-gallery {
+  position: relative;
+  width: 280px;
+  height: 460px;
+  text-align: center;
+}
+@media (min-width: 600px) {
+  .izox-b2c #flip-gallery {
+    width: 380px;
+    height: 620px;
+  }
+}
+@media (min-width: 900px) {
+  .izox-b2c #flip-gallery {
+    width: 460px;
+    height: 750px;
+  }
+}
+
+/* Barre de pliage centrale (couleur abysse = fond de page). */
+.izox-b2c #flip-gallery::after {
+  content: "";
+  position: absolute;
+  background-color: var(--b2c-bg);
+  width: 100%;
+  height: 4px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+/* Libellé sous la galerie, piloté par data-title + vars --title-*. */
+.izox-b2c #flip-gallery::before {
+  content: attr(data-title);
+  color: var(--b2c-tx-dim);
+  font-family: var(--b2c-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  left: -0.5rem;
+  position: absolute;
+  top: calc(100% + 1rem);
+  line-height: 2;
+  opacity: var(--title-opacity, 0);
+  transform: translateY(var(--title-y, 0));
+  transition: opacity 500ms ease-in-out, transform 500ms ease-in-out;
+}
+
+/* Volets (4 couches). background-size = dimension pleine image pour que les
+   moitiés haut/bas s'alignent (background-position top/bottom). */
+.izox-b2c #flip-gallery > .flip-unite {
+  position: absolute;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.05);
+  background-size: 280px 460px;
+  background-repeat: no-repeat;
+}
+@media (min-width: 600px) {
+  .izox-b2c #flip-gallery > .flip-unite {
+    background-size: 380px 620px;
+  }
+}
+@media (min-width: 900px) {
+  .izox-b2c #flip-gallery > .flip-unite {
+    background-size: 460px 750px;
+  }
+}
+
+/* Slot vide (photos à venir) : hachures discrètes en placeholder. */
+.izox-b2c #flip-gallery > .flip-unite[data-empty] {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(63, 216, 255, 0.05) 0 16px,
+    transparent 16px 34px
+  );
+}
+
+.izox-b2c .flip-top,
+.izox-b2c .flip-overlay-top {
+  top: 0;
+  transform-origin: bottom;
+  background-position: top;
+}
+.izox-b2c .flip-bottom,
+.izox-b2c .flip-overlay-bottom {
+  bottom: 0;
+  transform-origin: top;
+  background-position: bottom;
+}
+
+.izox-b2c .flip-nav {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.izox-b2c .flip-nav__btn {
+  color: var(--b2c-accent);
+  opacity: 0.75;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.izox-b2c .flip-nav__btn:hover {
+  opacity: 1;
+  transform: scale(1.25);
+}
+
+/* ============================================================
+   Hero visual — placeholder élégant (la gravure R5 arrive en 2b)
+   ============================================================ */
+
+.b2c-hero-halo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60% 50% at 70% 30%,
+      rgba(63, 216, 255, calc(0.1 * var(--b2c-glow))),
+      transparent 70%
+    );
+}
+
+/* ============================================================
+   Fil de l'eau (fixe à droite) — structure posée ici,
+   animation scroll branchée en Phase 2c.
+   ============================================================ */
+
+.fil {
+  position: fixed;
+  top: 0;
+  right: 18px;
+  bottom: 0;
+  width: 2px;
+  z-index: 30;
+  pointer-events: none;
+}
+.fil-track {
+  position: absolute;
+  inset: 0;
+  background: var(--b2c-line);
+}
+.fil-trail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to bottom, transparent, var(--b2c-accent));
+}
+.fil-drop {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--b2c-accent);
+  box-shadow: 0 0 calc(16px * var(--b2c-glow)) rgba(63, 216, 255, calc(0.9 * var(--b2c-glow)));
+}
+@media (max-width: 860px) {
+  .fil {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Section rythm
+   ============================================================ */
+
+.b2c-section {
+  position: relative;
+  padding-block: clamp(4rem, 9vw, 7rem);
+}
+.b2c-container {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+/* ============================================================
+   Accessibilité — prefers-reduced-motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .izox-b2c[data-anim="on"] .rv {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .izox-b2c *,
+  .izox-b2c *::before,
+  .izox-b2c *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
